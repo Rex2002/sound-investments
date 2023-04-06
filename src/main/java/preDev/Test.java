@@ -18,24 +18,25 @@ public class Test {
     }
 
     public Test(){
-        AudioFormat af = new AudioFormat(SAMPLE_RATE, 16, 1, true, true);
+        AudioFormat af = new AudioFormat(SAMPLE_RATE, 8, 1, true, true);
         try{
             SourceDataLine sdl = AudioSystem.getSourceDataLine(af);
             sdl.open(af);
             sdl.start();
-            byte[] sine = createPitchingSine(440, 50, 60, 5000);
-            double[] lfo = createDoubleSine(2, 4, 1);
+            byte[] cleanSine = createSine(440, 10, 127);
+            byte[] sine = createPitchingSine(440, 10, 60, 5000);
+            double[] lfo = createDoubleSine(1, 4, 1);
             byte[] combined = multiplyArrays(sine, lfo);
             EventQueue.invokeLater(() -> {
-                FrequencyChart c = new FrequencyChart(Arrays.copyOfRange(sine, 0, 44100), 10, "Raw Sine");
+                FrequencyChart c = new FrequencyChart(Arrays.copyOfRange(cleanSine, 0, 44100), 1, "Raw Sine");
                 FrequencyChart c1 = new FrequencyChart(Arrays.copyOfRange(combined, 0, 44100*4), 100, "Combined");
-                FrequencyChart c2 = new FrequencyChart(Arrays.copyOfRange(lfo,0, 44100),100, "LFO");
+                FrequencyChart c2 = new FrequencyChart(Arrays.copyOfRange(lfo,0, 44100),1, "LFO");
                 c.setVisible(true);
                 c1.setVisible(true);
                 c2.setVisible(true);
             });
-            //play(sdl, combined);
-            play(sdl, sine);
+            play(sdl, cleanSine);
+            //play(sdl, sine);
 
             sdl.drain();
             sdl.close();
@@ -47,15 +48,15 @@ public class Test {
     // creates a sine wave of given frequency, duration and max amplitude
     private byte[] createSine(int freq, int duration, int amplitude){
         byte[] sin = new byte[duration * SAMPLE_RATE];
-        double samplingInterval = (double) SAMPLE_RATE/freq;
-        double lfoSamplingInterval = (double) SAMPLE_RATE/2;
+        double samplingInterval = (double) SAMPLE_RATE/freq ;
+        //double lfoSamplingInterval = (double) SAMPLE_RATE/2;
         System.out.println("Frequency of signal: " + freq + " hz");
         System.out.println("Sampling interval: " + samplingInterval + " hz");
         for(int i = 0; i < sin.length; i++){
-            double angle = ((2*Math.PI)/(samplingInterval)) * i;  // full circle: 2*Math.PI -> one step: divide by sampling interval
-            double lfo = ((2*Math.PI)/lfoSamplingInterval) * i;
+            double angle = ((2*Math.PI * i)/(samplingInterval));  // full circle: 2*Math.PI -> one step: divide by sampling interval
+            //double lfo = ((2*Math.PI)/lfoSamplingInterval) * i;
 
-            sin[i] = (byte) ((Math.sin(angle)) * (amplitude*Math.sin(lfo)) );
+            sin[i] = (byte) ((Math.sin(angle)) * (amplitude) );
         }
         return sin;
     }
@@ -69,7 +70,7 @@ public class Test {
         for(int i = 0; i < sin.length; i++){
             double angle = ((2*Math.PI)/(samplingInterval)) * i;  // full circle: 2*Math.PI -> one step: divide by sampling interval
 
-            sin[i] = (byte) ((Math.sin(angle*i/1000)) * (amplitude));
+            sin[i] = (byte) ((Math.sin(angle*i/15000)) * (amplitude));
         }
         return sin;
     }
