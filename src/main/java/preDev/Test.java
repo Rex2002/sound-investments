@@ -23,19 +23,20 @@ public class Test {
             SourceDataLine sdl = AudioSystem.getSourceDataLine(af);
             sdl.open(af);
             sdl.start();
-            byte[] cleanSine = createSine(440, 10, 127);
-            byte[] sine = createPitchingSine(440, 10, 60, 5000);
-            double[] lfo = createDoubleSine(1, 4, 1);
-            byte[] combined = multiplyArrays(sine, lfo);
+            //byte[] cleanSine = createSine(440, 10, 127);
+            //double[] lfo = createDoubleSine(1, 4, 1);
+            byte[] sine = createSine(new double[]{440,  493.88,  523.25,  587.33,  659.25,  698.46,  783.99,  880.00}, 4, 127);
+            //byte[] combined = multiplyArrays(sine, lfo);
             EventQueue.invokeLater(() -> {
-                FrequencyChart c = new FrequencyChart(Arrays.copyOfRange(cleanSine, 0, 44100), 1, "Raw Sine");
-                FrequencyChart c1 = new FrequencyChart(Arrays.copyOfRange(combined, 0, 44100*4), 100, "Combined");
-                FrequencyChart c2 = new FrequencyChart(Arrays.copyOfRange(lfo,0, 44100),1, "LFO");
+                FrequencyChart c = new FrequencyChart(Arrays.copyOfRange(sine, 0, 44100), 1, "Raw Sine");
+                //FrequencyChart c1 = new FrequencyChart(Arrays.copyOfRange(combined, 0, 44100*4), 100, "Combined");
+                //FrequencyChart c2 = new FrequencyChart(Arrays.copyOfRange(lfo,0, 44100),1, "LFO");
                 c.setVisible(true);
-                c1.setVisible(true);
-                c2.setVisible(true);
+                //c1.setVisible(true);
+//                c2.setVisible(true);
             });
-            play(sdl, cleanSine);
+            //play(sdl, cleanSine);
+            play(sdl, sine);
             //play(sdl, sine);
 
             sdl.drain();
@@ -61,16 +62,18 @@ public class Test {
         return sin;
     }
 
-    // creates a sine wave that changes frequency
-    private byte[] createPitchingSine(int freq, int duration, int amplitude, int modFactor){
+    private byte[] createSine(double[] freq, int duration, int amplitude){
         byte[] sin = new byte[duration * SAMPLE_RATE];
-        double samplingInterval = (double) SAMPLE_RATE/freq;
         System.out.println("Frequency of signal: " + freq + " hz");
-        System.out.println("Sampling interval: " + samplingInterval + " hz");
+        double samplingInterval = 0;
         for(int i = 0; i < sin.length; i++){
-            double angle = ((2*Math.PI)/(samplingInterval)) * i;  // full circle: 2*Math.PI -> one step: divide by sampling interval
+            if((double) SAMPLE_RATE/freq[(int)( (double) i/sin.length * freq.length)] != samplingInterval) {
+                samplingInterval = (double) SAMPLE_RATE / freq[(int) ((double)i / sin.length * (freq.length))];
+                System.out.println("New sampling interval: " + samplingInterval);
+            }
 
-            sin[i] = (byte) ((Math.sin(angle*i/15000)) * (amplitude));
+            double angle = ((2*Math.PI * i)/(samplingInterval));  // full circle: 2*Math.PI -> one step: divide by sampling interval
+            sin[i] = (byte) ((Math.sin(angle)) * amplitude)
         }
         return sin;
     }
