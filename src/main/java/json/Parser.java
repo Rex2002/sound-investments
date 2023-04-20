@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.function.Function;
 
 public class Parser {
+	final static String DEFAULT_FILENAME = "Unknown";
+
 	private int lc = 1;
 	private int bol = 0;
 	private int cur = 0;
@@ -231,7 +233,21 @@ public class Parser {
 	 * @return An object of type `T`
 	 */
 	public <T> T parse(String json, Function<JsonPrimitive<?>, T> func) {
-		this.filename = "Unknown";
-		return parse(this.filename, json, func);
+		return parse(DEFAULT_FILENAME, json, func);
+	}
+
+	public <T> List<T> parseList(String filename, String json, Function<JsonPrimitive<?>, T> func) {
+		return parse(filename, json, l -> {
+			List<JsonPrimitive<?>> list = l.asList();
+			List<T> res = new ArrayList<>(list.size());
+			for (JsonPrimitive<?> x : list) {
+				res.add(func.apply(x));
+			}
+			return res;
+		});
+	}
+
+	public <T> List<T> parseList(String json, Function<JsonPrimitive<?>, T> func) {
+		return parseList(DEFAULT_FILENAME, json, func);
 	}
 }

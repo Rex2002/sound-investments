@@ -23,19 +23,18 @@ public class Test {
 			myReader.close();
 
 			Parser parser = new Parser();
-			List<T> l = parser.parse("resources/test.json", sb.toString(), x -> {
-				List<JsonPrimitive<?>> arr = (List<JsonPrimitive<?>>) x.el;
-				return arr.stream().map(y -> {
-					HashMap<String, JsonPrimitive<?>> obj = (HashMap<String, JsonPrimitive<?>>) y.el;
-					Number start = (Number) obj.get("open").el;
-					Number end = (Number) obj.get("close").el;
-					return new T(start.doubleValue(), end.doubleValue());
-				}).toList();
+			List<T> l = parser.parseList("resources/test.json", sb.toString(), x -> {
+				HashMap<String, JsonPrimitive<?>> obj = x.asMap();
+				Double start = obj.get("open").asDouble();
+				Double end = obj.get("close").asDouble();
+				return new T(start, end);
 			});
 			for (Integer i = 0; i < l.size(); i++) {
 				System.out.println(i.toString() + ": " + l.get(i).toString());
 			}
-		} catch (FileNotFoundException e) {
+		} catch (
+
+		FileNotFoundException e) {
 			System.out.println("An error occurred.");
 			e.printStackTrace();
 		}
