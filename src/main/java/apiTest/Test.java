@@ -1,42 +1,36 @@
 package apiTest;
 
-import java.io.File; // Import the File class
-import java.io.FileNotFoundException; // Import this class to handle errors
-import java.util.ArrayList;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.net.URI;
+import java.net.http.*;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Scanner; // Import the Scanner class to read text files
-
 import json.*;
 
 public class Test {
-	public static void main(String[] args) {
-		try {
-			File myObj = new File("resources/test.json");
-			StringBuilder sb = new StringBuilder(256);
-			Scanner myReader = new Scanner(myObj);
-			while (myReader.hasNextLine()) {
-				String data = myReader.nextLine();
-				sb.append(data);
-				sb.append('\n');
-			}
-			myReader.close();
+	public static void main(String[] args) throws IOException, InterruptedException {
+		HttpClient client = HttpClient.newHttpClient();
+		HttpRequest request = HttpRequest.newBuilder().uri(URI.create(
+				"https://api.leeway.tech/api/v1/public/historicalquotes/SAP.XETRA?apitoken=pgz64a5qiuvw4qhkoullnx&from=2023-04-01"))
+				.build();
+		HttpResponse<String> response = client.send(request, HttpResponse.BodyHandlers.ofString());
+		String body = response.body();
 
-			Parser parser = new Parser();
-			List<T> l = parser.parseList("resources/test.json", sb.toString(), x -> {
-				HashMap<String, JsonPrimitive<?>> obj = x.asMap();
-				Double start = obj.get("open").asDouble();
-				Double end = obj.get("close").asDouble();
-				return new T(start, end);
-			});
-			for (Integer i = 0; i < l.size(); i++) {
-				System.out.println(i.toString() + ": " + l.get(i).toString());
-			}
-		} catch (
+		PrintWriter out = new PrintWriter("resources/test.json");
+		out.print(body);
+		out.close();
 
-		FileNotFoundException e) {
-			System.out.println("An error occurred.");
-			e.printStackTrace();
+		Parser parser = new Parser();
+		List<T> l = parser.parseList("resources/test.json", body, x -> {
+			HashMap<String, JsonPrimitive<?>> obj = x.asMap();
+			Double start = obj.get("open").asDouble();
+			Double end = obj.get("close").asDouble();
+			return new T(start, end);
+		});
+
+		for (Integer i = 0; i < l.size(); i++) {
+			System.out.println(i.toString() + ": " + l.get(i).toString());
 		}
 	}
 }
