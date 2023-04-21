@@ -1,5 +1,6 @@
 package preDev;
 
+// freq: 440,  493.88,  523.25,  587.33,  659.25,  698.46,  783.99,  880.00
 
 
 import lombok.Data;
@@ -32,14 +33,16 @@ public class Test {
             sdl.start();
             //byte[] sine = createSine(440, 8, 127);
             //double[] lfo = createDoubleSine(1, 4, 1);
-            byte[] sine = createSine(new double[]{440,  493.88,  523.25,  587.33,  659.25,  698.46,  783.99,  880.00}, 4, 127);
-            byte[] sq = createSquare(new double[]{440,  493.88,  523.25,  587.33,  659.25,  698.46,  783.99,  880.00}, 4, 127);
-            byte[] sw = createSawtooth(new double[]{440,  493.88,  523.25,  587.33,  659.25,  698.46,  783.99,  880.00}, 4, 127);
+            ADSR adsr = new ADSR(0.2, 0.2, 0.5, 0.3);
+            byte[] sine = createSine(new double[]{440,  493.88,  523.25,  587.33 }, 4, 127, adsr);
+            byte[] sq = createSquare(new double[]{440,  493.88  }, 2, 60, adsr);
+            byte[] sq2 = createSquare(new double[]{523.25,  587.33}, 2, 127, adsr);
+            byte[] sw = createSawtooth(new double[]{440,  493.88,  523.25,  587.33}, 4, 60, adsr);
             //byte[] combined = multiplyArrays(sine, lfo);
             EventQueue.invokeLater(() -> {
-                FrequencyChart c = new FrequencyChart(Arrays.copyOfRange(sine, 0, 2000), 1, "Raw Sine");
-                FrequencyChart c1 = new FrequencyChart(Arrays.copyOfRange(sq, 0, 2000), 1, "Square");
-                FrequencyChart c2 = new FrequencyChart(Arrays.copyOfRange(sw,0, 2000),1, "Sawtooth");
+                FrequencyChart c = new FrequencyChart(Arrays.copyOfRange(sine, 0, 44100), 1, "Raw Sine");
+                FrequencyChart c1 = new FrequencyChart(Arrays.copyOfRange(sq, 0, 44100), 1, "Square");
+                FrequencyChart c2 = new FrequencyChart(Arrays.copyOfRange(sw,0, 44100),1, "Sawtooth");
                 c.setVisible(true);
                 c1.setVisible(true);
                 c2.setVisible(true);
@@ -47,6 +50,7 @@ public class Test {
             //play(sdl, cleanSine);
             play(sdl, sine);
             play(sdl, sq);
+            play(sdl, sq2);
             play(sdl, sw);
             //play(sdl, sine);
 
@@ -69,7 +73,7 @@ public class Test {
             double angle = ((2*Math.PI * i)/(samplingInterval));  // full circle: 2*Math.PI -> one step: divide by sampling interval
             //double lfo = ((2*Math.PI)/lfoSamplingInterval) * i;
 
-            sin[i] = (byte) ((Math.sin(angle)) * (amplitude) );
+            sin[i] = (byte) (Math.sin(angle) * amplitude );
         }
         return sin;
     }
@@ -80,6 +84,18 @@ public class Test {
         for(int i = 0; i < sin.length; i++){
             phase = this.advancePhaseSine(phase, freq[(int) (((double) i/sin.length) * freq.length)]);
             sin[i] = (byte) (Math.sin( phase ) * amplitude);
+        }
+        return sin;
+    }
+
+    private byte[] createSine(double[] freq, int duration, int amplitude, ADSR env){
+        byte[] sin = new byte[duration * SAMPLE_RATE];
+        env.setTotalLength(sin.length);
+        env.setNoOfTones(freq.length);
+        double phase = 0;
+        for(int i = 0; i < sin.length; i++){
+            phase = this.advancePhaseSine(phase, freq[(int) (((double) i/sin.length) * freq.length)]);
+            sin[i] = (byte) (Math.sin( phase ) * amplitude * env.getAmplitudeFactor(i));
         }
         return sin;
     }
@@ -96,15 +112,41 @@ public class Test {
         return sq;
     }
 
+    private byte[] createSquare(double[] freq, int duration, int amplitude, ADSR env){
+        byte[] sq = new byte[duration * SAMPLE_RATE];
+        env.setTotalLength(sq.length);
+        env.setNoOfTones(freq.length);
+        PhaseContainer phases = new PhaseContainer();
+        phases.phase = 0;
+        System.out.println("freq: " + Arrays.toString(freq));
+        for(int i = 0; i < sq.length; i++){
+            phases = this.advancePhaseSquare(phases, freq[(int) (((double) i/sq.length) * freq.length)]);
+            sq[i] = (byte) (phases.ret * amplitude * env.getAmplitudeFactor(i));
+        }
+        return sq;
+    }
+
     private byte[] createSawtooth(double[] freq, int duration, int amplitude){
         byte[] sw = new byte[duration * SAMPLE_RATE];
         PhaseContainer phases = new PhaseContainer();
         phases.phase = 0;
         for(int i = 0; i < sw.length; i++){
-            System.out.println("forwarded freq: " + freq[(int) ((double) i/sw.length) * freq.length]);
+            phases = this.advancePhaseSawtooth(phases, freq[(int) (((double) i/sw.length) * freq.length)]);
+            sw[i] = (byte) (phases.ret * amplitude);
+        }
+        return sw;
+    }
+
+    private byte[] createSawtooth(double[] freq, int duration, int amplitude, ADSR env){
+        byte[] sw = new byte[duration * SAMPLE_RATE];
+        env.setTotalLength(sw.length);
+        env.setNoOfTones(freq.length);
+        PhaseContainer phases = new PhaseContainer();
+        phases.phase = 0;
+        for(int i = 0; i < sw.length; i++){
             phases = this.advancePhaseSawtooth(phases, freq[(int) (((double) i/sw.length) * freq.length)]);
 
-            sw[i] = (byte) (phases.ret * amplitude);
+            sw[i] = (byte) (phases.ret * amplitude * env.getAmplitudeFactor(i));
         }
         return sw;
     }
@@ -126,6 +168,45 @@ public class Test {
     }
     private void play(SourceDataLine s, byte[] data){
         s.write(data, 0, data.length);
+    }
+
+    private double advancePhaseSine(double phase, double freq){
+        phase += 2 * Math.PI * freq/SAMPLE_RATE;
+        while (phase > 2 * Math.PI){
+            phase -= 2* Math.PI;
+        }
+        while (phase < 0){
+            phase += 2 * Math.PI;
+        }
+        return phase;
+    }
+
+    private PhaseContainer advancePhaseSquare(PhaseContainer phases, double freq){
+        phases.phase += freq/SAMPLE_RATE;
+
+        while (phases.phase > 1.0f){
+            phases.phase -= 1.0f;
+        }
+        while (phases.phase < 0.0f){
+            phases.phase += 1.0f;
+        }
+        if (phases.phase >= 0.5f){
+            phases.ret = 1.0f;
+        }
+        else{
+            phases.ret = -1.0f;
+        }
+        return phases;
+    }
+    private PhaseContainer advancePhaseSawtooth(PhaseContainer phases, double freq){
+        phases.phase += freq/SAMPLE_RATE;
+        while(phases.phase > 1.0f)
+            phases.phase -= 1.0f;
+
+        while(phases.phase < 0.0f)
+            phases.phase += 1.0f;
+        phases.ret = (phases.phase * 2) - 1;
+        return phases;
     }
 
     @Deprecated
@@ -183,44 +264,5 @@ public class Test {
         }
 
         return result;
-    }
-
-    private double advancePhaseSine(double phase, double freq){
-        phase += 2 * Math.PI * freq/SAMPLE_RATE;
-        while (phase > 2 * Math.PI){
-            phase -= 2* Math.PI;
-        }
-        while (phase < 0){
-            phase += 2 * Math.PI;
-        }
-        return phase;
-    }
-    private PhaseContainer advancePhaseSquare(PhaseContainer phases, double freq){
-        phases.phase += freq/SAMPLE_RATE;
-
-        while (phases.phase > 1.0f){
-            phases.phase -= 1.0f;
-        }
-        while (phases.phase < 0.0f){
-            phases.phase += 1.0f;
-        }
-        if (phases.phase >= 0.5f){
-            phases.ret = 1.0f;
-        }
-        else{
-            phases.ret = -1.0f;
-        }
-        return phases;
-    }
-
-    private PhaseContainer advancePhaseSawtooth(PhaseContainer phases, double freq){
-        phases.phase += freq/SAMPLE_RATE;
-        while(phases.phase > 1.0f)
-            phases.phase -= 1.0f;
-
-        while(phases.phase < 0.0f)
-            phases.phase += 1.0f;
-        phases.ret = (phases.phase * 2) - 1;
-        return phases;
     }
 }
