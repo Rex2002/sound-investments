@@ -75,7 +75,7 @@ public class Parser {
 	}
 
 	private JsonPrimitive<Number> parseNum() {
-		return new JsonPrimitive<Number>(Number.class, parseNumber());
+		return new JsonPrimitive<Number>(parseNumber());
 	}
 
 	private String parseString() {
@@ -95,7 +95,7 @@ public class Parser {
 	}
 
 	private JsonPrimitive<String> parseStr() {
-		return new JsonPrimitive<String>(String.class, parseString());
+		return new JsonPrimitive<String>(parseString());
 	}
 
 	private JsonPrimitive<?> parseObj() {
@@ -185,10 +185,10 @@ public class Parser {
 				res = JsonPrimitive.Null();
 			} else if (startsWith("true")) {
 				chopWord("true");
-				res = new JsonPrimitive<Boolean>(Boolean.class, true);
+				res = new JsonPrimitive<Boolean>(true);
 			} else if (startsWith("false")) {
 				chopWord("false");
-				res = new JsonPrimitive<Boolean>(Boolean.class, false);
+				res = new JsonPrimitive<Boolean>(false);
 			} else {
 				throw new InvalidJson("Unexpected Symbol: '" + curChar() + "'", curLoc());
 			}

@@ -7,18 +7,16 @@ import java.util.Map;
 
 import javax.lang.model.type.NullType;
 
+@SuppressWarnings("unchecked")
 public class JsonPrimitive<T> {
-	private Class<?> clz;
 	private T el;
 
-	public JsonPrimitive(Class<T> clz, T el) {
-		this.clz = clz;
+	public JsonPrimitive(T el) {
 		this.el = el;
 	}
 
-	public JsonPrimitive(T el) {
-		this.clz = el.getClass();
-		this.el = el;
+	public Class<? extends Object> getElClass() {
+		return this.el.getClass();
 	}
 
 	public T get() {
@@ -27,6 +25,10 @@ public class JsonPrimitive<T> {
 
 	public <S> S as(Type S) {
 		return (S) this.el;
+	}
+
+	public NullType asNull() {
+		return (NullType) this.el;
 	}
 
 	public boolean asBool() {
@@ -82,6 +84,6 @@ public class JsonPrimitive<T> {
 	}
 
 	public static JsonPrimitive<NullType> Null() {
-		return new JsonPrimitive<NullType>(NullType.class, null);
+		return new JsonPrimitive<NullType>(null);
 	}
 }
