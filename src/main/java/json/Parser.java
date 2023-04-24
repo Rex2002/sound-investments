@@ -59,7 +59,7 @@ public class Parser {
 			sb.append(chopChar());
 		}
 		if (checkDot && cur < len && curChar() == '.') {
-			chopChar();
+			sb.append(chopChar());
 			sb.append(parseNumberStr(false));
 		}
 		return sb.toString();
