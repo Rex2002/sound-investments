@@ -131,7 +131,7 @@ public class APIReq {
 		}
 
 		StringBuilder sb = new StringBuilder(base);
-		sb.append(endPoint.startsWith("/") ? endPoint.substring(1) : endPoint);
+		sb.append(endPoint);
 
 		if (queries.length > 0 || this.queries.size() > 0) {
 			if (endPoint.endsWith("/")) {
@@ -157,7 +157,10 @@ public class APIReq {
 			// Last '&' is unnecessary & can be removed
 			sb.deleteCharAt(sb.length() - 1);
 		}
-		URI uri = new URI(sb.toString());
+
+		String url = sb.toString().replace(" ", "%20");
+		// System.out.println("URL: " + url);
+		URI uri = new URI(url);
 
 		HttpRequest.Builder rb = HttpRequest.newBuilder(uri);
 		for (StrTuple header : headers) {
@@ -166,14 +169,16 @@ public class APIReq {
 		return rb.build();
 	}
 
-	public T getJSON(Function<JsonPrimitive<?>, T> func, String endPoint, String... queries)
+	public <T> T getJSON(Function<JsonPrimitive<?>, T> func, String endPoint, String... queries)
 			throws URISyntaxException, IOException, InterruptedException {
+		if (endPoint.startsWith("/"))
+			endPoint = endPoint.substring(1);
 		HttpRequest req = prepReq(endPoint, queries);
 		HttpResponse<String> res = client.send(req, HttpResponse.BodyHandlers.ofString());
 		String body = res.body();
 
 		if (debug) {
-			String filename = "resources/test.json";
+			String filename = "resources/" + endPoint.replace("/", "-").replace(" ", "_") + ".json";
 			PrintWriter out = new PrintWriter(filename);
 			out.print(body);
 			out.close();
@@ -183,14 +188,16 @@ public class APIReq {
 		}
 	}
 
-	public List<T> getJSONList(Function<JsonPrimitive<?>, T> func, String endPoint, String... queries)
+	public <T> List<T> getJSONList(Function<JsonPrimitive<?>, T> func, String endPoint, String... queries)
 			throws URISyntaxException, IOException, InterruptedException {
+		if (endPoint.startsWith("/"))
+			endPoint = endPoint.substring(1);
 		HttpRequest req = prepReq(endPoint, queries);
 		HttpResponse<String> res = client.send(req, HttpResponse.BodyHandlers.ofString());
 		String body = res.body();
 
 		if (debug) {
-			String filename = "resources/test.json";
+			String filename = "resources/" + endPoint.replace("/", "-").replace(" ", "_") + ".json";
 			PrintWriter out = new PrintWriter(filename);
 			out.print(body);
 			out.close();
