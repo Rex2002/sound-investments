@@ -83,10 +83,20 @@ public class Parser {
 		assert curChar() == '"';
 		StringBuilder sb = new StringBuilder(32);
 		chopChar();
-		while (cur < len && curChar() != '"') {
-			sb.append(chopChar());
+		boolean escaped = false;
+		while (cur < len && (curChar() != '"' || escaped)) {
+			char c = chopChar();
+			if (escaped)
+				escaped = false;
+			else if (c == '\\')
+				escaped = true;
+
+			if (!escaped)
+				sb.append(c);
 		}
-		if (cur >= len) {
+		if (cur >= len)
+
+		{
 			throw new InvalidJson("Unexpected end of File", curLoc());
 		} else {
 			chopChar();
@@ -104,31 +114,36 @@ public class Parser {
 		HashMap<String, JsonPrimitive<?>> obj = new HashMap<>(128);
 		chopChar();
 		trimLeft();
-		while (cur < len) {
-			if (curChar() != '"') {
-				throw new InvalidJson(
-						"JSON objects require keys to start with \". Instead received: '" + curChar() + "'", curLoc());
-			}
-			String key = parseString();
-			trimLeft();
-			if (cur >= len || curChar() != ':') {
-				throw new InvalidJson(
-						"Expected a ':' after key '" + key + "'. Instead received: '" + curChar() + "'", curLoc());
-			}
-			chopChar();
-			trimLeft();
-			JsonPrimitive<?> val = parse();
-			obj.put(key, val);
-
-			trimLeft();
-			if (curChar() == '}') {
-				break;
-			} else if (curChar() == ',') {
+		if (curChar() != '}') {
+			while (cur < len) {
+				if (curChar() != '"') {
+					throw new InvalidJson(
+							"JSON objects require keys to start with \". Instead received: '" + curChar() + "'",
+							curLoc());
+				}
+				String key = parseString();
+				trimLeft();
+				if (cur >= len || curChar() != ':') {
+					throw new InvalidJson(
+							"Expected a ':' after key '" + key + "'. Instead received: '" + curChar() + "'", curLoc());
+				}
 				chopChar();
 				trimLeft();
-			} else {
-				throw new InvalidJson("Invalid symbol after key-value-pair. Expected ',' or '}'. Instead received: '"
-						+ curChar() + "'", curLoc());
+				JsonPrimitive<?> val = parse();
+				obj.put(key, val);
+
+				trimLeft();
+				if (curChar() == '}') {
+					break;
+				} else if (curChar() == ',') {
+					chopChar();
+					trimLeft();
+				} else {
+					throw new InvalidJson(
+							"Invalid symbol after key-value-pair. Expected ',' or '}'. Instead received: '"
+									+ curChar() + "'",
+							curLoc());
+				}
 			}
 		}
 		if (cur >= len) {
@@ -145,19 +160,21 @@ public class Parser {
 		List<JsonPrimitive<?>> arr = new ArrayList<>(128);
 		chopChar();
 		trimLeft();
-		while (cur < len) {
-			JsonPrimitive<?> x = parse();
-			arr.add(x);
+		if (curChar() != ']') {
+			while (cur < len) {
+				JsonPrimitive<?> x = parse();
+				arr.add(x);
 
-			trimLeft();
-			if (curChar() == ']') {
-				break;
-			} else if (curChar() == ',') {
-				chopChar();
 				trimLeft();
-			} else {
-				throw new InvalidJson("Invalid symbol after Array value. Expected ',' or ']'. Instead received: '"
-						+ curChar() + "'", curLoc());
+				if (curChar() == ']') {
+					break;
+				} else if (curChar() == ',') {
+					chopChar();
+					trimLeft();
+				} else {
+					throw new InvalidJson("Invalid symbol after Array value. Expected ',' or ']'. Instead received: '"
+							+ curChar() + "'", curLoc());
+				}
 			}
 		}
 		if (cur >= len) {
