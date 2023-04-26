@@ -19,7 +19,7 @@ public class ADSR {
     }
 
 
-    public double getAmplitudeFactor( int pos) {
+    public double getAmplitudeFactor(int pos) {
         int envLen = this.totalLength / this.noOfTones;
         pos = pos % envLen;
         double relPos = (double) pos / envLen;
@@ -30,7 +30,6 @@ public class ADSR {
             return relPos * 1/attack;
         }
         if(relPos < decay+attack){
-            System.out.println("Decaying");
             return relPos * (sustain-1)/(decay) + (1-(attack*sustain-attack)/(decay));
         }
         if(relPos < 1-release){
