@@ -1,7 +1,5 @@
 package apiTest;
 
-import java.util.Objects;
-
 public class Stock {
 	public final String name;
 	public final String code;
