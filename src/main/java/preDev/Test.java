@@ -34,7 +34,11 @@ public class Test {
             //byte[] sine = createSine(440, 8, 127);
             //double[] lfo = createDoubleSine(1, 4, 1);
             ADSR adsr = new ADSR(0.2, 0.2, 0.5, 0.3);
-            byte[] sine = createSine(new double[]{440,  493.88,  523.25,  587.33 }, 4, 127, adsr);
+            boolean[] onOffFilterTest = new boolean[]{true, false, false, false, false, false, false, false};
+            //onOffFilterTest = new boolean[]{true, false};
+            byte[] sine = Effect.echo(Effect.onOffFilter(createSine(new double[]{440,  493.88,  523.25,  587.33, 440,  493.88,  523.25,  587.33 }, 8, 60, adsr), onOffFilterTest), 0.5, 22050);
+            //byte[] sine = Effect.echo(createSine(new double[]{440,  493.88,  523.25,  587.33 }, 8, 127, adsr), 0.9, 15000);
+
             // mod freq factor of 1.5 seems to resemble a clarinet - though rather rough, could not yet figure out how to add more harmonics
             // TODO add calculation to actually play given freq when modulation and not just gcd of carrier and modulation frequency
             byte[] mSine = createModulatedSine(new double[]{440,  493.88,  523.25,  587.33 }, 4, 127, adsr, 1.5);
@@ -43,22 +47,20 @@ public class Test {
             byte[] sw = createSawtooth(new double[]{440,  493.88,  523.25,  587.33}, 4, 60, adsr);
             //byte[] combined = multiplyArrays(sine, lfo);
             EventQueue.invokeLater(() -> {
-                FrequencyChart c = new FrequencyChart(Arrays.copyOfRange(sine, 0, 4410), 1, "Raw Sine");
-                FrequencyChart c0 = new FrequencyChart(Arrays.copyOfRange(sine, 0, 4410), 1, "Mod Sine");
+                FrequencyChart c = new FrequencyChart(Arrays.copyOfRange(sine, 0, 44100), 1, "Raw Sine");
+                FrequencyChart c0 = new FrequencyChart(Arrays.copyOfRange(sine, 0, 44100), 1, "Mod Sine");
                 FrequencyChart c1 = new FrequencyChart(Arrays.copyOfRange(sq, 0, 44100), 1, "Square");
                 FrequencyChart c2 = new FrequencyChart(Arrays.copyOfRange(sw,0, 44100),1, "Sawtooth");
                 c.setVisible(true);
-                c0.setVisible(true);
-                c1.setVisible(true);
-                c2.setVisible(true);
+                //c0.setVisible(true);
+                //c1.setVisible(true);
+                //c2.setVisible(true);
             });
-            //play(sdl, cleanSine);
             play(sdl, sine);
-            play(sdl, mSine);
-            play(sdl, sq);
-            play(sdl, sq2);
-            play(sdl, sw);
-            //play(sdl, sine);
+            //play(sdl, mSine);
+            //play(sdl, sq);
+            //play(sdl, sq2);
+            //play(sdl, sw);
 
             sdl.drain();
             sdl.close();
