@@ -17,11 +17,21 @@ import java.awt.*;
 
 public class FrequencyChart extends JFrame {
 
-    byte[] data;
+    short[] data;
     int graphDefinition;
     String title;
 
     public FrequencyChart(byte[] data, int graphDefinition, String title){
+        this.data = new short[data.length];
+        for(int i = 0; i< data.length; i++){
+            this.data[i] = (short) (data[i] * 127);
+        }
+        this.title = title;
+        this.graphDefinition = graphDefinition;
+        initUI();
+    }
+
+    public FrequencyChart(short[] data, int graphDefinition, String title){
         this.data = data;
         this.title = title;
         this.graphDefinition = graphDefinition;
@@ -29,9 +39,9 @@ public class FrequencyChart extends JFrame {
     }
 
     public FrequencyChart(double[] data, int graphDefinition, String title){
-        this.data = new byte[data.length];
+        this.data = new short[data.length];
         for(int i = 0; i< data.length; i++){
-            this.data[i] = (byte) (data[i] * 127);
+            this.data[i] = (short) (data[i] * 16383);
         }
         this.title = title;
         this.graphDefinition = graphDefinition;
