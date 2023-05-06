@@ -17,6 +17,7 @@ import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.DateCell;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
@@ -77,21 +78,56 @@ public class MainSceneController implements Initializable {
         stage.setScene(scene);
         stage.show();
     }
+
     public void addToCheckList(){
         CheckBox cBox = new CheckBox("Hi");
-    
         checkVBox.setPrefHeight((checkVBox.getChildren().size())*74.0);
         checkVBox.getChildren().add(cBox);
     }
     @FXML
     public void addToPaneBox(){
         Pane examplePane = new Pane();
-        examplePane.getChildren().addAll(sharePane.getChildren());
-        examplePane.setPrefHeight(466);
-        examplePane.setPrefWidth(350);
-        examplePane.setBackground(sharePane.getBackground());
-        paneBox.setPrefHeight((paneBox.getChildren().size())*477.0);
+        examplePane.setId("expPane" );
+        TextField tField = new TextField();
+        tField.setPromptText("Aktien Name");
+        tField.setId("txtField");
+        examplePane.getChildren().add(tField);
+        Label pLabel = new Label();
+        pLabel.setId("paneShareLabel");
+        pLabel.setText("Price");
+        pLabel.setLayoutX(26);
+        pLabel.setLayoutY(77);
+        Label tLBLabel = new Label();
+        tLBLabel.setId("paneShareLabel");
+        tLBLabel.setText("Trend Line Break");
+        tLBLabel.setLayoutX(20);
+        tLBLabel.setLayoutY(206);
+        examplePane.getChildren().add(tLBLabel);
+        Label dLabel = new Label();
+        dLabel.setId("paneShareLabel");
+        dLabel.setText("Derivate");
+        dLabel.setLayoutX(20);
+        dLabel.setLayoutY(326);
+        ChoiceBox pChoiceBox = new ChoiceBox<>();
+        pChoiceBox.getItems().addAll(prices);
+        pChoiceBox.setLayoutX(20);
+        pChoiceBox.setLayoutY(135);
+        ChoiceBox tLBChoiceBox = new ChoiceBox<>();
+        tLBChoiceBox.getItems().addAll(trends);
+        tLBChoiceBox.setLayoutX(20);
+        tLBChoiceBox.setLayoutY(262);
+        ChoiceBox dChoiceBox = new ChoiceBox<>();
+        dChoiceBox.getItems().addAll(derivate);
+        dChoiceBox.setLayoutX(20);
+        dChoiceBox.setLayoutY(377);
+        examplePane.getChildren().add(pChoiceBox);
+        examplePane.getChildren().add(tLBChoiceBox);
+        examplePane.getChildren().add(dChoiceBox);
+        examplePane.getChildren().add(dLabel);
+        examplePane.getChildren().add(pLabel);
         paneBox.getChildren().add(examplePane);
+        
+        paneBox.setPrefHeight((paneBox.getChildren().size())*477.0);
     }
     
     LocalDate minDateStart = LocalDate.of(2023, 4, 16);

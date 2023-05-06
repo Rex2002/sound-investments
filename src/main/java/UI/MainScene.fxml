@@ -26,7 +26,7 @@
       </Pane>
       <Pane layoutX="1490.0" layoutY="200.0" prefHeight="355.0" prefWidth="419.0" style="-fx-background-color: #D9D9D9; -fx-background-radius: 30;" />
       <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#121315" height="107.0" layoutX="-3.0" stroke="#121315" strokeType="INSIDE" width="1993.0" />
-      <Button layoutX="1511.0" layoutY="822.0" mnemonicParsing="false" onAction="#addToCheckList" prefHeight="107.0" prefWidth="398.0" style="-fx-background-color: #9C5EEB; -fx-background-radius: 30;" text="Start" textFill="WHITE">
+      <Button layoutX="1511.0" layoutY="822.0" mnemonicParsing="false" onAction="#addToPaneBox" prefHeight="107.0" prefWidth="398.0" style="-fx-background-color: #9C5EEB; -fx-background-radius: 30;" text="Start" textFill="WHITE">
          <font>
             <Font size="50.0" />
          </font>
@@ -44,12 +44,12 @@
                      <children>
                         <Pane fx:id="sharePane" prefHeight="466.0" prefWidth="340.0" style="-fx-background-color: #FFFFFF; -fx-background-radius: 30;">
                            <children>
-                              <Label layoutX="20.0" layoutY="82.0" prefHeight="53.0" prefWidth="165.0" style="-fx-font-style: &quot;Roboto&quot;;" text="Price">
+                              <Label layoutX="26.0" layoutY="77.0" prefHeight="53.0" prefWidth="165.0" style="-fx-font-style: &quot;Roboto&quot;;" text="Price">
                                  <font>
                                     <Font size="36.0" />
                                  </font>
                               </Label>
-                              <Label layoutX="20.0" layoutY="206.0" prefHeight="53.0" prefWidth="321.0" style="-fx-font-style: &quot;Roboto&quot;;" text="Trend Line Breaks">
+                              <Label layoutX="20.0" layoutY="206.0" prefHeight="53.0" prefWidth="286.0" style="-fx-font-style: &quot;Roboto&quot;;" text="Trend Line Breaks">
                                  <font>
                                     <Font size="36.0" />
                                  </font>
@@ -59,17 +59,17 @@
                                     <Font size="36.0" />
                                  </font>
                               </Label>
-                              <ChoiceBox fx:id="priceChoice" layoutX="26.0" layoutY="135.0" prefHeight="61.0" prefWidth="288.0" style="-fx-background-color: #4D505B; -fx-background-radius: 10;" />
+                              <ChoiceBox fx:id="priceChoice" layoutX="20.0" layoutY="135.0" prefHeight="61.0" prefWidth="288.0" style="-fx-background-color: #4D505B; -fx-background-radius: 10;" />
                               <ChoiceBox fx:id="trendLineBreaksChoice" layoutX="20.0" layoutY="262.0" prefHeight="61.0" prefWidth="288.0" style="-fx-background-color: #4D505B; -fx-background-radius: 10;" />
                               <ChoiceBox fx:id="derivateChoice" layoutX="20.0" layoutY="377.0" prefHeight="61.0" prefWidth="288.0" style="-fx-background-color: #4D505B; -fx-background-radius: 10;" />
-                              <TextField layoutX="41.0" layoutY="14.0" prefHeight="77.0" prefWidth="292.0" promptText="Aktien Name" style="-fx-background-color: #FFFFFF; -fx-background-radius: 30;">
+                              <TextField alignment="CENTER" prefHeight="77.0" prefWidth="321.0" promptText="Aktien Name" style="-fx-background-color: #FFFFFF; -fx-background-radius: 30;">
                                  <font>
                                     <Font size="36.0" />
                                  </font>
                               </TextField>
                            </children>
                            <VBox.margin>
-                              <Insets bottom="10.0" />
+                              <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
                            </VBox.margin>
                         </Pane>
                      </children>

@@ -7,6 +7,10 @@
  .choice-box{
     -fx-font-size:15pt;
     -fx-font-weight:bold; 
+    -fx-pref-height: 61px;
+    -fx-pref-width: 286px;
+    -fx-radius: 30.0;
+   -fx-background-color:  #4D505B;
  }
  .choice-box .label{
     -fx-text-fill: rgb(168, 168, 168);
@@ -22,4 +26,29 @@
    
    -fx-pref-height: 74px;
    -fx-pref-width: 680px;
+}
+#expPane{
+   -fx-background-color: white;
+    -fx-background-radius: 30.0;
+    -fx-hgap: 10;
+    -fx-pref-height: 466px;
+    -fx-pref-width: 340px;
+    -fx-padding: 0 0 5 0;
+    -fx-border-insets: 0 0 5 0;
+    -fx-background-insets: 0 0 5 0;
+}
+#txtField{
+   -fx-background-color: white;
+   -fx-background-radius: 30.0;
+   -fx-pref-height: 77px;
+   -fx-pref-width: 321px;
+   -fx-layout-x: 0px;
+   -fx-layout-y: 0px;
+   -fx-font-size: 36;
+   -fx-alignment:center;
+}
+#paneShareLabel{
+   -fx-pref-height: 53px;
+   -fx-pref-width: 286px;
+   -fx-font-size: 36;
 }
