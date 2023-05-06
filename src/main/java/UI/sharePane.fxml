@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.ChoiceBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.Pane?>
+<?import javafx.scene.text.Font?>
+
+<Pane fx:id="sharePane" prefHeight="466.0" prefWidth="340.0" style="-fx-background-color: #FFFFFF; -fx-background-radius: 30;" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1">
+   <children>
+      <Label layoutX="20.0" layoutY="82.0" prefHeight="53.0" prefWidth="165.0" style="-fx-font-style: &quot;Roboto&quot;;" text="Price">
+         <font>
+            <Font size="36.0" />
+         </font>
+      </Label>
+      <Label layoutX="20.0" layoutY="206.0" prefHeight="53.0" prefWidth="321.0" style="-fx-font-style: &quot;Roboto&quot;;" text="Trend Line Breaks">
+         <font>
+            <Font size="36.0" />
+         </font>
+      </Label>
+      <Label layoutX="20.0" layoutY="326.0" prefHeight="53.0" prefWidth="165.0" style="-fx-font-style: &quot;Roboto&quot;;" text="Derivate">
+         <font>
+            <Font size="36.0" />
+         </font>
+      </Label>
+      <ChoiceBox fx:id="priceChoice" layoutX="26.0" layoutY="135.0" prefHeight="61.0" prefWidth="288.0" style="-fx-background-color: #4D505B; -fx-background-radius: 10;" />
+      <ChoiceBox fx:id="trendLineBreaksChoice" layoutX="20.0" layoutY="262.0" prefHeight="61.0" prefWidth="288.0" style="-fx-background-color: #4D505B; -fx-background-radius: 10;" />
+      <ChoiceBox fx:id="derivateChoice" layoutX="20.0" layoutY="377.0" prefHeight="61.0" prefWidth="288.0" style="-fx-background-color: #4D505B; -fx-background-radius: 10;" />
+      <TextField layoutX="41.0" layoutY="14.0" prefHeight="77.0" prefWidth="292.0" promptText="Aktien Name" style="-fx-background-color: #FFFFFF; -fx-background-radius: 30;">
+         <font>
+            <Font size="36.0" />
+         </font>
+      </TextField>
+   </children>
+</Pane>

@@ -11,3 +11,15 @@
  .choice-box .label{
     -fx-text-fill: rgb(168, 168, 168);
 }
+.check-box {
+   -fx-font-size: 36;
+   -fx-padding: 10px;
+}
+.check-box > .box {
+   -fx-padding: 10px;
+}
+.check-box > .viewport{
+   
+   -fx-pref-height: 74px;
+   -fx-pref-width: 680px;
+}
