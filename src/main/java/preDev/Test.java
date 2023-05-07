@@ -19,6 +19,7 @@ public class Test {
         private double ret;
     }
     static int SAMPLE_RATE = 44100;
+    static String waveFileName = "...path...to.../Casio-MT-45-Beguine.wav";
 
     public static void main(String[] args){
         System.out.println("Hello Sound");
@@ -27,8 +28,10 @@ public class Test {
 
     public Test(){
         AudioFormat af = new AudioFormat(SAMPLE_RATE, 16, 1, true, true);
+
         try{
             SourceDataLine sdl = AudioSystem.getSourceDataLine(af);
+            System.out.println("Audio Format: " + af);
             sdl.open(af);
             sdl.start();
             //short[] sine = createSine(440, 8, 127);
@@ -41,6 +44,12 @@ public class Test {
             short[] sine1 = createSine(new double[]{440,  493.88,  523.25,  587.33 }, 4, 16383, adsr);
             short[] sine2 = createSine(new double[]{523.25,  587.33,  659.25,  698.46, }, 8, 12000, adsr);
             short[] addedSine = addArrays(sine1, sine2);
+
+            // TODO transform every method to stereo-audio format!!!
+            // Currently stereo samples can be played, but sounds a bit weird and is only half the speed
+            //short[] drumSample = SampleLoader.loadSample(waveFileName);
+            //short[] out = addArrays(addArrays(addedSine, drumSample), drumSample, drumSample.length);
+
             // mod freq factor of 1.5 seems to resemble a clarinet - though rather rough, could not yet figure out how to add more harmonics
             // TODO add calculation to actually play given freq when modulation and not just gcd of carrier and modulation frequency
             short[] mSine = createModulatedSine(new double[]{440,  493.88,  523.25,  587.33 }, 4, 16383, adsr, 1.5);
@@ -58,10 +67,6 @@ public class Test {
                 //c1.setVisible(true);
                 //c2.setVisible(true);
             });
-            play(sdl, sine);
-            play(sdl, mSine);
-            play(sdl, sine1);
-            play(sdl, sine2);
             play(sdl, addedSine);
 
             sdl.drain();
@@ -72,22 +77,6 @@ public class Test {
     }
 
     // creates a sine wave of given frequency, duration and max amplitude
-    private short[] createSine(int freq, int duration, int amplitude){
-        short[] sin = new short[duration * SAMPLE_RATE];
-        double samplingInterval = (double) SAMPLE_RATE/freq ;
-        //double lfoSamplingInterval = (double) SAMPLE_RATE/2;
-        System.out.println("Frequency of signal: " + freq + " hz");
-        System.out.println("Sampling interval: " + samplingInterval + " hz");
-        for(int i = 0; i < sin.length; i++){
-            samplingInterval = Math.sin(2* Math.PI * i*0.000005);
-            double angle = ((2*Math.PI * i)/(samplingInterval));  // full circle: 2*Math.PI -> one step: divide by sampling interval
-            //double lfo = ((2*Math.PI)/lfoSamplingInterval) * i;
-
-            sin[i] = (short) (Math.sin(angle) * amplitude);
-        }
-        return sin;
-    }
-
     private short[] createSine(double[] freq, int duration, int amplitude){
         short[] sin = new short[duration * SAMPLE_RATE];
         double phase = 0;
@@ -131,7 +120,7 @@ public class Test {
         phases.phase = 0;
         System.out.println("freq: " + Arrays.toString(freq));
         for(int i = 0; i < sq.length; i++){
-            phases = this.advancePhaseSquare(phases, freq[(int) (((double) i/sq.length) * freq.length)]);
+            this.advancePhaseSquare(phases, freq[(int) (((double) i / sq.length) * freq.length)]);
             sq[i] = (short) (phases.ret * amplitude);
         }
         return sq;
@@ -145,7 +134,7 @@ public class Test {
         phases.phase = 0;
         System.out.println("freq: " + Arrays.toString(freq));
         for(int i = 0; i < sq.length; i++){
-            phases = this.advancePhaseSquare(phases, freq[(int) (((double) i/sq.length) * freq.length)]);
+            this.advancePhaseSquare(phases, freq[(int) (((double) i / sq.length) * freq.length)]);
             sq[i] = (short) (phases.ret * amplitude * env.getAmplitudeFactor(i));
         }
         return sq;
@@ -156,7 +145,7 @@ public class Test {
         PhaseContainer phases = new PhaseContainer();
         phases.phase = 0;
         for(int i = 0; i < sw.length; i++){
-            phases = this.advancePhaseSawtooth(phases, freq[(int) (((double) i/sw.length) * freq.length)]);
+            this.advancePhaseSawtooth(phases, freq[(int) (((double) i / sw.length) * freq.length)]);
             sw[i] = (short) (phases.ret * amplitude);
         }
         return sw;
@@ -169,7 +158,7 @@ public class Test {
         PhaseContainer phases = new PhaseContainer();
         phases.phase = 0;
         for(int i = 0; i < sw.length; i++){
-            phases = this.advancePhaseSawtooth(phases, freq[(int) (((double) i/sw.length) * freq.length)]);
+            this.advancePhaseSawtooth(phases, freq[(int) (((double) i / sw.length) * freq.length)]);
 
             sw[i] = (short) (phases.ret * amplitude * env.getAmplitudeFactor(i));
         }
@@ -190,13 +179,17 @@ public class Test {
         }
         return sin;
     }
-    private void play(SourceDataLine s, short[] data){
+    public static void play(SourceDataLine s, short[] data){
         byte[] out = new byte[data.length * 2];
         for(int p = 0; p < data.length; p++){
             out[2*p] = (byte) ((data[p] >> 8) & 0xFF);
             out[2*p+1] = (byte) (data[p] & 0xFF);
         }
-        s.write(out, 0, data.length);
+        s.write(out, 0, out.length);
+    }
+
+    private void play(SourceDataLine s, byte[] data){
+        s.write(data, 0, data.length);
     }
 
     private double advancePhaseSine(double phase, double freq){
@@ -210,7 +203,7 @@ public class Test {
         return phase;
     }
 
-    private PhaseContainer advancePhaseSquare(PhaseContainer phases, double freq){
+    private void advancePhaseSquare(PhaseContainer phases, double freq){
         phases.phase += freq/SAMPLE_RATE;
 
         while (phases.phase > 1.0f){
@@ -225,9 +218,8 @@ public class Test {
         else{
             phases.ret = -1.0f;
         }
-        return phases;
     }
-    private PhaseContainer advancePhaseSawtooth(PhaseContainer phases, double freq){
+    private void advancePhaseSawtooth(PhaseContainer phases, double freq){
         phases.phase += freq/SAMPLE_RATE;
         while(phases.phase > 1.0f)
             phases.phase -= 1.0f;
@@ -235,17 +227,26 @@ public class Test {
         while(phases.phase < 0.0f)
             phases.phase += 1.0f;
         phases.ret = (phases.phase * 2) - 1;
-        return phases;
     }
 
     private static short[] addArrays(short[] first, short[] second) {
+        return addArrays(first, second, 0);
+    }
+
+    private static short[] addArrays(short[] first, short[] second, int start) {
+        System.out.println("Adding arrays of lengths " + first.length + " and " + second.length + ", starting at " + start);
+        // if start is zero, it does not matter which array is longer.
+        // if start is not zero, we assume that the second array is meant to be added at the given position
+        if(start != 0 && first.length < second.length + start){
+            throw new RuntimeException("Illegal array addition, length not matching!");
+        }
         int maxLength = Math.max(first.length, second.length);
         int minLength = Math.min(first.length, second.length);
         double resizingFactor = 16383 / Math.max(findMax(first), findMax(second));
         short[] result = new short[maxLength];
         System.out.println("resizing factor: " + resizingFactor);
 
-        for (int i = 0; i < minLength; i++) {
+        for (int i = start; i < minLength + start; i++) {
             result[i] = (short) (first[i] * resizingFactor + second[i] * resizingFactor);
         }
         if(maxLength == first.length){
