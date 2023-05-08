@@ -7,6 +7,7 @@ import java.net.URISyntaxException;
 import java.net.http.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 import json.JsonPrimitive;
@@ -28,6 +29,8 @@ public class APIReq {
 	private final String apiTokQueryKey;
 	private final String[] apiToks;
 	private int curTokIdx;
+	private Function<JsonPrimitive<?>, HandledPagination> paginationHandler = null;
+	private Consumer<Integer> setQueryPage = null;
 
 	public APIReq(String base, String[] apiToks, AuthPolicy authPolicy, String apiTokQueryKey) {
 		this.base = base.endsWith("/") ? base : base + "/";
@@ -45,6 +48,12 @@ public class APIReq {
 		this.apiToks = apiToks;
 		this.curTokIdx = 0;
 		reset();
+	}
+
+	public void setPaginationHandler(Function<JsonPrimitive<?>, HandledPagination> handler,
+			Consumer<Integer> setQueryPage) {
+		this.paginationHandler = handler;
+		this.setQueryPage = setQueryPage;
 	}
 
 	public void reset() {
@@ -205,5 +214,38 @@ public class APIReq {
 		} else {
 			return new Parser().parseList(body, func);
 		}
+	}
+
+	public <T> List<T> getPaginatedList(Function<JsonPrimitive<?>, T> func, String endPoint, String... queries)
+			throws URISyntaxException, IOException, InterruptedException {
+		if (endPoint.startsWith("/"))
+			endPoint = endPoint.substring(1);
+
+		Parser parser = new Parser();
+		List<T> list = new ArrayList<>();
+		Integer pageCounter = 0;
+		HandledPagination page = null;
+		do {
+			this.setQueryPage.accept(pageCounter);
+			HttpRequest req = prepReq(endPoint, queries);
+			HttpResponse<String> res = client.send(req, HttpResponse.BodyHandlers.ofString());
+			String body = res.body();
+
+			if (debug) {
+				String filename = "resources/" + endPoint.replace("/", "-").replace(" ", "_") + ".json";
+				PrintWriter out = new PrintWriter(filename);
+				out.print(body);
+				out.close();
+				page = this.paginationHandler.apply(parser.parse(filename, body));
+				list.addAll(Parser.applyList(page.getRestJson(), func));
+			} else {
+				page = this.paginationHandler.apply(parser.parse(body));
+				list.addAll(Parser.applyList(page.getRestJson(), func));
+			}
+
+			pageCounter++;
+		} while (!page.isDone());
+
+		return list;
 	}
 }
