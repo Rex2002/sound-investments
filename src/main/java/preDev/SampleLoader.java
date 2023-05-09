@@ -31,7 +31,8 @@ public class SampleLoader {
             System.out.println("Array length: " + out.length);
             return out;
         }catch (IOException | UnsupportedAudioFileException e){
-            throw new RuntimeException("error while reading sample file");
+            e.printStackTrace();
+            throw new RuntimeException("error while reading sample file: ");
         }
 
     }
