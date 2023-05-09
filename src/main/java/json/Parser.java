@@ -215,6 +215,20 @@ public class Parser {
 		}
 	}
 
+	public JsonPrimitive<?> parse(String json) {
+		this.json = json;
+		this.len = json.length();
+		this.lc = 1;
+		this.bol = 0;
+		this.cur = 0;
+		return parse();
+	}
+
+	public JsonPrimitive<?> parse(String filename, String json) {
+		this.filename = filename;
+		return parse(json);
+	}
+
 	/**
 	 * Parses the given JSON-String and returns an object of type `T`
 	 *
@@ -225,13 +239,7 @@ public class Parser {
 	 * @return An object of type `T`
 	 */
 	public <T> T parse(String filename, String json, Function<JsonPrimitive<?>, T> func) {
-		this.filename = filename;
-		this.json = json;
-		this.len = json.length();
-		this.lc = 1;
-		this.bol = 0;
-		this.cur = 0;
-		JsonPrimitive<?> res = parse();
+		JsonPrimitive<?> res = parse(filename, json);
 
 		// Check that we parsed the complete file
 		trimLeft();
@@ -253,15 +261,17 @@ public class Parser {
 		return parse(DEFAULT_FILENAME, json, func);
 	}
 
+	public static <T> List<T> applyList(JsonPrimitive<?> l, Function<JsonPrimitive<?>, T> func) {
+		List<JsonPrimitive<?>> list = l.asList();
+		List<T> res = new ArrayList<>(list.size());
+		for (JsonPrimitive<?> x : list) {
+			res.add(func.apply(x));
+		}
+		return res;
+	}
+
 	public <T> List<T> parseList(String filename, String json, Function<JsonPrimitive<?>, T> func) {
-		return parse(filename, json, l -> {
-			List<JsonPrimitive<?>> list = l.asList();
-			List<T> res = new ArrayList<>(list.size());
-			for (JsonPrimitive<?> x : list) {
-				res.add(func.apply(x));
-			}
-			return res;
-		});
+		return parse(filename, json, l -> applyList(l, func));
 	}
 
 	public <T> List<T> parseList(String json, Function<JsonPrimitive<?>, T> func) {
