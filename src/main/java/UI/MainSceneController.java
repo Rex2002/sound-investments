@@ -81,25 +81,22 @@ public class MainSceneController implements Initializable {
         stage.setScene(scene);
         stage.show();
     }
-   
-    public  void addToCheckList(MouseEvent e){
+   @FXML
+    public  void addToCheckList(){
         CheckBox cBox = new CheckBox("Hi");
-       /* cBox.selectedProperty().addListener(new ChangeListener<Boolean>() {
+       cBox.selectedProperty().addListener(new ChangeListener<Boolean>() {
          @Override
         public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
-            // TODO Auto-generated method stub
             if(newValue){
                 addToPaneBox(cBox.getText());
 
             }else{
-
-                // your checkbox has been unticked. do stuff...
-                // clear the config file
+                
             }
         }
-          });*/
-        checkVBox.getChildren().add(cBox);
+          });
         checkVBox.setPrefHeight((checkVBox.getChildren().size())*74.0);
+        checkVBox.getChildren().add(cBox);
     }
 
     @FXML
