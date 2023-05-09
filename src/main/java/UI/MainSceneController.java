@@ -5,6 +5,8 @@ import java.net.URL;
 import java.time.LocalDate;
 import java.util.ResourceBundle;
 
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -18,6 +20,7 @@ import javafx.scene.control.DateCell;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
@@ -78,18 +81,37 @@ public class MainSceneController implements Initializable {
         stage.setScene(scene);
         stage.show();
     }
-
-    public void addToCheckList(){
+   
+    public  void addToCheckList(MouseEvent e){
         CheckBox cBox = new CheckBox("Hi");
-        checkVBox.setPrefHeight((checkVBox.getChildren().size())*74.0);
+       /* cBox.selectedProperty().addListener(new ChangeListener<Boolean>() {
+         @Override
+        public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
+            // TODO Auto-generated method stub
+            if(newValue){
+                addToPaneBox(cBox.getText());
+
+            }else{
+
+                // your checkbox has been unticked. do stuff...
+                // clear the config file
+            }
+        }
+          });*/
         checkVBox.getChildren().add(cBox);
+        checkVBox.setPrefHeight((checkVBox.getChildren().size())*74.0);
     }
+
     @FXML
-    public void addToPaneBox(){
+    public void addToPaneBox(String txt){
+        paneBox.getChildren().add(createSharePane(txt));
+        paneBox.setPrefHeight((paneBox.getChildren().size())*477.0);
+    }
+    private Pane createSharePane(String name){
         Pane examplePane = new Pane();
         examplePane.setId("expPane" );
         TextField tField = new TextField();
-        tField.setPromptText("Aktien Name");
+        tField.setText(name);
         tField.setId("txtField");
         examplePane.getChildren().add(tField);
         Label pLabel = new Label();
@@ -125,9 +147,7 @@ public class MainSceneController implements Initializable {
         examplePane.getChildren().add(dChoiceBox);
         examplePane.getChildren().add(dLabel);
         examplePane.getChildren().add(pLabel);
-        paneBox.getChildren().add(examplePane);
-        
-        paneBox.setPrefHeight((paneBox.getChildren().size())*477.0);
+        return examplePane;
     }
     
     LocalDate minDateStart = LocalDate.of(2023, 4, 16);

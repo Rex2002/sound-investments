@@ -26,7 +26,7 @@
       </Pane>
       <Pane layoutX="1490.0" layoutY="200.0" prefHeight="355.0" prefWidth="419.0" style="-fx-background-color: #D9D9D9; -fx-background-radius: 30;" />
       <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#121315" height="107.0" layoutX="-3.0" stroke="#121315" strokeType="INSIDE" width="1993.0" />
-      <Button layoutX="1511.0" layoutY="822.0" mnemonicParsing="false" onAction="#addToPaneBox" prefHeight="107.0" prefWidth="398.0" style="-fx-background-color: #9C5EEB; -fx-background-radius: 30;" text="Start" textFill="WHITE">
+      <Button layoutX="1511.0" layoutY="822.0" mnemonicParsing="false" onAction="#addToCheckList" prefHeight="107.0" prefWidth="398.0" style="-fx-background-color: #9C5EEB; -fx-background-radius: 30;" text="Start" textFill="WHITE">
          <font>
             <Font size="50.0" />
          </font>

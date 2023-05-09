@@ -14,7 +14,7 @@
 			"type": "java",
 			"name": "App",
 			"request": "launch",
-			"vmArgs": "--module-path \"C:\\Languages\\Java\\javafx-sdk-19\\lib\" --add-modules javafx.base,javafx.controls,javafx.fxml,javafx.graphics",
+			"vmArgs": "--module-path \"C:\\Users\\liz\\Downloads\\javafx-sdk-20.0.1\\lib\" --add-modules javafx.base,javafx.controls,javafx.fxml,javafx.graphics",
 			"mainClass": "UI.App",
 			"projectName": "SonicMarkets"
 		}
