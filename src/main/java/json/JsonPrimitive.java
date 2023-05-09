@@ -4,6 +4,7 @@ import java.lang.reflect.Type;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import javax.lang.model.type.NullType;
 
@@ -85,5 +86,42 @@ public class JsonPrimitive<T> {
 
 	public static JsonPrimitive<NullType> Null() {
 		return new JsonPrimitive<NullType>(null);
+	}
+
+	@Override
+	public String toString() {
+		if (el == null) {
+			return "null";
+		} else if (el instanceof Number || el instanceof Boolean) {
+			return el.toString();
+		} else if (el instanceof String) {
+			return "\"" + asStr() + "\"";
+		} else if (el instanceof List) {
+			List<JsonPrimitive<?>> l = asList();
+			StringBuilder sb = new StringBuilder("[");
+			for (int i = 0; i < l.size(); i++) {
+				if (i > 0)
+					sb.append(", ");
+				sb.append(l.get(i).toString());
+			}
+			sb.append("]");
+			return sb.toString();
+		} else if (el instanceof HashMap) {
+			HashMap<String, JsonPrimitive<?>> m = asMap();
+			StringBuilder sb = new StringBuilder("{");
+			boolean isFirst = true;
+			for (Entry<String, JsonPrimitive<?>> e : m.entrySet()) {
+				if (!isFirst)
+					sb.append(", ");
+				else
+					isFirst = false;
+				sb.append("\"" + e.getKey() + "\": " + e.getValue().toString());
+			}
+			sb.append("}");
+			return sb.toString();
+		} else {
+			assert false : "unreachable";
+			return "UNREACHABLE";
+		}
 	}
 }
