@@ -157,9 +157,9 @@ public class APIReq {
 			}
 
 			for (int i = 0; i < queries.length; i += 2) {
-				sb.append(queries[0]);
+				sb.append(queries[i + 0]);
 				sb.append('=');
-				sb.append(queries[1]);
+				sb.append(queries[i + 1]);
 				sb.append('&');
 			}
 
