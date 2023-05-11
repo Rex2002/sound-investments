@@ -27,7 +27,19 @@ public class Test {
 	public static void main(String[] args) throws URISyntaxException, IOException, InterruptedException {
 		// testLeeway();
 		// testMarketstack();
-		testYahooETFs();
+		// testYahooETFs();
+		testIndices();
+	}
+
+	public static void testIndices() throws URISyntaxException, IOException, InterruptedException {
+		APIReq twelvedataAPI = new APIReq("https://api.twelvedata.com/", twelvedataAPIToks, AuthPolicy.QUERY,
+				"apikey");
+
+		JsonPrimitive<?> json = twelvedataAPI.getJSON(x -> x, "time_series", "symbol", "IXIC", "interval", "1h",
+				"exchange", "NASDAQ",
+				"type",
+				"Index", "start_date", "2023-05-01", "end_date", "2023-05-11");
+		System.out.println(json);
 	}
 
 	public static void testYahooETFs() throws URISyntaxException, IOException, InterruptedException {
@@ -36,7 +48,7 @@ public class Test {
 		yahooAPI.setQueries("events", "history", "interval", "1d", "includeAdjustedClose", "true", "period1",
 				"1652114187", "period2", "1683650187");
 		APIReq twelvedataAPI = new APIReq("https://api.twelvedata.com/", twelvedataAPIToks, AuthPolicy.QUERY,
-				"api_key");
+				"apikey");
 
 		List<JsonPrimitive<?>> etfs = twelvedataAPI.getJSON(x -> x.asMap().get("data").asList(), "etf");
 		for (JsonPrimitive<?> etf : etfs) {
