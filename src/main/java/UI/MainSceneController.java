@@ -243,6 +243,7 @@ public class MainSceneController implements Initializable {
             
     public void enableBtn(){
         int[] checkArray = new int[10];
+        startBtn.setDisable(false);
         for(int x = 0; x<10; x++){
             if(setArray[x][0] != null)
             {
@@ -263,12 +264,13 @@ public class MainSceneController implements Initializable {
                         startBtn.setDisable(true);
                         break;
                     }
-                    else {
-                        startBtn.setDisable(false);
-                    }
                 }
             }
-        }   
+        }
+        if(endPicker.getValue() == null || startPicker.getValue() == null){
+            startBtn.setDisable(true);
+        }
+        
     }
 }
  
