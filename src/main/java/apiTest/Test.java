@@ -22,7 +22,9 @@ public class Test {
 	static final String[] marketstackAPIToks = { "4b6a78c092537f07bbdedff8f134372d", "0c2e8a9c96f2a74c0049f4b662f47b40",
 			"621fc5e0add038cc7d9697bcb7f15caa", "4312dfd8788579ec14ee9e9c9bec4557",
 			"0a99047c49080d975013978d3609ca9e" };
-	static final String[] twelvedataAPIToks = { "04ed9e666cbb4873ac6d29651e2b4d7e" };
+	static final String[] twelvedataAPIToks = { "04ed9e666cbb4873ac6d29651e2b4d7e", "7e51ed4d1d5f4cbfa6e6bcc8569c1e54",
+			"98888ec975884e98a9555233c3dd59da", "af38d2454c2c4a579768b8262d3e039e",
+			"facbd6808e6d436e95c4935ab8cc082e" };
 
 	public static void main(String[] args) throws URISyntaxException, IOException, InterruptedException {
 		// testLeeway();

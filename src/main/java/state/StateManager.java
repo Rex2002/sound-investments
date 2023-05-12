@@ -1,7 +1,10 @@
 package state;
 
+import java.util.List;
+
 import UI.App;
 import dataRepo.DataRepo;
+import dataRepo.Sonifiable;
 import dataRepo.DataRepo.FilterFlag;
 import javafx.application.Application;
 
@@ -17,7 +20,11 @@ public class StateManager {
 		DataRepo.init();
 
 		try {
-			EventQueues.toUI.put(DataRepo.getSlice(0, 10, FilterFlag.STOCK));
+			List<Sonifiable> l = DataRepo.getAll(FilterFlag.ALL);
+			l = l.subList(0, Math.min(l.size(), 10));
+			for (Sonifiable x : l)
+				System.out.println(x);
+			EventQueues.toUI.put(l);
 		} catch (Exception e) {
 			System.out.println("ERROR:");
 			e.printStackTrace();
