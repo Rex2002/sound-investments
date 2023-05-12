@@ -3,6 +3,7 @@ package apiTest;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.URISyntaxException;
+import java.net.http.HttpResponse;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -21,10 +22,48 @@ public class Test {
 	static final String[] marketstackAPIToks = { "4b6a78c092537f07bbdedff8f134372d", "0c2e8a9c96f2a74c0049f4b662f47b40",
 			"621fc5e0add038cc7d9697bcb7f15caa", "4312dfd8788579ec14ee9e9c9bec4557",
 			"0a99047c49080d975013978d3609ca9e" };
+	static final String[] twelvedataAPIToks = { "04ed9e666cbb4873ac6d29651e2b4d7e" };
 
 	public static void main(String[] args) throws URISyntaxException, IOException, InterruptedException {
 		// testLeeway();
-		testMarketstack();
+		// testMarketstack();
+		// testYahooETFs();
+		testIndices();
+	}
+
+	public static void testIndices() throws URISyntaxException, IOException, InterruptedException {
+		APIReq twelvedataAPI = new APIReq("https://api.twelvedata.com/", twelvedataAPIToks, AuthPolicy.QUERY,
+				"apikey");
+
+		JsonPrimitive<?> json = twelvedataAPI.getJSON(x -> x, "time_series", "symbol", "IXIC", "interval", "1h",
+				"exchange", "NASDAQ",
+				"type",
+				"Index", "start_date", "2023-05-01", "end_date", "2023-05-11");
+		System.out.println(json);
+	}
+
+	public static void testYahooETFs() throws URISyntaxException, IOException, InterruptedException {
+		APIReq yahooAPI = new APIReq("https://query1.finance.yahoo.com/v7/finance/download/", new String[0],
+				AuthPolicy.NONE);
+		yahooAPI.setQueries("events", "history", "interval", "1d", "includeAdjustedClose", "true", "period1",
+				"1652114187", "period2", "1683650187");
+		APIReq twelvedataAPI = new APIReq("https://api.twelvedata.com/", twelvedataAPIToks, AuthPolicy.QUERY,
+				"apikey");
+
+		List<JsonPrimitive<?>> etfs = twelvedataAPI.getJSON(x -> x.asMap().get("data").asList(), "etf");
+		for (JsonPrimitive<?> etf : etfs) {
+			String symbolName = etf.asMap().get("symbol").asStr();
+			HttpResponse<String> res = yahooAPI.makeReq(symbolName, new String[0]);
+			if (200 <= res.statusCode() && res.statusCode() < 300) {
+				PrintWriter out = new PrintWriter("test/" + symbolName + ".csv");
+				out.print(res.body());
+				out.close();
+			}
+		}
+	}
+
+	public static void testTwelveData() throws URISyntaxException, IOException, InterruptedException {
+		// Not really necessary, since it was already tested in testYahooETFs()
 	}
 
 	public static void testMarketstack() throws URISyntaxException, IOException, InterruptedException {

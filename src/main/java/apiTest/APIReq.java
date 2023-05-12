@@ -157,9 +157,9 @@ public class APIReq {
 			}
 
 			for (int i = 0; i < queries.length; i += 2) {
-				sb.append(queries[0]);
+				sb.append(queries[i + 0]);
 				sb.append('=');
-				sb.append(queries[1]);
+				sb.append(queries[i + 1]);
 				sb.append('&');
 			}
 
@@ -168,7 +168,7 @@ public class APIReq {
 		}
 
 		String url = sb.toString().replace(" ", "%20");
-		// System.out.println("URL: " + url);
+		System.out.println("URL: " + url);
 		URI uri = new URI(url);
 
 		HttpRequest.Builder rb = HttpRequest.newBuilder(uri);
@@ -178,12 +178,16 @@ public class APIReq {
 		return rb.build();
 	}
 
+	public HttpResponse<String> makeReq(String endPoint, String... queries)
+			throws URISyntaxException, IOException, InterruptedException {
+		return client.send(prepReq(endPoint, queries), HttpResponse.BodyHandlers.ofString());
+	}
+
 	public <T> T getJSON(Function<JsonPrimitive<?>, T> func, String endPoint, String... queries)
 			throws URISyntaxException, IOException, InterruptedException {
 		if (endPoint.startsWith("/"))
 			endPoint = endPoint.substring(1);
-		HttpRequest req = prepReq(endPoint, queries);
-		HttpResponse<String> res = client.send(req, HttpResponse.BodyHandlers.ofString());
+		HttpResponse<String> res = makeReq(endPoint, queries);
 		String body = res.body();
 
 		if (debug) {
@@ -201,8 +205,7 @@ public class APIReq {
 			throws URISyntaxException, IOException, InterruptedException {
 		if (endPoint.startsWith("/"))
 			endPoint = endPoint.substring(1);
-		HttpRequest req = prepReq(endPoint, queries);
-		HttpResponse<String> res = client.send(req, HttpResponse.BodyHandlers.ofString());
+		HttpResponse<String> res = makeReq(endPoint, queries);
 		String body = res.body();
 
 		if (debug) {
