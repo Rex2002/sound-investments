@@ -8,14 +8,14 @@ import static synth.Test.SAMPLE_RATE;
 
 
 // TODO work in progress -> figure out whether this is acutally needed or if frequency modualtion of sines is the way to go.
-public class RectangleWaveGenerator implements WaveGenerator{
+public class RectangleWaveGenerator{
 
-    @Override
+
     public short[] generate(double freq, int duration, int amplitude) {
         return new short[0];
     }
 
-    @Override
+
     public short[] generate(double[] freq, int duration, int amplitude){
         short[] sq = new short[duration * SAMPLE_RATE * CHANNEL_NO];
         PhaseContainer phases = new PhaseContainer();
@@ -28,7 +28,6 @@ public class RectangleWaveGenerator implements WaveGenerator{
         return sq;
     }
 
-    @Override
     public short[] generate(double[] freq, int duration, int amplitude, Envelope env){
         short[] sq = new short[duration * SAMPLE_RATE * CHANNEL_NO];
         env.setTotalLength(sq.length);
@@ -45,17 +44,14 @@ public class RectangleWaveGenerator implements WaveGenerator{
     }
 
 
-    @Override
     public short[] generate(double[] freq, int duration, int amplitude, double modFactor) {
         return new short[0];
     }
 
-    @Override
     public short[] generate(double[] freq, int duration, int amplitude, Envelope env, double modFactor) {
         return new short[0];
     }
 
-    @Override
     public short[] generate(double[] freq, int duration, int amplitude, Envelope env, double modFactor, Envelope modEnv) {
         return new short[0];
     }

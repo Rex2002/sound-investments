@@ -42,7 +42,9 @@ public class Effect {
         return out;
     }
 
-    public static short[] echo(short[] input, double feedback, int delay){
+    public static short[] echo(short[] input, double[] feedback, int[] delayArray){
+        // TODO fix echo to deal with delayArray instead of fixed value (see Issue #31);
+        int delay = delayArray[0];
         short[] outShort = new short[input.length];
         int[] out = new int[input.length];
         int[] bufferL = new int[input.length / 2];
@@ -55,8 +57,8 @@ public class Effect {
             int inR = input[2 * pos + 1];
             int bL = bufferL[cursor];
             int bR = bufferR[cursor];
-            bufferL[cursor] = (int) ((double) inL + (double) bL * feedback);
-            bufferR[cursor] = (int) ((double) inR + (double) bR * feedback);
+            bufferL[cursor] = (int) ((double) inL + (double) bL * feedback[((int) (2 * (double) pos/input.length) * feedback.length)]);
+            bufferR[cursor] = (int) ((double) inR + (double) bR * feedback[((int) (2 * (double) pos/input.length) * feedback.length)]);
             cursor += 1;
             if(cursor >= delay){
                 cursor = 0;

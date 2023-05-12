@@ -40,13 +40,13 @@ public class Test {
             ADSR adsr = new ADSR(0.2, 0.2, 0.5, 0.3);
             ADSR sevenFivePercent = new ADSR(0.001, 0.001, 0.75, 0.001);
             WaveGenerator generator = new SineWaveGenerator();
-            WaveGenerator rectGenerator = new RectangleWaveGenerator();
+            RectangleWaveGenerator rectGenerator = new RectangleWaveGenerator();
             //boolean[] onOffFilterTest = new boolean[]{true, true, false, false, false, false, false, false};
             //onOffFilterTest = new boolean[]{true, false};
             //short[] sine = Effect.echo(Effect.onOffFilter(createSine(new double[]{440,  493.88,  523.25,  587.33, 440,  493.88,  523.25,  587.33 }, 8, 8000, adsr), onOffFilterTest), 0.5, 44100);
-            short[] sineEcho = Effect.echo(generator.generate(new double[]{440,  493.88,  523.25,  587.33 }, 8, 16383, adsr), 0.9, 15000);
-            short[] sine1 = generator.generate(new double[]{440,  493.88,  523.25,  587.33 }, 4, 16383, adsr);
-            short[] sine2 = generator.generate(new double[]{523.25,  587.33,  659.25,  698.46, }, 8, 12000, adsr);
+            short[] sineEcho = Effect.echo(generator.generate(new double[]{440,  493.88,  523.25,  587.33 }, 8, new short[]{16383}, adsr), new double[]{0.9}, new int[]{15000});
+            short[] sine1 = generator.generate(new double[]{440,  493.88,  523.25,  587.33 }, 4, new short[]{16383}, adsr);
+            short[] sine2 = generator.generate(new double[]{523.25,  587.33,  659.25,  698.46, }, 8, new short[]{12000}, adsr);
             short[] addedSine = addArrays(sine1, sine2);
 
             // Currently stereo samples can be played, but sounds a bit weird and is only half the speed
@@ -58,7 +58,7 @@ public class Test {
 
             // mod freq factor of 1.5 seems to resemble a clarinet - though rather rough, could not yet figure out how to add more harmonics
             // TODO add calculation to actually play given freq when modulation and not just gcd of carrier and modulation frequency
-            short[] mSine = generator.generate(new double[]{900}, 4, 15000,  2/3f);
+            short[] mSine = generator.generate(new double[]{900}, 4, new short[]{15000},  2/3f);
             short[] sq = rectGenerator.generate(new double[]{440,  493.88  }, 2, 8000, adsr);
             short[] sq2 = rectGenerator.generate(new double[]{523.25,  587.33}, 2, 16383, adsr);
             short[] sw = createSawtooth(new double[]{440,  493.88,  523.25,  587.33}, 4, 5000, sevenFivePercent);
