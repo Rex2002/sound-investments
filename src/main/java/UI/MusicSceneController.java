@@ -55,6 +55,6 @@ public class MusicSceneController implements Initializable {
         scene = new Scene(root);
         stage.setScene(scene);
         stage.show();
-       }
+    }
 
 }

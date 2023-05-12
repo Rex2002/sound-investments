@@ -221,7 +221,7 @@ public class MainSceneController implements Initializable {
     LocalDate minDateStart = LocalDate.of(2023, 4, 16);
     LocalDate maxDateStart = LocalDate.now();
 
-    private void updateStartPicker(){   //Datum Blockers
+    private void updateStartPicker(){   //Datum Blockers WARNING: Müsen schauen dass wir die angegebenen Daten bei änderung der Aktien überprüfen
     startPicker.setDayCellFactory(d ->
             new DateCell() {
                @Override public void updateItem(LocalDate item, boolean empty) {
@@ -270,7 +270,7 @@ public class MainSceneController implements Initializable {
         if(endPicker.getValue() == null || startPicker.getValue() == null){
             startBtn.setDisable(true);
         }
-        
+
     }
 }
  
