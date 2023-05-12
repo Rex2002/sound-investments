@@ -3,10 +3,14 @@ package UI;
 import java.io.IOException;
 import java.net.URL;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.ResourceBundle;
 
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
+import javafx.concurrent.ScheduledService;
+import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -20,13 +24,16 @@ import javafx.scene.control.DateCell;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
-import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
-import javafx.scene.text.Text;
 import javafx.stage.Stage;
+import javafx.util.Duration;
+import dataRepo.Sonifiable;
+import state.EventQueues;
 
 public class MainSceneController implements Initializable {
+
+    private CheckEQService service;
 
     @FXML
     private VBox paneBox;
@@ -65,6 +72,7 @@ public class MainSceneController implements Initializable {
     private String[] trends = { "Option 1", "Option 2" };
     @FXML
     private String[] derivate = { "Option 1", "Option 2" };
+
     @Override
     public void initialize(URL arg0, ResourceBundle arg1) {
         categorieChoice.getItems().addAll(categories);
@@ -72,41 +80,60 @@ public class MainSceneController implements Initializable {
         priceChoice.getItems().addAll(prices);
         trendLineBreaksChoice.getItems().addAll(trends);
         derivateChoice.getItems().addAll(derivate);
+
+        service = new CheckEQService();
+        service.setPeriod(Duration.millis(100));
+        service.setOnSucceeded(e -> {
+            List<Sonifiable> v = service.getValue();
+            if (!v.isEmpty()) {
+                for (Sonifiable s : v) {
+                    addToCheckList(s.getName());
+                }
+            }
+        });
+        service.start();
     }
+
     @FXML
     public void switchToMusicScene(ActionEvent event) throws IOException {
         root = FXMLLoader.load(getClass().getResource("MusicScene.fxml"));
-        stage = (Stage)((Node)event.getSource()).getScene().getWindow();
+        stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
         scene = new Scene(root);
         stage.setScene(scene);
         stage.show();
     }
-   @FXML
-    public  void addToCheckList(){
-        CheckBox cBox = new CheckBox("Hi");
-       cBox.selectedProperty().addListener(new ChangeListener<Boolean>() {
-         @Override
-        public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
-            if(newValue){
-                addToPaneBox(cBox.getText());
 
-            }else{
-                
+    @FXML
+    public void printBtnPress() {
+        System.out.println("Button pressed");
+    }
+
+    public void addToCheckList(String name) {
+        CheckBox cBox = new CheckBox(name);
+        cBox.selectedProperty().addListener(new ChangeListener<Boolean>() {
+            @Override
+            public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
+                if (newValue) {
+                    addToPaneBox(cBox.getText());
+
+                } else {
+
+                }
             }
-        }
-          });
-        checkVBox.setPrefHeight((checkVBox.getChildren().size())*74.0);
+        });
+        checkVBox.setPrefHeight((checkVBox.getChildren().size()) * 74.0);
         checkVBox.getChildren().add(cBox);
     }
 
     @FXML
-    public void addToPaneBox(String txt){
+    public void addToPaneBox(String txt) {
         paneBox.getChildren().add(createSharePane(txt));
-        paneBox.setPrefHeight((paneBox.getChildren().size())*477.0);
+        paneBox.setPrefHeight((paneBox.getChildren().size()) * 477.0);
     }
-    private Pane createSharePane(String name){
+
+    private Pane createSharePane(String name) {
         Pane examplePane = new Pane();
-        examplePane.setId("expPane" );
+        examplePane.setId("expPane");
         TextField tField = new TextField();
         tField.setText(name);
         tField.setId("txtField");
@@ -146,27 +173,48 @@ public class MainSceneController implements Initializable {
         examplePane.getChildren().add(pLabel);
         return examplePane;
     }
-    
+
     LocalDate minDateStart = LocalDate.of(2023, 4, 16);
     LocalDate maxDateStart = LocalDate.now();
-    private void updateStartPicker(){
-    startPicker.setDayCellFactory(d ->
-            new DateCell() {
-               @Override public void updateItem(LocalDate item, boolean empty) {
-                      super.updateItem(item, empty);
-                   setDisable(item.isAfter(maxDateStart) || item.isBefore(minDateStart));
-                  }});
-                }
+
+    private void updateStartPicker() {
+        startPicker.setDayCellFactory(d -> new DateCell() {
+            @Override
+            public void updateItem(LocalDate item, boolean empty) {
+                super.updateItem(item, empty);
+                setDisable(item.isAfter(maxDateStart) || item.isBefore(minDateStart));
+            }
+        });
+    }
+
     LocalDate minDateEnd = LocalDate.of(2023, 4, 16);
     LocalDate maxDateEnd = LocalDate.now();
-    private void updateEndPicker(){
-    endPicker.setDayCellFactory(d ->
-            new DateCell() {
-               @Override public void updateItem(LocalDate item, boolean empty) {
-                      super.updateItem(item, empty);
-                   setDisable(item.isAfter(maxDateEnd) || item.isBefore(minDateEnd));
-                  }});
-                }  
-    
+
+    private void updateEndPicker() {
+        endPicker.setDayCellFactory(d -> new DateCell() {
+            @Override
+            public void updateItem(LocalDate item, boolean empty) {
+                super.updateItem(item, empty);
+                setDisable(item.isAfter(maxDateEnd) || item.isBefore(minDateEnd));
+            }
+        });
     }
-               
+
+    private static class CheckEQService extends ScheduledService<List<Sonifiable>> {
+        static List<Sonifiable> l = new ArrayList<>(10);
+
+        @Override
+        protected Task<List<Sonifiable>> createTask() {
+            return new Task<>() {
+                @Override
+                protected List<Sonifiable> call() throws Exception {
+                    l.clear();
+                    while (!EventQueues.toUI.isEmpty())
+                        l = EventQueues.toUI.poll();
+                    return l;
+                }
+            };
+        }
+    }
+
+}
