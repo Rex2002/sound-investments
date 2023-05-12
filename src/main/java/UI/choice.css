@@ -52,3 +52,9 @@
    -fx-pref-width: 286px;
    -fx-font-size: 36;
 }
+#loadBtn{
+   -fx-font-size: 36;
+   -fx-alignment:center;
+   -fx-pref-height: 74px;
+   -fx-pref-width: 680px;
+}

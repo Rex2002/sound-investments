@@ -3,6 +3,8 @@ package UI;
 import java.io.IOException;
 import java.net.URL;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.ResourceBundle;
 
 import javafx.beans.value.ChangeListener;
@@ -14,20 +16,19 @@ import javafx.fxml.Initializable;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
+import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ChoiceBox;
 import javafx.scene.control.DateCell;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
-import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
-import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
 public class MainSceneController implements Initializable {
-
+    //WARNING: Kommentare werden noch normalisiert 
     @FXML
     private VBox paneBox;
     @FXML
@@ -51,10 +52,13 @@ public class MainSceneController implements Initializable {
     @FXML
     private VBox checkVBox;
     @FXML
+    private ArrayList<String> shareCheckName = new ArrayList<>();
+    @FXML
+    private HashMap<String, ArrayList<String>> shareSettingList = new HashMap<String, ArrayList<String>>();
+    @FXML
     private Stage stage;
     private Scene scene;
     private Parent root;
-
     @FXML
     private String[] categories = { "Option 1", "Option 2" };
     @FXML
@@ -65,38 +69,67 @@ public class MainSceneController implements Initializable {
     private String[] trends = { "Option 1", "Option 2" };
     @FXML
     private String[] derivate = { "Option 1", "Option 2" };
+    @FXML
+    private int counter = 1;
     @Override
-    public void initialize(URL arg0, ResourceBundle arg1) {
+    public void initialize(URL arg0, ResourceBundle arg1) { //Initialisierung mit den Optionen
         categorieChoice.getItems().addAll(categories);
         locationChoice.getItems().addAll(locations);
-        priceChoice.getItems().addAll(prices);
-        trendLineBreaksChoice.getItems().addAll(trends);
-        derivateChoice.getItems().addAll(derivate);
     }
     @FXML
-    public void switchToMusicScene(ActionEvent event) throws IOException {
+    public void switchToMusicScene(ActionEvent event) throws IOException { //Wechsel auf die Music Scene
         root = FXMLLoader.load(getClass().getResource("MusicScene.fxml"));
         stage = (Stage)((Node)event.getSource()).getScene().getWindow();
         scene = new Scene(root);
         stage.setScene(scene);
         stage.show();
     }
+    @FXML
+    public void clearCheckList(){
+        checkVBox.getChildren().removeAll();  //Die Checkliste Liste clearen, NOCH TESTEN
+    }
    @FXML
     public  void addToCheckList(){
-        CheckBox cBox = new CheckBox("Hi");
+        if(checkVBox.getChildren().size() < counter*10){
+        CheckBox cBox = new CheckBox("Hi");  // API Text Holen Was bei neu laden einfach weiter hinten abfragen könnten die Size als indicator nehmen
+        if(shareCheckName.contains(cBox.getText())){
+            cBox.setSelected(true);
+        }
        cBox.selectedProperty().addListener(new ChangeListener<Boolean>() {
-         @Override
+        @Override
         public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
             if(newValue){
+                if(paneBox.getChildren().size() < 10){
                 addToPaneBox(cBox.getText());
+                shareCheckName.add(cBox.getText());
+                }
+                else{
+                    cBox.setSelected(false);
+                }
 
             }else{
-                
+                int i = shareCheckName.indexOf(cBox.getText());
+                shareCheckName.remove(cBox.getText());
+                paneBox.getChildren().remove(i);
+                paneBox.prefHeight(paneBox.getChildren().size()*477.0);
             }
         }
           });
         checkVBox.setPrefHeight((checkVBox.getChildren().size())*74.0);
         checkVBox.getChildren().add(cBox);
+        }
+        else{
+            Button loadBtn = new Button("Nächste laden");
+            loadBtn.setOnAction(event ->{
+                loadNew();
+            });
+            checkVBox.setPrefHeight((checkVBox.getChildren().size())*74.0);
+            checkVBox.getChildren().add(loadBtn);
+        }
+    }
+    private void loadNew(){ //Nachladen der Aktien
+        counter++;  // Notfallplan: clearCheckList und dann einfac alle neu laden -> belastend NOCH TESTEN
+        addToCheckList();
     }
 
     @FXML
@@ -104,7 +137,7 @@ public class MainSceneController implements Initializable {
         paneBox.getChildren().add(createSharePane(txt));
         paneBox.setPrefHeight((paneBox.getChildren().size())*477.0);
     }
-    private Pane createSharePane(String name){
+    private Pane createSharePane(String name){ //geht das irgdwie hübscher ?  Wahrscheinlich in CSS Auslagern Teile Davon
         Pane examplePane = new Pane();
         examplePane.setId("expPane" );
         TextField tField = new TextField();
@@ -149,7 +182,8 @@ public class MainSceneController implements Initializable {
     
     LocalDate minDateStart = LocalDate.of(2023, 4, 16);
     LocalDate maxDateStart = LocalDate.now();
-    private void updateStartPicker(){
+
+    private void updateStartPicker(){   //Datum Blockers
     startPicker.setDayCellFactory(d ->
             new DateCell() {
                @Override public void updateItem(LocalDate item, boolean empty) {
@@ -159,7 +193,8 @@ public class MainSceneController implements Initializable {
                 }
     LocalDate minDateEnd = LocalDate.of(2023, 4, 16);
     LocalDate maxDateEnd = LocalDate.now();
-    private void updateEndPicker(){
+
+    private void updateEndPicker(){     //Datum Blockers
     endPicker.setDayCellFactory(d ->
             new DateCell() {
                @Override public void updateItem(LocalDate item, boolean empty) {
@@ -167,6 +202,4 @@ public class MainSceneController implements Initializable {
                    setDisable(item.isAfter(maxDateEnd) || item.isBefore(minDateEnd));
                   }});
                 }  
-    
     }
-               
