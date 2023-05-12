@@ -6,6 +6,7 @@ import synth.envelopes.Envelope;
 import synth.generators.SineWaveGenerator;
 import synth.generators.WaveGenerator;
 
+import static synth.Test.CHANNEL_NO;
 import static synth.Test.SAMPLE_RATE;
 
 public class SynthLine {
@@ -29,7 +30,7 @@ public class SynthLine {
     int length;
     public SynthLine(InstrumentData data, int length){
         this.data = data;
-        out = new short[length * SAMPLE_RATE];
+        out = new short[length * SAMPLE_RATE * CHANNEL_NO];
         this.length = length;
     }
 
@@ -45,7 +46,8 @@ public class SynthLine {
 
     private void applyVolume(){
         for(int i = 0; i < length * SAMPLE_RATE; i++){
-            out[i] = (short) (Short.MAX_VALUE * data.volume[i]);
+            out[2*i] = (short) (Short.MAX_VALUE * data.volume[i]);
+            out[2*i+1] = (short) (Short.MAX_VALUE * data.volume[i]);
         }
     }
 
@@ -77,7 +79,14 @@ public class SynthLine {
     }
 
     private void applyPan(){
-        // TODO WIP
+        for(int pos = 0; pos < out.length; pos+=2){
+            if(data.getPan()[pos/2] < 0){
+                out[pos] = (short) (out[pos] * data.getPan()[pos / 2] * -1);
+            }
+            else if(data.getPan()[pos/2] > 0){
+                out[pos + 1] = (short) (out[pos + 1] * data.getPan()[pos / 2]);
+            }
+        }
     }
 
     private double[] transformNotesToFreq(){
@@ -104,9 +113,7 @@ public class SynthLine {
                 uInstr.setEnvFactors(new double[]{0.1,0.3, 0.5, 0.2});
                 uInstr.setModEnvFactors(new double[]{0.1,0.3, 0.5, 0.2});
             }
-            case SYNTH_TWO -> {
-                throw new RuntimeException("implement instruments");
-            }
+            case SYNTH_TWO -> throw new RuntimeException("implement instruments");
         }
 
         return uInstr;
