@@ -260,21 +260,4 @@ public class Parser {
 	public <T> T parse(String json, Function<JsonPrimitive<?>, T> func) {
 		return parse(DEFAULT_FILENAME, json, func);
 	}
-
-	public static <T> List<T> applyList(JsonPrimitive<?> l, Function<JsonPrimitive<?>, T> func) {
-		List<JsonPrimitive<?>> list = l.asList();
-		List<T> res = new ArrayList<>(list.size());
-		for (JsonPrimitive<?> x : list) {
-			res.add(func.apply(x));
-		}
-		return res;
-	}
-
-	public <T> List<T> parseList(String filename, String json, Function<JsonPrimitive<?>, T> func) {
-		return parse(filename, json, l -> applyList(l, func));
-	}
-
-	public <T> List<T> parseList(String json, Function<JsonPrimitive<?>, T> func) {
-		return parseList(DEFAULT_FILENAME, json, func);
-	}
 }
