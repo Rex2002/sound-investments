@@ -12,6 +12,7 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 import javafx.util.Duration;
+import dataRepo.Sonifiable;
 import state.EventQueues;
 
 // For a wonderful explanation of periodic tasks in javaFX see here:
@@ -27,12 +28,11 @@ public class App extends Application {
       service = new CheckEQService();
       service.setPeriod(Duration.millis(100));
       service.setOnSucceeded(e -> {
-        List<String> v = service.getValue();
+        List<Sonifiable> v = service.getValue();
         if (!v.isEmpty()) {
-          for (String s : v) {
-            System.out.print(s + " ");
+          for (Sonifiable s : v) {
+            System.out.println(s);
           }
-          System.out.print("\n");
         }
       });
 
@@ -56,16 +56,17 @@ public class App extends Application {
     launch(args);
   }
 
-  private static class CheckEQService extends ScheduledService<List<String>> {
-    static List<String> l = new ArrayList<>(10);
+  private static class CheckEQService extends ScheduledService<List<Sonifiable>> {
+    static List<Sonifiable> l = new ArrayList<>(10);
 
     @Override
-    protected Task<List<String>> createTask() {
+    protected Task<List<Sonifiable>> createTask() {
       return new Task<>() {
         @Override
-        protected List<String> call() throws Exception {
+        protected List<Sonifiable> call() throws Exception {
           l.clear();
-          EventQueues.toUI.drainTo(l);
+          while (!EventQueues.toUI.isEmpty())
+            l = EventQueues.toUI.poll();
           return l;
         }
       };
