@@ -83,8 +83,6 @@ public class MainSceneController implements Initializable {
     private String[] trends = { "Option 1", "Option 2" };
     @FXML
     private String[] derivate = { "Option 1", "Option 2" };
-    @FXML
-    private int counter = 1;
 
     @Override
     public void initialize(URL arg0, ResourceBundle arg1) { // Initialisierung mit den Optionen
@@ -119,7 +117,6 @@ public class MainSceneController implements Initializable {
     }
 
     public void addToCheckList(String name) {
-        if (checkVBox.getChildren().size() < counter * 10) {
             CheckBox cBox = new CheckBox(name); // API Text Holen Was bei neu laden einfach weiter hinten abfragen
                                                 // könnten die Size als indicator nehmen
             if (shareCheckName.contains(cBox.getText())) {
@@ -137,6 +134,15 @@ public class MainSceneController implements Initializable {
                         }
 
                     } else {
+                       for(int i = 0; i<10; i++){
+                        if(setArray[i][0] == cBox.getText()){
+                            setArray[i][0] = null;
+                            setArray[i][1] = null;
+                            setArray[i][2] = null;
+                            enableBtn();
+                            setArray[i][3] = null;
+                        }
+                       }
                         int i = shareCheckName.indexOf(cBox.getText());
                         shareCheckName.remove(cBox.getText());
                         paneBox.getChildren().remove(i);
@@ -146,7 +152,7 @@ public class MainSceneController implements Initializable {
             });
             checkVBox.setPrefHeight((checkVBox.getChildren().size()) * 74.0);
             checkVBox.getChildren().add(cBox);
-        } else {
+         if(checkVBox.getChildren().size() == 10){
             Button loadBtn = new Button("Nächste laden");
             loadBtn.setOnAction(event -> {
                 loadNew();
@@ -155,12 +161,21 @@ public class MainSceneController implements Initializable {
             checkVBox.setPrefHeight((checkVBox.getChildren().size()) * 74.0);
             checkVBox.getChildren().add(loadBtn);
         }
-    }
+        }
+    
 
     private void loadNew() { // Nachladen der Aktien
-        counter++; // Notfallplan: clearCheckList und dann einfac alle neu laden -> belastend NOCH
-                   // TESTEN
-        addToCheckList("Hi");
+        service = new CheckEQService();
+        service.setPeriod(Duration.millis(100));
+        service.setOnSucceeded(e -> {
+            List<Sonifiable> v = service.getValue();
+            if (!v.isEmpty()) {
+                for (Sonifiable s : v) {
+                    addToCheckList(s.getName());
+                }
+            }
+        });
+        service.start();
     }
 
     @FXML
@@ -169,8 +184,13 @@ public class MainSceneController implements Initializable {
         paneBox.setPrefHeight((paneBox.getChildren().size()) * 477.0);
     }
 
-    private Pane createSharePane(String name) { // geht das irgdwie hübscher ? Wahrscheinlich in CSS Auslagern Teile
-                                                // Davon
+    private Pane createSharePane(String name) { 
+        for(int x= 0; x<10; x++){
+            if(setArray[x][0]== null){
+                setArray[x][0] = name;
+                break;
+            }
+        }
         Pane examplePane = new Pane();
         examplePane.setId("expPane");
         TextField tField = new TextField();
@@ -200,11 +220,12 @@ public class MainSceneController implements Initializable {
         pChoiceBox.getSelectionModel().selectedIndexProperty().addListener(new ChangeListener<Number>() {
             @Override
             public void changed(ObservableValue<? extends Number> observableValue, Number number, Number number2) {
-                while (setArray[countArray][0] != tField.getText()) {
+                while (setArray[countArray][0] != name) {
                     countArray++;
                 }
-                setArray[countArray][1] = (String) pChoiceBox.getSelectionModel().getSelectedItem();
+                setArray[countArray][1] = (String) pChoiceBox.getValue().toString();
                 countArray = 0;
+                enableBtn();
             }
         });
         ChoiceBox tLBChoiceBox = new ChoiceBox<>();
@@ -214,11 +235,12 @@ public class MainSceneController implements Initializable {
         tLBChoiceBox.getSelectionModel().selectedIndexProperty().addListener(new ChangeListener<Number>() {
             @Override
             public void changed(ObservableValue<? extends Number> observableValue, Number number, Number number2) {
-                while (setArray[countArray][0] != tField.getText()) {
+                while (setArray[countArray][0] != name) {
                     countArray++;
                 }
-                setArray[countArray][2] = (String) tLBChoiceBox.getSelectionModel().getSelectedItem();
+                setArray[countArray][2] = (String) tLBChoiceBox.getValue().toString();
                 countArray = 0;
+                enableBtn();
             }
         });
         ChoiceBox dChoiceBox = new ChoiceBox<>();
@@ -228,11 +250,12 @@ public class MainSceneController implements Initializable {
         dChoiceBox.getSelectionModel().selectedIndexProperty().addListener(new ChangeListener<Number>() {
             @Override
             public void changed(ObservableValue<? extends Number> observableValue, Number number, Number number2) {
-                while (setArray[countArray][0] != tField.getText()) {
+                while (setArray[countArray][0] != name) {
                     countArray++;
                 }
-                setArray[countArray][3] = (String) dChoiceBox.getSelectionModel().getSelectedItem();
+                setArray[countArray][3] = dChoiceBox.getValue().toString(); // Klappt nicht so wie es soll
                 countArray = 0;
+                enableBtn();
             }
         });
         examplePane.getChildren().add(pChoiceBox);
@@ -276,10 +299,12 @@ public class MainSceneController implements Initializable {
                 countArray++;
             }
         }
+        System.out.println("countArray"+ countArray);
         if (countArray == 0) {
             startBtn.setDisable(true);
         } else {
             for (int p = 0; p < countArray; p++) {
+                System.out.println(countArray);
                 for (int c = 1; c < 4; c++) {
                     if (setArray[p][c] == null) {
                         startBtn.setDisable(true);
@@ -291,7 +316,7 @@ public class MainSceneController implements Initializable {
         if (endPicker.getValue() == null || startPicker.getValue() == null) {
             startBtn.setDisable(true);
         }
-
+        countArray = 0;
     }
 
     private static class CheckEQService extends ScheduledService<List<Sonifiable>> {
