@@ -92,9 +92,9 @@ public class MainSceneController implements Initializable {
     public void initialize(URL arg0, ResourceBundle arg1) { // Initialisierung mit den Optionen
         categorieChoice.getItems().addAll(categories);
         locationChoice.getItems().addAll(locations);
-        priceChoice.getItems().addAll(prices);
-        trendLineBreaksChoice.getItems().addAll(trends);
-        derivateChoice.getItems().addAll(derivate);
+        // priceChoice.getItems().addAll(prices);
+        // trendLineBreaksChoice.getItems().addAll(trends);
+        // derivateChoice.getItems().addAll(derivate);
 
         service = new CheckEQService();
         service.setPeriod(Duration.millis(100));
@@ -165,7 +165,7 @@ public class MainSceneController implements Initializable {
     private void loadNew() { // Nachladen der Aktien
         counter++; // Notfallplan: clearCheckList und dann einfac alle neu laden -> belastend NOCH
                    // TESTEN
-        addToCheckList();
+        addToCheckList("Hi");
     }
 
     @FXML
