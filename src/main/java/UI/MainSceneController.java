@@ -1,6 +1,7 @@
 package UI;
 
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.net.URL;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -30,6 +31,8 @@ import javafx.stage.Stage;
 public class MainSceneController implements Initializable {
     //WARNING: Kommentare werden noch normalisiert 
     @FXML
+    private Button startBtn;
+    @FXML
     private VBox paneBox;
     @FXML
     private Label headerTitle;
@@ -53,8 +56,12 @@ public class MainSceneController implements Initializable {
     private VBox checkVBox;
     @FXML
     private ArrayList<String> shareCheckName = new ArrayList<>();
+    // @FXML
+    //private HashMap<String, String[]> shareSettingList = new HashMap<String, String[]>(); Wharscheinlich Löschen
     @FXML
-    private HashMap<String, ArrayList<String>> shareSettingList = new HashMap<String, ArrayList<String>>();
+    private String[][] setArray = new String[10][4];
+    @FXML
+    private int countArray = 0;
     @FXML
     private Stage stage;
     private Scene scene;
@@ -75,6 +82,7 @@ public class MainSceneController implements Initializable {
     public void initialize(URL arg0, ResourceBundle arg1) { //Initialisierung mit den Optionen
         categorieChoice.getItems().addAll(categories);
         locationChoice.getItems().addAll(locations);
+        
     }
     @FXML
     public void switchToMusicScene(ActionEvent event) throws IOException { //Wechsel auf die Music Scene
@@ -98,31 +106,32 @@ public class MainSceneController implements Initializable {
        cBox.selectedProperty().addListener(new ChangeListener<Boolean>() {
         @Override
         public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
-            if(newValue){
-                if(paneBox.getChildren().size() < 10){
-                addToPaneBox(cBox.getText());
-                shareCheckName.add(cBox.getText());
-                }
-                else{
-                    cBox.setSelected(false);
-                }
+                if(newValue){
+                    if(paneBox.getChildren().size() < 10){
+                    addToPaneBox(cBox.getText());
+                    shareCheckName.add(cBox.getText());
+                    }
+                    else{
+                        cBox.setSelected(false);
+                    }
 
-            }else{
-                int i = shareCheckName.indexOf(cBox.getText());
-                shareCheckName.remove(cBox.getText());
-                paneBox.getChildren().remove(i);
-                paneBox.prefHeight(paneBox.getChildren().size()*477.0);
+                }else{
+                    int i = shareCheckName.indexOf(cBox.getText());
+                    shareCheckName.remove(cBox.getText());
+                    paneBox.getChildren().remove(i);
+                    paneBox.prefHeight(paneBox.getChildren().size()*477.0);
+                    }
             }
-        }
-          });
-        checkVBox.setPrefHeight((checkVBox.getChildren().size())*74.0);
-        checkVBox.getChildren().add(cBox);
+            });
+            checkVBox.setPrefHeight((checkVBox.getChildren().size())*74.0);
+            checkVBox.getChildren().add(cBox);
         }
         else{
             Button loadBtn = new Button("Nächste laden");
             loadBtn.setOnAction(event ->{
                 loadNew();
             });
+            loadBtn.setId("loadBtn");
             checkVBox.setPrefHeight((checkVBox.getChildren().size())*74.0);
             checkVBox.getChildren().add(loadBtn);
         }
@@ -164,14 +173,43 @@ public class MainSceneController implements Initializable {
         pChoiceBox.getItems().addAll(prices);
         pChoiceBox.setLayoutX(20);
         pChoiceBox.setLayoutY(135);
+        pChoiceBox.getSelectionModel().selectedIndexProperty().addListener(new ChangeListener<Number>() {
+            @Override
+            public void changed(ObservableValue<? extends Number> observableValue, Number number, Number number2) {
+             while(setArray[countArray][0] != tField.getText()){
+                countArray++;
+             }
+             setArray[countArray][1] = (String) pChoiceBox.getSelectionModel().getSelectedItem();
+             countArray = 0;
+            }
+          });
         ChoiceBox tLBChoiceBox = new ChoiceBox<>();
         tLBChoiceBox.getItems().addAll(trends);
         tLBChoiceBox.setLayoutX(20);
         tLBChoiceBox.setLayoutY(262);
+        tLBChoiceBox.getSelectionModel().selectedIndexProperty().addListener(new ChangeListener<Number>() {
+            @Override
+            public void changed(ObservableValue<? extends Number> observableValue, Number number, Number number2) {
+             while(setArray[countArray][0] != tField.getText()){
+                countArray++;
+             }
+             setArray[countArray][2] = (String) tLBChoiceBox.getSelectionModel().getSelectedItem();
+             countArray = 0;
+            }
+          });
         ChoiceBox dChoiceBox = new ChoiceBox<>();
         dChoiceBox.getItems().addAll(derivate);
         dChoiceBox.setLayoutX(20);
         dChoiceBox.setLayoutY(377);
+        dChoiceBox.getSelectionModel().selectedIndexProperty().addListener(new ChangeListener<Number>() {
+            @Override
+            public void changed(ObservableValue<? extends Number> observableValue, Number number, Number number2) {
+             while(setArray[countArray][0] != tField.getText()){
+                countArray++;
+             }
+             setArray[countArray][3] = (String) dChoiceBox.getSelectionModel().getSelectedItem();
+            countArray = 0;            }
+          });
         examplePane.getChildren().add(pChoiceBox);
         examplePane.getChildren().add(tLBChoiceBox);
         examplePane.getChildren().add(dChoiceBox);
@@ -202,4 +240,35 @@ public class MainSceneController implements Initializable {
                    setDisable(item.isAfter(maxDateEnd) || item.isBefore(minDateEnd));
                   }});
                 }  
+            
+    public void enableBtn(){
+        int[] checkArray = new int[10];
+        for(int x = 0; x<10; x++){
+            if(setArray[x][0] != null)
+            {
+                checkArray[countArray] = x;
+                countArray++;
+            }
+        }
+        if(countArray == 0)
+        {
+            startBtn.setDisable(true);
+        }
+        else{
+            for(int p = 0; p < countArray; p ++)
+            {
+                for(int c = 1; c < 4; c++){
+                    if(setArray[p][c] == null)
+                    {
+                        startBtn.setDisable(true);
+                        break;
+                    }
+                    else {
+                        startBtn.setDisable(false);
+                    }
+                }
+            }
+        }   
     }
+}
+ 
