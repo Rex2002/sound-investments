@@ -168,7 +168,8 @@ public class APIReq {
 		}
 
 		String url = sb.toString().replace(" ", "%20");
-		System.out.println("URL: " + url);
+		if (debug)
+			System.out.println("URL: " + url);
 		URI uri = new URI(url);
 
 		HttpRequest.Builder rb = HttpRequest.newBuilder(uri);
@@ -213,9 +214,9 @@ public class APIReq {
 			PrintWriter out = new PrintWriter(filename);
 			out.print(body);
 			out.close();
-			return new Parser().parseList(filename, body, func);
+			return new Parser().parse(filename, body).applyList(func);
 		} else {
-			return new Parser().parseList(body, func);
+			return new Parser().parse(body).applyList(func);
 		}
 	}
 
@@ -240,10 +241,10 @@ public class APIReq {
 				out.print(body);
 				out.close();
 				page = this.paginationHandler.apply(parser.parse(filename, body));
-				list.addAll(Parser.applyList(page.getRestJson(), func));
+				list.addAll(page.getRestJson().applyList(func));
 			} else {
 				page = this.paginationHandler.apply(parser.parse(body));
-				list.addAll(Parser.applyList(page.getRestJson(), func));
+				list.addAll(page.getRestJson().applyList(func));
 			}
 
 			pageCounter++;
