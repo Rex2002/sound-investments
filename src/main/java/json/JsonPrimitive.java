@@ -1,10 +1,12 @@
 package json;
 
 import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.function.Function;
 
 import javax.lang.model.type.NullType;
 
@@ -81,6 +83,15 @@ public class JsonPrimitive<T> {
 			res.put(key, value);
 		}
 
+		return res;
+	}
+
+	public <S> List<S> applyList(Function<JsonPrimitive<?>, S> func) {
+		List<JsonPrimitive<?>> list = asList();
+		List<S> res = new ArrayList<>(list.size());
+		for (JsonPrimitive<?> x : list) {
+			res.add(func.apply(x));
+		}
 		return res;
 	}
 
