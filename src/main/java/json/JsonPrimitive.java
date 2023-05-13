@@ -87,10 +87,16 @@ public class JsonPrimitive<T> {
 	}
 
 	public <S> List<S> applyList(Function<JsonPrimitive<?>, S> func) {
+		return applyList(func, false);
+	}
+
+	public <S> List<S> applyList(Function<JsonPrimitive<?>, S> func, boolean rmNulls) {
 		List<JsonPrimitive<?>> list = asList();
 		List<S> res = new ArrayList<>(list.size());
 		for (JsonPrimitive<?> x : list) {
-			res.add(func.apply(x));
+			S el = func.apply(x);
+			if (!rmNulls || el != null)
+				res.add(el);
 		}
 		return res;
 	}

@@ -1,27 +1,87 @@
 package dataRepo;
 
 import java.text.SimpleDateFormat;
+import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 
 import apiTest.APIReq;
 import apiTest.AuthPolicy;
+import apiTest.HandledPagination;
 import json.JsonPrimitive;
 
 public class DataRepo {
-	private static SimpleDateFormat fmt = new SimpleDateFormat("yyyy-mm-dd", Locale.US);
+	private static SimpleDateFormat fmtDate = new SimpleDateFormat("yyyy-mm-dd", Locale.US);
+	private static SimpleDateFormat fmtDatetime = new SimpleDateFormat("yyyy-mm-dd hh:mm:ss", Locale.US);
 
-	private static List<Stock> testStocks() {
-		try {
-			return List
-					.of(new Stock("SAP SE", "SAP", "XETRA", fmt.parse("1994-02-01"), fmt.parse("2023-05-12")),
-							new Stock("Siemens Energy AG", "ENR", "XETRA", fmt.parse("2020-09-28"),
-									fmt.parse("2023-05-12")));
-		} catch (Exception e) {
-			return List.of();
+	// private static List<Stock> testStocks() {
+	// try {
+	// return List
+	// .of(new Stock("SAP SE", "SAP", "XETRA", fmtDate.parse("1994-02-01"),
+	// fmtDate.parse("2023-05-12")),
+	// new Stock("Siemens Energy AG", "ENR", "XETRA", fmtDate.parse("2020-09-28"),
+	// fmtDate.parse("2023-05-12")));
+	// } catch (Exception e) {
+	// return List.of();
+	// }
+	// }
+
+	public static enum API {
+		LEEWAY,
+		MARKETSTACK,
+		TWELVEDATA;
+	}
+
+	public static enum IntervalLength {
+		MIN,
+		// MIN5,
+		// MIN30,
+		HOUR,
+		DAY;
+
+		public Instant addToInstant(Instant x) {
+			long millis = 1000;
+			if (this == MIN)
+				millis *= 60;
+			else if (this == HOUR)
+				millis *= 60 * 60;
+			else if (this == DAY)
+				millis *= 60 * 60 * 12;
+			else
+				assert false : "Inexhaustive handling of cases for IntervalLength";
+			long res = x.toEpochMilli() + millis;
+			return Instant.ofEpochMilli(res);
+		}
+
+		public String toString(API api) {
+			if (this == MIN) {
+				if (api == API.LEEWAY)
+					return "1m";
+				else
+					return "1min";
+			} else if (this == HOUR) {
+				if (api == API.MARKETSTACK)
+					return "1hour";
+				else
+					return "1h";
+			} else if (this == DAY) {
+				if (api == API.LEEWAY)
+					assert false : "Daily intervals can't be used for intraday requests in Leeway's API";
+				else if (api == API.MARKETSTACK)
+					return "24hour";
+				else if (api == API.TWELVEDATA)
+					return "1day";
+				else
+					assert false : "Inexhaustive handling of cases for API enum";
+			} else {
+				assert false : "Inexhaustive handling of cases for IntervalLength enum";
+			}
+			return ""; // sto shut up the type checker
 		}
 	}
 
@@ -63,86 +123,83 @@ public class DataRepo {
 
 	private static APIReq apiTwelvedata = new APIReq("https://api.twelvedata.com/", apiToksTwelvedata, AuthPolicy.QUERY,
 			"apikey");
+	private static APIReq apiLeeway = new APIReq("https://api.leeway.tech/api/v1/public/", apiToksLeeway,
+			AuthPolicy.QUERY,
+			"apitoken");
+	private static APIReq apiMarketstack = getApiMarketstack();
+
+	private static APIReq getApiMarketstack() {
+		APIReq api = new APIReq("http://api.marketstack.com/v1/", apiToksMarketstack,
+				AuthPolicy.QUERY,
+				"access_key");
+		api.setQueries("limit", "1000");
+		return api.setPaginationHandler(json -> {
+			JsonPrimitive<?> rest = json.asMap().get("data");
+			HashMap<String, JsonPrimitive<?>> pageMap = json.asMap().get("pagination").asMap();
+			Integer x = pageMap.get("offset").asInt() + pageMap.get("count").asInt();
+			boolean done = x >= 5000; // pageMap.get("total").asInt();
+			return new HandledPagination(rest, done);
+		}, counter -> {
+			api.setQuery("offset", Integer.toString(counter * 1000));
+		});
+	}
 
 	private static List<Stock> stocks = new ArrayList<>(128);
 	private static List<ETF> etfs = new ArrayList<>(128);
 	private static List<Index> indices = new ArrayList<>(128);
 
 	public static void init() {
-		stocks = testStocks();
+		// stocks = testStocks();
 
-		// For debugging only: @Cleanup
-		// apiTwelvedata.setQuery("exchange", "XNYS");
+		// @Cleanup For debugging only
+		apiTwelvedata.setQuery("exchange", "XNYS");
 
-		// try {
-		// stocks = apiTwelvedata.getJSON(x -> x.asMap().get("data"), "stocks")
-		// .applyList(x -> new Stock(x.asMap().get("name").asStr(),
-		// x.asMap().get("symbol").asStr(), x.asMap().get("exchange").asStr()));
+		try {
+			stocks = apiTwelvedata.getJSON(x -> x.asMap().get("data"), "stocks")
+					.applyList(x -> new Stock(x.asMap().get("name").asStr(),
+							x.asMap().get("symbol").asStr(), x.asMap().get("exchange").asStr()));
+			setTradingPeriods(stocks);
 
-		// // @Cleanup Don't repeat the same code 3 times here
-		// // @Performance this could be done much faster by using an unsorted remove
-		// // The most performant option would probably be to write a custom ArrayList,
-		// // which only does unsorted removes and keeps an internal removedAmount
-		// counter
-		// for (int i = 0; i < stocks.size(); i++) {
-		// Sonifiable x = stocks.get(i);
-		// HashMap<String, JsonPrimitive<?>> m = apiTwelvedata.getJSON(json ->
-		// json.asMap(),
-		// "earliest_timestamp", "symbol", x.symbol, "timezone", "UTC", "interval",
-		// "1day");
-		// if (m.get("status").asStr() != "ok") {
-		// // If an error happens, I assume that we don't have access to the given
-		// symbol
-		// // with our free plan
-		// // this might be a wrong assumption in some or even many cases
-		// stocks.remove(i);
-		// } else {
-		// x.earliest = new Date(m.get("unix_time").asLong());
-		// System.out.println(x);
-		// }
-		// }
+			etfs = apiTwelvedata.getJSON(x -> x.asMap().get("data"), "etf")
+					.applyList(x -> new ETF(x.asMap().get("name").asStr(),
+							x.asMap().get("symbol").asStr(), x.asMap().get("exchange").asStr()));
+			setTradingPeriods(etfs);
 
-		// etfs = apiTwelvedata.getJSON(x -> x.asMap().get("data"), "etf")
-		// .applyList(x -> new ETF(x.asMap().get("name").asStr(),
-		// x.asMap().get("symbol").asStr(), x.asMap().get("exchange").asStr()));
-		// for (int i = 0; i < etfs.size(); i++) {
-		// Sonifiable x = etfs.get(i);
-		// HashMap<String, JsonPrimitive<?>> m = apiTwelvedata.getJSON(json ->
-		// json.asMap(),
-		// "earliest_timestamp", "symbol", x.symbol, "timezone", "UTC", "interval",
-		// "1day");
-		// if (m.get("status").asStr() != "ok") {
-		// etfs.remove(i);
-		// } else {
-		// x.earliest = new Date(m.get("unix_time").asLong());
-		// System.out.println(x);
-		// }
-		// }
+			indices = apiTwelvedata.getJSON(x -> x.asMap().get("data"), "indices")
+					.applyList(x -> new Index(x.asMap().get("name").asStr(),
+							x.asMap().get("symbol").asStr(), x.asMap().get("exchange").asStr()));
+			setTradingPeriods(indices);
 
-		// indices = apiTwelvedata.getJSON(x -> x.asMap().get("data"), "indices")
-		// .applyList(x -> new Index(x.asMap().get("name").asStr(),
-		// x.asMap().get("symbol").asStr(), x.asMap().get("exchange").asStr()));
-		// for (int i = 0; i < indices.size(); i++) {
-		// Sonifiable x = indices.get(i);
-		// HashMap<String, JsonPrimitive<?>> m = apiTwelvedata.getJSON(json ->
-		// json.asMap(),
-		// "earliest_timestamp", "symbol", x.symbol, "timezone", "UTC", "interval",
-		// "1day");
-		// if (m.get("status").asStr() != "ok") {
-		// indices.remove(i);
-		// } else {
-		// x.earliest = new Date(m.get("unix_time").asLong());
-		// System.out.println(x);
-		// }
-		// }
+			System.out.println("Init done");
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
 
-		// System.out.println("Amount of stocks: " + stocks.size());
-		// System.out.println("Amount of etfs: " + etfs.size());
-		// System.out.println("Amount of indices: " + indices.size());
-		// System.out.println("Init done");
-		// } catch (Exception e) {
-		// e.printStackTrace();
-		// }
+	private static <T extends Sonifiable> void setTradingPeriods(List<T> list) {
+		// @Cleanup `i < 10` is only for debugging
+		for (int i = 0; i < list.size() && i < 5; i++) {
+			T s = list.get(i);
+			try {
+				HashMap<String, JsonPrimitive<?>> json = apiLeeway.getJSON(x -> x.asMap(),
+						"general/tradingperiod/" + s.getSymbolExchange());
+
+				Calendar startCal = new GregorianCalendar();
+				startCal.setTime(fmtDate.parse(json.get("start").asStr()));
+				s.setEarliest(startCal);
+
+				Calendar endCal = new GregorianCalendar();
+				endCal.setTime(fmtDate.parse(json.get("end").asStr()));
+				s.setLatest(endCal);
+			} catch (Exception e) {
+				// We assume tht if an error occured, that we don't have access to the given
+				// symbol
+				// This might be a wrong assumption
+				System.out.println("Remove element");
+				list.remove(i);
+				i--;
+			}
+		}
 	}
 
 	public static List<Sonifiable> findByPrefix(String prefix, FilterFlag... filters) {
@@ -196,5 +253,42 @@ public class DataRepo {
 				return x;
 		}
 		return null;
+	}
+
+	public static List<Price> getPrices(Sonifiable s, Calendar start, Calendar end, IntervalLength interval) {
+		try {
+			String is = interval.toString(API.TWELVEDATA);
+			return apiTwelvedata.getJSON(x -> x.asMap().get("values"), "time_series", "interval", is, "start_date",
+					formatDate(start), "end_date", formatDate(end), "timezone", "UTC").applyList(x -> {
+						try {
+							HashMap<String, JsonPrimitive<?>> m = x.asMap();
+							Instant startTime = fmtDatetime.parse(m.get("datetime").asStr()).toInstant();
+							Instant endTime = interval.addToInstant(startTime);
+							return new Price(start, startTime, endTime, m.get("open").asDouble(),
+									m.get("close").asDouble(), m.get("low").asDouble(), m.get("high").asDouble());
+						} catch (Exception e) {
+							return null;
+						}
+					}, true);
+
+		} catch (Exception e) {
+			// @Checkin Make sure we want to indicate errors like this
+			return null;
+		}
+	}
+
+	public static String formatDate(Calendar date) {
+		return paddedParse(date.get(Calendar.YEAR), 4, '0') + "-" + paddedParse(date.get(Calendar.MONTH), 2, '0') + "-"
+				+ paddedParse(date.get(Calendar.DAY_OF_MONTH), 2, '0');
+	}
+
+	public static String paddedParse(int x, int length, char pad) {
+		StringBuffer sb = new StringBuffer(length);
+		String xs = String.valueOf(x);
+		sb.insert(length - xs.length(), xs);
+		for (int i = 0; i < length - xs.length(); i++) {
+			sb.insert(i, pad);
+		}
+		return sb.toString();
 	}
 }
