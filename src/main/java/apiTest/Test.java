@@ -26,14 +26,14 @@ public class Test {
 			"98888ec975884e98a9555233c3dd59da", "af38d2454c2c4a579768b8262d3e039e",
 			"facbd6808e6d436e95c4935ab8cc082e" };
 
-	public static void main(String[] args) throws URISyntaxException, IOException, InterruptedException {
+	public static void main(String[] args) throws URISyntaxException, IOException, InterruptedException, APIErr {
 		// testLeeway();
 		// testMarketstack();
 		// testYahooETFs();
 		testIndices();
 	}
 
-	public static void testIndices() throws URISyntaxException, IOException, InterruptedException {
+	public static void testIndices() throws URISyntaxException, IOException, InterruptedException, APIErr {
 		APIReq twelvedataAPI = new APIReq("https://api.twelvedata.com/", twelvedataAPIToks, AuthPolicy.QUERY,
 				"apikey");
 
@@ -44,7 +44,7 @@ public class Test {
 		System.out.println(json);
 	}
 
-	public static void testYahooETFs() throws URISyntaxException, IOException, InterruptedException {
+	public static void testYahooETFs() throws URISyntaxException, IOException, InterruptedException, APIErr {
 		APIReq yahooAPI = new APIReq("https://query1.finance.yahoo.com/v7/finance/download/", new String[0],
 				AuthPolicy.NONE);
 		yahooAPI.setQueries("events", "history", "interval", "1d", "includeAdjustedClose", "true", "period1",
@@ -64,11 +64,11 @@ public class Test {
 		}
 	}
 
-	public static void testTwelveData() throws URISyntaxException, IOException, InterruptedException {
+	public static void testTwelveData() throws URISyntaxException, IOException, InterruptedException, APIErr {
 		// Not really necessary, since it was already tested in testYahooETFs()
 	}
 
-	public static void testMarketstack() throws URISyntaxException, IOException, InterruptedException {
+	public static void testMarketstack() throws URISyntaxException, IOException, InterruptedException, APIErr {
 		APIReq marketstackAPI = new APIReq("http://api.marketstack.com/v1/", marketstackAPIToks, AuthPolicy.QUERY,
 				"access_key");
 		marketstackAPI.setQueries("limit", "1000");
@@ -90,22 +90,25 @@ public class Test {
 		out.close();
 	}
 
-	public static void testLeeway() throws URISyntaxException, IOException, InterruptedException {
-		APIReq leewayAPI = new APIReq("https://api.leeway.tech/api/v1/public/", leewayAPIToks, AuthPolicy.QUERY,
-				"apitoken");
+	// public static void testLeeway() throws URISyntaxException, IOException,
+	// InterruptedException {
+	// APIReq leewayAPI = new APIReq("https://api.leeway.tech/api/v1/public/",
+	// leewayAPIToks, AuthPolicy.QUERY,
+	// "apitoken");
 
-		List<Exchange> exchanges = leewayAPI.getJSONList(
-				x -> new Exchange(x.asMap().get("Name").asStr(), x.asMap().get("Code").asStr()),
-				"general/exchanges");
+	// List<Exchange> exchanges = leewayAPI.getJSONList(
+	// x -> new Exchange(x.asMap().get("Name").asStr(),
+	// x.asMap().get("Code").asStr()),
+	// "general/exchanges");
 
-		List<Stock> stocks = new ArrayList<>();
-		for (Exchange exchange : exchanges) {
-			stocks.addAll(leewayAPI.getJSONList(
-					x -> new Stock(x.asMap().get("name").asStr(), x.asMap().get("code").asStr(),
-							x.asMap().get("exchange").asStr(), x.asMap().get("type").asStr()),
-					"general/symbols/" + exchange.code));
-		}
+	// List<Stock> stocks = new ArrayList<>();
+	// for (Exchange exchange : exchanges) {
+	// stocks.addAll(leewayAPI.getJSONList(
+	// x -> new Stock(x.asMap().get("name").asStr(), x.asMap().get("code").asStr(),
+	// x.asMap().get("exchange").asStr(), x.asMap().get("type").asStr()),
+	// "general/symbols/" + exchange.code));
+	// }
 
-		System.out.println("Amount of available stocks: " + stocks.size());
-	}
+	// System.out.println("Amount of available stocks: " + stocks.size());
+	// }
 }
