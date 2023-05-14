@@ -35,52 +35,44 @@ public class Test {
             System.out.println("Audio Format: " + af);
             sdl.open(af);
             sdl.start();
-            //short[] sine = createSine(440, 8, 127);
-            //double[] lfo = createDoubleSine(1, 4, 1);
             ADSR adsr = new ADSR(0.2, 0.2, 0.5, 0.3);
             ADSR sevenFivePercent = new ADSR(0.001, 0.001, 0.75, 0.001);
             WaveGenerator generator = new SineWaveGenerator();
             RectangleWaveGenerator rectGenerator = new RectangleWaveGenerator();
-            //boolean[] onOffFilterTest = new boolean[]{true, true, false, false, false, false, false, false};
-            //onOffFilterTest = new boolean[]{true, false};
-            //short[] sine = Effect.echo(Effect.onOffFilter(createSine(new double[]{440,  493.88,  523.25,  587.33, 440,  493.88,  523.25,  587.33 }, 8, 8000, adsr), onOffFilterTest), 0.5, 44100);
+
             short[] sineEcho = Effect.echo(generator.generate(new double[]{440,  493.88,  523.25,  587.33 }, 8, new short[]{16383}, adsr), new double[]{0.9}, new int[]{15000});
             short[] sine1 = generator.generate(new double[]{440,  493.88,  523.25,  587.33 }, 4, new short[]{16383}, adsr);
             short[] sine2 = generator.generate(new double[]{523.25,  587.33,  659.25,  698.46, }, 8, new short[]{12000}, adsr);
             short[] addedSine = addArrays(sine1, sine2);
 
+            short[] fftSine = generator.generate(880, 1, new short[]{16383});
+            short[] fftSine2 = generator.generate(440, 1, new short[]{16383});
+            short[] addedfftSine  = addArrays(fftSine2, fftSine);
+            short[] addedFilteredSine = Effect.simplestLowPass(addedfftSine);
+            Complex[] fftOfSine = Util.fft(Arrays.copyOfRange(addedfftSine,0 , 2048));
+            Complex[] fftOfFilteredSine = Util.fft(Arrays.copyOfRange(addedFilteredSine, 0, 2048));
             // Currently stereo samples can be played, but sounds a bit weird and is only half the speed
             short[] drumSample = SampleLoader.loadSample(waveFileName);
-            short[] funkSample = SampleLoader.loadSample(waveFileFunk);
-            short[] LoFiSample = SampleLoader.loadSample(waveFileLoFi);
-            short[] out1 = addArrays(addedSine, drumSample);
-            short[] out2 = addArrays(out1, funkSample, drumSample.length);
+
 
             // mod freq factor of 1.5 seems to resemble a clarinet - though rather rough, could not yet figure out how to add more harmonics
             // TODO add calculation to actually play given freq when modulation and not just gcd of carrier and modulation frequency
             short[] mSine = generator.generate(new double[]{900}, 4, new short[]{15000},  2/3f);
-            short[] sq = rectGenerator.generate(new double[]{440,  493.88  }, 2, 8000, adsr);
-            short[] sq2 = rectGenerator.generate(new double[]{523.25,  587.33}, 2, 16383, adsr);
             short[] sw = createSawtooth(new double[]{440,  493.88,  523.25,  587.33}, 4, 5000, sevenFivePercent);
             //short[] combined = multiplyArrays(sine, lfo);
             EventQueue.invokeLater(() -> {
-                FrequencyChart c = new FrequencyChart(Arrays.copyOfRange(mSine, 0, 1000), 1, "Sine1");
-                FrequencyChart c0 = new FrequencyChart(Arrays.copyOfRange(sine2, 0, 44100), 1, "Sine2");
+                FrequencyChart c = new FrequencyChart(Arrays.copyOfRange(fftOfSine, 0, fftOfSine.length), 1, "Unfiltered");
+                FrequencyChart c0 = new FrequencyChart(Arrays.copyOfRange(fftOfFilteredSine, 0, fftOfFilteredSine.length), 1, "Filtered");
                 FrequencyChart c1 = new FrequencyChart(Arrays.copyOfRange(addedSine, 0, 44100), 1, "Added");
                 FrequencyChart c2 = new FrequencyChart(Arrays.copyOfRange(sw,0, 44100),1, "Sawtooth");
                 c.setVisible(true);
-                //c0.setVisible(true);
+                c0.setVisible(true);
                 //c1.setVisible(true);
                 //c2.setVisible(true);
             });
-            //play(sdl, drumSample);
-            play(sdl, mSine);
-            //play(sdl, sw);
-            //play(sdl, addedSine);
-            //play(sdl, out1);
-            //play(sdl, out2);
-//            play(sdl, sineEcho);
-            //play(sdl, LoFiSample);
+
+            play(sdl, addedfftSine);
+            play(sdl, addedFilteredSine);
             sdl.drain();
             sdl.close();
         } catch (LineUnavailableException e) {

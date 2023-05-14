@@ -82,8 +82,8 @@ public class Effect {
         //TODO untested!!
         short[] out = new short[in.length];
         for(int i = 2; i< in.length; i += 2){
-            out[i] = (short) (in[i] + in[i - 2]);
-            out[i + 1] = (short) (in[i + 1] + in[i - 1]);
+            out[i] += (short) (in[i] - in[i - 2]);
+            out[i + 1] += (short) (in[i + 1] - in[i - 1]);
         }
         return out;
     }
