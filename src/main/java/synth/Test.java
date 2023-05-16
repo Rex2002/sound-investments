@@ -43,14 +43,15 @@ public class Test {
             short[] sine2 = generator.generate(new double[]{523.25,  587.33,  659.25,  698.46, }, 8, new short[]{12000}, adsr);
             short[] addedSine = addArrays(sine1, sine2);
 
-            short[] fftSine = generator.generate(880, 1, new short[]{16383});
-            short[] fftSine2 = generator.generate(440, 1, new short[]{16383});
-            short[] addedfftSine  = addArrays(fftSine2, fftSine);
-            short[] addedFilteredSine = Effect.simplestLowPass(addedfftSine);
-            Complex[] fftOfSine = Util.fft(Arrays.copyOfRange(addedfftSine,0 , 2048));
+            //short[] fft = generator.generate(880, 2, new short[]{16383});
+            //short[] fft2 = generator.generate(440, 2, new short[]{16383});
+            //short[] addedfftSine  = addArrays(fftSine2, fftSine);
+            short[] fft = SampleLoader.loadSample(waveFileName);
+            short[] addedFilteredSine = Effect.fourStageLowPass(fft, 1200);
+            Complex[] fftOfSine = Util.fft(Arrays.copyOfRange(fft,0 , 2048));
             Complex[] fftOfFilteredSine = Util.fft(Arrays.copyOfRange(addedFilteredSine, 0, 2048));
             // Currently stereo samples can be played, but sounds a bit weird and is only half the speed
-            short[] drumSample = SampleLoader.loadSample(waveFileName);
+            //short[] drumSample = SampleLoader.loadSample(waveFileName);
 
             InstrumentData instrData = new InstrumentData();
             instrData.setInstrument(InstrumentEnum.SYNTH_ONE);
@@ -75,9 +76,9 @@ public class Test {
                 //c1.setVisible(true);
                 //c2.setVisible(true);
             });
-            play(sdl, synthLine);
-            //play(sdl, addedfftSine);
-            //play(sdl, addedFilteredSine);
+            //play(sdl, synthLine);
+            play(sdl, fft);
+            play(sdl, addedFilteredSine);
             sdl.drain();
             sdl.close();
         } catch (LineUnavailableException e) {

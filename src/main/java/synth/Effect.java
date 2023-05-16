@@ -1,6 +1,8 @@
 package synth;
 
 
+import static synth.Test.SAMPLE_RATE;
+
 public class Effect {
 
     public static short[] onOffFilter(short[] input, boolean[] onOff){
@@ -45,46 +47,67 @@ public class Effect {
     public static short[] echo(short[] input, double[] feedback, int[] delayArray){
         // TODO fix echo to deal with delayArray instead of fixed value (see Issue #31);
         int delay = delayArray[0];
-        short[] outShort = new short[input.length];
-        int[] out = new int[input.length];
-        int[] bufferL = new int[input.length / 2];
-        int[] bufferR = new int[input.length / 2];
+        double[] preOut = new double[input.length];
+        double[] bufferL = new double[input.length / 2];
+        double[] bufferR = new double[input.length / 2];
         bufferL[0] = input[0];
         bufferR[0] = input[1];
         int cursor = 0;
         for(int pos = 0; pos < input.length/2; pos++){
-            int inL = input[2 * pos];
-            int inR = input[2 * pos + 1];
-            int bL = bufferL[cursor];
-            int bR = bufferR[cursor];
-            bufferL[cursor] = (int) ((double) inL + (double) bL * feedback[((int) (2 * (double) pos/input.length) * feedback.length)]);
-            bufferR[cursor] = (int) ((double) inR + (double) bR * feedback[((int) (2 * (double) pos/input.length) * feedback.length)]);
+            double inL = input[2 * pos];
+            double inR = input[2 * pos + 1];
+            double bL = bufferL[cursor];
+            double bR = bufferR[cursor];
+            bufferL[cursor] = ( inL +  bL * feedback[((int) (2 * (double) pos/input.length) * feedback.length)]);
+            bufferR[cursor] = ( inR +  bR * feedback[((int) (2 * (double) pos/input.length) * feedback.length)]);
             cursor += 1;
             if(cursor >= delay){
                 cursor = 0;
             }
-            out[2 * pos] = bL;
-            out[2 * pos + 1] = bR;
+            preOut[2 * pos] = bL;
+            preOut[2 * pos + 1] = bR;
         }
-        int max = Math.max(Util.findMax(out), Math.abs(Util.findMin(out)));
-        double resizingFactor = 1;
-        if(max >= Short.MAX_VALUE){
-            // this is slightly less than short.MAX_VALUE to avoid punctual overdrive
-            resizingFactor = 32755f / max;
-        }
-        for (int i = 0; i < out.length; i++) {
-            outShort[i] = (short) (out[i] * resizingFactor);
-        }
-        return outShort;
+        return Util.scale(preOut);
     }
 
     public static short[] simplestLowPass(short[] in){
-        //TODO untested!!
+        //TODO untested, probably stupid!!
         short[] out = new short[in.length];
         for(int i = 2; i< in.length; i += 2){
             out[i] += (short) (in[i] - in[i - 2]);
             out[i + 1] += (short) (in[i + 1] - in[i - 1]);
         }
         return out;
+    }
+
+    public static short[] fourStageLowPass(short[] in, double kadov){
+        double x = Math.pow(Math.E, -14.4445 * kadov/SAMPLE_RATE);
+        double[] a_coefficients = new double[]{Math.pow((1-x), 4)};
+        double[] b_coefficients = new double[]{4*x, -6 * x * x, 4 * Math.pow(x,3), - Math.pow(x,4)};
+
+        return IIR(in, a_coefficients, b_coefficients);
+    }
+
+    private static short[] IIR(short[] in, double[] a_coefficients, double[] b_coefficients){
+        int filterStart = Math.max(a_coefficients.length, b_coefficients.length);
+
+        double[] preOut = new double[in.length];
+        for(int i = 0; i < filterStart; i++){
+            preOut[i] = in[i];
+        }
+        for(int i = filterStart; i < in.length; i++){
+            double value = 0;
+            for(int aPointer = 0; aPointer < a_coefficients.length; aPointer++){
+                value += in[i - aPointer] * a_coefficients[aPointer];
+            }
+            for(int bPointer = 0; bPointer < b_coefficients.length; bPointer++){
+                value += preOut[i -(bPointer + 1)] * b_coefficients[bPointer];
+            }
+            preOut[i] = value;
+        }
+        short maxIn = Util.findMax(in);
+        double maxPreOut = Util.findMax(preOut);
+        System.out.println("MaxIn " +  maxIn + ", maxPreOut" +  maxPreOut);
+        return Util.scale(preOut);
     }
 }
