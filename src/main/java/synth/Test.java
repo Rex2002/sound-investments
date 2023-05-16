@@ -36,9 +36,7 @@ public class Test {
             sdl.open(af);
             sdl.start();
             ADSR adsr = new ADSR(0.2, 0.2, 0.5, 0.3);
-            ADSR sevenFivePercent = new ADSR(0.001, 0.001, 0.75, 0.001);
             WaveGenerator generator = new SineWaveGenerator();
-            RectangleWaveGenerator rectGenerator = new RectangleWaveGenerator();
 
             short[] sineEcho = Effect.echo(generator.generate(new double[]{440,  493.88,  523.25,  587.33 }, 8, new short[]{16383}, adsr), new double[]{0.9}, new int[]{15000});
             short[] sine1 = generator.generate(new double[]{440,  493.88,  523.25,  587.33 }, 4, new short[]{16383}, adsr);
@@ -54,25 +52,32 @@ public class Test {
             // Currently stereo samples can be played, but sounds a bit weird and is only half the speed
             short[] drumSample = SampleLoader.loadSample(waveFileName);
 
+            InstrumentData instrData = new InstrumentData();
+            instrData.setInstrument(InstrumentEnum.SYNTH_ONE);
+            instrData.setVolume(new double[]{15000, 7000});
+            instrData.setPitch(new int[]{69, 70, 80});
+            instrData.setPan(new double[]{0});
+
+            short[] synthLine = new SynthLine(instrData, 6).synthesize();
+
 
             // mod freq factor of 1.5 seems to resemble a clarinet - though rather rough, could not yet figure out how to add more harmonics
             // TODO add calculation to actually play given freq when modulation and not just gcd of carrier and modulation frequency
             short[] mSine = generator.generate(new double[]{900}, 4, new short[]{15000},  2/3f);
-            short[] sw = createSawtooth(new double[]{440,  493.88,  523.25,  587.33}, 4, 5000, sevenFivePercent);
             //short[] combined = multiplyArrays(sine, lfo);
             EventQueue.invokeLater(() -> {
                 FrequencyChart c = new FrequencyChart(Arrays.copyOfRange(fftOfSine, 0, fftOfSine.length), 1, "Unfiltered");
                 FrequencyChart c0 = new FrequencyChart(Arrays.copyOfRange(fftOfFilteredSine, 0, fftOfFilteredSine.length), 1, "Filtered");
                 FrequencyChart c1 = new FrequencyChart(Arrays.copyOfRange(addedSine, 0, 44100), 1, "Added");
-                FrequencyChart c2 = new FrequencyChart(Arrays.copyOfRange(sw,0, 44100),1, "Sawtooth");
+                //FrequencyChart c2 = new FrequencyChart(Arrays.copyOfRange(sw,0, 44100),1, "Sawtooth");
                 c.setVisible(true);
                 c0.setVisible(true);
                 //c1.setVisible(true);
                 //c2.setVisible(true);
             });
-
-            play(sdl, addedfftSine);
-            play(sdl, addedFilteredSine);
+            play(sdl, synthLine);
+            //play(sdl, addedfftSine);
+            //play(sdl, addedFilteredSine);
             sdl.drain();
             sdl.close();
         } catch (LineUnavailableException e) {
