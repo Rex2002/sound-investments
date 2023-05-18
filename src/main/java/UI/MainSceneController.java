@@ -41,6 +41,8 @@ public class MainSceneController implements Initializable {
     @FXML
     private VBox paneBox;
     @FXML
+    private VBox instBox;
+    @FXML
     private Label headerTitle;
     @FXML
     private ChoiceBox<String> categorieChoice;
@@ -177,7 +179,145 @@ public class MainSceneController implements Initializable {
         });
         service.start();
     }
-
+    public void addInstrumenet(){    
+        instBox.getChildren().add(createInstPane("test"));
+        instBox.setPrefHeight(((instBox.getChildren().size())+1) * 685.0);
+    }
+    public Pane createInstPane(String name){
+        Pane instPane = new Pane();
+        instPane.setId("instPane");
+        TextField txtField = new TextField();
+        txtField.setText(name);
+        txtField.setId("txtField");
+        instPane.getChildren().add(txtField);
+        Label vLabel = new Label();
+        vLabel.setId("paneShareLabel");
+        vLabel.setText("Volume");
+        vLabel.setLayoutX(14);
+        vLabel.setLayoutY(109);
+        instPane.getChildren().add(vLabel);
+        Label pitLabel = new Label();
+        pitLabel.setId("paneShareLabel");
+        pitLabel.setText("Pitch");
+        pitLabel.setLayoutX(14);
+        pitLabel.setLayoutY(249);
+        instPane.getChildren().add(pitLabel);
+        Label echoLabel = new Label();
+        echoLabel.setId("paneShareLabel");
+        echoLabel.setText("Echo");
+        echoLabel.setLayoutX(14);
+        echoLabel.setLayoutY(389);
+        instPane.getChildren().add(echoLabel);
+        Label highLabel = new Label();
+        highLabel.setId("paneShareLabel");
+        highLabel.setText("High-");
+        highLabel.setLayoutX(14);
+        highLabel.setLayoutY(509);
+        instPane.getChildren().add(highLabel);
+        Label passLabel = new Label();
+        passLabel.setId("paneShareLabel");
+        passLabel.setText("pass");
+        passLabel.setLayoutX(14);
+        passLabel.setLayoutY(569);
+        instPane.getChildren().add(passLabel);
+        ChoiceBox v1ChoiceBox = new ChoiceBox<>();
+        v1ChoiceBox.setId("instChoice");
+        v1ChoiceBox.getItems().addAll(prices);
+        v1ChoiceBox.setLayoutX(153);
+        v1ChoiceBox.setLayoutY(74);
+        v1ChoiceBox.getSelectionModel().selectedIndexProperty().addListener(new ChangeListener<Number>() {
+            @Override
+            public void changed(ObservableValue<? extends Number> observableValue, Number number, Number number2) {
+                //make something
+            }
+        });
+        ChoiceBox v2ChoiceBox = new ChoiceBox<>();
+        v2ChoiceBox.setId("instChoice");
+        v2ChoiceBox.getItems().addAll(prices);
+        v2ChoiceBox.setLayoutX(153);
+        v2ChoiceBox.setLayoutY(141);
+        v2ChoiceBox.getSelectionModel().selectedIndexProperty().addListener(new ChangeListener<Number>() {
+            @Override
+            public void changed(ObservableValue<? extends Number> observableValue, Number number, Number number2) {
+                //make something
+            }
+        });
+        ChoiceBox p1ChoiceBox = new ChoiceBox<>();
+        p1ChoiceBox.setId("instChoice");
+        p1ChoiceBox.getItems().addAll(prices);
+        p1ChoiceBox.setLayoutX(153);
+        p1ChoiceBox.setLayoutY(217);
+        p1ChoiceBox.getSelectionModel().selectedIndexProperty().addListener(new ChangeListener<Number>() {
+            @Override
+            public void changed(ObservableValue<? extends Number> observableValue, Number number, Number number2) {
+                //make something
+            }
+        });
+        ChoiceBox p2ChoiceBox = new ChoiceBox<>();
+        p2ChoiceBox.setId("instChoice");
+        p2ChoiceBox.getItems().addAll(prices);
+        p2ChoiceBox.setLayoutX(153);
+        p2ChoiceBox.setLayoutY(284);
+        p2ChoiceBox.getSelectionModel().selectedIndexProperty().addListener(new ChangeListener<Number>() {
+            @Override
+            public void changed(ObservableValue<? extends Number> observableValue, Number number, Number number2) {
+                //make something
+            }
+        });
+        ChoiceBox e1ChoiceBox = new ChoiceBox<>();
+        e1ChoiceBox.setId("instChoice");
+        e1ChoiceBox.getItems().addAll(prices);
+        e1ChoiceBox.setLayoutX(153);
+        e1ChoiceBox.setLayoutY(360);
+        e1ChoiceBox.getSelectionModel().selectedIndexProperty().addListener(new ChangeListener<Number>() {
+            @Override
+            public void changed(ObservableValue<? extends Number> observableValue, Number number, Number number2) {
+                //make something
+            }
+        });
+        ChoiceBox e2ChoiceBox = new ChoiceBox<>();
+        e2ChoiceBox.setId("instChoice");
+        e2ChoiceBox.getItems().addAll(prices);
+        e2ChoiceBox.setLayoutX(153);
+        e2ChoiceBox.setLayoutY(427);
+        e2ChoiceBox.getSelectionModel().selectedIndexProperty().addListener(new ChangeListener<Number>() {
+            @Override
+            public void changed(ObservableValue<? extends Number> observableValue, Number number, Number number2) {
+                //make something
+            }
+        });
+        ChoiceBox h1ChoiceBox = new ChoiceBox<>();
+        h1ChoiceBox.setId("instChoice");
+        h1ChoiceBox.getItems().addAll(prices);
+        h1ChoiceBox.setLayoutX(153);
+        h1ChoiceBox.setLayoutY(503);
+        v1ChoiceBox.getSelectionModel().selectedIndexProperty().addListener(new ChangeListener<Number>() {
+            @Override
+            public void changed(ObservableValue<? extends Number> observableValue, Number number, Number number2) {
+                //make something
+            }
+        });
+        ChoiceBox h2ChoiceBox = new ChoiceBox<>();
+        h2ChoiceBox.setId("instChoice");
+        h2ChoiceBox.getItems().addAll(prices);
+        h2ChoiceBox.setLayoutX(153);
+        h2ChoiceBox.setLayoutY(570);
+        h2ChoiceBox.getSelectionModel().selectedIndexProperty().addListener(new ChangeListener<Number>() {
+            @Override
+            public void changed(ObservableValue<? extends Number> observableValue, Number number, Number number2) {
+                //make something
+            }
+        });
+        instPane.getChildren().add(p1ChoiceBox);
+        instPane.getChildren().add(p2ChoiceBox);
+        instPane.getChildren().add(e1ChoiceBox);
+        instPane.getChildren().add(e2ChoiceBox);
+        instPane.getChildren().add(h1ChoiceBox);
+        instPane.getChildren().add(h2ChoiceBox);
+        instPane.getChildren().add(v1ChoiceBox);
+        instPane.getChildren().add(v2ChoiceBox);
+        return instPane;
+    }
     @FXML
     public void addToPaneBox(String txt) {
         paneBox.getChildren().add(createSharePane(txt));
