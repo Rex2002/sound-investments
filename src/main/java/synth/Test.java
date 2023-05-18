@@ -4,7 +4,12 @@ package synth;
 
 
 import synth.envelopes.ADSR;
-import synth.generators.*;
+import synth.fx.Effect;
+import synth.fx.FilterData;
+import synth.generators.PhaseAdvancers;
+import synth.generators.PhaseContainer;
+import synth.generators.SineWaveGenerator;
+import synth.generators.WaveGenerator;
 
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioSystem;
@@ -47,7 +52,11 @@ public class Test {
             //short[] fft2 = generator.generate(440, 2, new short[]{16383});
             //short[] addedfftSine  = addArrays(fftSine2, fftSine);
             short[] fft = SampleLoader.loadSample(waveFileName);
-            short[] addedFilteredSine = Effect.fourStageLowPass(fft, 1200);
+            FilterData filterData = new FilterData();
+            filterData.setCutoff(new double[] {1200, 6000});
+            filterData.setOrder(new double[]{0.5});
+            filterData.setHighPass(false);
+            short[] addedFilteredSine = Effect.IIR(fft, filterData);
             Complex[] fftOfSine = Util.fft(Arrays.copyOfRange(fft,0 , 2048));
             Complex[] fftOfFilteredSine = Util.fft(Arrays.copyOfRange(addedFilteredSine, 0, 2048));
             // Currently stereo samples can be played, but sounds a bit weird and is only half the speed
@@ -58,6 +67,7 @@ public class Test {
             instrData.setVolume(new double[]{15000, 7000});
             instrData.setPitch(new int[]{69, 70, 80});
             instrData.setPan(new double[]{0});
+            instrData.setFilterData(filterData);
 
             short[] synthLine = new SynthLine(instrData, 6).synthesize();
 

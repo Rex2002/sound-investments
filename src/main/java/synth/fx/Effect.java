@@ -1,9 +1,13 @@
-package synth;
+package synth.fx;
 
+
+import synth.Util;
 
 import static synth.Test.SAMPLE_RATE;
 
 public class Effect {
+
+    static double maxGain = 1;
 
     public static short[] onOffFilter(short[] input, boolean[] onOff){
         double decayScalingFactor = 1; // controls how fast the sound decreases on change on -> off
@@ -70,44 +74,80 @@ public class Effect {
         return Util.scale(preOut);
     }
 
-    public static short[] simplestLowPass(short[] in){
-        //TODO untested, probably stupid!!
-        short[] out = new short[in.length];
-        for(int i = 2; i< in.length; i += 2){
-            out[i] += (short) (in[i] - in[i - 2]);
-            out[i + 1] += (short) (in[i + 1] - in[i - 1]);
-        }
-        return out;
-    }
 
-    public static short[] fourStageLowPass(short[] in, double kadov){
-        double x = Math.pow(Math.E, -14.4445 * kadov/SAMPLE_RATE);
-        double[] a_coefficients = new double[]{Math.pow((1-x), 4)};
-        double[] b_coefficients = new double[]{4*x, -6 * x * x, 4 * Math.pow(x,3), - Math.pow(x,4)};
-
-        return IIR(in, a_coefficients, b_coefficients);
-    }
-
-    private static short[] IIR(short[] in, double[] a_coefficients, double[] b_coefficients){
-        int filterStart = Math.max(a_coefficients.length, b_coefficients.length);
+    public static short[] IIR(short[] in, FilterData filterData){
+        Coefficients c = new Coefficients();
+        FILTER_TYPES ft = filterData.highPass ? FILTER_TYPES.HIGH : FILTER_TYPES.LOW;
+        double[] kadov = filterData.getCutoff();
+        // TODO create relation between order and bandwidth;
+        double[] bandwidth = filterData.getOrder();
+        calculateCoefficients(kadov[0], 0.5f, c, ft);
+        int filterStart = 2 * Math.max(c.aCoefficients.length, c.bCoefficients.length);
 
         double[] preOut = new double[in.length];
         for(int i = 0; i < filterStart; i++){
             preOut[i] = in[i];
         }
         for(int i = filterStart; i < in.length; i++){
+            calculateCoefficients(kadov[(int) (((double) (i-filterStart)/(in.length-filterStart)) * kadov.length)],0.5f, c, ft);
             double value = 0;
-            for(int aPointer = 0; aPointer < a_coefficients.length; aPointer++){
-                value += in[i - aPointer] * a_coefficients[aPointer];
+            for(int aPointer = 0; aPointer < c.aCoefficients.length; aPointer++){
+                value += in[i - 2 * aPointer] * c.aCoefficients[aPointer];
             }
-            for(int bPointer = 0; bPointer < b_coefficients.length; bPointer++){
-                value += preOut[i -(bPointer + 1)] * b_coefficients[bPointer];
+            for(int bPointer = 0; bPointer < c.bCoefficients.length; bPointer++){
+                value += preOut[i - 2 * (bPointer + 1)] * c.bCoefficients[bPointer];
             }
             preOut[i] = value;
         }
         short maxIn = Util.findMax(in);
         double maxPreOut = Util.findMax(preOut);
-        System.out.println("MaxIn " +  maxIn + ", maxPreOut" +  maxPreOut);
+        System.out.println("MaxIn " +  maxIn + ", maxPreOut: " +  maxPreOut);
         return Util.scale(preOut);
     }
+
+    private static void calculateCoefficients(double kadov, double bandwidth, Coefficients c, FILTER_TYPES filterType){
+        double t = Math.pow(10, Math.abs(maxGain) /20);
+        double x = Math.tan(Math.PI * kadov/SAMPLE_RATE);
+        double norm, a0, a1, a2, b1, b2;
+
+        switch (filterType){
+            case FOUR_STAGE_LOW -> {
+                x = Math.pow(Math.E, -14.4445 * kadov/SAMPLE_RATE);
+                c.aCoefficients = new double[]{
+                        Math.pow((1-x), 4)
+                };
+                c.bCoefficients = new double[]{
+                        4*x,
+                        -6 * x * x,
+                        4 * Math.pow(x,3),
+                        - Math.pow(x,4)
+                };
+
+            }
+            case LOW -> {
+                norm = 1 / (1 + x / bandwidth + x * x);
+                a0 = x * x * norm;
+                a1 = 2 * a0;
+                a2 = a0;
+                b1 = 2 * (x * x - 1) * norm;
+                b2 = (1 - x / bandwidth + x * x) * norm;
+                c.aCoefficients = new double[]{a0,a1,a2};
+                c.bCoefficients = new double[]{-b1, -b2};
+
+            }
+            case HIGH -> {
+                norm = 1 / (1 + x / bandwidth + x * x);
+                a0 = 1 * norm;
+                a1 = -2 * a0;
+                a2 = a0;
+                b1 = 2 * (x * x - 1) * norm;
+                b2 = (1 - x / bandwidth + x * x) * norm;
+                c.aCoefficients = new double[]{a0,a1,a2};
+                c.bCoefficients = new double[]{-b1, -b2};
+
+            }
+        }
+
+    }
+
 }
