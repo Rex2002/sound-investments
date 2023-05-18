@@ -28,7 +28,8 @@ public class StateManager {
 				for (Sonifiable x : l)
 					System.out.println(x);
 				Sonifiable x = l.get(0);
-				List<Price> prices = DataRepo.getPrices(x, x.getEarliest(), x.getLatest(), IntervalLength.DAY);
+				List<Price> prices = DataRepo.getPrices(x, x.getEarliest(), x.getLatest(),
+						IntervalLength.DAY);
 				for (Price p : prices.subList(0, Math.min(prices.size(), 10)))
 					System.out.println(p);
 				EventQueues.toUI.put(l);

@@ -1,35 +1,62 @@
 package dataRepo;
 
-import java.text.SimpleDateFormat;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Date;
-import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Locale;
 
 import apiTest.APIReq;
 import apiTest.AuthPolicy;
 import apiTest.HandledPagination;
 import json.JsonPrimitive;
+import json.Parser;
 
 public class DataRepo {
-	private static SimpleDateFormat fmtDate = new SimpleDateFormat("yyyy-mm-dd", Locale.US);
-	private static SimpleDateFormat fmtDatetime = new SimpleDateFormat("yyyy-mm-dd hh:mm:ss", Locale.US);
+	private static List<Stock> testStocks() {
+		try {
+			return List
+					.of(
+							new Stock("SAP SE", "SAP", "XETRA", Util.calFromDateStr("1994-02-01"),
+									Util.calFromDateStr("2023-05-17")),
+							new Stock("Siemens Energy AG", "ENR", "XETRA", Util.calFromDateStr("2020-09-28"),
+									Util.calFromDateStr("2023-05-17")),
+							new Stock("Dropbox Inc", "1Q5", "XETRA", Util.calFromDateStr("2021-01-07"),
+									Util.calFromDateStr("2023-05-17")),
+							new Stock("1&1 AG", "1U1", "XETRA", Util.calFromDateStr("1998-12-04"),
+									Util.calFromDateStr("2023-05-17")),
+							new Stock("123fahrschule SE", "123F", "XETRA", Util.calFromDateStr("2021-11-02"),
+									Util.calFromDateStr("2023-05-17")));
+		} catch (Exception e) {
+			return List.of();
+		}
+	}
 
-	// private static List<Stock> testStocks() {
-	// try {
-	// return List
-	// .of(new Stock("SAP SE", "SAP", "XETRA", fmtDate.parse("1994-02-01"),
-	// fmtDate.parse("2023-05-12")),
-	// new Stock("Siemens Energy AG", "ENR", "XETRA", fmtDate.parse("2020-09-28"),
-	// fmtDate.parse("2023-05-12")));
-	// } catch (Exception e) {
-	// return List.of();
-	// }
-	// }
+	private static List<Price> testPrices() {
+		try {
+			String fname = "./src/main/resources/TestPrices.json";
+			String json = Files.readString(Path.of(fname));
+			Parser parser = new Parser();
+			List<Price> prices = parser.parse(fname, json).applyList(x -> {
+				try {
+					HashMap<String, JsonPrimitive<?>> m = x.asMap();
+					Calendar startDay = Util.calFromDateStr(m.get("datetime").asStr());
+					Instant startTime = Util.fmtDatetime.parse(m.get("datetime").asStr()).toInstant();
+					Instant endTime = IntervalLength.HOUR.addToInstant(startTime);
+
+					return new Price(startDay, startTime, endTime, m.get("open").asDouble(),
+							m.get("close").asDouble(), m.get("low").asDouble(), m.get("high").asDouble());
+				} catch (Exception e) {
+					return null;
+				}
+			}, true);
+			return prices;
+		} catch (Exception e) {
+			return List.of();
+		}
+	}
 
 	public static enum API {
 		LEEWAY,
@@ -149,31 +176,33 @@ public class DataRepo {
 	private static List<Index> indices = new ArrayList<>(128);
 
 	public static void init() {
-		// stocks = testStocks();
+		// @Cleanup for Development & Testing only
+		stocks = testStocks();
+		return;
 
 		// @Cleanup For debugging only
-		apiTwelvedata.setQuery("exchange", "XNYS");
+		// apiTwelvedata.setQuery("exchange", "XNYS");
 
-		try {
-			stocks = apiTwelvedata.getJSON(x -> x.asMap().get("data"), "stocks")
-					.applyList(x -> new Stock(x.asMap().get("name").asStr(),
-							x.asMap().get("symbol").asStr(), x.asMap().get("exchange").asStr()));
-			setTradingPeriods(stocks);
+		// try {
+		// stocks = apiTwelvedata.getJSON(x -> x.asMap().get("data"), "stocks")
+		// .applyList(x -> new Stock(x.asMap().get("name").asStr(),
+		// x.asMap().get("symbol").asStr(), x.asMap().get("exchange").asStr()));
+		// setTradingPeriods(stocks);
 
-			etfs = apiTwelvedata.getJSON(x -> x.asMap().get("data"), "etf")
-					.applyList(x -> new ETF(x.asMap().get("name").asStr(),
-							x.asMap().get("symbol").asStr(), x.asMap().get("exchange").asStr()));
-			setTradingPeriods(etfs);
+		// etfs = apiTwelvedata.getJSON(x -> x.asMap().get("data"), "etf")
+		// .applyList(x -> new ETF(x.asMap().get("name").asStr(),
+		// x.asMap().get("symbol").asStr(), x.asMap().get("exchange").asStr()));
+		// setTradingPeriods(etfs);
 
-			indices = apiTwelvedata.getJSON(x -> x.asMap().get("data"), "indices")
-					.applyList(x -> new Index(x.asMap().get("name").asStr(),
-							x.asMap().get("symbol").asStr(), x.asMap().get("exchange").asStr()));
-			setTradingPeriods(indices);
+		// indices = apiTwelvedata.getJSON(x -> x.asMap().get("data"), "indices")
+		// .applyList(x -> new Index(x.asMap().get("name").asStr(),
+		// x.asMap().get("symbol").asStr(), x.asMap().get("exchange").asStr()));
+		// setTradingPeriods(indices);
 
-			System.out.println("Init done");
-		} catch (Exception e) {
-			e.printStackTrace();
-		}
+		// System.out.println("Init done");
+		// } catch (Exception e) {
+		// e.printStackTrace();
+		// }
 	}
 
 	private static <T extends Sonifiable> void setTradingPeriods(List<T> list) {
@@ -183,14 +212,8 @@ public class DataRepo {
 			try {
 				HashMap<String, JsonPrimitive<?>> json = apiLeeway.getJSON(x -> x.asMap(),
 						"general/tradingperiod/" + s.getSymbolExchange());
-
-				Calendar startCal = new GregorianCalendar();
-				startCal.setTime(fmtDate.parse(json.get("start").asStr()));
-				s.setEarliest(startCal);
-
-				Calendar endCal = new GregorianCalendar();
-				endCal.setTime(fmtDate.parse(json.get("end").asStr()));
-				s.setLatest(endCal);
+				s.setEarliest(Util.calFromDateStr(json.get("start").asStr()));
+				s.setLatest(Util.calFromDateStr(json.get("end").asStr()));
 			} catch (Exception e) {
 				// We assume tht if an error occured, that we don't have access to the given
 				// symbol
@@ -256,39 +279,32 @@ public class DataRepo {
 	}
 
 	public static List<Price> getPrices(Sonifiable s, Calendar start, Calendar end, IntervalLength interval) {
-		try {
-			String is = interval.toString(API.TWELVEDATA);
-			return apiTwelvedata.getJSON(x -> x.asMap().get("values"), "time_series", "interval", is, "start_date",
-					formatDate(start), "end_date", formatDate(end), "timezone", "UTC").applyList(x -> {
-						try {
-							HashMap<String, JsonPrimitive<?>> m = x.asMap();
-							Instant startTime = fmtDatetime.parse(m.get("datetime").asStr()).toInstant();
-							Instant endTime = interval.addToInstant(startTime);
-							return new Price(start, startTime, endTime, m.get("open").asDouble(),
-									m.get("close").asDouble(), m.get("low").asDouble(), m.get("high").asDouble());
-						} catch (Exception e) {
-							return null;
-						}
-					}, true);
+		return testPrices();
 
-		} catch (Exception e) {
-			// @Checkin Make sure we want to indicate errors like this
-			return null;
-		}
-	}
+		// try {
+		// String is = interval.toString(API.TWELVEDATA);
+		// return apiTwelvedata.getJSON(x -> x.asMap().get("values"), "time_series",
+		// "interval", is, "start_date",
+		// Util.formatDate(start), "end_date", Util.formatDate(end), "timezone",
+		// "UTC").applyList(x -> {
+		// try {
+		// HashMap<String, JsonPrimitive<?>> m = x.asMap();
+		// Calendar startDay = Util.calFromDateStr(m.get("datetime").asStr());
+		// Instant startTime =
+		// Util.fmtDatetime.parse(m.get("datetime").asStr()).toInstant();
+		// Instant endTime = interval.addToInstant(startTime);
 
-	public static String formatDate(Calendar date) {
-		return paddedParse(date.get(Calendar.YEAR), 4, '0') + "-" + paddedParse(date.get(Calendar.MONTH), 2, '0') + "-"
-				+ paddedParse(date.get(Calendar.DAY_OF_MONTH), 2, '0');
-	}
+		// return new Price(startDay, startTime, endTime, m.get("open").asDouble(),
+		// m.get("close").asDouble(), m.get("low").asDouble(),
+		// m.get("high").asDouble());
+		// } catch (Exception e) {
+		// return null;
+		// }
+		// }, true);
 
-	public static String paddedParse(int x, int length, char pad) {
-		StringBuffer sb = new StringBuffer(length);
-		String xs = String.valueOf(x);
-		sb.insert(length - xs.length(), xs);
-		for (int i = 0; i < length - xs.length(); i++) {
-			sb.insert(i, pad);
-		}
-		return sb.toString();
+		// } catch (Exception e) {
+		// // @Checkin Make sure we want to indicate errors like this
+		// return null;
+		// }
 	}
 }

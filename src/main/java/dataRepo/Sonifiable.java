@@ -94,8 +94,8 @@ public abstract class Sonifiable {
 				" name='" + getName() + "'" +
 				", symbol='" + getSymbol() + "'" +
 				", exchange='" + getExchange() + "'" +
-				", earliest='" + DataRepo.formatDate(getEarliest()) + "'" +
-				", latest='" + DataRepo.formatDate(getLatest()) + "'" +
+				", earliest='" + Util.formatDate(getEarliest()) + "'" +
+				", latest='" + Util.formatDate(getLatest()) + "'" +
 				"}";
 	}
 }
