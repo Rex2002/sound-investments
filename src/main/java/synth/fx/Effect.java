@@ -77,7 +77,7 @@ public class Effect {
 
     public static short[] IIR(short[] in, FilterData filterData){
         Coefficients c = new Coefficients();
-        FILTER_TYPES ft = filterData.highPass ? FILTER_TYPES.HIGH : FILTER_TYPES.LOW;
+        FilterTypesEnum ft = filterData.highPass ? FilterTypesEnum.HIGH : FilterTypesEnum.LOW;
         double[] kadov = filterData.getCutoff();
         // TODO create relation between order and bandwidth;
         double[] bandwidth = filterData.getOrder();
@@ -105,7 +105,7 @@ public class Effect {
         return Util.scale(preOut);
     }
 
-    private static void calculateCoefficients(double kadov, double bandwidth, Coefficients c, FILTER_TYPES filterType){
+    private static void calculateCoefficients(double kadov, double bandwidth, Coefficients c, FilterTypesEnum filterType){
         double t = Math.pow(10, Math.abs(maxGain) /20);
         double x = Math.tan(Math.PI * kadov/SAMPLE_RATE);
         double norm, a0, a1, a2, b1, b2;

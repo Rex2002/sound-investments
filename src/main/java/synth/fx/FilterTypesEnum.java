@@ -1,6 +1,6 @@
 package synth.fx;
 
-public enum FILTER_TYPES {
+public enum FilterTypesEnum {
     //SINGLE_POLE_LOW,
     //SINGLE_POLE_HIGH,
     FOUR_STAGE_LOW,
