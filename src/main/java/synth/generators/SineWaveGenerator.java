@@ -48,6 +48,8 @@ public class SineWaveGenerator implements WaveGenerator{
         short[] sin = new short[duration * SAMPLE_RATE * CHANNEL_NO];
         env.setTotalLength(sin.length);
         env.setNoOfTones(freq.length);
+        modEnv.setTotalLength(sin.length);
+        modEnv.setNoOfTones(freq.length);
         double phase = 0;
         double mPhase = 0; // modulation phase
         double sin1;

@@ -17,14 +17,17 @@ import java.awt.*;
 
 public class FrequencyChart extends JFrame {
 
-    short[] data;
+    double[] data;
+    Complex[] complexData;
     int graphDefinition;
     String title;
 
+    boolean useFFT = false;
+
     public FrequencyChart(byte[] data, int graphDefinition, String title){
-        this.data = new short[data.length];
+        this.data = new double[data.length];
         for(int i = 0; i< data.length; i++){
-            this.data[i] = (short) (data[i] * 127);
+            this.data[i] = (data[i] * 127);
         }
         this.title = title;
         this.graphDefinition = graphDefinition;
@@ -32,14 +35,28 @@ public class FrequencyChart extends JFrame {
     }
 
     public FrequencyChart(short[] data, int graphDefinition, String title){
-        this.data = data;
+        this.data = new double[data.length];
+        for(int i = 0; i<data.length; i++){
+            this.data[i] = data[i];
+        }
+        this.title = title;
+        this.graphDefinition = graphDefinition;
+        initUI();
+    }
+
+    public FrequencyChart(Complex[] data, int graphDefinition, String title){
+        useFFT = true;
+        this.complexData = new Complex[data.length];
+        for (int i = 0; i < data.length; i++) {
+            this.complexData[i] = data[i];
+        }
         this.title = title;
         this.graphDefinition = graphDefinition;
         initUI();
     }
 
     public FrequencyChart(double[] data, int graphDefinition, String title){
-        this.data = new short[data.length];
+        this.data = new double[data.length];
         for(int i = 0; i< data.length; i++){
             this.data[i] = (short) (data[i] * 16383);
         }
@@ -65,8 +82,18 @@ public class FrequencyChart extends JFrame {
 
     private XYDataset createDataSet(){
         var series = new XYSeries("Data");
-        for(int i = 0; i < data.length; i += graphDefinition){
-            series.add(i,data[i]);
+        if(useFFT){
+            double df = 44100 / complexData.length;
+            for( int i = -complexData.length/4; i < complexData.length/4 - 1; i ++){
+                double f = i * df;
+                double v = Math.sqrt(Math.pow(complexData[i + complexData.length/2].real, 2) + Math.pow(complexData[i + complexData.length/2].imaginary, 2));
+                series.add(2 * f, v);
+            }
+        }
+        else {
+            for (int i = 0; i < data.length; i += graphDefinition) {
+                series.add(i, data[i]);
+            }
         }
         var dataset = new XYSeriesCollection();
         dataset.addSeries(series);

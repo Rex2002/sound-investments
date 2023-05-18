@@ -6,9 +6,6 @@ import synth.envelopes.Envelope;
 import synth.generators.SineWaveGenerator;
 import synth.generators.WaveGenerator;
 
-import static synth.Test.CHANNEL_NO;
-import static synth.Test.SAMPLE_RATE;
-
 public class SynthLine {
 
     enum WaveTypes {
@@ -30,7 +27,7 @@ public class SynthLine {
     int length;
     public SynthLine(InstrumentData data, int length){
         this.data = data;
-        out = new short[length * SAMPLE_RATE * CHANNEL_NO];
+        //out = new short[length * SAMPLE_RATE * CHANNEL_NO];
         this.length = length;
     }
 
@@ -45,9 +42,10 @@ public class SynthLine {
     }
 
     private void applyVolume(){
-        for(int i = 0; i < length * SAMPLE_RATE; i++){
-            out[2*i] = (short) (Short.MAX_VALUE * data.volume[i]);
-            out[2*i+1] = (short) (Short.MAX_VALUE * data.volume[i]);
+        out = new short[data.volume.length];
+        for(int i = 0; i < data.volume.length; i++){
+            out[i] = (short) (Short.MAX_VALUE * data.volume[i]);
+            //out[2*i+1] = (short) (Short.MAX_VALUE * data.volume[i]);
         }
     }
 
@@ -67,11 +65,15 @@ public class SynthLine {
     }
 
     private void applyEcho(){
-        out = Effect.echo(out, data.feedbackEcho, data.delayEcho);
+        if(data.feedbackEcho != null && data.delayEcho != null) {
+            out = Effect.echo(out, data.feedbackEcho, data.delayEcho);
+        }
     }
 
     private void applyReverb(){
-        out = Effect.echo(out, data.feedbackReverb, data.delayReverb);
+        if(data.feedbackReverb != null && data.delayReverb != null) {
+            out = Effect.echo(out, data.feedbackReverb, data.delayReverb);
+        }
     }
 
     private void applyFilter(){
@@ -80,26 +82,26 @@ public class SynthLine {
 
     private void applyPan(){
         for(int pos = 0; pos < out.length; pos+=2){
-            if(data.getPan()[pos/2] < 0){
-                out[pos] = (short) (out[pos] * data.getPan()[pos / 2] * -1);
+            double panValue = data.getPan()[(int) (((double) pos / out.length) * data.getPan().length)];
+            if(panValue < 0){
+                out[pos] = (short) (out[pos] * panValue * -1);
             }
-            else if(data.getPan()[pos/2] > 0){
-                out[pos + 1] = (short) (out[pos + 1] * data.getPan()[pos / 2]);
+            else if(panValue > 0){
+                out[pos + 1] = (short) (out[pos + 1] * panValue);
             }
         }
     }
 
     private double[] transformNotesToFreq(){
         double[] tPitch = new double[data.pitch.length];
-        for( int i = 0; i < data.pitch.length; i++){
-            tPitch[i] = getFreqFromRelValue(data.pitch[i]);
+        for( int i = 0; i < data.getPitch().length; i++){
+            tPitch[i] = getFreqFromRelValue(data.getPitch()[i]);
         }
         return tPitch;
     }
 
     private double getFreqFromRelValue(int rel){
-        // TODO implement mapping of rel note number (0-47) to according frequencies.
-        return 440;
+        return Math.pow(2, ((double)rel-69)/12) * 440;
     }
 
 
