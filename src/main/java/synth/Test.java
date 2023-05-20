@@ -4,7 +4,12 @@ package synth;
 
 
 import synth.envelopes.ADSR;
-import synth.generators.*;
+import synth.fx.Effect;
+import synth.fx.FilterData;
+import synth.generators.PhaseAdvancers;
+import synth.generators.PhaseContainer;
+import synth.generators.SineWaveGenerator;
+import synth.generators.WaveGenerator;
 
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioSystem;
@@ -43,20 +48,26 @@ public class Test {
             short[] sine2 = generator.generate(new double[]{523.25,  587.33,  659.25,  698.46, }, 8, new short[]{12000}, adsr);
             short[] addedSine = addArrays(sine1, sine2);
 
-            short[] fftSine = generator.generate(880, 1, new short[]{16383});
-            short[] fftSine2 = generator.generate(440, 1, new short[]{16383});
-            short[] addedfftSine  = addArrays(fftSine2, fftSine);
-            short[] addedFilteredSine = Effect.simplestLowPass(addedfftSine);
-            Complex[] fftOfSine = Util.fft(Arrays.copyOfRange(addedfftSine,0 , 2048));
+            //short[] fft = generator.generate(880, 2, new short[]{16383});
+            //short[] fft2 = generator.generate(440, 2, new short[]{16383});
+            //short[] addedfftSine  = addArrays(fftSine2, fftSine);
+            short[] fft = SampleLoader.loadSample(waveFileName);
+            FilterData filterData = new FilterData();
+            filterData.setCutoff(new double[] {1200, 6000});
+            filterData.setOrder(new double[]{0.5});
+            filterData.setHighPass(false);
+            short[] addedFilteredSine = Effect.IIR(fft, filterData);
+            Complex[] fftOfSine = Util.fft(Arrays.copyOfRange(fft,0 , 2048));
             Complex[] fftOfFilteredSine = Util.fft(Arrays.copyOfRange(addedFilteredSine, 0, 2048));
             // Currently stereo samples can be played, but sounds a bit weird and is only half the speed
-            short[] drumSample = SampleLoader.loadSample(waveFileName);
+            //short[] drumSample = SampleLoader.loadSample(waveFileName);
 
             InstrumentData instrData = new InstrumentData();
             instrData.setInstrument(InstrumentEnum.SYNTH_ONE);
             instrData.setVolume(new double[]{15000, 7000});
             instrData.setPitch(new int[]{69, 70, 80});
             instrData.setPan(new double[]{0});
+            instrData.setFilterData(filterData);
 
             short[] synthLine = new SynthLine(instrData, 6).synthesize();
 
@@ -75,9 +86,9 @@ public class Test {
                 //c1.setVisible(true);
                 //c2.setVisible(true);
             });
-            play(sdl, synthLine);
-            //play(sdl, addedfftSine);
-            //play(sdl, addedFilteredSine);
+            //play(sdl, synthLine);
+            play(sdl, fft);
+            play(sdl, addedFilteredSine);
             sdl.drain();
             sdl.close();
         } catch (LineUnavailableException e) {

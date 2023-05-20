@@ -10,7 +10,7 @@ public class Util {
             complexValues[i] = new Complex(vTd[i], 0);
         }
         transform(complexValues);
-        System.out.println(Arrays.toString(complexValues));
+        //System.out.println(Arrays.toString(complexValues));
         return complexValues;
     }
 
@@ -47,7 +47,7 @@ public class Util {
                 max = (short) Math.abs(k);
             }
         }
-        System.out.println("Found max value: " + max);
+        //System.out.println("Found max value: " + max);
         return max;
     }
 
@@ -57,5 +57,21 @@ public class Util {
     public static int findMin(int[] array){
         return Arrays.stream(array).summaryStatistics().getMax();
     }
+    public static double findMax(double[] array) {
+        return Arrays.stream(array).summaryStatistics().getMax();
+    }
+    public static double findMin(double[] array) { return Arrays.stream(array).summaryStatistics().getMax(); }
 
+    public static short[] scale(double[] in){
+        short[] out = new short[in.length];
+        double max = Math.max(Math.abs(findMin(in)), findMax(in));
+        double resFactor = 1;
+        if(max >= Short.MAX_VALUE - 10) {
+            resFactor = (Short.MAX_VALUE - 10) / max;
+        }
+        for(int i = 0; i < in.length; i++) {
+            out[i] = (short) (resFactor * in[i]);
+        }
+        return out;
+    }
 }

@@ -3,6 +3,7 @@ package synth;
 import lombok.Data;
 import synth.envelopes.ADSR;
 import synth.envelopes.Envelope;
+import synth.fx.Effect;
 import synth.generators.SineWaveGenerator;
 import synth.generators.WaveGenerator;
 
@@ -77,7 +78,7 @@ public class SynthLine {
     }
 
     private void applyFilter(){
-        // TODO (Issue #29)
+        Effect.IIR(out, data.getFilterData());
     }
 
     private void applyPan(){

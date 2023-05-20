@@ -1,6 +1,7 @@
 package synth;
 
 import lombok.Data;
+import synth.fx.FilterData;
 
 @Data
 public class InstrumentData {
@@ -22,10 +23,7 @@ public class InstrumentData {
     double[] feedbackReverb;
 
     // Filter parameters
-    int[] cutoff;
-    double[] order;
-    boolean highPass;
-
+    FilterData filterData;
     // Panning
     double[] pan;
 }
