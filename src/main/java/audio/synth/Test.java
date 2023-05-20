@@ -3,6 +3,7 @@ package audio.synth;
 // freq: 440,  493.88,  523.25,  587.33,  659.25,  698.46,  783.99,  880.00
 
 
+import audio.Constants;
 import audio.synth.envelopes.ADSR;
 import audio.synth.fx.Effect;
 import audio.synth.fx.FilterData;
@@ -21,8 +22,6 @@ import java.util.Arrays;
 import static audio.synth.Util.findMax;
 
 public class Test {
-    public static int SAMPLE_RATE = 44100;
-    public static int CHANNEL_NO = 2;
     static String waveFileName = "./src/main/resources/Casio-MT-45-Beguine.wav";
     static String waveFileFunk = "./src/main/resources/Yamaha-PSS-280-Funk.wav";
     static String waveFileLoFi = "./src/main/resources/lofi_research.wav";
@@ -33,7 +32,7 @@ public class Test {
     }
 
     public Test(){
-        AudioFormat af = new AudioFormat(SAMPLE_RATE, 16, CHANNEL_NO, true, true);
+        AudioFormat af = new AudioFormat(Constants.SAMPLE_RATE, 16, Constants.CHANNEL_NO, true, true);
 
         try{
             SourceDataLine sdl = AudioSystem.getSourceDataLine(af);
@@ -100,7 +99,7 @@ public class Test {
 
 
     private short[] createSawtooth(double[] freq, int duration, int amplitude){
-        short[] sw = new short[duration * SAMPLE_RATE * CHANNEL_NO];
+        short[] sw = new short[duration * Constants.SAMPLE_RATE * Constants.CHANNEL_NO];
         PhaseContainer phases = new PhaseContainer();
         phases.phase = 0;
         for(int i = 0; i < sw.length; i += 2){
@@ -112,7 +111,7 @@ public class Test {
     }
 
     private short[] createSawtooth(double[] freq, int duration, int amplitude, ADSR env){
-        short[] sw = new short[duration * SAMPLE_RATE * CHANNEL_NO];
+        short[] sw = new short[duration * Constants.SAMPLE_RATE * Constants.CHANNEL_NO];
         env.setTotalLength(sw.length);
         env.setNoOfTones(freq.length);
         PhaseContainer phases = new PhaseContainer();
@@ -128,8 +127,8 @@ public class Test {
 
     // creates a sine wave in double format of given frequency, duration and max amplitude
     private double[] createDoubleSine(int freq, int duration, int amplitude){
-        double[] sin = new double[duration * SAMPLE_RATE * CHANNEL_NO];
-        double samplingInterval = (double) SAMPLE_RATE/freq;
+        double[] sin = new double[duration * Constants.SAMPLE_RATE * Constants.CHANNEL_NO];
+        double samplingInterval = (double) Constants.SAMPLE_RATE/freq;
         System.out.println("Frequency of signal: " + freq + " hz");
         System.out.println("Sampling interval: " + samplingInterval + " hz");
         for(int i = 0; i < sin.length; i += 2){

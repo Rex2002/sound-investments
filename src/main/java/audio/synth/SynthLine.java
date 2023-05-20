@@ -7,8 +7,8 @@ import audio.synth.fx.Effect;
 import audio.synth.generators.SineWaveGenerator;
 import audio.synth.generators.WaveGenerator;
 
-import static audio.synth.Test.CHANNEL_NO;
-import static audio.synth.Test.SAMPLE_RATE;
+import static audio.Constants.CHANNEL_NO;
+import static audio.Constants.SAMPLE_RATE;
 
 public class SynthLine {
 

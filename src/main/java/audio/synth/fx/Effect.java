@@ -3,7 +3,7 @@ package audio.synth.fx;
 
 import audio.synth.Util;
 
-import static audio.synth.Test.SAMPLE_RATE;
+import static audio.Constants.SAMPLE_RATE;
 
 public class Effect {
 
