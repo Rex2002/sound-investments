@@ -1,4 +1,4 @@
-package synth;
+package audio.synth;
 
 //import com.groupdocs.metadata.Metadata;
 //import com.groupdocs.metadata.core.WavRootPackage;

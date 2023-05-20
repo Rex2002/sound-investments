@@ -1,4 +1,4 @@
-package synth;
+package audio.synth;
 
 public enum InstrumentEnum {
     SYNTH_ONE,

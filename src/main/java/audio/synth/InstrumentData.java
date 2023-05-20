@@ -1,7 +1,7 @@
-package synth;
+package audio.synth;
 
 import lombok.Data;
-import synth.fx.FilterData;
+import audio.synth.fx.FilterData;
 
 @Data
 public class InstrumentData {

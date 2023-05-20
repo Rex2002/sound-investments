@@ -1,6 +1,6 @@
-package synth.generators;
+package audio.synth.generators;
 
-import static synth.Test.SAMPLE_RATE;
+import static audio.Constants.SAMPLE_RATE;
 
 public class PhaseAdvancers {
 

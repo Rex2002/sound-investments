@@ -1,9 +1,9 @@
-package synth.envelopes;
+package audio.synth.envelopes;
 
-public class ZeroEnvelope implements Envelope{
+public class OneEnvelope implements Envelope{
     @Override
     public double getAmplitudeFactor(int pos) {
-        return 0;
+        return 1;
     }
 
     @Override

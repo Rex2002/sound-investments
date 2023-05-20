@@ -1,4 +1,4 @@
-package synth.fx;
+package audio.synth.fx;
 
 import lombok.Data;
 
