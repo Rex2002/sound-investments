@@ -1,15 +1,15 @@
-package synth;
+package audio.synth;
 
 // freq: 440,  493.88,  523.25,  587.33,  659.25,  698.46,  783.99,  880.00
 
 
-import synth.envelopes.ADSR;
-import synth.fx.Effect;
-import synth.fx.FilterData;
-import synth.generators.PhaseAdvancers;
-import synth.generators.PhaseContainer;
-import synth.generators.SineWaveGenerator;
-import synth.generators.WaveGenerator;
+import audio.synth.envelopes.ADSR;
+import audio.synth.fx.Effect;
+import audio.synth.fx.FilterData;
+import audio.synth.generators.PhaseAdvancers;
+import audio.synth.generators.PhaseContainer;
+import audio.synth.generators.SineWaveGenerator;
+import audio.synth.generators.WaveGenerator;
 
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioSystem;
@@ -18,7 +18,7 @@ import javax.sound.sampled.SourceDataLine;
 import java.awt.*;
 import java.util.Arrays;
 
-import static synth.Util.findMax;
+import static audio.synth.Util.findMax;
 
 public class Test {
     public static int SAMPLE_RATE = 44100;
@@ -54,7 +54,7 @@ public class Test {
             short[] fft = SampleLoader.loadSample(waveFileName);
             FilterData filterData = new FilterData();
             filterData.setCutoff(new double[] {1200, 6000});
-            filterData.setOrder(new double[]{0.5});
+            filterData.setBandwidth(new double[]{0.5});
             filterData.setHighPass(false);
             short[] addedFilteredSine = Effect.IIR(fft, filterData);
             Complex[] fftOfSine = Util.fft(Arrays.copyOfRange(fft,0 , 2048));

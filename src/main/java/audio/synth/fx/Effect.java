@@ -1,9 +1,9 @@
-package synth.fx;
+package audio.synth.fx;
 
 
-import synth.Util;
+import audio.synth.Util;
 
-import static synth.Test.SAMPLE_RATE;
+import static audio.synth.Test.SAMPLE_RATE;
 
 public class Effect {
 
@@ -80,8 +80,8 @@ public class Effect {
         FilterTypesEnum ft = filterData.highPass ? FilterTypesEnum.HIGH : FilterTypesEnum.LOW;
         double[] kadov = filterData.getCutoff();
         // TODO create relation between order and bandwidth;
-        double[] bandwidth = filterData.getOrder();
-        calculateCoefficients(kadov[0], 0.5f, c, ft);
+        double[] bandwidth = filterData.getBandwidth();
+        calculateCoefficients(kadov[0], bandwidth[0], c, ft);
         int filterStart = 2 * Math.max(c.aCoefficients.length, c.bCoefficients.length);
 
         double[] preOut = new double[in.length];
@@ -89,7 +89,11 @@ public class Effect {
             preOut[i] = in[i];
         }
         for(int i = filterStart; i < in.length; i++){
-            calculateCoefficients(kadov[(int) (((double) (i-filterStart)/(in.length-filterStart)) * kadov.length)],0.5f, c, ft);
+            calculateCoefficients(
+                    kadov[(int) (((double) (i-filterStart)/(in.length-filterStart)) * kadov.length)],
+                    bandwidth[(int) (((double) (i-filterStart)/(in.length-filterStart)) * bandwidth.length)],
+                    c, ft
+            );
             double value = 0;
             for(int aPointer = 0; aPointer < c.aCoefficients.length; aPointer++){
                 value += in[i - 2 * aPointer] * c.aCoefficients[aPointer];

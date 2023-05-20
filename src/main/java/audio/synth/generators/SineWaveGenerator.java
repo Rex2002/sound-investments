@@ -1,11 +1,11 @@
-package synth.generators;
+package audio.synth.generators;
 
-import synth.envelopes.Envelope;
-import synth.envelopes.OneEnvelope;
-import synth.envelopes.ZeroEnvelope;
+import audio.synth.envelopes.Envelope;
+import audio.synth.envelopes.OneEnvelope;
+import audio.synth.envelopes.ZeroEnvelope;
 
-import static synth.Test.CHANNEL_NO;
-import static synth.Test.SAMPLE_RATE;
+import static audio.synth.Test.CHANNEL_NO;
+import static audio.synth.Test.SAMPLE_RATE;
 
 
 //TODO or discuss: amplitude generally as short

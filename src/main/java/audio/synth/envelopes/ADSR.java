@@ -1,4 +1,4 @@
-package synth.envelopes;
+package audio.synth.envelopes;
 
 public class ADSR implements Envelope{
     private final double attack;

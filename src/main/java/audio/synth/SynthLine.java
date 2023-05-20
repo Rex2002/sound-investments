@@ -1,11 +1,14 @@
-package synth;
+package audio.synth;
 
 import lombok.Data;
-import synth.envelopes.ADSR;
-import synth.envelopes.Envelope;
-import synth.fx.Effect;
-import synth.generators.SineWaveGenerator;
-import synth.generators.WaveGenerator;
+import audio.synth.envelopes.ADSR;
+import audio.synth.envelopes.Envelope;
+import audio.synth.fx.Effect;
+import audio.synth.generators.SineWaveGenerator;
+import audio.synth.generators.WaveGenerator;
+
+import static audio.synth.Test.CHANNEL_NO;
+import static audio.synth.Test.SAMPLE_RATE;
 
 public class SynthLine {
 
@@ -28,7 +31,6 @@ public class SynthLine {
     int length;
     public SynthLine(InstrumentData data, int length){
         this.data = data;
-        //out = new short[length * SAMPLE_RATE * CHANNEL_NO];
         this.length = length;
     }
 
@@ -43,10 +45,9 @@ public class SynthLine {
     }
 
     private void applyVolume(){
-        out = new short[data.volume.length];
+        out = new short[length * SAMPLE_RATE * CHANNEL_NO];
         for(int i = 0; i < data.volume.length; i++){
             out[i] = (short) (Short.MAX_VALUE * data.volume[i]);
-            //out[2*i+1] = (short) (Short.MAX_VALUE * data.volume[i]);
         }
     }
 
@@ -85,10 +86,10 @@ public class SynthLine {
         for(int pos = 0; pos < out.length; pos+=2){
             double panValue = data.getPan()[(int) (((double) pos / out.length) * data.getPan().length)];
             if(panValue < 0){
-                out[pos] = (short) (out[pos] * panValue * -1);
+                out[pos] = (short) (out[pos] * (1- panValue) * -1);
             }
             else if(panValue > 0){
-                out[pos + 1] = (short) (out[pos + 1] * panValue);
+                out[pos + 1] = (short) (out[pos + 1] * (1- panValue));
             }
         }
     }

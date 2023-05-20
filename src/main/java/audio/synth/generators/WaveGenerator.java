@@ -1,6 +1,6 @@
-package synth.generators;
+package audio.synth.generators;
 
-import synth.envelopes.Envelope;
+import audio.synth.envelopes.Envelope;
 
 public interface WaveGenerator {
     short[] generate(double freq, int duration, short amplitude);

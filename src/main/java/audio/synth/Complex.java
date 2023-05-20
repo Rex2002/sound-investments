@@ -1,4 +1,4 @@
-package synth;
+package audio.synth;
 
 public class Complex {
     public final double real;

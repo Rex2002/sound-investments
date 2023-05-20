@@ -1,10 +1,10 @@
-package synth.fx;
+package audio.synth.fx;
 
 import lombok.Data;
 
 @Data
 public class FilterData {
     double[] cutoff;
-    double[] order;
+    double[] bandwidth;
     boolean highPass;
 }

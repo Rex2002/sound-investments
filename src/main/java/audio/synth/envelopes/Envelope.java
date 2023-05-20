@@ -1,4 +1,4 @@
-package synth.envelopes;
+package audio.synth.envelopes;
 
 public interface Envelope {
     double getAmplitudeFactor(int pos);

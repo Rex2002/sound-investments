@@ -1,4 +1,4 @@
-package synth.generators;
+package audio.synth.generators;
 
 import lombok.Data;
 

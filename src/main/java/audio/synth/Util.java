@@ -1,4 +1,4 @@
-package synth;
+package audio.synth;
 
 
 import java.util.Arrays;

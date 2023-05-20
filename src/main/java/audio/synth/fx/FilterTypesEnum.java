@@ -1,4 +1,4 @@
-package synth.fx;
+package audio.synth.fx;
 
 public enum FilterTypesEnum {
     //SINGLE_POLE_LOW,
