@@ -5,8 +5,7 @@ public class ADSR implements Envelope{
     private final double decay;
     private final double sustain;
     private final double release;
-    private int totalLength;
-    private int noOfTones;
+    private int envLen;
 
     public ADSR(double attack, double decay, double sustain, double release) {
         this.attack = attack;
@@ -20,7 +19,6 @@ public class ADSR implements Envelope{
 
 
     public double getAmplitudeFactor(int pos) {
-        int envLen = this.totalLength / this.noOfTones;
         pos = pos % envLen;
         double relPos = (double) pos / envLen;
         if (relPos > 1 || relPos < 0) {
@@ -39,13 +37,7 @@ public class ADSR implements Envelope{
             return -sustain / release * relPos + sustain / release;
         }
     }
-
-    public void setNoOfTones(int noOfTones) {
-        this.noOfTones = noOfTones;
+    public void setSectionLen(int envLen){
+        this.envLen = envLen;
     }
-
-    public void setTotalLength(int tLength){
-        this.totalLength = tLength;
-    }
-
 }
