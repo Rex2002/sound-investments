@@ -43,7 +43,7 @@ public class Test {
             WaveGenerator generator = new SineWaveGenerator();
 
             short[] sineEcho = Effect.echo(generator.generate(new double[]{440,  493.88,  523.25,  587.33 }, 8, new short[]{16383}, adsr), new double[]{0.9}, new int[]{15000});
-            short[] sine1 = generator.generate(new double[]{440,  493.88,  523.25,  587.33 }, 4, new short[]{16383}, adsr);
+            short[] sine1 = generator.generate(new double[]{440,440, 493.88,  493.88, 440,440,  523.25,  587.33, 440, 440 }, 4, new short[]{16383}, adsr);
             short[] sine2 = generator.generate(new double[]{523.25,  587.33,  659.25,  698.46, }, 8, new short[]{12000}, adsr);
             short[] addedSine = addArrays(sine1, sine2);
 
@@ -86,6 +86,7 @@ public class Test {
                 //c2.setVisible(true);
             });
             //play(sdl, synthLine);
+            play(sdl, sine1);
             play(sdl, fft);
             play(sdl, addedFilteredSine);
             sdl.drain();
@@ -112,8 +113,7 @@ public class Test {
 
     private short[] createSawtooth(double[] freq, int duration, int amplitude, ADSR env){
         short[] sw = new short[duration * Constants.SAMPLE_RATE * Constants.CHANNEL_NO];
-        env.setTotalLength(sw.length);
-        env.setNoOfTones(freq.length);
+        env.setSectionLen(sw.length/freq.length);
         PhaseContainer phases = new PhaseContainer();
         phases.phase = 0;
         for(int i = 0; i < sw.length; i += 2){

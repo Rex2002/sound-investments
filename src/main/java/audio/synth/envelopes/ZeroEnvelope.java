@@ -7,8 +7,5 @@ public class ZeroEnvelope implements Envelope{
     }
 
     @Override
-    public void setNoOfTones(int noOfTones) {}
-
-    @Override
-    public void setTotalLength(int tLength) {}
+    public void setSectionLen(int envLen){}
 }
