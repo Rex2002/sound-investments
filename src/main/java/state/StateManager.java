@@ -9,6 +9,7 @@ import dataRepo.Sonifiable;
 import dataRepo.DataRepo.FilterFlag;
 import dataRepo.DataRepo.IntervalLength;
 import javafx.application.Application;
+import audio.synth.InstrumentEnum;
 
 // This class runs in the main thread and coordinates all tasks and the creation of the UI thread
 // This is atypical, as JavaFX's UI thread is usually the main thread as well
@@ -16,6 +17,9 @@ import javafx.application.Application;
 // however, it makes conceptually more sense, as the app's logic should be done in the main thread
 
 public class StateManager {
+	// THis mapping assumes that each instrument can only be mapped exactly once
+	public static InstrumentMapping[] mapping = new InstrumentMapping[InstrumentEnum.size];
+
 	public static void main(String[] args) {
 		Thread th = new Thread(() -> Application.launch(App.class, args));
 		th.start();
