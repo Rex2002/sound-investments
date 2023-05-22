@@ -1,14 +1,14 @@
 package dataRepo;
 
-import java.util.Date;
+import java.util.Calendar;
 import java.util.Objects;
 
 public abstract class Sonifiable {
 	public String name;
 	public String symbol;
 	public String exchange;
-	public Date earliest;
-	public Date latest;
+	public Calendar earliest;
+	public Calendar latest;
 
 	public Sonifiable(String name, String symbol, String exchange) {
 		this.name = name;
@@ -18,12 +18,16 @@ public abstract class Sonifiable {
 		this.latest = null;
 	}
 
-	public Sonifiable(String name, String symbol, String exchange, Date earliest, Date latest) {
+	public Sonifiable(String name, String symbol, String exchange, Calendar earliest, Calendar latest) {
 		this.name = name;
 		this.symbol = symbol;
 		this.exchange = exchange;
 		this.earliest = earliest;
 		this.latest = latest;
+	}
+
+	public String getSymbolExchange() {
+		return symbol + "." + exchange;
 	}
 
 	public String getName() {
@@ -50,19 +54,19 @@ public abstract class Sonifiable {
 		this.exchange = exchange;
 	}
 
-	public Date getEarliest() {
+	public Calendar getEarliest() {
 		return this.earliest;
 	}
 
-	public void setEarliest(Date earliest) {
+	public void setEarliest(Calendar earliest) {
 		this.earliest = earliest;
 	}
 
-	public Date getLatest() {
+	public Calendar getLatest() {
 		return this.latest;
 	}
 
-	public void setLatest(Date latest) {
+	public void setLatest(Calendar latest) {
 		this.latest = latest;
 	}
 
@@ -90,8 +94,8 @@ public abstract class Sonifiable {
 				" name='" + getName() + "'" +
 				", symbol='" + getSymbol() + "'" +
 				", exchange='" + getExchange() + "'" +
-				", earliest='" + getEarliest() + "'" +
-				", latest='" + getLatest() + "'" +
+				", earliest='" + Util.formatDate(getEarliest()) + "'" +
+				", latest='" + Util.formatDate(getLatest()) + "'" +
 				"}";
 	}
 }
