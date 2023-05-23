@@ -7,8 +7,8 @@ public class OneEnvelope implements Envelope{
     }
 
     @Override
-    public void setNoOfTones(int noOfTones) {}
+    public void setSectionLen(int envLen) {
 
-    @Override
-    public void setTotalLength(int tLength) {}
+    }
+
 }

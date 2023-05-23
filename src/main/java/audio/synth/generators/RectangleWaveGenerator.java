@@ -30,8 +30,7 @@ public class RectangleWaveGenerator{
 
     public short[] generate(double[] freq, int duration, int amplitude, Envelope env){
         short[] sq = new short[duration * SAMPLE_RATE * CHANNEL_NO];
-        env.setTotalLength(sq.length);
-        env.setNoOfTones(freq.length);
+        env.setSectionLen(sq.length/freq.length);
         PhaseContainer phases = new PhaseContainer();
         phases.phase = 0;
         for(int i = 0; i < sq.length-1; i += 2){
