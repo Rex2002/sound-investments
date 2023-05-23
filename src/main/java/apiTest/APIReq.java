@@ -1,7 +1,6 @@
 package apiTest;
 
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.http.*;
@@ -50,6 +49,7 @@ public class APIReq {
 		reset();
 	}
 
+	// Return `this` to allow chaining
 	public APIReq setPaginationHandler(Function<JsonPrimitive<?>, HandledPagination> handler,
 			Consumer<Integer> setQueryPage) {
 		this.paginationHandler = handler;
@@ -70,6 +70,7 @@ public class APIReq {
 		this.queries = new ArrayList<>();
 	}
 
+	// Return `this` to allow chaining
 	public APIReq setHeader(String key, String val) {
 		for (StrTuple h : this.headers) {
 			if (h.getFirst() == key) {
@@ -82,6 +83,7 @@ public class APIReq {
 	}
 
 	// Convenience method for setting several headers at once.
+	// Return `this` to allow chaining
 	public APIReq setHeaders(String... headers) {
 		assert headers.length % 2 == 0
 				: "setHeaders expects a flattened list of key-value pairs as input. The amount of arguments must therefore be even";
@@ -92,6 +94,7 @@ public class APIReq {
 		return this;
 	}
 
+	// Return `this` to allow chaining
 	public APIReq setQuery(String key, String val) {
 		for (StrTuple h : this.queries) {
 			if (h.getFirst() == key) {
@@ -104,6 +107,7 @@ public class APIReq {
 	}
 
 	// Convenience method for setting several headers at once.
+	// Return `this` to allow chaining
 	public APIReq setQueries(String... queries) {
 		assert queries.length % 2 == 0
 				: "setQueries expects a flattened list of key-value pairs as input. The amount of arguments must therefore be even";
