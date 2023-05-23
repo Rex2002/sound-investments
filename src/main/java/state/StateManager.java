@@ -21,6 +21,10 @@ public class StateManager {
 	public static InstrumentMapping[] mapping = new InstrumentMapping[InstrumentEnum.size];
 
 	public static void main(String[] args) {
+		testUI(args);
+	}
+
+	public static void testUI(String[] args) {
 		Thread th = new Thread(() -> Application.launch(App.class, args));
 		th.start();
 		DataRepo.init();
@@ -36,11 +40,18 @@ public class StateManager {
 						IntervalLength.DAY);
 				for (Price p : prices.subList(0, Math.min(prices.size(), 10)))
 					System.out.println(p);
-				EventQueues.toUI.put(l);
+				EventQueues.toUI.put(new Msg<>(MsgToUIType.FILTERED_SONIFIABLES, l));
 			}
 		} catch (Exception e) {
 			System.out.println("ERROR:");
 			e.printStackTrace();
 		}
+	}
+
+	public static void testSound(String[] args) {
+		DataRepo.init();
+
+		List<Sonifiable> data = DataRepo.getAll(FilterFlag.ALL);
+		// TODO: Call functions in Harmonizer
 	}
 }

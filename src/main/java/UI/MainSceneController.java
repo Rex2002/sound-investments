@@ -1,11 +1,9 @@
 package UI;
 
 import java.io.IOException;
-import java.lang.reflect.Array;
 import java.net.URL;
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.ResourceBundle;
 
@@ -33,6 +31,8 @@ import javafx.stage.Stage;
 import javafx.util.Duration;
 import dataRepo.Sonifiable;
 import state.EventQueues;
+import state.Msg;
+import state.MsgToUIType;
 
 public class MainSceneController implements Initializable {
     private CheckEQService service;
@@ -96,16 +96,8 @@ public class MainSceneController implements Initializable {
         // trendLineBreaksChoice.getItems().addAll(trends);
         // derivateChoice.getItems().addAll(derivate);
 
-        service = new CheckEQService();
+        service = new CheckEQService(this);
         service.setPeriod(Duration.millis(100));
-        service.setOnSucceeded(e -> {
-            List<Sonifiable> v = service.getValue();
-            if (!v.isEmpty()) {
-                for (Sonifiable s : v) {
-                    addToCheckList(s.getName());
-                }
-            }
-        });
         service.start();
     }
 
@@ -163,7 +155,7 @@ public class MainSceneController implements Initializable {
     }
 
     private void loadNew() { // Nachladen der Aktien
-        counter++; // Notfallplan: clearCheckList und dann einfac alle neu laden -> belastend NOCH
+        counter++; // Notfallplan: clearCheckList und dann einfach alle neu laden -> belastend NOCH
                    // TESTEN
         addToCheckList("Hi");
     }
@@ -301,18 +293,34 @@ public class MainSceneController implements Initializable {
 
     }
 
-    private static class CheckEQService extends ScheduledService<List<Sonifiable>> {
-        static List<Sonifiable> l = new ArrayList<>(10);
+    private static class CheckEQService extends ScheduledService<Object> {
+        MainSceneController controller;
 
+        CheckEQService(MainSceneController controller) {
+            this.controller = controller;
+        }
+
+        @SuppressWarnings("unchecked")
         @Override
-        protected Task<List<Sonifiable>> createTask() {
+        protected Task<Object> createTask() {
             return new Task<>() {
                 @Override
-                protected List<Sonifiable> call() throws Exception {
-                    l.clear();
-                    while (!EventQueues.toUI.isEmpty())
-                        l = EventQueues.toUI.poll();
-                    return l;
+                protected Object call() throws Exception {
+                    while (!EventQueues.toUI.isEmpty()) {
+                        Msg<MsgToUIType> msg = EventQueues.toUI.poll();
+                        if (msg.type == MsgToUIType.FILTERED_SONIFIABLES) {
+                            List<Sonifiable> sonifiables = (List<Sonifiable>) msg.data;
+                            for (Sonifiable s : sonifiables) {
+                                controller.addToCheckList(s.getName());
+                            }
+                        } else {
+                            // @Cleanup This hard exit is only for development, to not forget adding any
+                            // MsgTypes here
+                            System.out.println("MsgType '" + msg.type.toString() + "' is not yet implemented");
+                            System.exit(1);
+                        }
+                    }
+                    return null;
                 }
             };
         }

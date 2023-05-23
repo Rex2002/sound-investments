@@ -1,0 +1,10 @@
+package state;
+
+public enum MsgToSMType implements MsgType {
+	FILTERED_SONIFIABLES,
+	LOADABLE_MAPPINGS,
+	ERROR,
+	VALIDATION_DONE,
+	VALIDATION_ERROR,
+	FINISHED;
+}
