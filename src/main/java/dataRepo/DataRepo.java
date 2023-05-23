@@ -8,28 +8,28 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 
-import apiTest.APIReq;
-import apiTest.AuthPolicy;
-import apiTest.HandledPagination;
-import json.JsonPrimitive;
-import json.Parser;
-import util.AppError;
+import app.AppError;
+import dataRepo.api.APIReq;
+import dataRepo.api.AuthPolicy;
+import dataRepo.api.HandledPagination;
+import dataRepo.json.JsonPrimitive;
+import dataRepo.json.Parser;
 
 public class DataRepo {
 	private static List<Stock> testStocks() {
 		try {
 			return List
 					.of(
-							new Stock("SAP SE", "SAP", "XETRA", Util.calFromDateStr("1994-02-01"),
-									Util.calFromDateStr("2023-05-17")),
-							new Stock("Siemens Energy AG", "ENR", "XETRA", Util.calFromDateStr("2020-09-28"),
-									Util.calFromDateStr("2023-05-17")),
-							new Stock("Dropbox Inc", "1Q5", "XETRA", Util.calFromDateStr("2021-01-07"),
-									Util.calFromDateStr("2023-05-17")),
-							new Stock("1&1 AG", "1U1", "XETRA", Util.calFromDateStr("1998-12-04"),
-									Util.calFromDateStr("2023-05-17")),
-							new Stock("123fahrschule SE", "123F", "XETRA", Util.calFromDateStr("2021-11-02"),
-									Util.calFromDateStr("2023-05-17")));
+							new Stock("SAP SE", "SAP", "XETRA", DateUtil.calFromDateStr("1994-02-01"),
+									DateUtil.calFromDateStr("2023-05-17")),
+							new Stock("Siemens Energy AG", "ENR", "XETRA", DateUtil.calFromDateStr("2020-09-28"),
+									DateUtil.calFromDateStr("2023-05-17")),
+							new Stock("Dropbox Inc", "1Q5", "XETRA", DateUtil.calFromDateStr("2021-01-07"),
+									DateUtil.calFromDateStr("2023-05-17")),
+							new Stock("1&1 AG", "1U1", "XETRA", DateUtil.calFromDateStr("1998-12-04"),
+									DateUtil.calFromDateStr("2023-05-17")),
+							new Stock("123fahrschule SE", "123F", "XETRA", DateUtil.calFromDateStr("2021-11-02"),
+									DateUtil.calFromDateStr("2023-05-17")));
 		} catch (Exception e) {
 			return List.of();
 		}
@@ -43,8 +43,8 @@ public class DataRepo {
 			List<Price> prices = parser.parse(fname, json).applyList(x -> {
 				try {
 					HashMap<String, JsonPrimitive<?>> m = x.asMap();
-					Calendar startDay = Util.calFromDateStr(m.get("datetime").asStr());
-					Instant startTime = Util.fmtDatetime.parse(m.get("datetime").asStr()).toInstant();
+					Calendar startDay = DateUtil.calFromDateStr(m.get("datetime").asStr());
+					Instant startTime = DateUtil.fmtDatetime.parse(m.get("datetime").asStr()).toInstant();
 					Instant endTime = IntervalLength.HOUR.addToInstant(startTime);
 
 					return new Price(startDay, startTime, endTime, m.get("open").asDouble(),
@@ -213,8 +213,8 @@ public class DataRepo {
 			try {
 				HashMap<String, JsonPrimitive<?>> json = apiLeeway.getJSON(x -> x.asMap(),
 						"general/tradingperiod/" + s.getSymbolExchange());
-				s.setEarliest(Util.calFromDateStr(json.get("start").asStr()));
-				s.setLatest(Util.calFromDateStr(json.get("end").asStr()));
+				s.setEarliest(DateUtil.calFromDateStr(json.get("start").asStr()));
+				s.setLatest(DateUtil.calFromDateStr(json.get("end").asStr()));
 			} catch (Exception e) {
 				// We assume tht if an error occured, that we don't have access to the given
 				// symbol
