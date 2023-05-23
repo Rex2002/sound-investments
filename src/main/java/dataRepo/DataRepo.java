@@ -13,6 +13,7 @@ import apiTest.AuthPolicy;
 import apiTest.HandledPagination;
 import json.JsonPrimitive;
 import json.Parser;
+import util.AppError;
 
 public class DataRepo {
 	private static List<Stock> testStocks() {
@@ -175,7 +176,7 @@ public class DataRepo {
 	private static List<ETF> etfs = new ArrayList<>(128);
 	private static List<Index> indices = new ArrayList<>(128);
 
-	public static void init() {
+	public static void init() throws AppError {
 		// @Cleanup for Development & Testing only
 		stocks = testStocks();
 		return;

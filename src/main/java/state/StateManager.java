@@ -1,6 +1,7 @@
 package state;
 
 import java.util.List;
+import java.util.function.Supplier;
 
 import UI.App;
 import dataRepo.DataRepo;
@@ -9,6 +10,7 @@ import dataRepo.Sonifiable;
 import dataRepo.DataRepo.FilterFlag;
 import dataRepo.DataRepo.IntervalLength;
 import javafx.application.Application;
+import util.AppError;
 import audio.synth.InstrumentEnum;
 
 // This class runs in the main thread and coordinates all tasks and the creation of the UI thread
@@ -27,9 +29,10 @@ public class StateManager {
 	public static void testUI(String[] args) {
 		Thread th = new Thread(() -> Application.launch(App.class, args));
 		th.start();
-		DataRepo.init();
 
 		try {
+			call(() -> DataRepo.init());
+
 			List<Sonifiable> l = DataRepo.getAll(FilterFlag.ALL);
 			l = l.subList(0, Math.min(l.size(), 10));
 			if (!l.isEmpty()) {
@@ -48,10 +51,27 @@ public class StateManager {
 		}
 	}
 
-	public static void testSound(String[] args) {
-		DataRepo.init();
+	public static <T> T call(AppSupplier<T> func, T alternative) throws InterruptedException {
+		try {
+			return func.call();
+		} catch (AppError e) {
+			EventQueues.toUI.put(new Msg<>(MsgToUIType.ERROR, e.getMessage()));
+			return alternative;
+		}
+	}
 
-		List<Sonifiable> data = DataRepo.getAll(FilterFlag.ALL);
+	public static void call(AppFunction func) throws InterruptedException {
+		try {
+			func.call();
+		} catch (AppError e) {
+			EventQueues.toUI.put(new Msg<>(MsgToUIType.ERROR, e.getMessage()));
+		}
+	}
+
+	public static void testSound(String[] args) {
+		// DataRepo.init();
+
+		// List<Sonifiable> data = DataRepo.getAll(FilterFlag.ALL);
 		// TODO: Call functions in Harmonizer
 	}
 }
