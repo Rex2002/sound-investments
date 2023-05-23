@@ -11,6 +11,7 @@ import audio.synth.generators.PhaseAdvancers;
 import audio.synth.generators.PhaseContainer;
 import audio.synth.generators.SineWaveGenerator;
 import audio.synth.generators.WaveGenerator;
+import state.EventQueues;
 
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioSystem;
@@ -36,14 +37,13 @@ public class Test {
 
         try{
             SourceDataLine sdl = AudioSystem.getSourceDataLine(af);
-            System.out.println("Audio Format: " + af);
             sdl.open(af);
             sdl.start();
             ADSR adsr = new ADSR(0.2, 0.2, 0.5, 0.3);
             WaveGenerator generator = new SineWaveGenerator();
 
             short[] sineEcho = Effect.echo(generator.generate(new double[]{440,  493.88,  523.25,  587.33 }, 8, new short[]{16383}, adsr), new double[]{0.9}, new int[]{15000});
-            short[] sine1 = generator.generate(new double[]{440,440, 493.88,  493.88, 440,440,  523.25,  587.33, 440, 440 }, 4, new short[]{16383}, adsr);
+            short[] sine1 = generator.generate(new double[]{440,440, 493.88,  493.88, 440,440,  523.25,  587.33, 440, 440 }, 40, new short[]{16383}, adsr);
             short[] sine2 = generator.generate(new double[]{523.25,  587.33,  659.25,  698.46, }, 8, new short[]{12000}, adsr);
             short[] addedSine = addArrays(sine1, sine2);
 
@@ -80,15 +80,13 @@ public class Test {
                 FrequencyChart c0 = new FrequencyChart(Arrays.copyOfRange(fftOfFilteredSine, 0, fftOfFilteredSine.length), 1, "Filtered");
                 FrequencyChart c1 = new FrequencyChart(Arrays.copyOfRange(addedSine, 0, 44100), 1, "Added");
                 //FrequencyChart c2 = new FrequencyChart(Arrays.copyOfRange(sw,0, 44100),1, "Sawtooth");
-                c.setVisible(true);
-                c0.setVisible(true);
+                //c.setVisible(true);
+                //c0.setVisible(true);
                 //c1.setVisible(true);
                 //c2.setVisible(true);
             });
-            //play(sdl, synthLine);
-            play(sdl, sine1);
-            play(sdl, fft);
-            play(sdl, addedFilteredSine);
+            playWithControls(sdl, sine1);
+            System.out.println("we have reached the point");
             sdl.drain();
             sdl.close();
         } catch (LineUnavailableException e) {
@@ -129,8 +127,6 @@ public class Test {
     private double[] createDoubleSine(int freq, int duration, int amplitude){
         double[] sin = new double[duration * Constants.SAMPLE_RATE * Constants.CHANNEL_NO];
         double samplingInterval = (double) Constants.SAMPLE_RATE/freq;
-        System.out.println("Frequency of signal: " + freq + " hz");
-        System.out.println("Sampling interval: " + samplingInterval + " hz");
         for(int i = 0; i < sin.length; i += 2){
             double angle = ((2*Math.PI)/(samplingInterval)) * i;  // full circle: 2*Math.PI -> one step: divide by sampling interval
             //double lfo = ((2*Math.PI)/lfoSamplingInterval) * i;
@@ -149,6 +145,50 @@ public class Test {
         s.write(out, 0, out.length);
     }
 
+    public static void playWithControls(SourceDataLine s, short[] data){
+        //TODO test / implement edge behaviour
+        System.out.println("Entering playWithControls.");
+        System.out.println("The audio playback can be controlled with the following commands: \n p: pause \n r: resume \n jf: jump forward 2s \n jb: jump backwards 2s \n");
+        System.out.println("Please do not try to test edge-case behaviour. It is untested and may result in outOfBoundsExceptions");
+        int playbackSampleSize = 4410;
+        int positionPointer = 0;
+        boolean paused = false;
+        Thread playController = new Thread(new PlaybackController());
+        playController.start();
+        System.out.println("started thread for playback controller.");
+        System.out.println("playBackSampleSize/data.length: " + data.length/playbackSampleSize);
+        byte[] outBuffer = new byte[playbackSampleSize * 2];
+        while(positionPointer < data.length/playbackSampleSize) {
+            if(!paused){
+                for (int i = 0; i < playbackSampleSize; i++) {
+                    outBuffer[2 * i] = (byte) ((data[positionPointer * playbackSampleSize + i] >> 8) & 0xFF);
+                    outBuffer[2 * i + 1] = (byte) (data[positionPointer * playbackSampleSize + i] & 0xFF);
+                }
+                s.write(outBuffer, 0, outBuffer.length);
+                positionPointer++;
+            }
+
+
+            if(!EventQueues.toPlayback.isEmpty()){
+                System.out.println("getting a value from the event queue:" + EventQueues.toPlayback.peek());
+                int queueValue = 0;
+                try {
+                    queueValue = EventQueues.toPlayback.take();
+                }catch (InterruptedException e){
+                    e.printStackTrace();
+                }
+                System.out.println("EventQueueValue: " + queueValue);
+                switch (queueValue) {
+                    case -1 -> paused = true;
+                    case -2 -> paused = false;
+                    case 1 -> positionPointer += 20;
+                    case 2 -> positionPointer -= 20;
+                }
+            }
+        }
+        System.out.println("finished loop");
+    }
+
     private void play(SourceDataLine s, byte[] data){
         s.write(data, 0, data.length);
     }
@@ -159,7 +199,6 @@ public class Test {
     }
 
     private static short[] addArrays(short[] first, short[] second, int start) {
-        System.out.println("Adding arrays of lengths " + first.length + " and " + second.length + ", starting at " + start);
         // if start is zero, it does not matter which array is longer.
         // if start is not zero, we assume that the second array is meant to be added at the given position
         if(start != 0 && first.length < second.length + start){
@@ -184,7 +223,6 @@ public class Test {
             }
         }
         else{
-            System.out.println("Second array is longer");
             for(int i = minLength; i<maxLength; i++) {
                 result[i] = (short) (second[i] * resizingFactor);
             }

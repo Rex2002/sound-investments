@@ -12,16 +12,12 @@ public class SampleLoader {
     public static short[] loadSample(String filename) {
 
         try{
-            System.out.println("Reading audioInputStream for file " + filename);
             AudioInputStream audioStream = AudioSystem.getAudioInputStream(new File(filename));
             AudioFormat af = audioStream.getFormat();
-            System.out.println("AudioFormat of read file: "+ audioStream.getFormat());
             if(af.getFrameSize() != 4 || af.getSampleRate() != 44100 || af.isBigEndian()){
                 throw new RuntimeException("Illegal Audioformat in sample" + filename);
             }
             short[] out = new short[(int) (audioStream.getFrameLength() * 2)];
-            System.out.println("audioStreamFrameLength: " + audioStream.getFrameLength());
-            System.out.println("audioStreamFrameSize: " + audioStream.getFormat().getFrameSize());
             byte[] frame = new byte[4];
             for(int pos = 0; pos < audioStream.getFrameLength(); pos ++){
                 audioStream.read(frame);
