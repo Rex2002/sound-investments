@@ -109,7 +109,7 @@ public class DataRepo {
 			} else {
 				assert false : "Inexhaustive handling of cases for IntervalLength enum";
 			}
-			return ""; // sto shut up the type checker
+			return null;
 		}
 	}
 
