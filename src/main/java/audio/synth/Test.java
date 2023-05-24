@@ -10,7 +10,7 @@ import audio.synth.generators.PhaseAdvancers;
 import audio.synth.generators.PhaseContainer;
 import audio.synth.generators.SineWaveGenerator;
 import audio.synth.generators.WaveGenerator;
-import state.EventQueues;
+import audio.synth.playback.PlaybackController;
 
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioSystem;
@@ -18,6 +18,7 @@ import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.SourceDataLine;
 import java.awt.*;
 import java.util.Arrays;
+import java.util.Scanner;
 
 import static audio.synth.Util.findMax;
 
@@ -156,53 +157,32 @@ public class Test {
         s.write(out, 0, out.length);
     }
 
-    public static void playWithControls(SourceDataLine s, short[] data) {
-        // TODO test / implement edge behaviour
-        System.out.println("Entering playWithControls.");
-        System.out.println(
-                "The audio playback can be controlled with the following commands: \n p: pause \n r: resume \n jf: jump forward 2s \n jb: jump backwards 2s \n");
-        System.out.println(
-                "Please do not try to test edge-case behaviour. It is untested and may result in outOfBoundsExceptions");
-        int playbackSampleSize = 4410;
-        int positionPointer = 0;
-        boolean paused = false;
-        Thread playController = new Thread(new PlaybackController());
-        playController.start();
-        System.out.println("started thread for playback controller.");
-        System.out.println("playBackSampleSize/data.length: " + data.length / playbackSampleSize);
-        byte[] outBuffer = new byte[playbackSampleSize * 2];
-        while (positionPointer < data.length / playbackSampleSize) {
-            if (!paused) {
-                for (int i = 0; i < playbackSampleSize; i++) {
-                    outBuffer[2 * i] = (byte) ((data[positionPointer * playbackSampleSize + i] >> 8) & 0xFF);
-                    outBuffer[2 * i + 1] = (byte) (data[positionPointer * playbackSampleSize + i] & 0xFF);
-                }
-                s.write(outBuffer, 0, outBuffer.length);
-                positionPointer++;
-            }
-
-            while (!EventQueues.toPlayback.isEmpty()) {
-                System.out.println("getting a value from the event queue:" + EventQueues.toPlayback.peek());
-                int queueValue = 0;
-                try {
-                    queueValue = EventQueues.toPlayback.take();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
-                System.out.println("EventQueueValue: " + queueValue);
-                switch (queueValue) {
-                    case -1 -> paused = true;
-                    case -2 -> paused = false;
-                    case 1 -> positionPointer += 20;
-                    case 2 -> positionPointer = (positionPointer < 20) ? 0 : positionPointer - 20;
-                }
-            }
-        }
-        System.out.println("finished loop");
-    }
 
     private void play(SourceDataLine s, byte[] data) {
         s.write(data, 0, data.length);
+    }
+
+    private void playWithControls(SourceDataLine s, short[] data){
+        PlaybackController p = new PlaybackController(s, data);
+        p.startPlayback();
+        while(true){
+            System.out.println("Please enter your next control action: ");
+            Scanner in = new Scanner(System.in);
+            String controlAction = in.next();
+
+                switch (controlAction) {
+                    //resume
+                    case "r" -> p.play();
+                    //pause
+                    case "p" -> p.pause();
+                    // jump forward 1s
+                    case "jf" -> p.skipForward();
+                    // jump backward 1s
+                    case "jb" -> p.skipBackward();
+                }
+
+
+        }
     }
 
     private static short[] addArrays(short[] first, short[] second) {

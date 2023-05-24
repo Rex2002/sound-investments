@@ -9,7 +9,7 @@ import java.util.Arrays;
 import java.util.Random;
 
 public class Harmonizer {
-    private InstrumentDataRaw dataRaw;
+    private final InstrumentDataRaw dataRaw;
 
     public Harmonizer(InstrumentDataRaw dataRaw) {
         this.dataRaw = dataRaw;
