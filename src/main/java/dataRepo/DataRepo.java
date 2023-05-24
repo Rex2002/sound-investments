@@ -74,42 +74,31 @@ public class DataRepo {
 
 		public Instant addToInstant(Instant x) {
 			long millis = 1000;
-			if (this == MIN)
-				millis *= 60;
-			else if (this == HOUR)
-				millis *= 60 * 60;
-			else if (this == DAY)
-				millis *= 60 * 60 * 12;
-			else
-				assert false : "Inexhaustive handling of cases for IntervalLength";
+			millis *= switch (this) {
+				case MIN -> 60;
+				case HOUR -> 60 * 60;
+				case DAY -> 12 * 60 * 60;
+			};
 			long res = x.toEpochMilli() + millis;
 			return Instant.ofEpochMilli(res);
 		}
 
 		public String toString(API api) {
-			if (this == MIN) {
-				if (api == API.LEEWAY)
-					return "1m";
-				else
-					return "1min";
-			} else if (this == HOUR) {
-				if (api == API.MARKETSTACK)
-					return "1hour";
-				else
-					return "1h";
-			} else if (this == DAY) {
-				if (api == API.LEEWAY)
-					assert false : "Daily intervals can't be used for intraday requests in Leeway's API";
-				else if (api == API.MARKETSTACK)
-					return "24hour";
-				else if (api == API.TWELVEDATA)
-					return "1day";
-				else
-					assert false : "Inexhaustive handling of cases for API enum";
-			} else {
-				assert false : "Inexhaustive handling of cases for IntervalLength enum";
-			}
-			return null;
+			return switch (this) {
+				case MIN -> switch (api) {
+					case LEEWAY -> "1m";
+					default -> "1min";
+				};
+				case HOUR -> switch (api) {
+					case MARKETSTACK -> "1hour";
+					default -> "1h";
+				};
+				case DAY -> switch (api) {
+					case LEEWAY -> null; // Leeway doesn't support 24hour intraday -> use /eod endpoint instead
+					case MARKETSTACK -> "24hour";
+					case TWELVEDATA -> "1day";
+				};
+			};
 		}
 	}
 
