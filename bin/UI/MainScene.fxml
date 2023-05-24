@@ -81,7 +81,7 @@
                   <Font size="27.0" />
                </font>
             </Label>
-            <ChoiceBox id="categorieChoice" layoutX="157.0" layoutY="240.0" prefHeight="42.0" prefWidth="153.0" style="-fx-background-radius: 10; -fx-background-color: #4D505B;" />
+            <ChoiceBox id="categorieChoice" fx:id="ecChoice1" layoutX="157.0" layoutY="240.0" prefHeight="42.0" prefWidth="153.0" style="-fx-background-radius: 10; -fx-background-color: #4D505B;" />
             <ChoiceBox id="categorieChoice" fx:id="ecChoice2" layoutX="157.0" layoutY="288.0" prefHeight="42.0" prefWidth="153.0" style="-fx-background-radius: 10; -fx-background-color: #4D505B;" />
             <ChoiceBox id="categorieChoice" fx:id="hiChoice2" layoutX="157.0" layoutY="403.0" prefHeight="42.0" prefWidth="153.0" style="-fx-background-radius: 10; -fx-background-color: #4D505B;" />
             <ChoiceBox id="categorieChoice" fx:id="hiChoice1" layoutX="157.0" layoutY="355.0" prefHeight="42.0" prefWidth="153.0" style="-fx-background-radius: 10; -fx-background-color: #4D505B;" />
