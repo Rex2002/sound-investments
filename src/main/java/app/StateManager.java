@@ -47,9 +47,19 @@ public class StateManager {
 					System.out.println(p);
 				EventQueues.toUI.put(new Msg<>(MsgToUIType.FILTERED_SONIFIABLES, l));
 			}
-		} catch (Exception e) {
-			System.out.println("ERROR:");
+		} catch (InterruptedException e) {
+			// TODO: What should we do here?
 			e.printStackTrace();
+			System.exit(1);
+		} catch (Exception e) {
+			e.printStackTrace();
+			try {
+				EventQueues.toUI.put(new Msg<>(MsgToUIType.ERROR, "Internal Error."));
+			} catch (InterruptedException e2) {
+				// TODO: DO same as above
+				e2.printStackTrace();
+				System.exit(1);
+			}
 		}
 	}
 
