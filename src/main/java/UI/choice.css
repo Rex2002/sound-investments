@@ -16,6 +16,15 @@
    -fx-background-insets: 5 5 5 5;
    
 }
+#instChoice{
+   -fx-pref-width: 165px;
+}
+#locationChoice{
+   -fx-pref-width: 206px;
+}
+#categorieChoice{
+   -fx-pref-width: 206px;
+}
  .choice-box{
     -fx-font-size:15pt;
     -fx-font-weight:bold; 
@@ -28,39 +37,64 @@
     -fx-text-fill: rgb(168, 168, 168);
 }
 .check-box {
-   -fx-font-size: 36;
-   -fx-padding: 10px;
+   -fx-font-size: 27;
+   -fx-padding: 8px;
 }
 .check-box > .box {
-   -fx-padding: 10px;
+   -fx-padding: 8px;
 }
 .check-box > .viewport{
-   
-   -fx-pref-height: 74px;
-   -fx-pref-width: 680px;
+   -fx-pref-height: 59.2px;
+   -fx-pref-width: 348.8px;
 }
 #expPane{
    -fx-background-color: white;
     -fx-background-radius: 30.0;
-    -fx-hgap: 10;
-    -fx-pref-height: 466px;
-    -fx-pref-width: 340px;
-    -fx-padding: 0 0 5 0;
-    -fx-border-insets: 0 0 5 0;
-    -fx-background-insets: 0 0 5 0;
+    -fx-hgap: 8;
+    -fx-pref-height: 372.8px;
+    -fx-pref-width: 272px;
+    -fx-padding: 0 0 4 0;
+    -fx-border-insets: 0 0 4 0;
+    -fx-background-insets: 0 0 4 0;
+}
+#instPane{
+   -fx-background-color: white;
+    -fx-background-radius: 30.0;
+    -fx-hgap: 8;
+    -fx-pref-height: 540px;
+    -fx-pref-width: 272px;
+    -fx-padding: 0 0 4 0;
+    -fx-border-insets: 0 0 4 0;
+    -fx-background-insets: 0 0 4 0;
 }
 #txtField{
    -fx-background-color: white;
    -fx-background-radius: 30.0;
-   -fx-pref-height: 77px;
-   -fx-pref-width: 321px;
+   -fx-pref-height: 61.6px;
+   -fx-pref-width: 256.8px;
    -fx-layout-x: 0px;
    -fx-layout-y: 0px;
-   -fx-font-size: 36;
+   -fx-font-size: 29;
    -fx-alignment:center;
 }
 #paneShareLabel{
-   -fx-pref-height: 53px;
-   -fx-pref-width: 286px;
-   -fx-font-size: 36;
+   -fx-pref-height: 42.4px;
+   -fx-pref-width: 228.8px;
+   -fx-font-size: 29;
+}
+#ecChoice1{
+   -fx-pref-height: 43.2px;
+   -fx-pref-width: 190px;
+}
+#ecChoice2{
+   -fx-pref-height: 43.2px;
+   -fx-pref-width: 152px;
+}
+#hiChoice1{
+   -fx-pref-height: 43.2px;
+   -fx-pref-width: 152px;
+}
+#hiChoice2{
+   -fx-pref-height: 43.2px;
+   -fx-pref-width: 152px;
 }

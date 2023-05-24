@@ -341,21 +341,21 @@ public class MainSceneController implements Initializable {
         pLabel.setId("paneShareLabel");
         pLabel.setText("Price");
         pLabel.setLayoutX(26);
-        pLabel.setLayoutY(77);
+        pLabel.setLayoutY(61.6);
         Label tLBLabel = new Label();
         tLBLabel.setId("paneShareLabel");
         tLBLabel.setText("Trend Line Break");
-        tLBLabel.setLayoutX(20);
-        tLBLabel.setLayoutY(206);
+        tLBLabel.setLayoutX(16);
+        tLBLabel.setLayoutY(164.8);
         examplePane.getChildren().add(tLBLabel);
         Label dLabel = new Label();
         dLabel.setId("paneShareLabel");
         dLabel.setText("Derivate");
-        dLabel.setLayoutX(20);
-        dLabel.setLayoutY(326);
+        dLabel.setLayoutX(16);
+        dLabel.setLayoutY(260.8);
         ChoiceBox pChoiceBox = new ChoiceBox<>();
         pChoiceBox.getItems().addAll(prices);
-        pChoiceBox.setLayoutX(20);
+        pChoiceBox.setLayoutX(16);
         pChoiceBox.setLayoutY(135);
         pChoiceBox.getSelectionModel().selectedIndexProperty().addListener(new ChangeListener<Number>() {
             @Override
@@ -370,8 +370,8 @@ public class MainSceneController implements Initializable {
         });
         ChoiceBox tLBChoiceBox = new ChoiceBox<>();
         tLBChoiceBox.getItems().addAll(trends);
-        tLBChoiceBox.setLayoutX(20);
-        tLBChoiceBox.setLayoutY(262);
+        tLBChoiceBox.setLayoutX(16);
+        tLBChoiceBox.setLayoutY(209.6);
         tLBChoiceBox.getSelectionModel().selectedIndexProperty().addListener(new ChangeListener<Number>() {
             @Override
             public void changed(ObservableValue<? extends Number> observableValue, Number number, Number number2) {
@@ -385,8 +385,8 @@ public class MainSceneController implements Initializable {
         });
         ChoiceBox dChoiceBox = new ChoiceBox<>();
         dChoiceBox.getItems().addAll(derivate);
-        dChoiceBox.setLayoutX(20);
-        dChoiceBox.setLayoutY(377);
+        dChoiceBox.setLayoutX(16);
+        dChoiceBox.setLayoutY(301.6);
         dChoiceBox.getSelectionModel().selectedIndexProperty().addListener(new ChangeListener<Number>() {
             @Override
             public void changed(ObservableValue<? extends Number> observableValue, Number number, Number number2) {

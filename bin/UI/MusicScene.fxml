@@ -16,16 +16,16 @@
 <?import javafx.scene.shape.Rectangle?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="1080.0" prefWidth="1980.0" style="-fx-background-color: #09080E;" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="UI.MusicSceneController">
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="823.0" prefWidth="1584.0" style="-fx-background-color: #09080E;" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="UI.MusicSceneController">
    <children>
-      <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#121315" height="107.0" stroke="#121315" strokeType="INSIDE" width="1980.0" />
-      <Label layoutX="92.0" layoutY="-2.0" prefHeight="53.0" prefWidth="885.0" text="Sound Investments" textFill="WHITE">
+      <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#121315" height="85.6" layoutX="-8.0" layoutY="1.0" stroke="#121315" strokeType="INSIDE" width="1592.0" />
+      <Label layoutX="83.0" layoutY="-18.0" prefHeight="124.0" prefWidth="885.0" text="Sound Investments" textFill="WHITE">
          <font>
-            <Font name="Rage Italic" size="99.0" />
+            <Font name="Rage Italic" size="80.0" />
          </font>
       </Label>
-      <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#121315" height="200.0" layoutY="880.0" stroke="#121315" strokeType="INSIDE" width="1980.0" />
-      <LineChart fx:id="lineChart" layoutX="-13.0" layoutY="177.0" legendSide="TOP" prefHeight="645.0" prefWidth="1980.0" title="Aktienkurs">
+      <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#121315" height="200.0" layoutY="623.0" stroke="#121315" strokeType="INSIDE" width="1584.0" />
+      <LineChart fx:id="lineChart" layoutY="119.0" legendSide="TOP" prefHeight="516.0" prefWidth="1584.0" title="Aktienkurs">
         <xAxis>
           <CategoryAxis side="BOTTOM" />
         </xAxis>
@@ -33,144 +33,129 @@
           <NumberAxis side="LEFT" />
         </yAxis>
       </LineChart>
-      <ImageView fitHeight="107.0" fitWidth="100.0" layoutX="1587.0" layoutY="930.0" pickOnBounds="true" preserveRatio="true">
-         <image>
-            <Image url="@../../../Downloads/icons8_left_24px.png" />
-         </image>
-      </ImageView>
-      <ImageView fitHeight="67.0" fitWidth="62.0" layoutX="1687.0" layoutY="949.0" pickOnBounds="true" preserveRatio="true">
-         <image>
-            <Image url="@../../../Downloads/icons8_pause_24px_1.png" />
-         </image>
-      </ImageView>
-      <ImageView fitHeight="107.0" fitWidth="100.0" layoutX="1847.0" layoutY="930.0" pickOnBounds="true" preserveRatio="true" rotate="180.0">
-         <image>
-            <Image url="@../../../Downloads/icons8_left_24px.png" />
-         </image>
-      </ImageView>
-      <ImageView fitHeight="77.0" fitWidth="86.0" layoutX="1770.0" layoutY="942.0" pickOnBounds="true" preserveRatio="true">
-         <image>
-            <Image url="@../../../Downloads/music-stop-button_98183.png" />
-         </image>
-      </ImageView>
-      <ProgressBar layoutX="997.0" layoutY="966.0" prefHeight="29.0" prefWidth="517.0" progress="0.0" />
+      <ProgressBar layoutX="808.0" layoutY="706.0" prefHeight="36.0" prefWidth="426.4" progress="0.0" />
       <Accordion layoutX="221.0" layoutY="880.0" />
-      <HBox layoutX="10.0" layoutY="890.0" prefHeight="50.0" prefWidth="960.0">
+      <HBox layoutX="14.0" layoutY="646.0" prefHeight="40.0" prefWidth="768.0">
          <children>
-            <Circle fill="DODGERBLUE" radius="18.0" stroke="BLACK" strokeType="INSIDE">
+            <Circle fill="DODGERBLUE" radius="14.4" stroke="BLACK" strokeType="INSIDE">
                <HBox.margin>
                   <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
                </HBox.margin>
             </Circle>
-            <Label prefHeight="50.0" prefWidth="184.0" text="Kurs_1" textFill="WHITE">
+            <Label prefHeight="50.0" prefWidth="147.2" text="Kurs_1" textFill="WHITE">
                <font>
-                  <Font size="36.0" />
+                  <Font size="28.8" />
                </font>
             </Label>
-            <Circle fill="#ff1fec" radius="18.0" stroke="BLACK" strokeType="INSIDE">
+            <Circle fill="#ff1fec" radius="14.4" stroke="BLACK" strokeType="INSIDE">
                <HBox.margin>
                   <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
                </HBox.margin>
             </Circle>
-            <Label prefHeight="60.0" prefWidth="184.0" text="Kurs_2" textFill="WHITE">
+            <Label prefHeight="60.0" prefWidth="147.2" text="Kurs_2" textFill="WHITE">
                <font>
-                  <Font size="36.0" />
+                  <Font size="28.8" />
                </font>
             </Label>
-            <Circle fill="#071d32" radius="18.0" stroke="BLACK" strokeType="INSIDE">
+            <Circle fill="#071d32" radius="14.4" stroke="BLACK" strokeType="INSIDE">
                <HBox.margin>
                   <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
                </HBox.margin>
             </Circle>
-            <Label prefHeight="60.0" prefWidth="184.0" text="Kurs_3" textFill="WHITE">
+            <Label prefHeight="60.0" prefWidth="147.2" text="Kurs_3" textFill="WHITE">
                <font>
-                  <Font size="36.0" />
+                  <Font size="28.8" />
                </font>
             </Label>
-            <Circle fill="#3b4854" radius="18.0" stroke="BLACK" strokeType="INSIDE">
+            <Circle fill="#3b4854" radius="14.4" stroke="BLACK" strokeType="INSIDE">
                <HBox.margin>
                   <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
                </HBox.margin>
             </Circle>
-            <Label prefHeight="53.0" prefWidth="184.0" text="Kurs_4" textFill="WHITE">
+            <Label prefHeight="53.0" prefWidth="147.2" text="Kurs_4" textFill="WHITE">
                <font>
-                  <Font size="36.0" />
+                  <Font size="28.8" />
                </font>
             </Label>
          </children>
       </HBox>
-      <HBox layoutX="10.0" layoutY="955.0" prefHeight="50.0" prefWidth="960.0">
+      <HBox layoutX="14.0" layoutY="699.0" prefHeight="40.0" prefWidth="768.0">
          <children>
-            <Circle fill="#ff5a1f" radius="18.0" stroke="BLACK" strokeType="INSIDE">
+            <Circle fill="#ff5a1f" radius="14.4" stroke="BLACK" strokeType="INSIDE">
                <HBox.margin>
                   <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
                </HBox.margin>
             </Circle>
-            <Label prefHeight="53.0" prefWidth="184.0" text="Kurs_5" textFill="WHITE">
+            <Label prefHeight="53.0" prefWidth="147.2" text="Kurs_5" textFill="WHITE">
                <font>
-                  <Font size="36.0" />
+                  <Font size="28.8" />
                </font>
             </Label>
-            <Circle fill="#e3ff1f" radius="18.0" stroke="BLACK" strokeType="INSIDE">
+            <Circle fill="#e3ff1f" radius="14.4" stroke="BLACK" strokeType="INSIDE">
                <HBox.margin>
                   <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
                </HBox.margin>
             </Circle>
-            <Label prefHeight="56.0" prefWidth="184.0" text="Kurs_6" textFill="WHITE">
+            <Label prefHeight="56.0" prefWidth="147.2" text="Kurs_6" textFill="WHITE">
                <font>
-                  <Font size="36.0" />
+                  <Font size="28.8" />
                </font>
             </Label>
-            <Circle fill="#7a4d69" radius="18.0" stroke="BLACK" strokeType="INSIDE">
+            <Circle fill="#7a4d69" radius="14.4" stroke="BLACK" strokeType="INSIDE">
                <HBox.margin>
                   <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
                </HBox.margin>
             </Circle>
-            <Label prefHeight="60.0" prefWidth="184.0" text="Kurs_7" textFill="WHITE">
+            <Label prefHeight="60.0" prefWidth="147.2" text="Kurs_7" textFill="WHITE">
                <font>
-                  <Font size="36.0" />
+                  <Font size="28.8" />
                </font>
             </Label>
          </children>
       </HBox>
-      <HBox layoutX="10.0" layoutY="1020.0" prefHeight="50.0" prefWidth="960.0">
+      <HBox layoutX="14.0" layoutY="748.0" prefHeight="40.0" prefWidth="768.0">
          <children>
-            <Circle fill="#1fff43" radius="18.0" stroke="BLACK" strokeType="INSIDE">
+            <Circle fill="#1fff43" radius="14.4" stroke="BLACK" strokeType="INSIDE">
                <HBox.margin>
                   <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
                </HBox.margin>
             </Circle>
-            <Label prefHeight="53.0" prefWidth="184.0" text="Kurs_8" textFill="WHITE">
+            <Label prefHeight="53.0" prefWidth="147.2" text="Kurs_8" textFill="WHITE">
                <font>
-                  <Font size="36.0" />
+                  <Font size="28.8" />
                </font>
             </Label>
-            <Circle fill="#ff2121" radius="18.0" stroke="BLACK" strokeType="INSIDE">
+            <Circle fill="#ff2121" radius="14.4" stroke="BLACK" strokeType="INSIDE">
                <HBox.margin>
                   <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
                </HBox.margin>
             </Circle>
-            <Label prefHeight="60.0" prefWidth="184.0" text="Kurs_9" textFill="WHITE">
+            <Label prefHeight="60.0" prefWidth="147.2" text="Kurs_9" textFill="WHITE">
                <font>
-                  <Font size="36.0" />
+                  <Font size="28.8" />
                </font>
             </Label>
-            <Circle fill="#891fff" radius="18.0" stroke="BLACK" strokeType="INSIDE">
+            <Circle fill="#891fff" radius="14.4" stroke="BLACK" strokeType="INSIDE">
                <HBox.margin>
                   <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
                </HBox.margin>
             </Circle>
-            <Label prefHeight="60.0" prefWidth="184.0" text="Kurs_10" textFill="WHITE">
+            <Label prefHeight="60.0" prefWidth="147.2" text="Kurs_10" textFill="WHITE">
                <font>
-                  <Font size="36.0" />
+                  <Font size="28.8" />
                </font>
             </Label>
          </children>
       </HBox>
-      <Button layoutX="1755.0" layoutY="26.0" mnemonicParsing="false" prefHeight="56.0" prefWidth="184.0" style="-fx-background-color: #9C5EEB; -fx-border-radius: 30;" text="Exportieren" textFill="WHITE">
+      <Button layoutX="1386.0" layoutY="22.0" mnemonicParsing="false" prefHeight="45.0" prefWidth="146.0" style="-fx-background-color: #9C5EEB; -fx-border-radius: 30;" text="Exportieren" textFill="WHITE">
          <font>
-            <Font size="24.0" />
+            <Font size="19.0" />
          </font>
       </Button>
+      <ImageView fitHeight="79.0" fitWidth="285.0" layoutX="1270.0" layoutY="684.0" pickOnBounds="true" preserveRatio="true">
+         <image>
+            <Image url="@../../../../../../OneDrive/Pictures/PlayPauseBtn.png" />
+         </image>
+      </ImageView>
    </children>
 </AnchorPane>
