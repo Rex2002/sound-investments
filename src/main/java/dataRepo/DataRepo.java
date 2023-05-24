@@ -20,15 +20,18 @@ public class DataRepo {
 		try {
 			return List
 					.of(
-							new Stock("SAP SE", "SAP", "XETRA", DateUtil.calFromDateStr("1994-02-01"),
+							new Stock("SAP SE", new SonifiableID("SAP", "XETRA"), DateUtil.calFromDateStr("1994-02-01"),
 									DateUtil.calFromDateStr("2023-05-17")),
-							new Stock("Siemens Energy AG", "ENR", "XETRA", DateUtil.calFromDateStr("2020-09-28"),
+							new Stock("Siemens Energy AG", new SonifiableID("ENR", "XETRA"),
+									DateUtil.calFromDateStr("2020-09-28"),
 									DateUtil.calFromDateStr("2023-05-17")),
-							new Stock("Dropbox Inc", "1Q5", "XETRA", DateUtil.calFromDateStr("2021-01-07"),
+							new Stock("Dropbox Inc", new SonifiableID("1Q5", "XETRA"),
+									DateUtil.calFromDateStr("2021-01-07"),
 									DateUtil.calFromDateStr("2023-05-17")),
-							new Stock("1&1 AG", "1U1", "XETRA", DateUtil.calFromDateStr("1998-12-04"),
+							new Stock("1&1 AG", new SonifiableID("1U1", "XETRA"), DateUtil.calFromDateStr("1998-12-04"),
 									DateUtil.calFromDateStr("2023-05-17")),
-							new Stock("123fahrschule SE", "123F", "XETRA", DateUtil.calFromDateStr("2021-11-02"),
+							new Stock("123fahrschule SE", new SonifiableID("123F", "XETRA"),
+									DateUtil.calFromDateStr("2021-11-02"),
 									DateUtil.calFromDateStr("2023-05-17")));
 		} catch (Exception e) {
 			return List.of();
@@ -201,7 +204,7 @@ public class DataRepo {
 			T s = list.get(i);
 			try {
 				HashMap<String, JsonPrimitive<?>> json = apiLeeway.getJSON(x -> x.asMap(),
-						"general/tradingperiod/" + s.getSymbolExchange());
+						"general/tradingperiod/" + s.getId().toString());
 				s.setEarliest(DateUtil.calFromDateStr(json.get("start").asStr()));
 				s.setLatest(DateUtil.calFromDateStr(json.get("end").asStr()));
 			} catch (Exception e) {
@@ -230,7 +233,7 @@ public class DataRepo {
 	private static void findByPrefix(String prefix, List<? extends Sonifiable> src, List<Sonifiable> dst) {
 		for (Sonifiable s : src) {
 			if (s.name.toLowerCase().startsWith(prefix.toLowerCase())
-					|| s.symbol.toLowerCase().startsWith(prefix.toLowerCase())) {
+					|| s.getId().symbol.toLowerCase().startsWith(prefix.toLowerCase())) {
 				dst.add(s);
 			}
 		}
@@ -262,7 +265,7 @@ public class DataRepo {
 
 	private static <T extends Sonifiable> T getSonifable(String symbol, List<T> list) {
 		for (T x : list) {
-			if (x.symbol == symbol)
+			if (x.getId().symbol == symbol)
 				return x;
 		}
 		return null;
