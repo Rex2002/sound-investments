@@ -31,7 +31,7 @@
                   <Font size="27.0" />
                </font>
             </Label>
-            <TextField layoutX="15.0" layoutY="94.0" prefHeight="27.0" prefWidth="370.0" promptText="Suche" style="-fx-background-color: #4D505B; -fx-background-radius: 30;">
+            <TextField id="searchBar" fx:id="searchBar" layoutX="15.0" layoutY="94.0" prefHeight="27.0" prefWidth="370.0" promptText="Suche" style="-fx-background-color: #4D505B; -fx-background-radius: 30;">
                <font>
                   <Font size="29.0" />
                </font>

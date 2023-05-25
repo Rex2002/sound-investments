@@ -6,10 +6,6 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
-
-import app.communication.EventQueues;
-import app.communication.Msg;
-import app.communication.MsgToUIType;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.concurrent.ScheduledService;
@@ -32,11 +28,16 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import javafx.util.Duration;
+
+import app.communication.EventQueues;
+import app.communication.Msg;
+import app.communication.MsgToSMType;
+import app.communication.MsgToUIType;
+import app.communication.SonifiableFilter;
 import dataRepo.Sonifiable;
+import dataRepo.DataRepo.FilterFlag;
 
 public class MainSceneController implements Initializable {
-    private CheckEQService service;
-
     // WARNING: Kommentare werden noch normalisiert
     @FXML
     private Label inst1EcLabel;
@@ -46,6 +47,8 @@ public class MainSceneController implements Initializable {
     private Label inst1PiLabel;
     @FXML
     private Label inst1HiLabel;
+    @FXML
+    private TextField searchBar;
     @FXML
     private Button startBtn;
     @FXML
@@ -82,33 +85,30 @@ public class MainSceneController implements Initializable {
     private DatePicker endPicker;
     @FXML
     private VBox checkVBox;
-    @FXML
+
+    private CheckEQService checkEQService;
     private ArrayList<String> shareCheckName = new ArrayList<>();
-    // @FXML
-    // private HashMap<String, String[]> shareSettingList = new HashMap<String,
-    // String[]>(); Wharscheinlich Löschen
-    @FXML
     private String[][] setArray = new String[10][4];
-    @FXML
     private int countArray = 0;
-    @FXML
     private Stage stage;
     private Scene scene;
     private Parent root;
-    @FXML
-    private String[] categories = { "Option 1", "Option 2" };
-    @FXML
-    private String[] locations = { "Option 1", "Option 2" };
-    @FXML
+
+    private static String[] categoryKeys = { "Alle Kategorien", "Aktien", "ETFs", "Indizes" };
+    private static FilterFlag[] categoryValues = { FilterFlag.ALL, FilterFlag.STOCK, FilterFlag.ETF, FilterFlag.INDEX };
+    static {
+        assert categoryKeys.length == categoryValues.length : "categoryKeys & categoryValues are not in sync";
+    }
+
+    private String[] locations = { "Deutschland" };
     private String[] prices = { "Option 1", "Option 2" };
-    @FXML
     private String[] trends = { "Option 1", "Option 2" };
-    @FXML
     private String[] derivate = { "Option 1", "Option 2" };
 
+    @SuppressWarnings("unchecked")
     @Override
     public void initialize(URL arg0, ResourceBundle arg1) { // Initialisierung mit den Optionen
-        categorieChoice.getItems().addAll(categories);
+        categorieChoice.getItems().addAll(MainSceneController.categoryKeys);
         locationChoice.getItems().addAll(locations);
         // priceChoice.getItems().addAll(prices);
         // trendLineBreaksChoice.getItems().addAll(trends);
@@ -116,10 +116,35 @@ public class MainSceneController implements Initializable {
 
         inst1VoLabel.setText("null");
         enableBtn();
-        service = new CheckEQService(this);
-        service.setPeriod(Duration.millis(100));
-        service.start();
+        checkEQService = new CheckEQService();
+        checkEQService.setPeriod(Duration.millis(100));
+        checkEQService.setOnSucceeded((event) -> {
+            List<Msg<MsgToUIType>> messages = checkEQService.getValue();
+            for (Msg<MsgToUIType> msg : messages) {
+                switch (msg.type) {
+                    case FILTERED_SONIFIABLES -> {
+                        clearCheckList();
+                        List<Sonifiable> sonifiables = (List<Sonifiable>) msg.data;
+                        for (Sonifiable s : sonifiables) {
+                            addToCheckList(s.getName());
+                        }
+                    }
+                    default -> System.out.println("ERROR: Msg-Type " + msg.type + " not yet implemented");
+                }
+            }
+        });
+        checkEQService.start();
 
+        categorieChoice.getSelectionModel().selectedIndexProperty().addListener((observable, oldIdx, newIdx) -> {
+            EventQueues.toSM.add(new Msg<>(MsgToSMType.FILTERED_SONIFIABLES,
+                    new SonifiableFilter(searchBar.getText(), categoryValues[(int) newIdx])));
+        });
+        categorieChoice.getSelectionModel().selectFirst();
+
+        searchBar.textProperty().addListener((observable, oldVal, newVal) -> {
+            EventQueues.toSM.add(new Msg<>(MsgToSMType.FILTERED_SONIFIABLES, new SonifiableFilter(newVal,
+                    categoryValues[categorieChoice.getSelectionModel().getSelectedIndex()])));
+        });
     }
 
     @FXML
@@ -133,7 +158,7 @@ public class MainSceneController implements Initializable {
 
     @FXML
     public void clearCheckList() {
-        checkVBox.getChildren().removeAll(); // Die Checkliste Liste clearen, NOCH TESTEN
+        checkVBox.getChildren().clear();
     }
 
     public void addToCheckList(String name) {
@@ -393,38 +418,5 @@ public class MainSceneController implements Initializable {
             startBtn.setDisable(true);
         }
         countArray = 0;
-    }
-
-    private static class CheckEQService extends ScheduledService<Object> {
-        MainSceneController controller;
-
-        CheckEQService(MainSceneController controller) {
-            this.controller = controller;
-        }
-
-        @SuppressWarnings("unchecked")
-        @Override
-        protected Task<Object> createTask() {
-            return new Task<>() {
-                @Override
-                protected Object call() throws Exception {
-                    while (!EventQueues.toUI.isEmpty()) {
-                        Msg<MsgToUIType> msg = EventQueues.toUI.poll();
-                        if (msg.type == MsgToUIType.FILTERED_SONIFIABLES) {
-                            List<Sonifiable> sonifiables = (List<Sonifiable>) msg.data;
-                            for (Sonifiable s : sonifiables) {
-                                controller.addToCheckList(s.getName());
-                            }
-                        } else {
-                            // @Cleanup This hard exit is only for development, to not forget adding any
-                            // MsgTypes here
-                            System.out.println("MsgType '" + msg.type.toString() + "' is not yet implemented");
-                            System.exit(1);
-                        }
-                    }
-                    return null;
-                }
-            };
-        }
     }
 }
