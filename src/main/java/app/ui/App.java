@@ -21,7 +21,6 @@ public class App extends Application {
             // scene.getStylesheets().add(getClass().getResource("Label.css").toExternalForm());
             String css = this.getClass().getResource("choice.css").toExternalForm();
             scene.getStylesheets().add(css);
-
             primaryStage.setScene(scene);
             primaryStage.show();
         } catch (IOException e) {

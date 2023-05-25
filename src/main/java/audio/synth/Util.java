@@ -10,7 +10,6 @@ public class Util {
             complexValues[i] = new Complex(vTd[i], 0);
         }
         transform(complexValues);
-        //System.out.println(Arrays.toString(complexValues));
         return complexValues;
     }
 

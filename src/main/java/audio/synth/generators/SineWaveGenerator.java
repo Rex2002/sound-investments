@@ -46,23 +46,39 @@ public class SineWaveGenerator implements WaveGenerator{
     @Override
     public short[] generate(double[] freq, int duration, short[] amplitude, Envelope env, double modFactor, Envelope modEnv) {
         short[] sin = new short[duration * SAMPLE_RATE * CHANNEL_NO];
-        env.setTotalLength(sin.length);
-        env.setNoOfTones(freq.length);
-        modEnv.setTotalLength(sin.length);
-        modEnv.setNoOfTones(freq.length);
+        env.setSectionLen(sin.length/freq.length);
+        modEnv.setSectionLen(sin.length/freq.length);
         double phase = 0;
         double mPhase = 0; // modulation phase
-        double sin1;
-        double ampFactor;
-        double modAmpFactor;
+        double sin1, ampFactor, modAmpFactor;
+        int freqIdx = -1, ampIdx, sectionLen, sectionOffset = 0;
+        // quick explanation:
+        //  freqIdx: index of the current frequency
+        //  ampIdx: same as freqIdx, just for amplitude
+        //  sectionLen: how long is the current frequency played (i.e. does it occur once in a row, twice, etc. in the freq. array)
+        //  sectionOffset: where does the section start in samples. This is needed to always restart the enveloping-counter at zero when a frequency change happens.
         for(int i = 0; i < sin.length; i += 2){
-            phase = PhaseAdvancers.advancePhaseSine(phase, freq[(int) (((double) i / sin.length) * freq.length)]);
-            mPhase = PhaseAdvancers.advancePhaseSine(mPhase, freq[(int) (((double) i / sin.length) * freq.length)] * modFactor);
-            ampFactor = env.getAmplitudeFactor(i);
-            modAmpFactor = modEnv.getAmplitudeFactor(i);
+            if(freqIdx == -1 || (freq[freqIdx] != freq[(int) (((double) i / sin.length) * freq.length)])){
+                freqIdx = (int) (((double) i / sin.length) * freq.length);
+                sectionOffset = i;
+                sectionLen = 0;
+                while(freqIdx + sectionLen < freq.length && freq[freqIdx] == freq[freqIdx + sectionLen]){
+                    sectionLen++;
+                }
+                env.setSectionLen(sin.length / freq.length * sectionLen);
+            }
+
+            ampIdx = (int) (((double) i / sin.length) * amplitude.length);
+
+            ampFactor = env.getAmplitudeFactor(i - sectionOffset);
+            modAmpFactor = modEnv.getAmplitudeFactor(i - sectionOffset);
+
+            phase = PhaseAdvancers.advancePhaseSine(phase, freq[freqIdx]);
+            mPhase = PhaseAdvancers.advancePhaseSine(mPhase, freq[freqIdx] * modFactor);
+
             sin1 = Math.sin(phase + Math.sin(mPhase) * modAmpFactor);
-            sin[i] = (short) (sin1 * amplitude[(int) (((double) i / sin.length) * amplitude.length)] * ampFactor);
-            sin[i+1] = (short) (sin1 * amplitude[(int) (((double) i / sin.length) * amplitude.length)] * ampFactor);
+            sin[i] = (short) (sin1 * amplitude[ampIdx] * ampFactor);
+            sin[i+1] = (short) (sin1 * amplitude[ampIdx] * ampFactor);
         }
         return sin;
     }
