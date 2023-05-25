@@ -12,6 +12,7 @@ import javafx.beans.value.ObservableValue;
 import javafx.concurrent.ScheduledService;
 import javafx.concurrent.Task;
 import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
@@ -25,6 +26,7 @@ import javafx.scene.control.DateCell;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
+import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
@@ -44,6 +46,16 @@ public class MainSceneController implements Initializable {
     private Label inst1PiLabel;
     @FXML
     private Label inst1HiLabel;
+    @FXML
+    private ChoiceBox inst1EcChoice;
+    @FXML
+    private ChoiceBox inst1VoChoice;
+    @FXML
+    private ChoiceBox inst1PiChoice;
+    @FXML
+    private ChoiceBox inst1HiChoice;
+    @FXML
+    private AnchorPane anchor;
     @FXML
     private Button startBtn;
     @FXML
@@ -121,7 +133,7 @@ public class MainSceneController implements Initializable {
             }
         });
         service.start();
-        
+        displayError("Testing", "Test");
     }
 
     @FXML
@@ -132,7 +144,36 @@ public class MainSceneController implements Initializable {
         stage.setScene(scene);
         stage.show();
     }
+    @FXML 
+    private void displayError(String errorMessage, String errorTitle){
+        Pane errorPane = new Pane();
+        errorPane.setId("errorPane");
+        errorPane.setLayoutX(542);
+        errorPane.setLayoutY(200);
+        errorPane.setPrefHeight(500);
+        errorPane.toFront();
+        errorPane.setPrefWidth(500);
+        Label errorMes = new Label(errorMessage);
+        errorMes.setId("errorMessage");
+        errorMes.setLayoutY(50);
+        errorMes.setLayoutX(125);
+        Label errorTit = new Label(errorTitle);
+        errorTit.setId("errorTitle");
+        errorTit.setLayoutY(20);
+        errorTit.setLayoutX(20);
+        Button close = new Button("Schließen");
+        close.setOnAction(new EventHandler<ActionEvent>() {
+            @Override public void handle(ActionEvent e) {
+                anchor.getChildren().remove(errorPane);
+            }
+        });
+        close.setLayoutX(330);
+        close.setLayoutY(20);
+        close.setId("closeBtn");
+        errorPane.getChildren().addAll(errorMes,close, errorTit);
+        anchor.getChildren().add(errorPane);
 
+    }
     @FXML
     public void clearCheckList() {
         checkVBox.getChildren().removeAll(); // Die Checkliste Liste clearen, NOCH TESTEN
@@ -264,17 +305,37 @@ public class MainSceneController implements Initializable {
                 switch ((int)number){
                     case 0:
                         inst1VoLabel.setText("Kein Kurs");
+                        inst1VoChoice.disableProperty().set(true);
                         break;
                    case 1:
                         inst1EcLabel.setText("Kein Kurs");
+                        inst1EcChoice.disableProperty().set(true);
+                        break;
+                    case 2:
+                        inst1PiLabel.setText("Kein Kurs");
+                        inst1PiChoice.disableProperty().set(true);
+                        break;
+                    case 3:
+                        inst1HiLabel.setText("Kein Kurs");
+                        inst1HiChoice.disableProperty().set(true);
                         break;
                    }
                 switch ((int)number2){
                 case 0:
                     inst1VoLabel.setText(tField.getText());
+                    inst1VoChoice.disableProperty().set(false);
                     break;
                case 1:
                     inst1EcLabel.setText(tField.getText());
+                    inst1EcChoice.disableProperty().set(false);
+                    break;
+               case 2:
+                    inst1PiLabel.setText(tField.getText());
+                    inst1PiChoice.disableProperty().set(false);
+                    break;
+                case 3:
+                    inst1HiLabel.setText(tField.getText());
+                    inst1HiChoice.disableProperty().set(false);
                     break;
                }
             }
@@ -302,13 +363,45 @@ public class MainSceneController implements Initializable {
         tLBinstChoiceBox.getSelectionModel().selectedIndexProperty().addListener(new ChangeListener<Number>() {
             @Override
             public void changed(ObservableValue<? extends Number> observableValue, Number number, Number number2) {
-                while (setArray[countArray][0] != name) {
-                    countArray++;
+                if(pChoiceBox.getValue().toString() == "Inst1"){
+                    switch ((int)number){
+                        case 0:
+                            inst1VoLabel.setText("Kein Kurs");
+                            inst1VoChoice.disableProperty().set(true);
+                            break;
+                       case 1:
+                            inst1EcLabel.setText("Kein Kurs");
+                            inst1EcChoice.disableProperty().set(true);
+                            break;
+                        case 2:
+                            inst1PiLabel.setText("Kein Kurs");
+                            inst1PiChoice.disableProperty().set(true);
+                            break;
+                        case 3:
+                            inst1HiLabel.setText("Kein Kurs");
+                            inst1HiChoice.disableProperty().set(true);
+                            break;
+                       }
+                    switch ((int)number2){
+                    case 0:
+                        inst1VoLabel.setText(tField.getText());
+                        inst1VoChoice.disableProperty().set(false);
+                        break;
+                   case 1:
+                        inst1EcLabel.setText(tField.getText());
+                        inst1EcChoice.disableProperty().set(false);
+                        break;
+                   case 2:
+                        inst1PiLabel.setText(tField.getText());
+                        inst1PiChoice.disableProperty().set(false);
+                        break;
+                    case 3:
+                        inst1HiLabel.setText(tField.getText());
+                        inst1HiChoice.disableProperty().set(false);
+                        break;
+                   }
                 }
-                setArray[countArray][2] = prices[(int)number2];
-                countArray = 0;
-                enableBtn();
-            }
+                }
         });
         ChoiceBox dChoiceBox = new ChoiceBox<>();
         dChoiceBox.getItems().addAll(derivate);
