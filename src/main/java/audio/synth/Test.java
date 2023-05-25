@@ -16,7 +16,6 @@ import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.SourceDataLine;
-import java.awt.*;
 import java.util.Arrays;
 import java.util.Scanner;
 
@@ -46,7 +45,7 @@ public class Test {
                     generator.generate(new double[] { 440, 493.88, 523.25, 587.33 }, 8, new short[] { 16383 }, adsr),
                     new double[] { 0.9 }, new int[] { 15000 });
             short[] sine1 = generator.generate(
-                    new double[] { 440, 440, 493.88, 493.88, 440, 440, 523.25, 587.33, 440, 440 }, 40,
+                    new double[] { 440, 440, 493.88, 493.88, 440, 440, 523.25, 587.33, 440, 440 }, 4,
                     new short[] { 16383 }, adsr);
             short[] sine2 = generator.generate(new double[] { 523.25, 587.33, 659.25, 698.46, }, 8,
                     new short[] { 12000 }, adsr);
@@ -82,23 +81,24 @@ public class Test {
             // gcd of carrier and modulation frequency
             short[] mSine = generator.generate(new double[] { 900 }, 4, new short[] { 15000 }, 2 / 3f);
             // short[] combined = multiplyArrays(sine, lfo);
-            EventQueue.invokeLater(() -> {
-                FrequencyChart c = new FrequencyChart(Arrays.copyOfRange(fftOfSine, 0, fftOfSine.length), 1,
-                        "Unfiltered");
-                FrequencyChart c0 = new FrequencyChart(
-                        Arrays.copyOfRange(fftOfFilteredSine, 0, fftOfFilteredSine.length), 1, "Filtered");
-                FrequencyChart c1 = new FrequencyChart(Arrays.copyOfRange(addedSine, 0, 44100), 1, "Added");
+            //EventQueue.invokeLater(() -> {
+            //    FrequencyChart c = new FrequencyChart(Arrays.copyOfRange(fftOfSine, 0, fftOfSine.length), 1,
+            //            "Unfiltered");
+            //    FrequencyChart c0 = new FrequencyChart(
+            //            Arrays.copyOfRange(fftOfFilteredSine, 0, fftOfFilteredSine.length), 1, "Filtered");
+            //    FrequencyChart c1 = new FrequencyChart(Arrays.copyOfRange(addedSine, 0, 44100), 1, "Added");
                 // FrequencyChart c2 = new FrequencyChart(Arrays.copyOfRange(sw,0, 44100),1,
                 // "Sawtooth");
                 // c.setVisible(true);
                 // c0.setVisible(true);
                 // c1.setVisible(true);
                 // c2.setVisible(true);
-            });
+            //});
             playWithControls(sdl, sine1);
             System.out.println("we have reached the point");
             sdl.drain();
             sdl.close();
+            System.out.println("ended main method");
         } catch (LineUnavailableException e) {
             throw new RuntimeException(e);
         }
@@ -165,7 +165,8 @@ public class Test {
     private void playWithControls(SourceDataLine s, short[] data){
         PlaybackController p = new PlaybackController(s, data);
         p.startPlayback();
-        while(true){
+        boolean running = true;
+        while(running){
             System.out.println("Please enter your next control action: ");
             Scanner in = new Scanner(System.in);
             String controlAction = in.next();
@@ -179,10 +180,11 @@ public class Test {
                     case "jf" -> p.skipForward();
                     // jump backward 1s
                     case "jb" -> p.skipBackward();
+                    case "s" -> {p.stop(); running = false;}
+                    case "rs" -> p.reset();
                 }
-
-
         }
+        System.out.println("finished scanner loop");
     }
 
     private static short[] addArrays(short[] first, short[] second) {
@@ -206,7 +208,7 @@ public class Test {
         }
 
         for (int i = start; i < minLength + start; i++) {
-            short secondValue = (short) (second[i - start] * resizingFactor);
+            // short secondValue = (short) (second[i - start] * resizingFactor);
             result[i] = (short) (first[i] * resizingFactor + second[i - start] * resizingFactor);
         }
         if (maxLength == first.length) {
@@ -217,7 +219,6 @@ public class Test {
             for (int i = minLength; i < maxLength; i++) {
                 result[i] = (short) (second[i] * resizingFactor);
             }
-
         }
         return result;
     }

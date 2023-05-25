@@ -5,11 +5,12 @@ import state.EventQueues;
 import javax.sound.sampled.SourceDataLine;
 
 public class Playback implements Runnable{
-    private final int PLAYBACK_SAMPLE_SIZE = 4410;
+    private static final int PLAYBACK_SAMPLE_SIZE = 4410;
     private final SourceDataLine s;
     private final short[] data;
     private int positionPointer;
     private boolean paused;
+    private boolean running;
 
     public Playback(SourceDataLine s, short[] data){
         this.s = s;
@@ -20,16 +21,17 @@ public class Playback implements Runnable{
         // TODO test / implement edge behaviour
         System.out.println("Entering playWithControls.");
         System.out.println(
-                "The audio playback can be controlled with the following commands: \n p: pause \n r: resume \n jf: jump forward 2s \n jb: jump backwards 2s \n");
+                "The audio playback can currently be controlled with the following commands: \n p: pause \n r: resume \n jf: jump forward 2s \n jb: jump backwards 2s \n rs: reset to start \n s: stop \n ");
         System.out.println(
                 "Please do not try to test edge-case behaviour. It is untested and may result in outOfBoundsExceptions");
         positionPointer = 0;
         paused = false;
+        running = true;
         System.out.println("started thread for playback controller.");
         System.out.println("playBackSampleSize/data.length: " + data.length / PLAYBACK_SAMPLE_SIZE);
         byte[] outBuffer = new byte[PLAYBACK_SAMPLE_SIZE * 2];
-        while (positionPointer < data.length / PLAYBACK_SAMPLE_SIZE) {
-            if (!paused) {
+        while (running) {
+            if (!paused && positionPointer < data.length/PLAYBACK_SAMPLE_SIZE) {
                 for (int i = 0; i < PLAYBACK_SAMPLE_SIZE; i++) {
                     outBuffer[2 * i] = (byte) ((data[positionPointer * PLAYBACK_SAMPLE_SIZE + i] >> 8) & 0xFF);
                     outBuffer[2 * i + 1] = (byte) (data[positionPointer * PLAYBACK_SAMPLE_SIZE + i] & 0xFF);
@@ -46,13 +48,13 @@ public class Playback implements Runnable{
                 } catch (InterruptedException e) {
                     e.printStackTrace();
                 }
-                System.out.println("EventQueueValue: " + nextEvent);
                 switch (nextEvent.getType()) {
                     case PAUSE -> paused = true;
                     case PLAY -> paused = false;
-                    case SKIP_BACKWARD -> positionPointer += nextEvent.getDuration();
-                    case SKIP_FORWARD -> positionPointer = (positionPointer < nextEvent.getDuration()) ? 0 : positionPointer - nextEvent.getDuration();
+                    case SKIP_FORWARD -> positionPointer += nextEvent.getDuration();
+                    case SKIP_BACKWARD -> positionPointer = Math.max(positionPointer - nextEvent.getDuration(), 0);
                     case RESET -> positionPointer = 0;
+                    case STOP -> running = false;
                 }
             }
         }

@@ -5,6 +5,7 @@ public enum PlayControlEventsEnum {
     PAUSE,
     SKIP_FORWARD,
     SKIP_BACKWARD,
-    RESET
+    RESET,
+    STOP
 
 }

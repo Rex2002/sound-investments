@@ -6,7 +6,7 @@ import javax.sound.sampled.SourceDataLine;
 
 public class PlaybackController{
 
-    public final int SKIP_LENGTH = 40;
+    public final int SKIP_LENGTH = 10;
     private final SourceDataLine s;
     private final short[] data;
 
@@ -68,6 +68,16 @@ public class PlaybackController{
         try{
             EventQueues.toPlayback.put(p);
         }catch (InterruptedException e){
+            e.printStackTrace();
+        }
+    }
+
+    public void stop(){
+        PlayControlEvent p = new PlayControlEvent();
+        p.setType(PlayControlEventsEnum.STOP);
+        try{
+            EventQueues.toPlayback.put(p);
+        }catch (InterruptedException e) {
             e.printStackTrace();
         }
     }
