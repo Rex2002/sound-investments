@@ -3,7 +3,7 @@ package app;
 public class AppError extends Throwable {
 	String message;
 
-	AppError(String msg) {
+	public AppError(String msg) {
 		this.message = msg;
 	}
 
