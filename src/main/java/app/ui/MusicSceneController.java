@@ -51,7 +51,7 @@ public class MusicSceneController implements Initializable {
   }
 
   public void switchToMainScene(ActionEvent event) throws IOException {
-    root = FXMLLoader.load(getClass().getResource("MainScene.fxml"));
+    root = FXMLLoader.load(getClass().getResource("/MainScene.fxml"));
     stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
     scene = new Scene(root);
     stage.setScene(scene);
@@ -77,7 +77,7 @@ public class MusicSceneController implements Initializable {
 
         /*
          * if(current/end == 1) {
-         * 
+         *
          * cancelTimer();
          * }
          */

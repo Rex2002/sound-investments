@@ -124,7 +124,7 @@ public class MainSceneController implements Initializable {
 
     @FXML
     public void switchToMusicScene(ActionEvent event) throws IOException { // Wechsel auf die Music Scene
-        root = FXMLLoader.load(getClass().getResource("MusicScene.fxml"));
+        root = FXMLLoader.load(getClass().getResource("/MusicScene.fxml"));
         stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
         scene = new Scene(root);
         stage.setScene(scene);
