@@ -242,14 +242,12 @@ public class MainSceneController implements Initializable {
         pChoiceBox.getSelectionModel().selectedIndexProperty().addListener(new ChangeListener<Number>() {
             @Override
             public void changed(ObservableValue<? extends Number> observableValue, Number number, Number number2) {
-                if(pChoiceBox.getValue().toString() == "Option 1"){
-                    inst1VoLabel.setText(tField.getText());
-                }
                 while (setArray[countArray][0] != name) {
                     countArray++;
                 }
+
                 pinstChoiceBox.disableProperty().set(false);
-                setArray[countArray][1] = (String) pChoiceBox.getValue().toString();
+                setArray[countArray][1] = prices[(int)number2];
                 countArray = 0;
                 enableBtn();
             }
@@ -263,12 +261,20 @@ public class MainSceneController implements Initializable {
             @Override
             public void changed(ObservableValue<? extends Number> observableValue, Number number, Number number2) {
                if(pChoiceBox.getValue().toString() == "Inst1"){
-                switch (pinstChoiceBox.getValue().toString()){
-                case "Option 1":
-                    inst1VoLabel.setText("Option 1");
+                switch ((int)number){
+                    case 0:
+                        inst1VoLabel.setText("Kein Kurs");
+                        break;
+                   case 1:
+                        inst1EcLabel.setText("Kein Kurs");
+                        break;
+                   }
+                switch ((int)number2){
+                case 0:
+                    inst1VoLabel.setText(tField.getText());
                     break;
-               case "Option 2":
-                    inst1VoLabel.setText("Option 2");
+               case 1:
+                    inst1EcLabel.setText(tField.getText());
                     break;
                }
             }
@@ -284,7 +290,7 @@ public class MainSceneController implements Initializable {
                 while (setArray[countArray][0] != name) {
                     countArray++;
                 }
-                setArray[countArray][2] = (String) tLBChoiceBox.getValue().toString();
+                setArray[countArray][2] = prices[(int)number2];
                 countArray = 0;
                 enableBtn();
             }
@@ -299,7 +305,7 @@ public class MainSceneController implements Initializable {
                 while (setArray[countArray][0] != name) {
                     countArray++;
                 }
-                setArray[countArray][2] = (String) tLBinstChoiceBox.getValue().toString();
+                setArray[countArray][2] = prices[(int)number2];
                 countArray = 0;
                 enableBtn();
             }
@@ -314,7 +320,7 @@ public class MainSceneController implements Initializable {
                 while (setArray[countArray][0] != name) {
                     countArray++;
                 }
-                setArray[countArray][3] = dChoiceBox.getValue().toString(); // Klappt nicht so wie es soll
+                setArray[countArray][3] = prices[(int)number2]; // Klappt nicht so wie es soll
                 countArray = 0;
                 enableBtn();
             }
@@ -329,7 +335,7 @@ public class MainSceneController implements Initializable {
                 while (setArray[countArray][0] != name) {
                     countArray++;
                 }
-                setArray[countArray][3] = dChoiceBox.getValue().toString(); // Klappt nicht so wie es soll
+                setArray[countArray][3] = prices[(int)number2]; // Klappt nicht so wie es soll
                 countArray = 0;
                 enableBtn();
             }
