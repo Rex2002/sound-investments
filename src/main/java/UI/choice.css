@@ -24,7 +24,7 @@
 #categorieChoice{
    -fx-pref-width: 206px;
 }
- .choice-box{
+.choice-box{
     -fx-font-size:15pt;
     -fx-font-weight:bold; 
     -fx-pref-height: 48.8px;
@@ -50,18 +50,16 @@
    -fx-background-color: white;
     -fx-background-radius: 30.0;
     -fx-hgap: 8;
-    -fx-pref-height: 372.8px;
+    -fx-pref-height: 570px;
     -fx-pref-width: 272px;
     -fx-padding: 0 0 4 0;
     -fx-border-insets: 0 0 4 0;
     -fx-background-insets: 0 0 4 0;
 }
 #instPane{
-   -fx-background-color: white;
-    -fx-background-radius: 30.0;
-    -fx-hgap: 8;
-    -fx-pref-height: 540px;
-    -fx-pref-width: 272px;
+   
+   -fx-pref-height: 530px;
+   -fx-pref-width: 272px;
     -fx-padding: 0 0 4 0;
     -fx-border-insets: 0 0 4 0;
     -fx-background-insets: 0 0 4 0;
