@@ -6,6 +6,9 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
+
+import com.groupdocs.metadata.internal.c.a.pd.internal.html.dom.canvas.le;
+
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.concurrent.ScheduledService;
@@ -28,6 +31,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
+import javafx.scene.shape.Line;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 
@@ -124,8 +128,6 @@ public class MainSceneController implements Initializable {
         // priceChoice.getItems().addAll(prices);
         // trendLineBreaksChoice.getItems().addAll(trends);
         // derivateChoice.getItems().addAll(derivate);
-
-        inst1VoLabel.setText("null");
         enableBtn();
 
         checkEQService = new CheckEQService();
@@ -274,28 +276,107 @@ public class MainSceneController implements Initializable {
         TextField tField = new TextField();
         tField.setText(name);
         tField.setId("txtField");
+        tField.setLayoutX(168);
+        tField.setLayoutY(8);
         examplePane.getChildren().add(tField);
+        Line topLine = new Line();
+        topLine.setLayoutX(174);
+        topLine.setLayoutY(53);
+        topLine.setStartX(0);
+        topLine.setStartY(0);
+        topLine.setEndX(391);
+        topLine.setEndY(0);
+        examplePane.getChildren().add(topLine);
+        Line leftLine = new Line();
+        leftLine.setLayoutX(306);
+        leftLine.setLayoutY(168);
+        leftLine.setId("pinkLine");
+        leftLine.setStartX(-100);
+        leftLine.setStartY(-60);
+        leftLine.setEndX(-100);
+        leftLine.setEndY(263);
+        examplePane.getChildren().add(leftLine);
+        Line rightLine = new Line();
+        rightLine.setLayoutX(512);
+        rightLine.setLayoutY(177);
+        rightLine.setId("pinkLine");
+        rightLine.setStartX(-100);
+        rightLine.setStartY(-60);
+        rightLine.setEndX(-100);
+        rightLine.setEndY(263);
+        examplePane.getChildren().add(rightLine);
         Label pLabel = new Label();
         pLabel.setId("paneShareLabel");
         pLabel.setText("Price");
-        pLabel.setLayoutX(26);
-        pLabel.setLayoutY(61.6);
+        pLabel.setLayoutX(14);
+        pLabel.setLayoutY(80);
         Label tLBLabel = new Label();
         tLBLabel.setId("paneShareLabel");
         tLBLabel.setText("Trend Line Break");
-        tLBLabel.setLayoutX(16);
-        tLBLabel.setLayoutY(224.8);
+        tLBLabel.setLayoutX(14);
+        tLBLabel.setLayoutY(215);
         examplePane.getChildren().add(tLBLabel);
         Label dLabel = new Label();
         dLabel.setId("paneShareLabel");
         dLabel.setText("Derivate");
-        dLabel.setLayoutX(16);
-        dLabel.setLayoutY(388);
+        dLabel.setLayoutX(14);
+        dLabel.setLayoutY(350);
+
+        Label flagLabel = new Label();
+        flagLabel.setId("paneShareLabel");
+        flagLabel.setText("Flag");
+        flagLabel.setLayoutX(226);
+        flagLabel.setLayoutY(80);
+        examplePane.getChildren().add(flagLabel);
+        Label triLabel = new Label();
+        triLabel.setId("paneShareLabel");
+        triLabel.setText("Triangle");
+        triLabel.setLayoutX(226);
+        triLabel.setLayoutY(215);
+        examplePane.getChildren().add(triLabel);
+        Label VformLabel = new Label();
+        VformLabel.setId("paneShareLabel");
+        VformLabel.setText("Vform");
+        VformLabel.setLayoutX(226);
+        VformLabel.setLayoutY(350);
+        examplePane.getChildren().add(VformLabel);
+
+        Label trendLabel = new Label();
+        trendLabel.setId("paneShareLabel");
+        trendLabel.setText("Trend-");
+        trendLabel.setLayoutX(422);
+        trendLabel.setLayoutY(80);
+        examplePane.getChildren().add(trendLabel);
+        Label breakLabel = new Label();
+        breakLabel.setId("paneShareLabel");
+        breakLabel.setText("break");
+        breakLabel.setLayoutX(422);
+        breakLabel.setLayoutY(119);
+        examplePane.getChildren().add(breakLabel);
+        Label movinLabel = new Label();
+        movinLabel.setId("paneShareLabel");
+        movinLabel.setText("Movin");
+        movinLabel.setLayoutX(422);
+        movinLabel.setLayoutY(203);
+        examplePane.getChildren().add(movinLabel);
+        Label supLabel = new Label();
+        supLabel.setId("paneShareLabel");
+        supLabel.setText("Support");
+        supLabel.setLayoutX(422);
+        supLabel.setLayoutY(305);
+        examplePane.getChildren().add(supLabel);
+        Label resLabel = new Label();
+        resLabel.setId("paneShareLabel");
+        resLabel.setText("Resist");
+        resLabel.setLayoutX(422);
+        resLabel.setLayoutY(410);
+        examplePane.getChildren().add(resLabel);
+        
         ChoiceBox pinstChoiceBox = new ChoiceBox<>();
         ChoiceBox pChoiceBox = new ChoiceBox<>();
         pChoiceBox.getItems().addAll("Inst1", "Inst2");
-        pChoiceBox.setLayoutX(16);
-        pChoiceBox.setLayoutY(106);
+        pChoiceBox.setLayoutX(14);
+        pChoiceBox.setLayoutY(115);
         pChoiceBox.getSelectionModel().selectedIndexProperty().addListener(new ChangeListener<Number>() {
             @Override
             public void changed(ObservableValue<? extends Number> observableValue, Number number, Number number2) {
@@ -311,9 +392,9 @@ public class MainSceneController implements Initializable {
         });
 
         pinstChoiceBox.getItems().addAll(prices);
-        pinstChoiceBox.setLayoutX(16);
+        pinstChoiceBox.setLayoutX(14);
         pinstChoiceBox.disableProperty().set(true);
-        pinstChoiceBox.setLayoutY(166);
+        pinstChoiceBox.setLayoutY(160);
         pinstChoiceBox.getSelectionModel().selectedIndexProperty().addListener(new ChangeListener<Number>() {
             @Override
             public void changed(ObservableValue<? extends Number> observableValue, Number number, Number number2) {
@@ -359,8 +440,8 @@ public class MainSceneController implements Initializable {
         });
         ChoiceBox tLBChoiceBox = new ChoiceBox<>();
         tLBChoiceBox.getItems().addAll(trends);
-        tLBChoiceBox.setLayoutX(16);
-        tLBChoiceBox.setLayoutY(270.2);
+        tLBChoiceBox.setLayoutX(14);
+        tLBChoiceBox.setLayoutY(250);
         tLBChoiceBox.getSelectionModel().selectedIndexProperty().addListener(new ChangeListener<Number>() {
             @Override
             public void changed(ObservableValue<? extends Number> observableValue, Number number, Number number2) {
@@ -374,8 +455,8 @@ public class MainSceneController implements Initializable {
         });
         ChoiceBox tLBinstChoiceBox = new ChoiceBox<>();
         tLBinstChoiceBox.getItems().addAll(trends);
-        tLBinstChoiceBox.setLayoutX(16);
-        tLBinstChoiceBox.setLayoutY(330.2);
+        tLBinstChoiceBox.setLayoutX(14);
+        tLBinstChoiceBox.setLayoutY(295);
         tLBinstChoiceBox.getSelectionModel().selectedIndexProperty().addListener(new ChangeListener<Number>() {
             @Override
             public void changed(ObservableValue<? extends Number> observableValue, Number number, Number number2) {
@@ -421,8 +502,8 @@ public class MainSceneController implements Initializable {
         });
         ChoiceBox dChoiceBox = new ChoiceBox<>();
         dChoiceBox.getItems().addAll(derivate);
-        dChoiceBox.setLayoutX(16);
-        dChoiceBox.setLayoutY(433.4);
+        dChoiceBox.setLayoutX(14);
+        dChoiceBox.setLayoutY(385);
         dChoiceBox.getSelectionModel().selectedIndexProperty().addListener(new ChangeListener<Number>() {
             @Override
             public void changed(ObservableValue<? extends Number> observableValue, Number number, Number number2) {
@@ -436,8 +517,8 @@ public class MainSceneController implements Initializable {
         });
         ChoiceBox dinstChoiceBox = new ChoiceBox<>();
         dinstChoiceBox.getItems().addAll(derivate);
-        dinstChoiceBox.setLayoutX(16);
-        dinstChoiceBox.setLayoutY(493.4);
+        dinstChoiceBox.setLayoutX(14);
+        dinstChoiceBox.setLayoutY(430);
         dinstChoiceBox.getSelectionModel().selectedIndexProperty().addListener(new ChangeListener<Number>() {
             @Override
             public void changed(ObservableValue<? extends Number> observableValue, Number number, Number number2) {
@@ -449,6 +530,148 @@ public class MainSceneController implements Initializable {
                 enableBtn();
             }
         });
+
+        ChoiceBox flaginstChoiceBox = new ChoiceBox<>();
+        flaginstChoiceBox.getItems().addAll(derivate);
+        flaginstChoiceBox.setLayoutX(226);
+        flaginstChoiceBox.setLayoutY(115);
+        flaginstChoiceBox.getSelectionModel().selectedIndexProperty().addListener(new ChangeListener<Number>() {
+            @Override
+            public void changed(ObservableValue<? extends Number> observableValue, Number number, Number number2) {
+                enableBtn();
+            }
+        });
+        ChoiceBox flagChoiceBox = new ChoiceBox<>();
+        flagChoiceBox.getItems().addAll(derivate);
+        flagChoiceBox.setLayoutX(226);
+        flagChoiceBox.setLayoutY(160);
+        flagChoiceBox.getSelectionModel().selectedIndexProperty().addListener(new ChangeListener<Number>() {
+            @Override
+            public void changed(ObservableValue<? extends Number> observableValue, Number number, Number number2) {
+                enableBtn();
+            }
+        });
+        ChoiceBox triinstChoiceBox = new ChoiceBox<>();
+        triinstChoiceBox.getItems().addAll(derivate);
+        triinstChoiceBox.setLayoutX(226);
+        triinstChoiceBox.setLayoutY(250);
+        triinstChoiceBox.getSelectionModel().selectedIndexProperty().addListener(new ChangeListener<Number>() {
+            @Override
+            public void changed(ObservableValue<? extends Number> observableValue, Number number, Number number2) {
+                enableBtn();
+            }
+        });
+        ChoiceBox triChoiceBox = new ChoiceBox<>();
+        triChoiceBox.getItems().addAll(derivate);
+        triChoiceBox.setLayoutX(226);
+        triChoiceBox.setLayoutY(295);
+        triChoiceBox.getSelectionModel().selectedIndexProperty().addListener(new ChangeListener<Number>() {
+            @Override
+            public void changed(ObservableValue<? extends Number> observableValue, Number number, Number number2) {
+                enableBtn();
+            }
+        });
+        ChoiceBox VforminstChoiceBox = new ChoiceBox<>();
+        VforminstChoiceBox.getItems().addAll(derivate);
+        VforminstChoiceBox.setLayoutX(226);
+        VforminstChoiceBox.setLayoutY(385);
+        VforminstChoiceBox.getSelectionModel().selectedIndexProperty().addListener(new ChangeListener<Number>() {
+            @Override
+            public void changed(ObservableValue<? extends Number> observableValue, Number number, Number number2) {
+                enableBtn();
+            }
+        });
+        ChoiceBox VformChoiceBox = new ChoiceBox<>();
+        VformChoiceBox.getItems().addAll(derivate);
+        VformChoiceBox.setLayoutX(226);
+        VformChoiceBox.setLayoutY(430);
+        VformChoiceBox.getSelectionModel().selectedIndexProperty().addListener(new ChangeListener<Number>() {
+            @Override
+            public void changed(ObservableValue<? extends Number> observableValue, Number number, Number number2) {
+                enableBtn();
+            }
+        });
+
+        ChoiceBox trendinstChoiceBox = new ChoiceBox<>();
+        trendinstChoiceBox.getItems().addAll(derivate);
+        trendinstChoiceBox.setLayoutX(500);
+        trendinstChoiceBox.setLayoutY(70);
+        trendinstChoiceBox.getSelectionModel().selectedIndexProperty().addListener(new ChangeListener<Number>() {
+            @Override
+            public void changed(ObservableValue<? extends Number> observableValue, Number number, Number number2) {
+                enableBtn();
+            }
+        });
+        ChoiceBox trendChoiceBox = new ChoiceBox<>();
+        trendChoiceBox.getItems().addAll(derivate);
+        trendChoiceBox.setLayoutX(500);
+        trendChoiceBox.setLayoutY(115);
+        trendChoiceBox.getSelectionModel().selectedIndexProperty().addListener(new ChangeListener<Number>() {
+            @Override
+            public void changed(ObservableValue<? extends Number> observableValue, Number number, Number number2) {
+                enableBtn();
+            }
+        });
+        ChoiceBox movininstChoiceBox = new ChoiceBox<>();
+        movininstChoiceBox.getItems().addAll(derivate);
+        movininstChoiceBox.setLayoutX(500);
+        movininstChoiceBox.setLayoutY(175);
+        movininstChoiceBox.getSelectionModel().selectedIndexProperty().addListener(new ChangeListener<Number>() {
+            @Override
+            public void changed(ObservableValue<? extends Number> observableValue, Number number, Number number2) {
+                enableBtn();
+            }
+        });
+        ChoiceBox movinChoiceBox = new ChoiceBox<>();
+        movinChoiceBox.getItems().addAll(derivate);
+        movinChoiceBox.setLayoutX(500);
+        movinChoiceBox.setLayoutY(220);
+        movinChoiceBox.getSelectionModel().selectedIndexProperty().addListener(new ChangeListener<Number>() {
+            @Override
+            public void changed(ObservableValue<? extends Number> observableValue, Number number, Number number2) {
+                enableBtn();
+            }
+        });
+        ChoiceBox supinstChoiceBox = new ChoiceBox<>();
+        supinstChoiceBox.getItems().addAll(derivate);
+        supinstChoiceBox.setLayoutX(500);
+        supinstChoiceBox.setLayoutY(280);
+        supinstChoiceBox.getSelectionModel().selectedIndexProperty().addListener(new ChangeListener<Number>() {
+            @Override
+            public void changed(ObservableValue<? extends Number> observableValue, Number number, Number number2) {
+                enableBtn();
+            }
+        });
+        ChoiceBox supChoiceBox = new ChoiceBox<>();
+        supChoiceBox.getItems().addAll(derivate);
+        supChoiceBox.setLayoutX(500);
+        supChoiceBox.setLayoutY(325);
+        supChoiceBox.getSelectionModel().selectedIndexProperty().addListener(new ChangeListener<Number>() {
+            @Override
+            public void changed(ObservableValue<? extends Number> observableValue, Number number, Number number2) {
+                enableBtn();
+            }
+        });
+        ChoiceBox resinstChoiceBox = new ChoiceBox<>();
+        resinstChoiceBox.getItems().addAll(derivate);
+        resinstChoiceBox.setLayoutX(500);
+        resinstChoiceBox.setLayoutY(385);
+        resinstChoiceBox.getSelectionModel().selectedIndexProperty().addListener(new ChangeListener<Number>() {
+            @Override
+            public void changed(ObservableValue<? extends Number> observableValue, Number number, Number number2) {
+                enableBtn();
+            }
+        });
+        ChoiceBox resChoiceBox = new ChoiceBox<>();
+        resChoiceBox.getItems().addAll(derivate);
+        resChoiceBox.setLayoutX(500);
+        resChoiceBox.setLayoutY(430);
+        resChoiceBox.getSelectionModel().selectedIndexProperty().addListener(new ChangeListener<Number>() {
+            @Override
+            public void changed(ObservableValue<? extends Number> observableValue, Number number, Number number2) {
+                enableBtn();
+            }
+        });
         examplePane.getChildren().add(pChoiceBox);
         examplePane.getChildren().add(pinstChoiceBox);
         examplePane.getChildren().add(tLBChoiceBox);
@@ -457,6 +680,21 @@ public class MainSceneController implements Initializable {
         examplePane.getChildren().add(dinstChoiceBox);
         examplePane.getChildren().add(dLabel);
         examplePane.getChildren().add(pLabel);
+        
+        examplePane.getChildren().add(flagChoiceBox);
+        examplePane.getChildren().add(flaginstChoiceBox);
+        examplePane.getChildren().add(triChoiceBox);
+        examplePane.getChildren().add(triinstChoiceBox);
+        examplePane.getChildren().add(VformChoiceBox);
+        examplePane.getChildren().add(VforminstChoiceBox);
+        examplePane.getChildren().add(trendChoiceBox);
+        examplePane.getChildren().add(trendinstChoiceBox);
+        examplePane.getChildren().add(movininstChoiceBox);
+        examplePane.getChildren().add(movinChoiceBox);
+        examplePane.getChildren().add(supinstChoiceBox);
+        examplePane.getChildren().add(supChoiceBox);
+        examplePane.getChildren().add(resinstChoiceBox);
+        examplePane.getChildren().add(resChoiceBox);
         return examplePane;
     }
 
