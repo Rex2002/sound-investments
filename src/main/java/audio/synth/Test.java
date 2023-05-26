@@ -18,7 +18,9 @@ import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.SourceDataLine;
 import java.awt.*;
 import java.util.Arrays;
+import java.util.LinkedList;
 
+import static audio.mixer.Mixer.mixAudioStreams;
 import static audio.synth.Util.findMax;
 
 public class Test {
@@ -45,7 +47,13 @@ public class Test {
             short[] sineEcho = Effect.echo(generator.generate(new double[]{440,  493.88,  523.25,  587.33 }, 8, new short[]{16383}, adsr), new double[]{0.9}, new int[]{15000});
             short[] sine1 = generator.generate(new double[]{440,440, 493.88,  493.88, 440,440,  523.25,  587.33, 440, 440 }, 4, new short[]{16383}, adsr);
             short[] sine2 = generator.generate(new double[]{523.25,  587.33,  659.25,  698.46, }, 8, new short[]{12000}, adsr);
-            short[] addedSine = addArrays(sine1, sine2);
+            short[] addedSine = mixAudioStreams(new LinkedList<short[]>(){
+                {
+                    add(sine1);
+                    add(sine2);
+                    add(sineEcho);
+                }
+            }, new int[]{0, 0, 0});
 
             //short[] fft = generator.generate(880, 2, new short[]{16383});
             //short[] fft2 = generator.generate(440, 2, new short[]{16383});
@@ -155,7 +163,10 @@ public class Test {
 
 
     private static short[] addArrays(short[] first, short[] second) {
-        return addArrays(first, second, 0);
+        return mixAudioStreams(new LinkedList<short[]>(){{
+            add(first);
+            add(second);
+        }}, new int[]{0,0});
     }
 
     private static short[] addArrays(short[] first, short[] second, int start) {
