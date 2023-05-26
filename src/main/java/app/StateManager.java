@@ -13,7 +13,6 @@ import app.mapping.InstrumentMapping;
 import app.ui.App;
 import dataRepo.DataRepo;
 import dataRepo.Sonifiable;
-import dataRepo.DataRepo.FilterFlag;
 import javafx.application.Application;
 import audio.synth.InstrumentEnum;
 

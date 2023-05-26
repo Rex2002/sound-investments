@@ -16,7 +16,7 @@
 <?import javafx.scene.shape.Rectangle?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="823.0" prefWidth="1584.0" style="-fx-background-color: #09080E;" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="app.ui.MainSceneController">
+<AnchorPane fx:id="anchor" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="823.0" prefWidth="1584.0" style="-fx-background-color: #09080E;" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="app.ui.MainSceneController">
 <children>
 	<!-- Title -->
 	<Rectangle arcHeight="5.0" arcWidth="5.0" fill="#121315" height="85.6" stroke="#121315" strokeType="INSIDE" width="1584.0" />
@@ -83,7 +83,7 @@
 		<children>
 			<ScrollPane fx:id="shareScrollPanel1" hbarPolicy="NEVER" layoutX="32.0" layoutY="95.0" prefHeight="454.0" prefWidth="292.0" vbarPolicy="NEVER">
 				<content>
-					<VBox fx:id="instBox" prefHeight="454.0" prefWidth="293.0" style="-fx-background-color: #D9D9D9 #D9D9D9; -fx-border-color: #D9D9D9;">
+					<VBox fx:id="instBox" prefHeight="530.0" prefWidth="293.0" style="-fx-background-color: #D9D9D9 #D9D9D9; -fx-border-color: #D9D9D9;">
 						<children>
 							<Pane prefHeight="530.0" prefWidth="272.0" style="-fx-background-color: white; -fx-background-radius: 30;">
 								<padding>
@@ -140,6 +140,11 @@
 											<Font size="24.0" />
 										</font>
 									</Label>
+
+									<ChoiceBox fx:id="inst1VoChoice" disable="true" layoutX="122.0" layoutY="102.0" prefHeight="49.0" prefWidth="153.0" style="-fx-background-radius: 10; -fx-background-color: #4D505B;" />
+									<ChoiceBox fx:id="inst1EcChoice" disable="true" layoutX="122.0" layoutY="214.0" prefHeight="49.0" prefWidth="153.0" style="-fx-background-radius: 10; -fx-background-color: #4D505B;" />
+									<ChoiceBox fx:id="inst1PiChoice" disable="true" layoutX="122.0" layoutY="326.0" prefHeight="49.0" prefWidth="153.0" style="-fx-background-radius: 10; -fx-background-color: #4D505B;" />
+									<ChoiceBox fx:id="inst1HiChoice" disable="true" layoutX="122.0" layoutY="441.0" prefHeight="49.0" prefWidth="153.0" style="-fx-background-radius: 10; -fx-background-color: #4D505B;" />
 								</children>
 							</Pane>
 						</children>
