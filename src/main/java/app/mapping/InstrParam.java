@@ -1,0 +1,17 @@
+package app.mapping;
+
+public enum InstrParam {
+	PITCH,
+	RELVOLUME,
+	ABSVOLUME,
+	DELAY_ECHO,
+	DELAY_REVERB,
+	FEEDBACK_ECHO,
+	FEEDBACK_REVERB,
+	ON_OFF_REVERB,
+	CUTOFF,
+	ORDER,
+	ON_OFF_FILTER,
+	HIGHPASS,
+	PAN;
+}
