@@ -3,7 +3,7 @@ package dataAnalyzer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Calendar;
-
+//Rückgabe beachten
 public class FlagFormationAnalyzer implements FormationAnalyzer {
     @Override
 	public List<FormationResult> analyzeFormations(List<Price> priceList){
@@ -46,7 +46,8 @@ public class FlagFormationAnalyzer implements FormationAnalyzer {
 		
 					if (formationLength >= 2 && formationLength <= 60) {
 						int duration = formationLength + 1; // Zeitraum der Formation
-						FormationResult result = new FormationResult(startDay, endDay, duration);
+						String namingShit = new String("Flag");
+						FormationResult result = new FormationResult(startDay, endDay, duration, namingShit);
 						flagFormations.add(result);
 					}
 				}
