@@ -52,7 +52,7 @@ public class MainSceneController implements Initializable {
     @FXML
     private Button startBtn;
     @FXML
-    private VBox paneBox;
+    private VBox paneBoxSonifiables;
     @FXML
     private VBox instBox;
     @FXML
@@ -64,13 +64,13 @@ public class MainSceneController implements Initializable {
     @FXML
     private ChoiceBox<String> locationChoice;
     @FXML
-    private ChoiceBox<String> ecChoice1;
+    private ChoiceBox<String> delayReverbChoice;
     @FXML
-    private ChoiceBox<String> ecChoice2;
+    private ChoiceBox<String> feedbackReverbChoice;
     @FXML
-    private ChoiceBox<String> hiChoice1;
+    private ChoiceBox<String> cutoffChoice;
     @FXML
-    private ChoiceBox<String> hiChoice2;
+    private ChoiceBox<String> filterChoice;
     @FXML
     private ChoiceBox<String> priceChoice;
     @FXML
@@ -116,6 +116,7 @@ public class MainSceneController implements Initializable {
 
         inst1VoLabel.setText("null");
         enableBtn();
+
         checkEQService = new CheckEQService();
         checkEQService.setPeriod(Duration.millis(100));
         checkEQService.setOnSucceeded((event) -> {
@@ -171,7 +172,7 @@ public class MainSceneController implements Initializable {
             @Override
             public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
                 if (newValue) {
-                    if (paneBox.getChildren().size() < 10) {
+                    if (paneBoxSonifiables.getChildren().size() < 10) {
                         addToPaneBox(cBox.getText());
                         shareCheckName.add(cBox.getText());
                     } else {
@@ -190,8 +191,8 @@ public class MainSceneController implements Initializable {
                     }
                     int i = shareCheckName.indexOf(cBox.getText());
                     shareCheckName.remove(cBox.getText());
-                    paneBox.getChildren().remove(i);
-                    paneBox.prefHeight(paneBox.getChildren().size() * 477.0);
+                    paneBoxSonifiables.getChildren().remove(i);
+                    paneBoxSonifiables.prefHeight(paneBoxSonifiables.getChildren().size() * 477.0);
                 }
             }
         });
@@ -214,8 +215,8 @@ public class MainSceneController implements Initializable {
 
     @FXML
     public void addToPaneBox(String txt) { // add a Sharepanel to the Panel Box if there are less than 10 Sharepanel
-        paneBox.getChildren().add(createSharePane(txt));
-        paneBox.setPrefHeight((paneBox.getChildren().size()) * 800.0);
+        paneBoxSonifiables.getChildren().add(createSharePane(txt));
+        paneBoxSonifiables.setPrefHeight((paneBoxSonifiables.getChildren().size()) * 800.0);
     }
 
     private Pane createSharePane(String name) { // initialize and dek the Share Pane
