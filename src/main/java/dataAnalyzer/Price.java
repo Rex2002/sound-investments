@@ -30,7 +30,7 @@ public class Price {
 	public Instant getstart(){
 		return start;
 	}
-	public Instand getend(){
+	public Instant getend(){
 		return end;
 	}
 }
