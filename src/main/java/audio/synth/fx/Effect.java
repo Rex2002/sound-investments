@@ -1,6 +1,8 @@
 package audio.synth.fx;
 
 
+  import audio.synth.Util;
+
 import static audio.Constants.SAMPLE_RATE;
 
 public class Effect {
@@ -11,10 +13,11 @@ public class Effect {
         double decayScalingFactor = 1; // controls how fast the sound decreases on change on -> off
         // TODO: implement attack-scaling on change off -> on
         for(int pos = 0; pos < input.length; pos++){
-            if(!onOff[(int) (((double) pos/input.length) * onOff.length)] && pos >= 1){
+
+            if(!onOff[Util.getRelPosition(pos, input.length, onOff.length)] && pos >= 1){
                 input[pos] = input[pos] * Math.pow(0.99, decayScalingFactor++/20);
             }
-            if(onOff[(int) (((double) pos/input.length) * onOff.length)]){
+            if(onOff[Util.getRelPosition(pos, input.length, onOff.length)]){
                 decayScalingFactor = 1;
                 // reset scaling factor for next decay
             }
@@ -85,8 +88,8 @@ public class Effect {
         if (filterStart >= 0) System.arraycopy(in, 0, out, 0, filterStart);
         for(int i = filterStart; i < in.length; i++){
             calculateCoefficients(
-                    kadov[(int) (((double) (i-filterStart)/(in.length-filterStart)) * kadov.length)],
-                    bandwidth[(int) (((double) (i-filterStart)/(in.length-filterStart)) * bandwidth.length)],
+                    kadov[Util.getRelPosition((i-filterStart), in.length-filterStart, kadov.length)],
+                    bandwidth[Util.getRelPosition((i-filterStart), in.length-filterStart, bandwidth.length)],
                     c, ft
             );
             double value = 0;

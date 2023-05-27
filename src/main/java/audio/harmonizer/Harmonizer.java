@@ -93,6 +93,7 @@ public class Harmonizer {
         double[] delays = new double[]{4/96f, 6/96f, 8/96f, 12/96f, 16/96f, 24/96f, 32/96f,48/96f, 1f };
         int[] output = new int[delayEcho.length];
         for (int i = 0; i < delayEcho.length; i++) {
+
             output[i] = (int) delays[(int) (delayEcho[i] * delays.length)] * (Constants.SAMPLE_RATE * 60 / (Constants.TEMPO * 4));
         }
         return output;

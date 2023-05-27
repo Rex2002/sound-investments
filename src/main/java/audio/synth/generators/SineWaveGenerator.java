@@ -1,5 +1,6 @@
 package audio.synth.generators;
 
+ import audio.synth.Util;
 import audio.synth.envelopes.Envelope;
 import audio.synth.envelopes.OneEnvelope;
 import audio.synth.envelopes.ZeroEnvelope;
@@ -47,8 +48,8 @@ public class SineWaveGenerator {
         //  sectionLen: how long is the current frequency played (i.e. does it occur once in a row, twice, etc. in the freq. array)
         //  sectionOffset: where does the section start in samples. This is needed to always restart the enveloping-counter at zero when a frequency change happens.
         for(int i = 0; i < sin.length; i += 2){
-            if(freqIdx == -1 || (freq[freqIdx] != freq[(int) (((double) i / sin.length) * freq.length)])){
-                freqIdx = (int) (((double) i / sin.length) * freq.length);
+            if(freqIdx == -1 || (freq[freqIdx] != freq[Util.getRelPosition(i, sin.length, freq.length)])){
+                freqIdx = Util.getRelPosition(i, sin.length, freq.length);
                 sectionOffset = i;
                 sectionLen = 0;
                 while(freqIdx + sectionLen < freq.length && freq[freqIdx] == freq[freqIdx + sectionLen]){
@@ -57,7 +58,7 @@ public class SineWaveGenerator {
                 env.setSectionLen(sin.length / freq.length * sectionLen);
             }
 
-            ampIdx = (int) (((double) i / sin.length) * amplitude.length);
+            ampIdx = Util.getRelPosition(i, sin.length, amplitude.length);
 
             ampFactor = env.getAmplitudeFactor(i - sectionOffset);
             modAmpFactor = modEnv.getAmplitudeFactor(i - sectionOffset);
