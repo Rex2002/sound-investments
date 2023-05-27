@@ -17,10 +17,11 @@ public class Mapping {
 	public static int MAX_SOUND_LENGTH = 5 * 60;
 	public static int MAX_SONIFIABLES_AMOUNT = 10;
 
+	private Set<SonifiableID> sonifiables = new HashSet<>(16);
 	private final InstrumentMapping[] mappedInstruments = new InstrumentMapping[InstrumentEnum.size];
-	private EvInstrMapping[] eventInstruments = new EvInstrMapping[MAX_EV_INSTR_SIZE];
+	private final EvInstrMapping[] eventInstruments = new EvInstrMapping[MAX_EV_INSTR_SIZE];
 	private int evInstrAmount = 0;
-	private Integer soundLength = 30; // stored in seconds
+	private Integer soundLength = null; // stored in seconds
 	// Timeperiod
 	private Calendar startDate = null;
 	private Calendar endDate = null;
@@ -34,10 +35,16 @@ public class Mapping {
 	private Boolean highPass = false;
 
 	public Mapping() {
+		// Initialize mappedInstruments
+		InstrumentEnum[] instruments = InstrumentEnum.values();
+		for (int i = 0; i < mappedInstruments.length; i++) {
+			mappedInstruments[i] = new InstrumentMapping(instruments[i]);
+		}
 	}
 
 	// Indicates whether the current mapping can already be used for sonification
 	public boolean isValid() {
+		System.out.println(verify());
 		return verify() == null;
 	}
 
@@ -51,21 +58,19 @@ public class Mapping {
 			return "End-Datum ist nicht gesetzt.";
 		if (soundLength == null || soundLength < MIN_SOUND_LENGTH || soundLength > MAX_SOUND_LENGTH)
 			return "Ungültige Audio-Länge gewählt. Die Audio-Länge muss zwischen 30 Sekunden und 5 Minuten liegen.";
+		if (sonifiables.isEmpty())
+			return "Kein Börsenkurs wurde auf ein Instrument gemappt.";
+		if (sonifiables.size() > MAX_SONIFIABLES_AMOUNT)
+			return "Zu viele Börsenkurse auf einmal im Mapping. Es dürfen maximal "
+					+ Integer.toString(MAX_SONIFIABLES_AMOUNT) + " Börsenkurse auf einmal gemappt werden.";
 
-		Set<SonifiableID> mappedSonifiables = new HashSet<>(16);
 		for (InstrumentMapping instrMap : mappedInstruments) {
 			if (instrMap.isEmpty())
 				continue;
 			if (instrMap.getPitch() == null)
 				return "Der Pitch vom Instrument '" + instrMap.getInstrument().toString()
 						+ "' wurde nicht auf einen Börsenwert gemappt.";
-			mappedSonifiables.addAll(instrMap.getMappedSonifiables());
 		}
-		if (mappedSonifiables.isEmpty())
-			return "Kein Börsenkurs wurde auf ein Instrument gemappt.";
-		if (mappedSonifiables.size() > MAX_SONIFIABLES_AMOUNT)
-			return "Zu viele Börsenkurse auf einmal im Mapping. Es dürfen maximal "
-					+ Integer.toString(MAX_SONIFIABLES_AMOUNT) + " Börsenkurse auf einmal gemappt werden.";
 		return null;
 	}
 
@@ -73,17 +78,54 @@ public class Mapping {
 	// Getters & Setters
 	////////
 
+	public void addSonifiable(SonifiableID sonifiable) {
+		sonifiables.add(sonifiable);
+	}
+
+	public void rmSonifiable(SonifiableID sonifiable) {
+		// TODO: Add logic to remove sonifiable from mapping
+		sonifiables.remove(sonifiable);
+	}
+
+	public boolean hasSonifiable(SonifiableID sonifiable) {
+		return sonifiables.contains(sonifiable);
+	}
+
+	// Do we even need this?
+	// private boolean isSonifiableStillMapped(SonifiableID sonifiable) {
+	// for (int i = 0; i < evInstrAmount; i++) {
+	// if (eventInstruments[i].getData().getId() == sonifiable)
+	// return true;
+	// }
+	// for (int i = 0; i < mappedInstruments.length; i++) {
+	// if (mappedInstruments[i].hasSonifiableMapped(sonifiable))
+	// return true;
+	// }
+	// return false;
+	// }
+
 	public void addEvInstr(EvInstrEnum instr, SonifiableID sonifiable, PointData eparam) throws AppError {
 		if (evInstrAmount == MAX_EV_INSTR_SIZE)
 			throw new AppError("Zu viele Event-Instrumente. Ein Mapping darf höchstens "
 					+ Integer.toString(MAX_EV_INSTR_SIZE) + " Event-Instrumente haben");
 		eventInstruments[evInstrAmount] = new EvInstrMapping(instr, new ExchangeData<>(sonifiable, eparam));
 		evInstrAmount++;
+		sonifiables.add(sonifiable);
 	}
 
-	public void rmEvInstr(SonifiableID sonifiable, PointData eparam) {
+	public void rmEvInstr(SonifiableID sonifiable, PointData eparam) throws AppError {
 		assert evInstrAmount > 0 : "Can't remove Event Instruments, when none have been mapped yet";
-
+		int idx = 0;
+		ExchangeData<PointData> e = eventInstruments[idx].getData();
+		while (e.getId() != sonifiable || e.getData() != eparam) {
+			idx++;
+			if (idx == evInstrAmount)
+				throw new AppError("Can't remove non-existent Event-Instrument.");
+			e = eventInstruments[idx].getData();
+		}
+		eventInstruments[idx] = eventInstruments[evInstrAmount - 1];
+		eventInstruments[evInstrAmount - 1] = null;
+		evInstrAmount--;
 	}
 
 	@SuppressWarnings("unchecked")
@@ -101,9 +143,13 @@ public class Mapping {
 		return Optional.of(setParamHelper(sonifiable, eparam, iparam));
 	}
 
+	// TODO: Make sure the switch cases don't forget any important parameters
+
+	// Important to keep in mind:
+	// setParam does not make sure to remove old parameter
 	public void setParam(InstrumentEnum instr, SonifiableID sonifiable, InstrParam iparam, ExchangeParam eparam)
 			throws AppError {
-		InstrumentMapping instrMap = Util.find(mappedInstruments, x -> x.getInstrument() == instr);
+		InstrumentMapping instrMap = Util.find(mappedInstruments, x -> x != null && x.getInstrument() == instr);
 		switch (iparam) {
 			case PITCH -> instrMap.setPitch(setParamHelper(sonifiable, eparam, iparam));
 			case RELVOLUME -> instrMap.setRelVolume(setOptParamHelper(sonifiable, eparam, iparam));
@@ -118,6 +164,25 @@ public class Mapping {
 			default ->
 				throw new AppError(eparam.toString() + " kann nicht auf " + iparam.toString() + "gemappt werden.");
 		}
+		sonifiables.add(sonifiable);
+	}
+
+	public void rmParam(SonifiableID sonifiable, InstrumentEnum instr, InstrParam iparam) throws AppError {
+		InstrumentMapping instrMap = Util.find(mappedInstruments, x -> x.getInstrument() == instr);
+		switch (iparam) {
+			case PITCH -> instrMap.setPitch(null);
+			case RELVOLUME -> instrMap.setRelVolume(Optional.empty());
+			case ABSVOLUME -> instrMap.setAbsVolume(Optional.empty());
+			case DELAY_ECHO -> instrMap.setDelayEcho(Optional.empty());
+			case FEEDBACK_ECHO -> instrMap.setFeedbackEcho(Optional.empty());
+			case ON_OFF_REVERB -> instrMap.setOnOffReverb(Optional.empty());
+			case CUTOFF -> instrMap.setCutoff(Optional.empty());
+			case ORDER -> instrMap.setOrder(Optional.empty());
+			case ON_OFF_FILTER -> instrMap.setOnOffFilter(Optional.empty());
+			case PAN -> instrMap.setPan(Optional.empty());
+			default ->
+				throw new AppError(iparam.toString() + " kann nicht gelöscht werden.");
+		}
 	}
 
 	public void setParam(SonifiableID sonifiable, InstrParam iparam, ExchangeParam eparam) throws AppError {
@@ -129,6 +194,19 @@ public class Mapping {
 			case ON_OFF_FILTER -> this.onOffFilter = setOptParamHelper(sonifiable, eparam, iparam);
 			default ->
 				throw new AppError(eparam.toString() + " kann nicht auf " + iparam.toString() + "gemappt werden.");
+		}
+		sonifiables.add(sonifiable);
+	}
+
+	public void rmParam(SonifiableID sonifiable, InstrParam iparam) throws AppError {
+		switch (iparam) {
+			case DELAY_REVERB -> this.delayReverb = Optional.empty();
+			case FEEDBACK_REVERB -> this.feedbackReverb = Optional.empty();
+			case ON_OFF_REVERB -> this.onOffReverb = Optional.empty();
+			case CUTOFF -> this.cutoff = Optional.empty();
+			case ON_OFF_FILTER -> this.onOffFilter = Optional.empty();
+			default ->
+				throw new AppError(iparam.toString() + " kann nicht gelöscht werden.");
 		}
 	}
 
@@ -151,6 +229,10 @@ public class Mapping {
 
 	public void setEndDate(Calendar endDate) {
 		this.endDate = endDate;
+	}
+
+	public Set<SonifiableID> getSonifiables() {
+		return this.sonifiables;
 	}
 
 	public InstrumentMapping[] getMappedInstruments() {
@@ -195,5 +277,24 @@ public class Mapping {
 
 	public Boolean getHighPass() {
 		return this.highPass;
+	}
+
+	@Override
+	public String toString() {
+		return "{" +
+				" sonifiables='" + this.sonifiables + "'" +
+				", mappedInstruments='" + Util.toStringArr(this.mappedInstruments) + "'" +
+				", eventInstruments='" + Util.toStringArr(this.eventInstruments) + "'" +
+				", evInstrAmount='" + this.evInstrAmount + "'" +
+				", soundLength='" + this.soundLength + "'" +
+				", startDate='" + this.startDate + "'" +
+				", endDate='" + this.endDate + "'" +
+				", delayReverb='" + this.delayReverb + "'" +
+				", feedbackReverb='" + this.feedbackReverb + "'" +
+				", onOffReverb='" + this.onOffReverb + "'" +
+				", cutoff='" + this.cutoff + "'" +
+				", onOffFilter='" + this.onOffFilter + "'" +
+				", highPass='" + this.highPass + "'" +
+				"}";
 	}
 }

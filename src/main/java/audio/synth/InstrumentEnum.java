@@ -5,8 +5,13 @@ public enum InstrumentEnum {
     SYNTH_TWO;
 
     public static final int size;
+    public static final String[] displayVals;
     static {
-        size = values().length;
+        InstrumentEnum[] vals = values();
+        size = vals.length;
+        displayVals = new String[size];
+        for (int i = 0; i < size; i++)
+            displayVals[i] = vals[i].toString();
     }
 
     public String toString() {

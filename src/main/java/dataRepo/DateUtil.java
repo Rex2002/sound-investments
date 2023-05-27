@@ -2,6 +2,8 @@ package dataRepo;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.Locale;
@@ -9,6 +11,7 @@ import java.util.Locale;
 public class DateUtil {
 	public static SimpleDateFormat fmtDate = new SimpleDateFormat("yyyy-mm-dd", Locale.US);
 	public static SimpleDateFormat fmtDatetime = new SimpleDateFormat("yyyy-mm-dd hh:mm:ss", Locale.US);
+	public static DateTimeFormatter dateTimeFmt = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
 	public static Calendar calFromDateStr(String dateStr) throws ParseException {
 		Calendar cal = new GregorianCalendar();
@@ -30,5 +33,9 @@ public class DateUtil {
 			sb.insert(i, pad);
 		}
 		return sb.toString();
+	}
+
+	public static Calendar localDateToCalendar(LocalDate ld) throws ParseException {
+		return calFromDateStr(ld.format(dateTimeFmt));
 	}
 }

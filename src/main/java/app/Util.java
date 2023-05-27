@@ -18,4 +18,16 @@ public class Util {
 		}
 		return null;
 	}
+
+	public static <T> String toStringArr(T[] xs) {
+		StringBuilder sb = new StringBuilder(64);
+		sb.append("[");
+		for (int i = 0; i < xs.length; i++) {
+			if (i > 0) sb.append(", ");
+			if (xs[i] == null) sb.append("null");
+			else sb.append(xs[i].toString());
+		}
+		sb.append("]");
+		return sb.toString();
+	}
 }

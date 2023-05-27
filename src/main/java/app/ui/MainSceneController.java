@@ -6,13 +6,9 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
-
-import com.groupdocs.metadata.internal.c.a.pd.internal.html.dom.canvas.le;
-
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
-import javafx.concurrent.ScheduledService;
-import javafx.concurrent.Task;
+import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
@@ -24,9 +20,11 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ChoiceBox;
+import javafx.scene.control.Control;
 import javafx.scene.control.DateCell;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
+import javafx.scene.control.SelectionModel;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
@@ -34,33 +32,28 @@ import javafx.scene.layout.VBox;
 import javafx.scene.shape.Line;
 import javafx.stage.Stage;
 import javafx.util.Duration;
+import java.util.Calendar;
+import java.time.Instant;
 
+import app.AppError;
 import app.communication.EventQueues;
 import app.communication.Msg;
 import app.communication.MsgToSMType;
 import app.communication.MsgToUIType;
 import app.communication.SonifiableFilter;
+import app.mapping.ExchangeParam;
+import app.mapping.InstrParam;
+import app.mapping.LineData;
+import app.mapping.Mapping;
+import app.mapping.PointData;
+import audio.synth.InstrumentEnum;
+import dataRepo.DateUtil;
 import dataRepo.Sonifiable;
+import dataRepo.SonifiableID;
 import dataRepo.DataRepo.FilterFlag;
 
 public class MainSceneController implements Initializable {
     // WARNING: Kommentare werden noch normalisiert
-    @FXML
-    private Label inst1EcLabel;
-    @FXML
-    private Label inst1VoLabel;
-    @FXML
-    private Label inst1PiLabel;
-    @FXML
-    private Label inst1HiLabel;
-    @FXML
-    private ChoiceBox inst1EcChoice;
-    @FXML
-    private ChoiceBox inst1VoChoice;
-    @FXML
-    private ChoiceBox inst1PiChoice;
-    @FXML
-    private ChoiceBox inst1HiChoice;
     @FXML
     private AnchorPane anchor;
     @FXML
@@ -70,13 +63,9 @@ public class MainSceneController implements Initializable {
     @FXML
     private VBox paneBoxSonifiables;
     @FXML
-    private VBox instBox;
-    @FXML
     private Label headerTitle;
     @FXML
-    private Label instPitchShare;
-    @FXML
-    private ChoiceBox<String> categorieChoice;
+    private ChoiceBox<String> categoriesChoice;
     @FXML
     private ChoiceBox<String> locationChoice;
     @FXML
@@ -88,47 +77,32 @@ public class MainSceneController implements Initializable {
     @FXML
     private ChoiceBox<String> filterChoice;
     @FXML
-    private ChoiceBox<String> priceChoice;
-    @FXML
-    private ChoiceBox<String> trendLineBreaksChoice;
-    @FXML
-    private ChoiceBox<String> derivateChoice;
-    @FXML
-    private Pane sharePane;
-    @FXML
     private DatePicker startPicker;
     @FXML
     private DatePicker endPicker;
     @FXML
+    private TextField audioLength;
+    @FXML
     private VBox checkVBox;
 
-    private CheckEQService checkEQService;
-    private ArrayList<String> shareCheckName = new ArrayList<>();
-    private String[][] setArray = new String[10][4];
-    private int countArray = 0;
     private Stage stage;
     private Scene scene;
     private Parent root;
 
+    private CheckEQService checkEQService;
+    private Mapping mapping = new Mapping();
+    private String[] locations = { "Deutschland" };
     private static String[] categoryKeys = { "Alle Kategorien", "Aktien", "ETFs", "Indizes" };
     private static FilterFlag[] categoryValues = { FilterFlag.ALL, FilterFlag.STOCK, FilterFlag.ETF, FilterFlag.INDEX };
     static {
         assert categoryKeys.length == categoryValues.length : "categoryKeys & categoryValues are not in sync";
     }
 
-    private String[] locations = { "Deutschland" };
-    private String[] prices = { "Option 1", "Option 2" };
-    private String[] trends = { "Option 1", "Option 2" };
-    private String[] derivate = { "Option 1", "Option 2" };
-
     @Override
     public void initialize(URL arg0, ResourceBundle arg1) { // Initialisierung mit den Optionen
-        categorieChoice.getItems().addAll(MainSceneController.categoryKeys);
+        categoriesChoice.getItems().addAll(MainSceneController.categoryKeys);
         locationChoice.getItems().addAll(locations);
-        // priceChoice.getItems().addAll(prices);
-        // trendLineBreaksChoice.getItems().addAll(trends);
-        // derivateChoice.getItems().addAll(derivate);
-        enableBtn();
+        enableBtnIfValid();
 
         checkEQService = new CheckEQService();
         checkEQService.setPeriod(Duration.millis(100));
@@ -139,26 +113,68 @@ public class MainSceneController implements Initializable {
                     case FILTERED_SONIFIABLES -> {
                         clearCheckList();
                         List<Sonifiable> sonifiables = (List<Sonifiable>) msg.data;
+                        // TODO: Decide whether we want to show all found sonifiables immediately or
+                        // only like 10 at once, unless prompted by the user to show more
                         for (Sonifiable s : sonifiables) {
-                            addToCheckList(s.getName());
+                            addToCheckList(s);
                         }
                     }
                     default -> System.out.println("ERROR: Msg-Type " + msg.type + " not yet implemented");
                 }
             }
         });
-        displayError("Testing", "Test");
         checkEQService.start();
 
-        categorieChoice.getSelectionModel().selectedIndexProperty().addListener((observable, oldIdx, newIdx) -> {
+        // @nocheckin Uncomment this before committing
+        // displayError("Testing", "Test");
+
+        categoriesChoice.getSelectionModel().selectedIndexProperty().addListener((observable, oldIdx, newIdx) -> {
             EventQueues.toSM.add(new Msg<>(MsgToSMType.FILTERED_SONIFIABLES,
                     new SonifiableFilter(searchBar.getText(), categoryValues[(int) newIdx])));
         });
-        categorieChoice.getSelectionModel().selectFirst();
+        categoriesChoice.getSelectionModel().selectFirst();
 
         searchBar.textProperty().addListener((observable, oldVal, newVal) -> {
             EventQueues.toSM.add(new Msg<>(MsgToSMType.FILTERED_SONIFIABLES, new SonifiableFilter(newVal,
-                    categoryValues[categorieChoice.getSelectionModel().getSelectedIndex()])));
+                    categoryValues[categoriesChoice.getSelectionModel().getSelectedIndex()])));
+        });
+
+        startPicker.valueProperty().addListener((observable, oldValue, newValue) -> {
+            try {
+                mapping.setStartDate(DateUtil.localDateToCalendar(newValue));
+                enableBtnIfValid();
+            } catch (Exception e) {
+                // TODO: Error Handling
+            }
+        });
+
+        endPicker.valueProperty().addListener((observable, oldValue, newValue) -> {
+            try {
+                mapping.setEndDate(DateUtil.localDateToCalendar(newValue));
+                enableBtnIfValid();
+            } catch (Exception e) {
+                // TODO: Error Handling
+            }
+        });
+
+        audioLength.textProperty().addListener((observable, oldValue, newValue) -> {
+            try {
+                Integer newVal = Integer.parseInt(newValue);
+                mapping.setSoundLength(newVal);
+                enableBtnIfValid();
+            } catch (Exception e) {
+                // TODO: Error Handling
+            }
+        });
+
+        startBtn.setOnAction(ev -> {
+            try {
+                EventQueues.toSM.add(new Msg<>(MsgToSMType.START, mapping));
+                switchToMusicScene(ev);
+            } catch (Exception e) {
+                e.printStackTrace();
+                // TODO: Error handling
+            }
         });
     }
 
@@ -167,7 +183,6 @@ public class MainSceneController implements Initializable {
         root = FXMLLoader.load(getClass().getResource("/MusicScene.fxml"));
         stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
         scene = new Scene(root);
-
         stage.show();
     }
 
@@ -207,38 +222,26 @@ public class MainSceneController implements Initializable {
         checkVBox.getChildren().clear();
     }
 
-    public void addToCheckList(String name) {
-        CheckBox cBox = new CheckBox(name); // API Text Holen Was bei neu laden einfach weiter hinten abfragen
-                                            // könnten die Size als indicator nehmen
-        if (shareCheckName.contains(cBox.getText())) {
+    public void addToCheckList(Sonifiable sonifiable) {
+        CheckBox cBox = new CheckBox(sonifiable.getName());
+        cBox.setUserData(sonifiable);
+
+        if (mapping.hasSonifiable(sonifiable.getId())) {
             cBox.setSelected(true);
         }
-        cBox.selectedProperty().addListener(new ChangeListener<Boolean>() {
-            @Override
-            public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue) {
-                if (newValue) {
-                    if (paneBoxSonifiables.getChildren().size() < 10) {
-                        addToPaneBox(cBox.getText());
-                        shareCheckName.add(cBox.getText());
-                    } else {
-                        cBox.setSelected(false);
-                    }
-
+        cBox.selectedProperty().addListener((observable, oldValue, newValue) -> {
+            if (newValue) {
+                if (paneBoxSonifiables.getChildren().size() < Mapping.MAX_SONIFIABLES_AMOUNT) {
+                    addToPaneBox((Sonifiable) cBox.getUserData());
                 } else {
-                    for (int i = 0; i < 10; i++) {
-                        if (setArray[i][0] == cBox.getText()) {
-                            setArray[i][0] = null;
-                            setArray[i][1] = null;
-                            setArray[i][2] = null;
-                            enableBtn();
-                            setArray[i][3] = null;
-                        }
-                    }
-                    int i = shareCheckName.indexOf(cBox.getText());
-                    shareCheckName.remove(cBox.getText());
-                    paneBoxSonifiables.getChildren().remove(i);
-                    paneBoxSonifiables.prefHeight(paneBoxSonifiables.getChildren().size() * 477.0);
+                    displayError(
+                            "Zu viele Börsenkurse gewählt. Es dürfen höchstens "
+                                    + Integer.toString(Mapping.MAX_SONIFIABLES_AMOUNT) + " Börsenkurse gewählt werden.",
+                            "Zu viele Börsenkurse");
+                    cBox.setSelected(false);
                 }
+            } else {
+                rmSonifiable(((Sonifiable) cBox.getUserData()).getId());
             }
         });
         checkVBox.setPrefHeight((checkVBox.getChildren().size()) * 74.0);
@@ -254,448 +257,151 @@ public class MainSceneController implements Initializable {
         }
     }
 
+    private void rmSonifiable(SonifiableID id) {
+        mapping.rmSonifiable(id);
+        ObservableList<Node> children = paneBoxSonifiables.getChildren();
+        int idx = 0;
+        while (idx < children.size() && !id.equals(children.get(idx).getUserData()))
+            idx++;
+        assert idx != children.size() : "rmSonifiable was called on " + id + " which couldn't be found in SceneTree.";
+        children.remove(idx);
+        paneBoxSonifiables.prefHeight(children.size() * 477.0);
+    }
+
     private void loadNew() {
-        // Reload sonif i ables
+        // Reload sonifiables
     }
 
     @FXML
-    public void addToPaneBox(String txt) { // add a Sharepanel to the Panel Box if there are less than 10 Sharepanel
-        paneBoxSonifiables.getChildren().add(createSharePane(txt));
+    public void addToPaneBox(Sonifiable sonifiable) {
+        // add a Sharepanel to the Panel Box
+        // Checking whether the maximum of sharePanels has already been reached must be
+        // done before calling this function
+        paneBoxSonifiables.getChildren().add(createSharePane(sonifiable));
         paneBoxSonifiables.setPrefHeight((paneBoxSonifiables.getChildren().size()) * 800.0);
     }
 
-    private Pane createSharePane(String name) { // initialize and dek the Share Pane
-        for (int x = 0; x < 10; x++) {
-            if (setArray[x][0] == null) {
-                setArray[x][0] = name;
-                break;
-            }
+    private void addLine(String cssClass, int layoutX, int layoutY, int startX, int startY, int endX, int endY,
+            ObservableList<Node> children) {
+        Line line = new Line();
+        if (cssClass != null)
+            line.getStyleClass().add(cssClass);
+        line.setLayoutX(layoutX);
+        line.setLayoutY(layoutY);
+        line.setStartX(startX);
+        line.setStartY(startY);
+        line.setEndX(endX);
+        line.setEndY(endY);
+        children.add(line);
+    }
+
+    private void addStockParamToPane(String text, String cssClass, int labelX, int labelY, int cb1X, int cb1Y, int cb2X,
+            int cb2Y, SonifiableID sonifiableId,
+            ExchangeParam eparam,
+            ObservableList<Node> children) {
+        Label label = new Label(text);
+        label.getStyleClass().add(cssClass);
+        label.setLayoutX(labelX);
+        label.setLayoutY(labelY);
+        children.add(label);
+
+        if (eparam instanceof PointData) {
+            // TODO: Add ChoiceBox for Event-Instrument
+        } else {
+            InstrParam[] iparams = (eparam instanceof LineData) ? InstrParam.LineDataParams
+                    : InstrParam.RangeDataParams;
+
+            ChoiceBox<InstrumentEnum> instCB = new ChoiceBox<>();
+            instCB.getItems().addAll(InstrumentEnum.values());
+            instCB.setLayoutX(cb1X);
+            instCB.setLayoutY(cb1Y);
+
+            ChoiceBox<InstrParam> paramCB = new ChoiceBox<>();
+            paramCB.getItems().addAll(iparams);
+            paramCB.setLayoutX(cb2X);
+            paramCB.setLayoutY(cb2Y);
+
+            instCB.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
+                SelectionModel<InstrParam> paramCBSelect = paramCB.getSelectionModel();
+                // Mapping isn't effected if the parameter ChoiceBox isn't selected yet
+                if (!paramCBSelect.isEmpty()) {
+                    try {
+                        mapping.setParam(newValue, sonifiableId, paramCBSelect.getSelectedItem(), eparam);
+                        if (oldValue != null)
+                            mapping.rmParam(sonifiableId, oldValue, paramCBSelect.getSelectedItem());
+                        enableBtnIfValid();
+                    } catch (AppError e) {
+                        instCB.getSelectionModel().select(oldValue);
+                        displayError(e.getMessage(), "Interner Fehler");
+                    }
+                }
+            });
+
+            paramCB.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
+                SelectionModel<InstrumentEnum> instCBSelect = instCB.getSelectionModel();
+                if (!instCBSelect.isEmpty()) {
+                    try {
+                        mapping.setParam(instCBSelect.getSelectedItem(), sonifiableId, newValue, eparam);
+                        if (oldValue != null)
+                            mapping.rmParam(sonifiableId, instCBSelect.getSelectedItem(), oldValue);
+                        enableBtnIfValid();
+                    } catch (AppError e) {
+                        paramCB.getSelectionModel().select(oldValue);
+                        displayError(e.getMessage(), "Interner Fehler");
+                    }
+                }
+            });
+
+            children.add(instCB);
+            children.add(paramCB);
         }
-        Pane examplePane = new Pane();
-        examplePane.setId("expPane");
+    }
+
+    private Pane createSharePane(Sonifiable sonifiable) { // initialize and dek the Share Pane
+        mapping.addSonifiable(sonifiable.getId());
+
+        Pane stockPane = new Pane();
+        stockPane.setUserData(sonifiable.getId());
+        stockPane.getStyleClass().add("stockPane");
         TextField tField = new TextField();
-        tField.setText(name);
-        tField.setId("txtField");
+        tField.setText(sonifiable.getName());
+        tField.getStyleClass().add("txtField");
         tField.setLayoutX(168);
         tField.setLayoutY(8);
-        examplePane.getChildren().add(tField);
-        Line topLine = new Line();
-        topLine.setLayoutX(174);
-        topLine.setLayoutY(53);
-        topLine.setStartX(0);
-        topLine.setStartY(0);
-        topLine.setEndX(391);
-        topLine.setEndY(0);
-        examplePane.getChildren().add(topLine);
-        Line leftLine = new Line();
-        leftLine.setLayoutX(306);
-        leftLine.setLayoutY(168);
-        leftLine.setId("pinkLine");
-        leftLine.setStartX(-100);
-        leftLine.setStartY(-60);
-        leftLine.setEndX(-100);
-        leftLine.setEndY(263);
-        examplePane.getChildren().add(leftLine);
-        Line rightLine = new Line();
-        rightLine.setLayoutX(512);
-        rightLine.setLayoutY(177);
-        rightLine.setId("pinkLine");
-        rightLine.setStartX(-100);
-        rightLine.setStartY(-60);
-        rightLine.setEndX(-100);
-        rightLine.setEndY(263);
-        examplePane.getChildren().add(rightLine);
-        Label pLabel = new Label();
-        pLabel.setId("paneShareLabel");
-        pLabel.setText("Price");
-        pLabel.setLayoutX(14);
-        pLabel.setLayoutY(80);
-        Label tLBLabel = new Label();
-        tLBLabel.setId("paneShareLabel");
-        tLBLabel.setText("Trend Line Break");
-        tLBLabel.setLayoutX(14);
-        tLBLabel.setLayoutY(215);
-        examplePane.getChildren().add(tLBLabel);
-        Label dLabel = new Label();
-        dLabel.setId("paneShareLabel");
-        dLabel.setText("Derivate");
-        dLabel.setLayoutX(14);
-        dLabel.setLayoutY(350);
+        stockPane.getChildren().add(tField);
 
-        Label flagLabel = new Label();
-        flagLabel.setId("paneShareLabel");
-        flagLabel.setText("Flag");
-        flagLabel.setLayoutX(226);
-        flagLabel.setLayoutY(80);
-        examplePane.getChildren().add(flagLabel);
-        Label triLabel = new Label();
-        triLabel.setId("paneShareLabel");
-        triLabel.setText("Triangle");
-        triLabel.setLayoutX(226);
-        triLabel.setLayoutY(215);
-        examplePane.getChildren().add(triLabel);
-        Label VformLabel = new Label();
-        VformLabel.setId("paneShareLabel");
-        VformLabel.setText("Vform");
-        VformLabel.setLayoutX(226);
-        VformLabel.setLayoutY(350);
-        examplePane.getChildren().add(VformLabel);
+        addLine(null, 174, 53, 0, 0, 391, 0, stockPane.getChildren());
+        addLine("pinkline", 306, 168, -100, -60, -100, 263, stockPane.getChildren());
+        addLine("pinkline", 512, 177, -100, -60, -100, 263, stockPane.getChildren());
 
-        Label trendLabel = new Label();
-        trendLabel.setId("paneShareLabel");
-        trendLabel.setText("Trend-");
-        trendLabel.setLayoutX(422);
-        trendLabel.setLayoutY(80);
-        examplePane.getChildren().add(trendLabel);
-        Label breakLabel = new Label();
-        breakLabel.setId("paneShareLabel");
-        breakLabel.setText("break");
-        breakLabel.setLayoutX(422);
-        breakLabel.setLayoutY(119);
-        examplePane.getChildren().add(breakLabel);
-        Label movinLabel = new Label();
-        movinLabel.setId("paneShareLabel");
-        movinLabel.setText("Movin");
-        movinLabel.setLayoutX(422);
-        movinLabel.setLayoutY(203);
-        examplePane.getChildren().add(movinLabel);
-        Label supLabel = new Label();
-        supLabel.setId("paneShareLabel");
-        supLabel.setText("Support");
-        supLabel.setLayoutX(422);
-        supLabel.setLayoutY(305);
-        examplePane.getChildren().add(supLabel);
-        Label resLabel = new Label();
-        resLabel.setId("paneShareLabel");
-        resLabel.setText("Resist");
-        resLabel.setLayoutX(422);
-        resLabel.setLayoutY(410);
-        examplePane.getChildren().add(resLabel);
-        
-        ChoiceBox pinstChoiceBox = new ChoiceBox<>();
-        ChoiceBox pChoiceBox = new ChoiceBox<>();
-        pChoiceBox.getItems().addAll("Inst1", "Inst2");
-        pChoiceBox.setLayoutX(14);
-        pChoiceBox.setLayoutY(115);
-        pChoiceBox.getSelectionModel().selectedIndexProperty().addListener(new ChangeListener<Number>() {
-            @Override
-            public void changed(ObservableValue<? extends Number> observableValue, Number number, Number number2) {
-                while (setArray[countArray][0] != name) {
-                    countArray++;
-                }
+        addStockParamToPane("Price", "paneShareLabel", 14, 80, 14, 115, 14, 160, sonifiable.getId(), LineData.PRICE,
+                stockPane.getChildren());
+        addStockParamToPane("Trend Line Break", "paneShareLabel", 14, 215, 14, 250, 14, 295, sonifiable.getId(),
+                LineData.PRICE, stockPane.getChildren());
+        addStockParamToPane("Derivate", "paneShareLabel", 14, 350, 14, 385, 14, 430, sonifiable.getId(), LineData.PRICE,
+                stockPane.getChildren());
+        addStockParamToPane("Flag", "paneShareLabel", 226, 80, 226, 115, 226, 160, sonifiable.getId(), LineData.PRICE,
+                stockPane.getChildren());
+        addStockParamToPane("Triangle", "paneShareLabel", 226, 215, 226, 250, 226, 295, sonifiable.getId(),
+                LineData.PRICE,
+                stockPane.getChildren());
+        addStockParamToPane("Vform", "paneShareLabel", 226, 350, 226, 385, 226, 430, sonifiable.getId(), LineData.PRICE,
+                stockPane.getChildren());
+        addStockParamToPane("Trend-", "paneShareLabel", 422, 80, 500, 70, 500, 115, sonifiable.getId(), LineData.PRICE,
+                stockPane.getChildren());
+        Label label = new Label("Break");
+        label.getStyleClass().add("paneShareLabel");
+        label.setLayoutX(422);
+        label.setLayoutY(100);
+        stockPane.getChildren().add(label);
+        addStockParamToPane("Movin", "paneShareLabel", 422, 203, 500, 175, 500, 220, sonifiable.getId(), LineData.PRICE,
+                stockPane.getChildren());
+        addStockParamToPane("Support", "paneShareLabel", 422, 305, 500, 280, 500, 325, sonifiable.getId(),
+                LineData.PRICE, stockPane.getChildren());
+        addStockParamToPane("Resist", "paneShareLabel", 422, 410, 500, 385, 500, 430, sonifiable.getId(),
+                LineData.PRICE, stockPane.getChildren());
 
-                pinstChoiceBox.disableProperty().set(false);
-                setArray[countArray][1] = prices[(int) number2];
-                countArray = 0;
-                enableBtn();
-            }
-        });
-
-        pinstChoiceBox.getItems().addAll(prices);
-        pinstChoiceBox.setLayoutX(14);
-        pinstChoiceBox.disableProperty().set(true);
-        pinstChoiceBox.setLayoutY(160);
-        pinstChoiceBox.getSelectionModel().selectedIndexProperty().addListener(new ChangeListener<Number>() {
-            @Override
-            public void changed(ObservableValue<? extends Number> observableValue, Number number, Number number2) {
-                if (pChoiceBox.getValue().toString() == "Inst1") {
-                    switch ((int) number) {
-                        case 0:
-                            inst1VoLabel.setText("Kein Kurs");
-                            inst1VoChoice.disableProperty().set(true);
-                            break;
-                        case 1:
-                            inst1EcLabel.setText("Kein Kurs");
-                            inst1EcChoice.disableProperty().set(true);
-                            break;
-                        case 2:
-                            inst1PiLabel.setText("Kein Kurs");
-                            inst1PiChoice.disableProperty().set(true);
-                            break;
-                        case 3:
-                            inst1HiLabel.setText("Kein Kurs");
-                            inst1HiChoice.disableProperty().set(true);
-                            break;
-                    }
-                    switch ((int) number2) {
-                        case 0:
-                            inst1VoLabel.setText(tField.getText());
-                            inst1VoChoice.disableProperty().set(false);
-                            break;
-                        case 1:
-                            inst1EcLabel.setText(tField.getText());
-                            inst1EcChoice.disableProperty().set(false);
-                            break;
-                        case 2:
-                            inst1PiLabel.setText(tField.getText());
-                            inst1PiChoice.disableProperty().set(false);
-                            break;
-                        case 3:
-                            inst1HiLabel.setText(tField.getText());
-                            inst1HiChoice.disableProperty().set(false);
-                            break;
-                    }
-                }
-            }
-        });
-        ChoiceBox tLBChoiceBox = new ChoiceBox<>();
-        tLBChoiceBox.getItems().addAll(trends);
-        tLBChoiceBox.setLayoutX(14);
-        tLBChoiceBox.setLayoutY(250);
-        tLBChoiceBox.getSelectionModel().selectedIndexProperty().addListener(new ChangeListener<Number>() {
-            @Override
-            public void changed(ObservableValue<? extends Number> observableValue, Number number, Number number2) {
-                while (setArray[countArray][0] != name) {
-                    countArray++;
-                }
-                setArray[countArray][2] = prices[(int) number2];
-                countArray = 0;
-                enableBtn();
-            }
-        });
-        ChoiceBox tLBinstChoiceBox = new ChoiceBox<>();
-        tLBinstChoiceBox.getItems().addAll(trends);
-        tLBinstChoiceBox.setLayoutX(14);
-        tLBinstChoiceBox.setLayoutY(295);
-        tLBinstChoiceBox.getSelectionModel().selectedIndexProperty().addListener(new ChangeListener<Number>() {
-            @Override
-            public void changed(ObservableValue<? extends Number> observableValue, Number number, Number number2) {
-                if (pChoiceBox.getValue().toString() == "Inst1") {
-                    switch ((int) number) {
-                        case 0:
-                            inst1VoLabel.setText("Kein Kurs");
-                            inst1VoChoice.disableProperty().set(true);
-                            break;
-                        case 1:
-                            inst1EcLabel.setText("Kein Kurs");
-                            inst1EcChoice.disableProperty().set(true);
-                            break;
-                        case 2:
-                            inst1PiLabel.setText("Kein Kurs");
-                            inst1PiChoice.disableProperty().set(true);
-                            break;
-                        case 3:
-                            inst1HiLabel.setText("Kein Kurs");
-                            inst1HiChoice.disableProperty().set(true);
-                            break;
-                    }
-                    switch ((int) number2) {
-                        case 0:
-                            inst1VoLabel.setText(tField.getText());
-                            inst1VoChoice.disableProperty().set(false);
-                            break;
-                        case 1:
-                            inst1EcLabel.setText(tField.getText());
-                            inst1EcChoice.disableProperty().set(false);
-                            break;
-                        case 2:
-                            inst1PiLabel.setText(tField.getText());
-                            inst1PiChoice.disableProperty().set(false);
-                            break;
-                        case 3:
-                            inst1HiLabel.setText(tField.getText());
-                            inst1HiChoice.disableProperty().set(false);
-                            break;
-                    }
-                }
-            }
-        });
-        ChoiceBox dChoiceBox = new ChoiceBox<>();
-        dChoiceBox.getItems().addAll(derivate);
-        dChoiceBox.setLayoutX(14);
-        dChoiceBox.setLayoutY(385);
-        dChoiceBox.getSelectionModel().selectedIndexProperty().addListener(new ChangeListener<Number>() {
-            @Override
-            public void changed(ObservableValue<? extends Number> observableValue, Number number, Number number2) {
-                while (setArray[countArray][0] != name) {
-                    countArray++;
-                }
-                setArray[countArray][3] = prices[(int) number2]; // Klappt nicht so wie es soll
-                countArray = 0;
-                enableBtn();
-            }
-        });
-        ChoiceBox dinstChoiceBox = new ChoiceBox<>();
-        dinstChoiceBox.getItems().addAll(derivate);
-        dinstChoiceBox.setLayoutX(14);
-        dinstChoiceBox.setLayoutY(430);
-        dinstChoiceBox.getSelectionModel().selectedIndexProperty().addListener(new ChangeListener<Number>() {
-            @Override
-            public void changed(ObservableValue<? extends Number> observableValue, Number number, Number number2) {
-                while (setArray[countArray][0] != name) {
-                    countArray++;
-                }
-                setArray[countArray][3] = prices[(int) number2]; // Klappt nicht so wie es soll
-                countArray = 0;
-                enableBtn();
-            }
-        });
-
-        ChoiceBox flaginstChoiceBox = new ChoiceBox<>();
-        flaginstChoiceBox.getItems().addAll(derivate);
-        flaginstChoiceBox.setLayoutX(226);
-        flaginstChoiceBox.setLayoutY(115);
-        flaginstChoiceBox.getSelectionModel().selectedIndexProperty().addListener(new ChangeListener<Number>() {
-            @Override
-            public void changed(ObservableValue<? extends Number> observableValue, Number number, Number number2) {
-                enableBtn();
-            }
-        });
-        ChoiceBox flagChoiceBox = new ChoiceBox<>();
-        flagChoiceBox.getItems().addAll(derivate);
-        flagChoiceBox.setLayoutX(226);
-        flagChoiceBox.setLayoutY(160);
-        flagChoiceBox.getSelectionModel().selectedIndexProperty().addListener(new ChangeListener<Number>() {
-            @Override
-            public void changed(ObservableValue<? extends Number> observableValue, Number number, Number number2) {
-                enableBtn();
-            }
-        });
-        ChoiceBox triinstChoiceBox = new ChoiceBox<>();
-        triinstChoiceBox.getItems().addAll(derivate);
-        triinstChoiceBox.setLayoutX(226);
-        triinstChoiceBox.setLayoutY(250);
-        triinstChoiceBox.getSelectionModel().selectedIndexProperty().addListener(new ChangeListener<Number>() {
-            @Override
-            public void changed(ObservableValue<? extends Number> observableValue, Number number, Number number2) {
-                enableBtn();
-            }
-        });
-        ChoiceBox triChoiceBox = new ChoiceBox<>();
-        triChoiceBox.getItems().addAll(derivate);
-        triChoiceBox.setLayoutX(226);
-        triChoiceBox.setLayoutY(295);
-        triChoiceBox.getSelectionModel().selectedIndexProperty().addListener(new ChangeListener<Number>() {
-            @Override
-            public void changed(ObservableValue<? extends Number> observableValue, Number number, Number number2) {
-                enableBtn();
-            }
-        });
-        ChoiceBox VforminstChoiceBox = new ChoiceBox<>();
-        VforminstChoiceBox.getItems().addAll(derivate);
-        VforminstChoiceBox.setLayoutX(226);
-        VforminstChoiceBox.setLayoutY(385);
-        VforminstChoiceBox.getSelectionModel().selectedIndexProperty().addListener(new ChangeListener<Number>() {
-            @Override
-            public void changed(ObservableValue<? extends Number> observableValue, Number number, Number number2) {
-                enableBtn();
-            }
-        });
-        ChoiceBox VformChoiceBox = new ChoiceBox<>();
-        VformChoiceBox.getItems().addAll(derivate);
-        VformChoiceBox.setLayoutX(226);
-        VformChoiceBox.setLayoutY(430);
-        VformChoiceBox.getSelectionModel().selectedIndexProperty().addListener(new ChangeListener<Number>() {
-            @Override
-            public void changed(ObservableValue<? extends Number> observableValue, Number number, Number number2) {
-                enableBtn();
-            }
-        });
-
-        ChoiceBox trendinstChoiceBox = new ChoiceBox<>();
-        trendinstChoiceBox.getItems().addAll(derivate);
-        trendinstChoiceBox.setLayoutX(500);
-        trendinstChoiceBox.setLayoutY(70);
-        trendinstChoiceBox.getSelectionModel().selectedIndexProperty().addListener(new ChangeListener<Number>() {
-            @Override
-            public void changed(ObservableValue<? extends Number> observableValue, Number number, Number number2) {
-                enableBtn();
-            }
-        });
-        ChoiceBox trendChoiceBox = new ChoiceBox<>();
-        trendChoiceBox.getItems().addAll(derivate);
-        trendChoiceBox.setLayoutX(500);
-        trendChoiceBox.setLayoutY(115);
-        trendChoiceBox.getSelectionModel().selectedIndexProperty().addListener(new ChangeListener<Number>() {
-            @Override
-            public void changed(ObservableValue<? extends Number> observableValue, Number number, Number number2) {
-                enableBtn();
-            }
-        });
-        ChoiceBox movininstChoiceBox = new ChoiceBox<>();
-        movininstChoiceBox.getItems().addAll(derivate);
-        movininstChoiceBox.setLayoutX(500);
-        movininstChoiceBox.setLayoutY(175);
-        movininstChoiceBox.getSelectionModel().selectedIndexProperty().addListener(new ChangeListener<Number>() {
-            @Override
-            public void changed(ObservableValue<? extends Number> observableValue, Number number, Number number2) {
-                enableBtn();
-            }
-        });
-        ChoiceBox movinChoiceBox = new ChoiceBox<>();
-        movinChoiceBox.getItems().addAll(derivate);
-        movinChoiceBox.setLayoutX(500);
-        movinChoiceBox.setLayoutY(220);
-        movinChoiceBox.getSelectionModel().selectedIndexProperty().addListener(new ChangeListener<Number>() {
-            @Override
-            public void changed(ObservableValue<? extends Number> observableValue, Number number, Number number2) {
-                enableBtn();
-            }
-        });
-        ChoiceBox supinstChoiceBox = new ChoiceBox<>();
-        supinstChoiceBox.getItems().addAll(derivate);
-        supinstChoiceBox.setLayoutX(500);
-        supinstChoiceBox.setLayoutY(280);
-        supinstChoiceBox.getSelectionModel().selectedIndexProperty().addListener(new ChangeListener<Number>() {
-            @Override
-            public void changed(ObservableValue<? extends Number> observableValue, Number number, Number number2) {
-                enableBtn();
-            }
-        });
-        ChoiceBox supChoiceBox = new ChoiceBox<>();
-        supChoiceBox.getItems().addAll(derivate);
-        supChoiceBox.setLayoutX(500);
-        supChoiceBox.setLayoutY(325);
-        supChoiceBox.getSelectionModel().selectedIndexProperty().addListener(new ChangeListener<Number>() {
-            @Override
-            public void changed(ObservableValue<? extends Number> observableValue, Number number, Number number2) {
-                enableBtn();
-            }
-        });
-        ChoiceBox resinstChoiceBox = new ChoiceBox<>();
-        resinstChoiceBox.getItems().addAll(derivate);
-        resinstChoiceBox.setLayoutX(500);
-        resinstChoiceBox.setLayoutY(385);
-        resinstChoiceBox.getSelectionModel().selectedIndexProperty().addListener(new ChangeListener<Number>() {
-            @Override
-            public void changed(ObservableValue<? extends Number> observableValue, Number number, Number number2) {
-                enableBtn();
-            }
-        });
-        ChoiceBox resChoiceBox = new ChoiceBox<>();
-        resChoiceBox.getItems().addAll(derivate);
-        resChoiceBox.setLayoutX(500);
-        resChoiceBox.setLayoutY(430);
-        resChoiceBox.getSelectionModel().selectedIndexProperty().addListener(new ChangeListener<Number>() {
-            @Override
-            public void changed(ObservableValue<? extends Number> observableValue, Number number, Number number2) {
-                enableBtn();
-            }
-        });
-        examplePane.getChildren().add(pChoiceBox);
-        examplePane.getChildren().add(pinstChoiceBox);
-        examplePane.getChildren().add(tLBChoiceBox);
-        examplePane.getChildren().add(tLBinstChoiceBox);
-        examplePane.getChildren().add(dChoiceBox);
-        examplePane.getChildren().add(dinstChoiceBox);
-        examplePane.getChildren().add(dLabel);
-        examplePane.getChildren().add(pLabel);
-        
-        examplePane.getChildren().add(flagChoiceBox);
-        examplePane.getChildren().add(flaginstChoiceBox);
-        examplePane.getChildren().add(triChoiceBox);
-        examplePane.getChildren().add(triinstChoiceBox);
-        examplePane.getChildren().add(VformChoiceBox);
-        examplePane.getChildren().add(VforminstChoiceBox);
-        examplePane.getChildren().add(trendChoiceBox);
-        examplePane.getChildren().add(trendinstChoiceBox);
-        examplePane.getChildren().add(movininstChoiceBox);
-        examplePane.getChildren().add(movinChoiceBox);
-        examplePane.getChildren().add(supinstChoiceBox);
-        examplePane.getChildren().add(supChoiceBox);
-        examplePane.getChildren().add(resinstChoiceBox);
-        examplePane.getChildren().add(resChoiceBox);
-        return examplePane;
+        return stockPane;
     }
 
     LocalDate minDateStart = LocalDate.of(2023, 4, 16);
@@ -725,32 +431,10 @@ public class MainSceneController implements Initializable {
         });
     }
 
-    public void enableBtn() {
-        int[] checkArray = new int[10];
-        startBtn.setDisable(false);
-        for (int x = 0; x < 10; x++) {
-            if (setArray[x][0] != null) {
-                checkArray[countArray] = x;
-                countArray++;
-            }
-        }
-        System.out.println("countArray" + countArray);
-        if (countArray == 0) {
+    public void enableBtnIfValid() {
+        if (mapping.isValid())
+            startBtn.setDisable(false);
+        else
             startBtn.setDisable(true);
-        } else {
-            for (int p = 0; p < countArray; p++) {
-                System.out.println(countArray);
-                for (int c = 1; c < 4; c++) {
-                    if (setArray[p][c] == null) {
-                        startBtn.setDisable(true);
-                        break;
-                    }
-                }
-            }
-        }
-        if (endPicker.getValue() == null || startPicker.getValue() == null) {
-            startBtn.setDisable(true);
-        }
-        countArray = 0;
     }
 }

@@ -34,4 +34,12 @@ public class EvInstrMapping {
 	public void setData(ExchangeData<PointData> data) {
 		this.data = data;
 	}
+
+	@Override
+	public String toString() {
+		return "{" +
+				" instrument='" + this.instrument + "'" +
+				", data='" + this.data + "'" +
+				"}";
+	}
 }

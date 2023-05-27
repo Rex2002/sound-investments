@@ -10,6 +10,7 @@ import app.communication.MsgToSMType;
 import app.communication.MsgToUIType;
 import app.communication.SonifiableFilter;
 import app.mapping.InstrumentMapping;
+import app.mapping.Mapping;
 import app.ui.App;
 import dataRepo.DataRepo;
 import dataRepo.Sonifiable;
@@ -51,6 +52,11 @@ public class StateManager {
 									System.out
 											.println(filter.prefix + ", " + filter.categoryFilter + ", " + list.size());
 									EventQueues.toUI.add(new Msg<>(MsgToUIType.FILTERED_SONIFIABLES, list));
+								}
+								case START -> {
+									Mapping mapping = (Mapping) msg.data;
+									System.out.println(mapping);
+									// TODO: Start sonification
 								}
 								default -> StateManager.call(() -> {
 									throw new AppError(

@@ -62,6 +62,31 @@ public class InstrumentMapping {
 	}
 
 	@SuppressWarnings("unchecked")
+	public boolean hasSonifiableMapped(SonifiableID sonifiable) {
+		for (Field f : getClass().getFields()) {
+			if (Optional.class.equals(f.getType())) {
+				try {
+					Optional<ExchangeData<?>> optField = (Optional<ExchangeData<?>>) f.get(this);
+					if (optField.isPresent() && optField.get().getId() == sonifiable)
+						return true;
+				} catch (Exception e) {
+					// DO nothing
+				}
+			} else if (ExchangeData.class.equals(f.getType())) {
+				try {
+					if (((ExchangeData<?>) f.get(this)).getId() == sonifiable)
+						return true;
+				} catch (Exception e) {
+					// Do nothing
+				}
+			} else {
+				// Do nothing
+			}
+		}
+		return false;
+	}
+
+	@SuppressWarnings("unchecked")
 	public Set<SonifiableID> getMappedSonifiables() {
 		Set<SonifiableID> set = new HashSet<>(10);
 		for (Field f : getClass().getFields()) {
@@ -206,4 +231,24 @@ public class InstrumentMapping {
 		this.pan = pan;
 	}
 
+	@Override
+	public String toString() {
+		return "{" +
+				" instrument='" + this.instrument + "'" +
+				", relVolume='" + this.relVolume + "'" +
+				", absVolume='" + this.absVolume + "'" +
+				", pitch='" + this.pitch + "'" +
+				", delayEcho='" + this.delayEcho + "'" +
+				", feedbackEcho='" + this.feedbackEcho + "'" +
+				", onOffEcho='" + this.onOffEcho + "'" +
+				", delayReverb='" + this.delayReverb + "'" +
+				", feedbackReverb='" + this.feedbackReverb + "'" +
+				", onOffReverb='" + this.onOffReverb + "'" +
+				", cutoff='" + this.cutoff + "'" +
+				", order='" + this.order + "'" +
+				", onOffFilter='" + this.onOffFilter + "'" +
+				", highPass='" + this.highPass + "'" +
+				", pan='" + this.pan + "'" +
+				"}";
+	}
 }

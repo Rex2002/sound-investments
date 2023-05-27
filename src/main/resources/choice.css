@@ -46,7 +46,7 @@
 	-fx-pref-height: 59.2px;
 	-fx-pref-width: 348.8px;
 }
-#expPane {
+.stockPane {
 	-fx-background-color: white;
 	-fx-background-radius: 30;
 	-fx-hgap: 8;
@@ -63,7 +63,7 @@
 	-fx-border-insets: 0 0 4 0;
 	-fx-background-insets: 0 0 4 0;
 }
-#txtField {
+.txtField {
 	-fx-background-color: white;
 	-fx-background-radius: 30;
 	-fx-pref-height: 61.6px;
@@ -75,7 +75,7 @@
 
 	-fx-alignment: center;
 }
-#paneShareLabel {
+.paneShareLabel {
 	-fx-pref-height: 35px;
 	-fx-pref-width: 184px;
 	-fx-font-size: 20;
@@ -126,11 +126,11 @@
 	-fx-text-fill: rgb(255, 255, 255);
 	-fx-background-radius: 30;
 }
-#searchBar{
+#searchBar {
 	-fx-font-size: 24px;
-	
+
 	-fx-text-fill: rgb(255, 255, 255);
 }
-#pinkLine{
+.pinkLine {
 	-fx-stroke: #9c5eeb;
 }
