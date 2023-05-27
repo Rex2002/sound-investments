@@ -3,7 +3,7 @@ package dataAnalyzer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Calendar;
-//Rückgabe beachten
+
 public class FlagFormationAnalyzer implements FormationAnalyzer {
     @Override
 	public List<FormationResult> analyzeFormations(List<Price> priceList){
