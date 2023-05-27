@@ -1,5 +1,6 @@
 package audio.synth.playback;
 
+import audio.synth.Util;
 import state.EventQueues;
 
 import javax.sound.sampled.SourceDataLine;
@@ -13,6 +14,11 @@ public class PlaybackController{
     public PlaybackController(SourceDataLine s, short[] data) {
         this.s = s;
         this.data = data;
+    }
+
+    public PlaybackController(SourceDataLine s, double[] data){
+        this.s = s;
+        this.data = Util.scaleToShort(data);
     }
     public void startPlayback(){
         EventQueues.toPlayback.clear();

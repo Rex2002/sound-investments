@@ -9,7 +9,7 @@ import java.io.File;
 import java.io.IOException;
 
 public class SampleLoader {
-    public static short[] loadSample(String filename) {
+    public static double[] loadSample(String filename) {
 
         try{
             AudioInputStream audioStream = AudioSystem.getAudioInputStream(new File(filename));
@@ -17,12 +17,12 @@ public class SampleLoader {
             if(af.getFrameSize() != 4 || af.getSampleRate() != 44100 || af.isBigEndian()){
                 throw new RuntimeException("Illegal Audioformat in sample" + filename);
             }
-            short[] out = new short[(int) (audioStream.getFrameLength() * 2)];
+            double[] out = new double[(int) (audioStream.getFrameLength() * 2)];
             byte[] frame = new byte[4];
             for(int pos = 0; pos < audioStream.getFrameLength(); pos ++){
                 audioStream.read(frame);
-                out[2*pos] = (short) (frame[1]  << 8 | frame[0] & 0xFF);
-                out[2*pos+1] = (short) (frame[3] << 8 | frame[2] & 0xFF);
+                out[2*pos] = frame[1]  << 8 | frame[0] & 0xFF;
+                out[2*pos+1] = frame[3] << 8 | frame[2] & 0xFF;
             }
             System.out.println("Array length: " + out.length);
             return out;

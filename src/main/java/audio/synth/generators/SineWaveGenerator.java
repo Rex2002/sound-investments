@@ -9,43 +9,32 @@ import static audio.Constants.SAMPLE_RATE;
 
 
 //TODO or discuss: amplitude generally as short
-//TODO refactor to reduce code duplication
-public class SineWaveGenerator implements WaveGenerator{
+public class SineWaveGenerator {
 
-    public short[] generate(double freq, int duration, short amplitude){
-        return generate(freq, duration, new short[]{amplitude});
+    public double[] generate(double freq, int duration, short amplitude){
+        return generate(freq, duration, new double[]{amplitude});
     }
-    @Override
-    public short[] generate(double freq, int duration, short[] amplitude) {
+    public double[] generate(double freq, int duration, double[] amplitude) {
         return generate(new double[]{freq}, duration, amplitude);
     }
-
-    @Override
-    public short[] generate(double[] freq, int duration, short[] amplitude){
+    public double[] generate(double[] freq, int duration, double[] amplitude){
         Envelope oneEnvelope = new OneEnvelope();
         return generate(freq, duration, amplitude, oneEnvelope);
     }
-    @Override
-    public short[] generate(double[] freq, int duration, short[] amplitude, Envelope env) {
+    public double[] generate(double[] freq, int duration, double[] amplitude, Envelope env) {
         Envelope zeroEnvelope = new ZeroEnvelope();
         return generate(freq, duration, amplitude, env, 1, zeroEnvelope);
     }
-
-    @Override
-    public short[] generate(double[] freq, int duration, short[] amplitude, double modFactor) {
+    public double[] generate(double[] freq, int duration, double[] amplitude, double modFactor) {
         Envelope oneEnvelope = new OneEnvelope();
         return generate(freq, duration, amplitude, oneEnvelope, modFactor);
     }
-
-    @Override
-    public short[] generate(double[] freq, int duration, short[] amplitude, Envelope env, double modFactor) {
+    public double[] generate(double[] freq, int duration, double[] amplitude, Envelope env, double modFactor) {
         Envelope oneEnvelope = new OneEnvelope();
         return generate(freq, duration, amplitude, env, modFactor, oneEnvelope);
     }
-
-    @Override
-    public short[] generate(double[] freq, int duration, short[] amplitude, Envelope env, double modFactor, Envelope modEnv) {
-        short[] sin = new short[duration * SAMPLE_RATE * CHANNEL_NO];
+    public double[] generate(double[] freq, int duration, double[] amplitude, Envelope env, double modFactor, Envelope modEnv) {
+        double[] sin = new double[duration * SAMPLE_RATE * CHANNEL_NO];
         env.setSectionLen(sin.length/freq.length);
         modEnv.setSectionLen(sin.length/freq.length);
         double phase = 0;
@@ -77,8 +66,8 @@ public class SineWaveGenerator implements WaveGenerator{
             mPhase = PhaseAdvancers.advancePhaseSine(mPhase, freq[freqIdx] * modFactor);
 
             sin1 = Math.sin(phase + Math.sin(mPhase) * modAmpFactor);
-            sin[i] = (short) (sin1 * amplitude[ampIdx] * ampFactor);
-            sin[i+1] = (short) (sin1 * amplitude[ampIdx] * ampFactor);
+            sin[i] = sin1 * amplitude[ampIdx] * ampFactor;
+            sin[i+1] = sin1 * amplitude[ampIdx] * ampFactor;
         }
         return sin;
     }
