@@ -1,10 +1,10 @@
 package audio.synth.playback;
 
-import state.EventQueues;
+import app.communication.EventQueues;
 
 import javax.sound.sampled.SourceDataLine;
 
-public class PlaybackController{
+public class PlaybackController {
 
     public final int SKIP_LENGTH = 10;
     private final SourceDataLine s;
@@ -14,7 +14,8 @@ public class PlaybackController{
         this.s = s;
         this.data = data;
     }
-    public void startPlayback(){
+
+    public void startPlayback() {
         EventQueues.toPlayback.clear();
         Thread playController = new Thread(new Playback(s, data));
         playController.start();
@@ -23,72 +24,72 @@ public class PlaybackController{
     public void play() {
         PlayControlEvent p = new PlayControlEvent();
         p.setType(PlayControlEventsEnum.PLAY);
-        try{
+        try {
             EventQueues.toPlayback.put(p);
-        } catch (InterruptedException e){
+        } catch (InterruptedException e) {
             e.printStackTrace();
         }
 
     }
 
-    public void pause(){
+    public void pause() {
         PlayControlEvent p = new PlayControlEvent();
         p.setType(PlayControlEventsEnum.PAUSE);
-        try{
+        try {
             EventQueues.toPlayback.put(p);
-        }catch (InterruptedException e){
+        } catch (InterruptedException e) {
             e.printStackTrace();
         }
     }
 
-    public void reset(){
+    public void reset() {
         PlayControlEvent p = new PlayControlEvent();
         p.setType(PlayControlEventsEnum.RESET);
-        try{
+        try {
             EventQueues.toPlayback.put(p);
-        }catch (InterruptedException e){
+        } catch (InterruptedException e) {
             e.printStackTrace();
         }
     }
 
-    public void skipForward(){
+    public void skipForward() {
         PlayControlEvent p = new PlayControlEvent();
         p.setType(PlayControlEventsEnum.SKIP_FORWARD);
         p.setDuration(SKIP_LENGTH);
-        try{
+        try {
             EventQueues.toPlayback.put(p);
-        }catch (InterruptedException e){
+        } catch (InterruptedException e) {
             e.printStackTrace();
         }
     }
 
-    public void skipBackward(){
+    public void skipBackward() {
         PlayControlEvent p = new PlayControlEvent();
         p.setType(PlayControlEventsEnum.SKIP_BACKWARD);
         p.setDuration(SKIP_LENGTH);
-        try{
+        try {
             EventQueues.toPlayback.put(p);
-        }catch (InterruptedException e){
+        } catch (InterruptedException e) {
             e.printStackTrace();
         }
     }
 
-    public void stop(){
+    public void stop() {
         PlayControlEvent p = new PlayControlEvent();
         p.setType(PlayControlEventsEnum.STOP);
-        try{
+        try {
             EventQueues.toPlayback.put(p);
-        } catch (InterruptedException e){
+        } catch (InterruptedException e) {
             e.printStackTrace();
         }
     }
 
-    public void kill(){
+    public void kill() {
         PlayControlEvent p = new PlayControlEvent();
         p.setType(PlayControlEventsEnum.KILL);
-        try{
+        try {
             EventQueues.toPlayback.put(p);
-        }catch (InterruptedException e) {
+        } catch (InterruptedException e) {
             e.printStackTrace();
         }
     }
