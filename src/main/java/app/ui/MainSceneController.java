@@ -50,7 +50,7 @@ import audio.synth.InstrumentEnum;
 import dataRepo.DateUtil;
 import dataRepo.Sonifiable;
 import dataRepo.SonifiableID;
-import dataRepo.DataRepo.FilterFlag;
+import dataRepo.FilterFlag;
 
 public class MainSceneController implements Initializable {
     // WARNING: Kommentare werden noch normalisiert

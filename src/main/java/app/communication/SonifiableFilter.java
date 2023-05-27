@@ -1,6 +1,6 @@
 package app.communication;
 
-import dataRepo.DataRepo.FilterFlag;
+import dataRepo.FilterFlag;
 
 public class SonifiableFilter {
 	public String prefix;

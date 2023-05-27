@@ -62,74 +62,6 @@ public class DataRepo {
 		}
 	}
 
-	public static enum API {
-		LEEWAY,
-		MARKETSTACK,
-		TWELVEDATA;
-	}
-
-	public static enum IntervalLength {
-		MIN,
-		// MIN5,
-		// MIN30,
-		HOUR,
-		DAY;
-
-		public Instant addToInstant(Instant x) {
-			long millis = 1000;
-			millis *= switch (this) {
-				case MIN -> 60;
-				case HOUR -> 60 * 60;
-				case DAY -> 12 * 60 * 60;
-			};
-			long res = x.toEpochMilli() + millis;
-			return Instant.ofEpochMilli(res);
-		}
-
-		public String toString(API api) {
-			return switch (this) {
-				case MIN -> switch (api) {
-					case LEEWAY -> "1m";
-					default -> "1min";
-				};
-				case HOUR -> switch (api) {
-					case MARKETSTACK -> "1hour";
-					default -> "1h";
-				};
-				case DAY -> switch (api) {
-					case LEEWAY -> null; // Leeway doesn't support 24hour intraday -> use /eod endpoint instead
-					case MARKETSTACK -> "24hour";
-					case TWELVEDATA -> "1day";
-				};
-			};
-		}
-	}
-
-	public static enum FilterFlag {
-		STOCK(1 << 0),
-		ETF(1 << 1),
-		INDEX(1 << 2),
-		ALL((1 << 0) | (1 << 1) | (1 << 2));
-
-		private final int x;
-
-		FilterFlag(int x) {
-			this.x = x;
-		}
-
-		public int getVal() {
-			return x;
-		}
-	}
-
-	public static int getFilterVal(FilterFlag... flags) {
-		int val = 0;
-		for (FilterFlag flag : flags) {
-			val |= flag.getVal();
-		}
-		return val;
-	}
-
 	private static final String[] apiToksLeeway = { "pgz64a5qiuvw4qhkoullnx", "9pe3xyaplenvfvbnyxtomm",
 			"r7splaijduabfpcu2z2l14", "o5npdx6elm2pcpp395uaun", "2ja5gszii8g63hzjd41x78" };
 	private static final String[] apiToksMarketstack = { "4b6a78c092537f07bbdedff8f134372d",
@@ -146,21 +78,20 @@ public class DataRepo {
 	private static APIReq apiLeeway = new APIReq("https://api.leeway.tech/api/v1/public/", apiToksLeeway,
 			AuthPolicy.QUERY,
 			"apitoken");
-	private static APIReq apiMarketstack = getApiMarketstack();
-
-	private static APIReq getApiMarketstack() {
-		APIReq api = new APIReq("http://api.marketstack.com/v1/", apiToksMarketstack,
+	private static APIReq apiMarketstack;
+	static {
+		apiMarketstack = new APIReq("http://api.marketstack.com/v1/", apiToksMarketstack,
 				AuthPolicy.QUERY,
 				"access_key");
-		api.setQueries("limit", "1000");
-		return api.setPaginationHandler(json -> {
+		apiMarketstack.setQueries("limit", "1000");
+		apiMarketstack.setPaginationHandler(json -> {
 			JsonPrimitive<?> rest = json.asMap().get("data");
 			HashMap<String, JsonPrimitive<?>> pageMap = json.asMap().get("pagination").asMap();
 			Integer x = pageMap.get("offset").asInt() + pageMap.get("count").asInt();
 			boolean done = x >= 5000; // pageMap.get("total").asInt();
 			return new HandledPagination(rest, done);
 		}, counter -> {
-			api.setQuery("offset", Integer.toString(counter * 1000));
+			apiMarketstack.setQuery("offset", Integer.toString(counter * 1000));
 		});
 	}
 
@@ -199,7 +130,7 @@ public class DataRepo {
 	}
 
 	private static <T extends Sonifiable> void setTradingPeriods(List<T> list) {
-		// @Cleanup `i < 10` is only for debugging
+		// @Cleanup `i < 5` is only for debugging
 		for (int i = 0; i < list.size() && i < 5; i++) {
 			T s = list.get(i);
 			try {
@@ -219,7 +150,7 @@ public class DataRepo {
 	}
 
 	public static List<Sonifiable> findByPrefix(String prefix, FilterFlag... filters) {
-		int flag = getFilterVal(filters);
+		int flag = FilterFlag.getFilterVal(filters);
 		List<Sonifiable> l = new ArrayList<>(128);
 		if ((flag & FilterFlag.STOCK.getVal()) > 0)
 			findByPrefix(prefix, stocks, l);
@@ -240,7 +171,7 @@ public class DataRepo {
 	}
 
 	public static List<Sonifiable> getAll(FilterFlag... filters) {
-		int flag = getFilterVal(filters);
+		int flag = FilterFlag.getFilterVal(filters);
 		List<Sonifiable> l = new ArrayList<>(128);
 		if ((flag & FilterFlag.STOCK.getVal()) > 0)
 			l.addAll(stocks);
