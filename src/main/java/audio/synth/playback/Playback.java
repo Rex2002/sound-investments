@@ -21,7 +21,7 @@ public class Playback implements Runnable{
         // TODO test / implement edge behaviour
         System.out.println("Entering playWithControls.");
         System.out.println(
-                "The audio playback can currently be controlled with the following commands: \n p: pause \n r: resume \n jf: jump forward 2s \n jb: jump backwards 2s \n rs: reset to start \n s: stop \n ");
+                "The audio playback can currently be controlled with the following commands: \n p: pause \n r: resume \n jf: jump forward 2s \n jb: jump backwards 2s \n rs: reset to start \n s: kill  \n ");
         System.out.println(
                 "Please do not try to test edge-case behaviour. It is untested and may result in outOfBoundsExceptions");
         positionPointer = 0;
@@ -54,7 +54,8 @@ public class Playback implements Runnable{
                     case SKIP_FORWARD -> positionPointer += nextEvent.getDuration();
                     case SKIP_BACKWARD -> positionPointer = Math.max(positionPointer - nextEvent.getDuration(), 0);
                     case RESET -> positionPointer = 0;
-                    case STOP -> running = false;
+                    case STOP -> {positionPointer = 0; paused = true;}
+                    case KILL -> running = false;
                 }
             }
         }

@@ -15,6 +15,7 @@ public class PlaybackController{
         this.data = data;
     }
     public void startPlayback(){
+        EventQueues.toPlayback.clear();
         Thread playController = new Thread(new Playback(s, data));
         playController.start();
     }
@@ -75,6 +76,16 @@ public class PlaybackController{
     public void stop(){
         PlayControlEvent p = new PlayControlEvent();
         p.setType(PlayControlEventsEnum.STOP);
+        try{
+            EventQueues.toPlayback.put(p);
+        } catch (InterruptedException e){
+            e.printStackTrace();
+        }
+    }
+
+    public void kill(){
+        PlayControlEvent p = new PlayControlEvent();
+        p.setType(PlayControlEventsEnum.KILL);
         try{
             EventQueues.toPlayback.put(p);
         }catch (InterruptedException e) {
