@@ -109,6 +109,7 @@ public class Effect {
         return Util.scale(preOut);
     }
 
+    @SuppressWarnings("DuplicateExpressions")
     private static void calculateCoefficients(double kadov, double bandwidth, Coefficients c, FilterTypesEnum filterType){
         double t = Math.pow(10, Math.abs(maxGain) /20);
         double x = Math.tan(Math.PI * kadov/SAMPLE_RATE);

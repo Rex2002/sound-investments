@@ -10,7 +10,7 @@ import java.util.Random;
 import app.mapping.InstrumentDataRaw;
 
 public class Harmonizer {
-    private InstrumentDataRaw dataRaw;
+    private final InstrumentDataRaw dataRaw;
 
     public Harmonizer(InstrumentDataRaw dataRaw) {
         this.dataRaw = dataRaw;
