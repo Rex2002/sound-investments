@@ -1,5 +1,8 @@
 package app;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -9,11 +12,16 @@ import app.communication.Msg;
 import app.communication.MsgToSMType;
 import app.communication.MsgToUIType;
 import app.communication.SonifiableFilter;
+import app.mapping.InstrumentDataRaw;
 import app.mapping.Mapping;
 import app.ui.App;
 import audio.Constants;
+import audio.harmonizer.Harmonizer;
+import audio.synth.InstrumentData;
+import audio.synth.InstrumentEnum;
 import dataRepo.DataRepo;
 import dataRepo.Sonifiable;
+import dataRepo.json.Parser;
 import javafx.application.Application;
 
 // This class runs in the main thread and coordinates all tasks and the creation of the UI thread
@@ -23,7 +31,7 @@ import javafx.application.Application;
 
 public class StateManager {
 	public static void main(String[] args) {
-		testUI(args);
+		testSound(args);
 	}
 
 	public static void testUI(String[] args) {
@@ -93,15 +101,27 @@ public class StateManager {
 	}
 
 	public static void testSound(String[] args) {
-		// DataRepo.init();
+		// Get Test-Data
+		try {
+			String jsonData = Files.readString(Path.of("./src/main/resources/TestDoubles.json"));
+			double[] pitchData = new Parser().parse(jsonData).toDoubleArray();
 
-		// List<Sonifiable> data = DataRepo.getAll(FilterFlag.ALL);
-
-		int soundLength = 60; // only for testing purposes, will actually be taken from Mapping
-		double numberBeatsRaw = (Constants.TEMPO / 60f) * soundLength;
-		// get number of beats to nearest multiple of 16 so that audio always lasts for a full multiple of 4 bars
-		int numberBeats = (int) Math.round(numberBeatsRaw / 16) * 16;
-		soundLength = (int) Math.ceil(numberBeats / (Constants.TEMPO / 60f));
-		// TODO: Call Harmonizer with numberBeats as argument
+			int soundLength = 60; // only for testing purposes, will actually be taken from Mapping
+			double numberBeatsRaw = (Constants.TEMPO / 60f) * soundLength;
+			// get number of beats to nearest multiple of 16 so that audio always lasts for
+			// a full multiple of 4 bars
+			int numberBeats = (int) Math.round(numberBeatsRaw / 16) * 16;
+			soundLength = (int) Math.ceil(numberBeats / (Constants.TEMPO / 60f));
+			// TODO: Call Harmonizer with numberBeats as argument
+			InstrumentDataRaw instrDataRaw = new InstrumentDataRaw(null, null, pitchData, InstrumentEnum.SYNTH_ONE,
+					null,
+					null, null, null, null, null, null, false, null, null);
+			Harmonizer harmonizer = new Harmonizer(instrDataRaw, numberBeats);
+			InstrumentData instrData = harmonizer.harmonize();
+			System.out.println(instrData);
+		} catch (Throwable e) {
+			e.printStackTrace();
+			System.out.println(e.getMessage());
+		}
 	}
 }

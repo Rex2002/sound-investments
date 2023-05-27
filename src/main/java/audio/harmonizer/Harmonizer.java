@@ -31,7 +31,8 @@ public class Harmonizer {
             data.setFeedbackEcho(normalizeFeedbackEcho(dataRaw.getFeedbackEcho(), dataRaw.getOnOffEcho()));
         }
 
-        if (!(dataRaw.getDelayReverb() == null && dataRaw.getFeedbackReverb() == null && dataRaw.getOnOffReverb() == null)) {
+        if (!(dataRaw.getDelayReverb() == null && dataRaw.getFeedbackReverb() == null
+                && dataRaw.getOnOffReverb() == null)) {
             data.setDelayReverb(normalizeDelayReverb(dataRaw.getDelayReverb()));
             data.setFeedbackReverb(normalizeFeedbackReverb(dataRaw.getFeedbackReverb(), dataRaw.getOnOffReverb()));
         }
@@ -67,10 +68,14 @@ public class Harmonizer {
 
     private double[] getRandomScale() {
         double[] scale = new double[] {
-                2/76f, 1/76f, 2/76f, 1/76f, 2/76f, 2/76f, 1/76f, 2/76f, 1/76f, 2/76f, 1/76f, 2/76f,
-                2/76f, 1/76f, 2/76f, 1/76f, 2/76f, 2/76f, 1/76f, 2/76f, 1/76f, 2/76f, 1/76f, 2/76f,
-                2/76f, 1/76f, 2/76f, 1/76f, 2/76f, 2/76f, 1/76f, 2/76f, 1/76f, 2/76f, 1/76f, 2/76f,
-                2/76f, 1/76f, 2/76f, 1/76f, 2/76f, 2/76f, 1/76f, 2/76f, 1/76f, 2/76f, 1/76f, 2/76f
+                2 / 76f, 1 / 76f, 2 / 76f, 1 / 76f, 2 / 76f, 2 / 76f, 1 / 76f, 2 / 76f, 1 / 76f, 2 / 76f, 1 / 76f,
+                2 / 76f,
+                2 / 76f, 1 / 76f, 2 / 76f, 1 / 76f, 2 / 76f, 2 / 76f, 1 / 76f, 2 / 76f, 1 / 76f, 2 / 76f, 1 / 76f,
+                2 / 76f,
+                2 / 76f, 1 / 76f, 2 / 76f, 1 / 76f, 2 / 76f, 2 / 76f, 1 / 76f, 2 / 76f, 1 / 76f, 2 / 76f, 1 / 76f,
+                2 / 76f,
+                2 / 76f, 1 / 76f, 2 / 76f, 1 / 76f, 2 / 76f, 2 / 76f, 1 / 76f, 2 / 76f, 1 / 76f, 2 / 76f, 1 / 76f,
+                2 / 76f
         };
 
         int shift = new Random().nextInt(12);
@@ -84,11 +89,13 @@ public class Harmonizer {
         return scale;
     }
 
-
     /**
-     * @param pitch data array which is presumed to be much longer than the amount of beats needed
-     * @return data array that has the exact length where one data point can be sonified as one note
-     * compresses long data array to the required length by averaging a number of data points into one note.
+     * @param pitch data array which is presumed to be much longer than the amount
+     *              of beats needed
+     * @return data array that has the exact length where one data point can be
+     *         sonified as one note
+     *         compresses long data array to the required length by averaging a
+     *         number of data points into one note.
      */
     private double[] quantizePitch(double[] pitch) {
         int bufferLength = (int) Math.round(pitch.length / (double) numberBeats);
@@ -98,13 +105,13 @@ public class Harmonizer {
             double[] buffer;
             if (i * bufferLength + bufferLength >= notes.length) {
                 int excess = i * bufferLength + bufferLength - notes.length;
-                buffer = Arrays.copyOfRange(pitch, i*bufferLength, i*bufferLength + bufferLength - (excess));
+                buffer = Arrays.copyOfRange(pitch, i * bufferLength, i * bufferLength + bufferLength - (excess));
             } else {
-                buffer = Arrays.copyOfRange(pitch, i*bufferLength, i*bufferLength + bufferLength);
+                buffer = Arrays.copyOfRange(pitch, i * bufferLength, i * bufferLength + bufferLength);
             }
 
-            notes[i] = Arrays.stream(buffer).average().
-                            orElseThrow( () -> new RuntimeException("Encountered exception while quantizing pitch: buffer is empty") );
+            notes[i] = Arrays.stream(buffer).average().orElseThrow(
+                    () -> new RuntimeException("Encountered exception while quantizing pitch: buffer is empty"));
         }
 
         return notes;
@@ -134,7 +141,8 @@ public class Harmonizer {
     private int[] normalizeDelayEcho(double[] delayEcho) throws AppError {
         // TODO: test delay times
         if (delayEcho != null) {
-            double[] delays = new double[] { 4/96f, 6/96f, 8/96f, 12/96f, 16/96f, 24/96f, 32/96f, 48/96f, 1f };
+            double[] delays = new double[] { 4 / 96f, 6 / 96f, 8 / 96f, 12 / 96f, 16 / 96f, 24 / 96f, 32 / 96f,
+                    48 / 96f, 1f };
             int[] output = new int[delayEcho.length];
             for (int i = 0; i < delayEcho.length; i++) {
                 checkDouble(delayEcho[i], "delayEcho", i);
@@ -144,7 +152,7 @@ public class Harmonizer {
             }
             return output;
         } else {
-            return new int[]{(int) ( 12/96f * (Constants.SAMPLE_RATE * 60 / (Constants.TEMPO * 4) ) ) };
+            return new int[] { (int) (12 / 96f * (Constants.SAMPLE_RATE * 60 / (Constants.TEMPO * 4))) };
         }
     }
 
@@ -168,7 +176,7 @@ public class Harmonizer {
             }
             return feedback;
         } else {
-            return new double[]{ 0.7 };
+            return new double[] { 0.7 };
         }
     }
 
@@ -183,7 +191,7 @@ public class Harmonizer {
             return output;
         } else {
             // TODO: test value
-            return new int[]{ 1600 };
+            return new int[] { 1600 };
         }
     }
 
@@ -207,7 +215,7 @@ public class Harmonizer {
             }
             return feedback;
         } else {
-            return new double[]{ 0.6 };
+            return new double[] { 0.6 };
         }
     }
 
@@ -247,7 +255,7 @@ public class Harmonizer {
             }
             return pan;
         } else {
-            return new double[]{0.0};
+            return new double[] { 0.0 };
         }
     }
 

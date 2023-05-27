@@ -86,6 +86,16 @@ public class JsonPrimitive<T> {
 		return res;
 	}
 
+	// @Performance Copies the elements into a new array
+	public double[] toDoubleArray() {
+		List<JsonPrimitive<?>> l = asList();
+		double[] arr = new double[l.size()];
+		for (int i = 0; i < l.size(); i++) {
+			arr[i] = l.get(i).asDouble();
+		}
+		return arr;
+	}
+
 	public <S> List<S> applyList(Function<JsonPrimitive<?>, S> func) {
 		return applyList(func, false);
 	}
