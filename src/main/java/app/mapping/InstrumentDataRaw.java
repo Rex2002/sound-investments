@@ -18,14 +18,17 @@ public class InstrumentDataRaw {
     // Echo parameters
     double[] delayEcho;
     double[] feedbackEcho;
+    boolean[] onOffEcho;
 
     // Reverb parameters
     double[] delayReverb;
     double[] feedbackReverb;
+    boolean[] onOffReverb;
 
     // Filter parameters
     double[] frequency;
     boolean highPass;
+    boolean[] onOffFilter;
 
     // Panning
     double[] pan;
