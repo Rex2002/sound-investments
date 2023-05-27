@@ -8,16 +8,18 @@ import java.util.Optional;
 import audio.synth.InstrumentEnum;
 import dataRepo.SonifiableID;
 
+// TODO: Remove Optionals
+
 public class InstrumentMapping {
 	// Optional fields represent that the user can leave those empty
 	// Any other fields have to be set for a valid mapping
 	// They can still be null, if the mapping isn't finished
 	public final InstrumentEnum instrument;
+	// Pitch
+	private ExchangeData<LineData> pitch = null;
 	// Volume
 	private Optional<ExchangeData<LineData>> relVolume = Optional.empty();
 	private Optional<ExchangeData<RangeData>> absVolume = Optional.empty();
-	// Pitch
-	private ExchangeData<LineData> pitch = null;
 	// Echo
 	private Optional<ExchangeData<LineData>> delayEcho = Optional.empty();
 	private Optional<ExchangeData<LineData>> feedbackEcho = Optional.empty();

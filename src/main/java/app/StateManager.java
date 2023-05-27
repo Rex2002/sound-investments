@@ -9,13 +9,11 @@ import app.communication.Msg;
 import app.communication.MsgToSMType;
 import app.communication.MsgToUIType;
 import app.communication.SonifiableFilter;
-import app.mapping.InstrumentMapping;
 import app.mapping.Mapping;
 import app.ui.App;
 import dataRepo.DataRepo;
 import dataRepo.Sonifiable;
 import javafx.application.Application;
-import audio.synth.InstrumentEnum;
 
 // This class runs in the main thread and coordinates all tasks and the creation of the UI thread
 // This is atypical, as JavaFX's UI thread is usually the main thread as well
@@ -23,9 +21,6 @@ import audio.synth.InstrumentEnum;
 // however, it makes conceptually more sense to me, as the app's logic should be done in the main thread
 
 public class StateManager {
-	// THis mapping assumes that each instrument can only be mapped exactly once
-	public static InstrumentMapping[] mapping = new InstrumentMapping[InstrumentEnum.size];
-
 	public static void main(String[] args) {
 		testUI(args);
 	}
@@ -49,8 +44,6 @@ public class StateManager {
 									List<Sonifiable> list = StateManager
 											.call(() -> DataRepo.findByPrefix(filter.prefix, filter.categoryFilter),
 													List.of());
-									System.out
-											.println(filter.prefix + ", " + filter.categoryFilter + ", " + list.size());
 									EventQueues.toUI.add(new Msg<>(MsgToUIType.FILTERED_SONIFIABLES, list));
 								}
 								case START -> {
@@ -75,14 +68,6 @@ public class StateManager {
 					}
 				};
 			}, 10, 100);
-
-			try {
-
-			} catch (Exception e) {
-				// TODO: Better Error Handling?
-				e.printStackTrace();
-				EventQueues.toUI.put(new Msg<>(MsgToUIType.ERROR, "Internal Error."));
-			}
 		} catch (Exception e) {
 			e.printStackTrace();
 			System.exit(1);

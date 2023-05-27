@@ -64,13 +64,17 @@ public class Mapping {
 			return "Zu viele Börsenkurse auf einmal im Mapping. Es dürfen maximal "
 					+ Integer.toString(MAX_SONIFIABLES_AMOUNT) + " Börsenkurse auf einmal gemappt werden.";
 
+		boolean isAnyInstrMapped = false;
 		for (InstrumentMapping instrMap : mappedInstruments) {
 			if (instrMap.isEmpty())
 				continue;
+			isAnyInstrMapped = true;
 			if (instrMap.getPitch() == null)
 				return "Der Pitch vom Instrument '" + instrMap.getInstrument().toString()
 						+ "' wurde nicht auf einen Börsenwert gemappt.";
 		}
+		if (!isAnyInstrMapped)
+			return "TODO: Message here";
 		return null;
 	}
 

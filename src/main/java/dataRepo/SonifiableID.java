@@ -39,11 +39,6 @@ public class SonifiableID {
 	}
 
 	@Override
-	public int hashCode() {
-		return Objects.hash(exchange, symbol);
-	}
-
-	@Override
 	public String toString() {
 		return this.symbol + "." + this.exchange;
 	}
