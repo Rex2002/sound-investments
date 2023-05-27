@@ -1,10 +1,10 @@
 package audio.synth.playback;
 
-import state.EventQueues;
+import app.communication.EventQueues;
 
 import javax.sound.sampled.SourceDataLine;
 
-public class Playback implements Runnable{
+public class Playback implements Runnable {
     private static final int PLAYBACK_SAMPLE_SIZE = 4410;
     private final SourceDataLine s;
     private final short[] data;
@@ -12,10 +12,11 @@ public class Playback implements Runnable{
     private boolean paused;
     private boolean running;
 
-    public Playback(SourceDataLine s, short[] data){
+    public Playback(SourceDataLine s, short[] data) {
         this.s = s;
         this.data = data;
     }
+
     @Override
     public void run() {
         // TODO test / implement edge behaviour
@@ -31,7 +32,7 @@ public class Playback implements Runnable{
         System.out.println("playBackSampleSize/data.length: " + data.length / PLAYBACK_SAMPLE_SIZE);
         byte[] outBuffer = new byte[PLAYBACK_SAMPLE_SIZE * 2];
         while (running) {
-            if (!paused && positionPointer < data.length/PLAYBACK_SAMPLE_SIZE) {
+            if (!paused && positionPointer < data.length / PLAYBACK_SAMPLE_SIZE) {
                 for (int i = 0; i < PLAYBACK_SAMPLE_SIZE; i++) {
                     outBuffer[2 * i] = (byte) ((data[positionPointer * PLAYBACK_SAMPLE_SIZE + i] >> 8) & 0xFF);
                     outBuffer[2 * i + 1] = (byte) (data[positionPointer * PLAYBACK_SAMPLE_SIZE + i] & 0xFF);
@@ -54,7 +55,10 @@ public class Playback implements Runnable{
                     case SKIP_FORWARD -> positionPointer += nextEvent.getDuration();
                     case SKIP_BACKWARD -> positionPointer = Math.max(positionPointer - nextEvent.getDuration(), 0);
                     case RESET -> positionPointer = 0;
-                    case STOP -> {positionPointer = 0; paused = true;}
+                    case STOP -> {
+                        positionPointer = 0;
+                        paused = true;
+                    }
                     case KILL -> running = false;
                 }
             }
