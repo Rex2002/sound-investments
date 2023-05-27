@@ -1,18 +1,12 @@
-## Getting Started
+# SoundInvestments
 
-Welcome to the VS Code Java world. Here is a guideline to help you get started to write Java code in Visual Studio Code.
+This is the source code for the "SoundInvestments" project from the lecture SoftwareEngineering II. \
+The application aims to support stock analysts by sonifying trade data and thereby enabling a more intuitive understanding of market trends.
 
-## Folder Structure
-
-The workspace contains two folders by default, where:
-
-- `src`: the folder to maintain sources
-- `lib`: the folder to maintain dependencies
-
-Meanwhile, the compiled output files will be generated in the `bin` folder by default.
-
-> If you want to customize the folder structure, open `.vscode/settings.json` and update the related settings there.
-
-## Dependency Management
-
-The `JAVA PROJECTS` view allows you to manage your dependencies. More details can be found [here](https://github.com/microsoft/vscode-java-dependency#manage-dependencies).
+## Developers
+- [Rex2002](https://github.com/Rex2002) - Music and synthesizer
+- [ArtInLines](https://github.com/ArtInLines) - Controller and Data flow
+- [MalteRichert](https://github.com/MalteRichert) - Music and harmonizer
+- [Lizzyhara](https://github.com/Lizzyhara) - User Interface
+- [JakobPK](https://github.com/JakobPK) - Data analysis
+- [nichtLehdev](https://github.com/nichtLehdev) - Music and mixer

@@ -1,12 +1,14 @@
 package audio.harmonizer;
 
+import app.AppError;
 import audio.Constants;
-import state.InstrumentDataRaw;
 import audio.synth.InstrumentData;
 import audio.synth.fx.FilterData;
 
 import java.util.Arrays;
 import java.util.Random;
+
+import app.mapping.InstrumentDataRaw;
 
 public class Harmonizer {
     private final InstrumentDataRaw dataRaw;
@@ -15,28 +17,39 @@ public class Harmonizer {
         this.dataRaw = dataRaw;
     }
 
-    public InstrumentData harmonize() {
+    public InstrumentData harmonize() throws AppError {
         InstrumentData data = new InstrumentData();
+        data.setInstrument(dataRaw.getInstrument());
+
         data.setPitch(normalizePitch(dataRaw.getPitch()));
         data.setVolume(normalizeVolume(dataRaw.getRelVolume(), dataRaw.getAbsVolume()));
 
-        data.setDelayEcho(normalizeDelayEcho(dataRaw.getDelayEcho()));
-        data.setFeedbackEcho(normalizeFeedbackEcho(dataRaw.getFeedbackEcho()));
-        data.setDelayReverb(normalizeDelayReverb(dataRaw.getDelayReverb()));
-        data.setFeedbackReverb(normalizeFeedbackReverb(dataRaw.getFeedbackReverb()));
+        if (!(dataRaw.getDelayEcho() == null && dataRaw.getFeedbackEcho() == null && dataRaw.getOnOffEcho() == null)) {
+            data.setDelayEcho(normalizeDelayEcho(dataRaw.getDelayEcho()));
+            data.setFeedbackEcho(normalizeFeedbackEcho(dataRaw.getFeedbackEcho(), dataRaw.getOnOffEcho()));
+        }
 
-        data.setFilterData(normalizeFilter(dataRaw.getFrequency(), dataRaw.isHighPass()));
+        if (!(dataRaw.getDelayReverb() == null && dataRaw.getFeedbackReverb() == null && dataRaw.getOnOffReverb() == null)) {
+            data.setDelayReverb(normalizeDelayReverb(dataRaw.getDelayReverb()));
+            data.setFeedbackReverb(normalizeFeedbackReverb(dataRaw.getFeedbackReverb(), dataRaw.getOnOffReverb()));
+        }
+
+        if (!(dataRaw.getFrequency() == null && dataRaw.getOnOffFilter() == null)) {
+            data.setFilterData(normalizeFilter(dataRaw.getFrequency(), dataRaw.getOnOffFilter(), dataRaw.isHighPass()));
+        }
+
         data.setPan(normalizePan(dataRaw.getPan()));
-
-        data.setInstrument(dataRaw.getInstrument());
 
         return data;
     }
-    private int[] normalizePitch(double[] pitch) {
+
+    private int[] normalizePitch(double[] pitch) throws AppError {
         double[] scale = getRandomScale();
 
         int[] output = new int[pitch.length];
         for (int i = 0; i < pitch.length; i++) {
+            checkDouble(pitch[i], "pitch", i);
+
             double sum = 0.0;
             for (int offsetIndex = 0; offsetIndex < scale.length; offsetIndex++) {
                 sum += scale[offsetIndex];
@@ -47,8 +60,9 @@ public class Harmonizer {
         }
         return output;
     }
+
     private double[] getRandomScale() {
-        double[] scale = new double[]{
+        double[] scale = new double[] {
                 2/76f, 1/76f, 2/76f, 1/76f, 2/76f, 2/76f, 1/76f, 2/76f, 1/76f, 2/76f, 1/76f, 2/76f,
                 2/76f, 1/76f, 2/76f, 1/76f, 2/76f, 2/76f, 1/76f, 2/76f, 1/76f, 2/76f, 1/76f, 2/76f,
                 2/76f, 1/76f, 2/76f, 1/76f, 2/76f, 2/76f, 1/76f, 2/76f, 1/76f, 2/76f, 1/76f, 2/76f,
@@ -56,30 +70,29 @@ public class Harmonizer {
         };
 
         int shift = new Random().nextInt(12);
-        double[] buffer = Arrays.copyOfRange(scale, 0, shift);
-        for (int i = 0; i < scale.length; i++) {
-            scale[i] = i < scale.length - shift ? scale[i + shift] : buffer[shift - (scale.length -i)];
+        if (shift > 0) {
+            double[] buffer = Arrays.copyOfRange(scale, 0, shift);
+            for (int i = 0; i < scale.length; i++) {
+                scale[i] = i < scale.length - shift ? scale[i + shift] : buffer[shift - (scale.length - i)];
+            }
         }
 
         return scale;
     }
 
-    private double[] normalizeVolume(double[] relVolume, boolean[] absVolume) {
+    private double[] normalizeVolume(double[] relVolume, boolean[] absVolume) throws AppError {
         if (relVolume == null && absVolume == null) {
-            return new double[]{1.0};
-        }
-        else if (relVolume == null) {
+            return new double[] { 1.0 };
+        } else if (relVolume == null) {
             double[] volume = new double[absVolume.length];
             for (int i = 0; i < absVolume.length; i++) {
-                volume[i] = absVolume[i]?1.0:0.0;
+                volume[i] = absVolume[i] ? 1.0 : 0.0;
             }
             return volume;
-        }
-        else {
+        } else {
             for (int i = 0; i < relVolume.length; i++) {
-                if (relVolume[i] > 1 || relVolume[i] < 0) {
-                    throw new RuntimeException("relVolume data is non-compliant at index " + i);
-                }
+                checkDouble(relVolume[i], "relVolume", i);
+
                 if (absVolume != null && absVolume.length > i) {
                     relVolume[i] = absVolume[i] ? relVolume[i] : 0.0;
                 }
@@ -88,59 +101,131 @@ public class Harmonizer {
         }
     }
 
-    private int[] normalizeDelayEcho(double[] delayEcho) {
-        //TODO: test delay times
-        double[] delays = new double[]{4/96f, 6/96f, 8/96f, 12/96f, 16/96f, 24/96f, 32/96f,48/96f, 1f };
-        int[] output = new int[delayEcho.length];
-        for (int i = 0; i < delayEcho.length; i++) {
 
-            output[i] = (int) delays[(int) (delayEcho[i] * delays.length)] * (Constants.SAMPLE_RATE * 60 / (Constants.TEMPO * 4));
+    private int[] normalizeDelayEcho(double[] delayEcho) throws AppError {
+        // TODO: test delay times
+        if (delayEcho != null) {
+            double[] delays = new double[] { 4/96f, 6/96f, 8/96f, 12/96f, 16/96f, 24/96f, 32/96f, 48/96f, 1f };
+            int[] output = new int[delayEcho.length];
+            for (int i = 0; i < delayEcho.length; i++) {
+                checkDouble(delayEcho[i], "delayEcho", i);
+
+                output[i] = (int) delays[(int) (delayEcho[i] * delays.length)]
+                        * (Constants.SAMPLE_RATE * 60 / (Constants.TEMPO * 4));
+            }
+            return output;
+        } else {
+            return new int[]{(int) ( 12/96f * (Constants.SAMPLE_RATE * 60 / (Constants.TEMPO * 4) ) ) };
         }
-        return output;
     }
 
-    private double[] normalizeFeedbackEcho(double[] feedbackEcho) {
-        //TODO: test values
-        for (int i = 0; i < feedbackEcho.length; i++) {
-            feedbackEcho[i] *= 0.9;
+    private double[] normalizeFeedbackEcho(double[] feedback, boolean[] onOff) throws AppError {
+        // TODO: test values
+        if (feedback != null) {
+            for (int i = 0; i < feedback.length; i++) {
+                checkDouble(feedback[i], "feedbackEcho", i);
+
+                if (onOff != null && !onOff[i]) {
+                    feedback[i] = 0.0;
+                } else {
+                    feedback[i] *= 0.9;
+                }
+            }
+            return feedback;
+        } else if (onOff != null) {
+            feedback = new double[onOff.length];
+            for (int i = 0; i < onOff.length; i++) {
+                feedback[i] = onOff[i] ? 0.7 : 0.0;
+            }
+            return feedback;
+        } else {
+            return new double[]{ 0.7 };
         }
-        return feedbackEcho;
     }
 
-    private int[] normalizeDelayReverb(double[] delayReverb) {
-        int[] output = new int[delayReverb.length];
-        for (int i = 0; i < delayReverb.length; i++) {
-            output[i] = (int) (delayReverb[i] * 2205);
+    private int[] normalizeDelayReverb(double[] delay) throws AppError {
+        if (delay != null) {
+            int[] output = new int[delay.length];
+            for (int i = 0; i < delay.length; i++) {
+                checkDouble(delay[i], "delayReverb", i);
+
+                output[i] = (int) (delay[i] * 2205);
+            }
+            return output;
+        } else {
+            // TODO: test value
+            return new int[]{ 1600 };
         }
-        return output;
     }
 
-    private double[] normalizeFeedbackReverb(double[] feedbackReverb) {
-        //TODO: test values
-        for (int i = 0; i < feedbackReverb.length; i++) {
-            feedbackReverb[i] *= 0.8;
+    private double[] normalizeFeedbackReverb(double[] feedback, boolean[] onOff) throws AppError {
+        // TODO: test values
+        if (feedback != null) {
+            for (int i = 0; i < feedback.length; i++) {
+                checkDouble(feedback[i], "feedbackReverb", i);
+
+                if (onOff != null && !onOff[i]) {
+                    feedback[i] = 0.0;
+                } else {
+                    feedback[i] *= 0.8;
+                }
+            }
+            return feedback;
+        } else if (onOff != null) {
+            feedback = new double[onOff.length];
+            for (int i = 0; i < onOff.length; i++) {
+                feedback[i] = onOff[i] ? 0.6 : 0.0;
+            }
+            return feedback;
+        } else {
+            return new double[]{ 0.6 };
         }
-        return feedbackReverb;
     }
 
-    private FilterData normalizeFilter(double[] cutoff, boolean highPass) {
+    private FilterData normalizeFilter(double[] cutoff, boolean[] onOff, boolean highPass) throws AppError {
         FilterData filter = new FilterData();
 
-        for (int i = 0; i < cutoff.length; i++) {
-            cutoff[i] = 40 + cutoff[i] * (20000 - 40);
+        if (cutoff != null) {
+            for (int i = 0; i < cutoff.length; i++) {
+                checkDouble(cutoff[i], "cutoff", i);
+
+                if (onOff != null && !onOff[i]) {
+                    cutoff[i] = highPass ? 50000 : 0;
+                } else {
+                    cutoff[i] = 40 + cutoff[i] * (20000 - 40);
+                }
+            }
+
+            filter.setCutoff(cutoff);
+        } else {
+            cutoff = new double[onOff.length];
+            for (int i = 0; i < onOff.length; i++) {
+                cutoff[i] = highPass ? 1000 : 500;
+            }
         }
 
-        filter.setCutoff(cutoff);
-        filter.setBandwidth(new double[]{0.5});
+        filter.setBandwidth(new double[] { 0.5 });
         filter.setHighPass(highPass);
-
         return filter;
     }
 
-    private double[] normalizePan(double[] pan) {
-        for (int i = 0; i < pan.length; i++) {
-            pan[i] = (pan[i] * 2) -1;
+    private double[] normalizePan(double[] pan) throws AppError {
+        if (pan != null) {
+            for (int i = 0; i < pan.length; i++) {
+                checkDouble(pan[i], "pan", i);
+
+                pan[i] = (pan[i] * 2) - 1;
+            }
+            return pan;
+        } else {
+            return new double[]{0.0};
         }
-        return pan;
+    }
+
+    private void checkDouble(double value, String collection, int index) throws AppError {
+        if (value > 1 || value < 0) {
+            throw new AppError("Mapped Data non-compliant: " + collection + "[" + index +
+                    "] not in range(0,1) with value " + value);
+        }
     }
 }
