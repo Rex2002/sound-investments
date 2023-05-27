@@ -12,9 +12,11 @@ import app.mapping.InstrumentDataRaw;
 
 public class Harmonizer {
     private final InstrumentDataRaw dataRaw;
+    private final int numberBeats;
 
-    public Harmonizer(InstrumentDataRaw dataRaw) {
+    public Harmonizer(InstrumentDataRaw dataRaw, int numberBeats) {
         this.dataRaw = dataRaw;
+        this.numberBeats = numberBeats;
     }
 
     public InstrumentData harmonize() throws AppError {
@@ -45,6 +47,8 @@ public class Harmonizer {
 
     private int[] normalizePitch(double[] pitch) throws AppError {
         double[] scale = getRandomScale();
+
+        pitch = quantizePitch(pitch);
 
         int[] output = new int[pitch.length];
         for (int i = 0; i < pitch.length; i++) {
@@ -78,6 +82,32 @@ public class Harmonizer {
         }
 
         return scale;
+    }
+
+
+    /**
+     * @param pitch data array which is presumed to be much longer than the amount of beats needed
+     * @return data array that has the exact length where one data point can be sonified as one note
+     * compresses long data array to the required length by averaging a number of data points into one note.
+     */
+    private double[] quantizePitch(double[] pitch) {
+        int bufferLength = (int) Math.round(pitch.length / (double) numberBeats);
+
+        double[] notes = new double[numberBeats];
+        for (int i = 0; i < notes.length; i++) {
+            double[] buffer;
+            if (i * bufferLength + bufferLength >= notes.length) {
+                int excess = i * bufferLength + bufferLength - notes.length;
+                buffer = Arrays.copyOfRange(pitch, i*bufferLength, i*bufferLength + bufferLength - (excess));
+            } else {
+                buffer = Arrays.copyOfRange(pitch, i*bufferLength, i*bufferLength + bufferLength);
+            }
+
+            notes[i] = Arrays.stream(buffer).average().
+                            orElseThrow( () -> new RuntimeException("Encountered exception while quantizing pitch: buffer is empty") );
+        }
+
+        return notes;
     }
 
     private double[] normalizeVolume(double[] relVolume, boolean[] absVolume) throws AppError {
