@@ -119,6 +119,10 @@ public class MainSceneController implements Initializable {
                             addToCheckList(s);
                         }
                     }
+                    case ERROR -> {
+                        System.out.println((String) msg.data);
+                        displayError((String) msg.data, "Interner Fehler");
+                    }
                     default -> System.out.println("ERROR: Msg-Type " + msg.type + " not yet implemented");
                 }
             }

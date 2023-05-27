@@ -64,7 +64,7 @@ public class StateManager {
 					}
 
 					if (!th.isAlive()) {
-						timer.cancel();
+						System.exit(0);
 					}
 				};
 			}, 10, 100);

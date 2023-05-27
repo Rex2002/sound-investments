@@ -4,12 +4,12 @@ import java.util.Calendar;
 import java.util.Optional;
 import java.util.HashSet;
 import java.util.Set;
-import app.Util;
 
 import app.AppError;
 import audio.synth.EvInstrEnum;
 import audio.synth.InstrumentEnum;
 import dataRepo.SonifiableID;
+import util.ArrayFunctions;
 
 public class Mapping {
 	public static int MAX_EV_INSTR_SIZE = 10;
@@ -153,7 +153,8 @@ public class Mapping {
 	// setParam does not make sure to remove old parameter
 	public void setParam(InstrumentEnum instr, SonifiableID sonifiable, InstrParam iparam, ExchangeParam eparam)
 			throws AppError {
-		InstrumentMapping instrMap = Util.find(mappedInstruments, x -> x != null && x.getInstrument() == instr);
+		InstrumentMapping instrMap = ArrayFunctions.find(mappedInstruments,
+				x -> x != null && x.getInstrument() == instr);
 		switch (iparam) {
 			case PITCH -> instrMap.setPitch(setParamHelper(sonifiable, eparam, iparam));
 			case RELVOLUME -> instrMap.setRelVolume(setOptParamHelper(sonifiable, eparam, iparam));
@@ -172,7 +173,7 @@ public class Mapping {
 	}
 
 	public void rmParam(SonifiableID sonifiable, InstrumentEnum instr, InstrParam iparam) throws AppError {
-		InstrumentMapping instrMap = Util.find(mappedInstruments, x -> x.getInstrument() == instr);
+		InstrumentMapping instrMap = ArrayFunctions.find(mappedInstruments, x -> x.getInstrument() == instr);
 		switch (iparam) {
 			case PITCH -> instrMap.setPitch(null);
 			case RELVOLUME -> instrMap.setRelVolume(Optional.empty());
@@ -215,7 +216,7 @@ public class Mapping {
 	}
 
 	public void setHighPass(InstrumentEnum instr, boolean highpass) {
-		InstrumentMapping instrMap = Util.find(mappedInstruments, x -> x.getInstrument() == instr);
+		InstrumentMapping instrMap = ArrayFunctions.find(mappedInstruments, x -> x.getInstrument() == instr);
 		instrMap.setHighPass(highpass);
 	}
 
@@ -287,8 +288,8 @@ public class Mapping {
 	public String toString() {
 		return "{" +
 				" sonifiables='" + this.sonifiables + "'" +
-				", mappedInstruments='" + Util.toStringArr(this.mappedInstruments) + "'" +
-				", eventInstruments='" + Util.toStringArr(this.eventInstruments) + "'" +
+				", mappedInstruments='" + ArrayFunctions.toStringArr(this.mappedInstruments) + "'" +
+				", eventInstruments='" + ArrayFunctions.toStringArr(this.eventInstruments) + "'" +
 				", evInstrAmount='" + this.evInstrAmount + "'" +
 				", soundLength='" + this.soundLength + "'" +
 				", startDate='" + this.startDate + "'" +

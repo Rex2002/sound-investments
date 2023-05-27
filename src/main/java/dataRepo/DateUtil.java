@@ -28,9 +28,11 @@ public class DateUtil {
 		StringBuffer sb = new StringBuffer(length);
 		sb.setLength(length);
 		String xs = String.valueOf(x);
-		sb.insert(length - xs.length(), xs);
-		for (int i = 0; i < length - xs.length(); i++) {
-			sb.insert(i, pad);
+		for (int i = 0; i < xs.length(); i++) {
+			sb.setCharAt(i, xs.charAt(i));
+		}
+		for (int i = xs.length(); i < length; i++) {
+			sb.setCharAt(i, pad);
 		}
 		return sb.toString();
 	}

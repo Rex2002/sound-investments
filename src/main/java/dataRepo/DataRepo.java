@@ -1,5 +1,6 @@
 package dataRepo;
 
+import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
@@ -14,6 +15,8 @@ import dataRepo.api.AuthPolicy;
 import dataRepo.api.HandledPagination;
 import dataRepo.json.JsonPrimitive;
 import dataRepo.json.Parser;
+import util.ArrayFunctions;
+import util.UnorderedList;
 
 public class DataRepo {
 	private static List<Stock> testStocks() {
@@ -95,58 +98,126 @@ public class DataRepo {
 		});
 	}
 
-	private static List<Stock> stocks = new ArrayList<>(128);
-	private static List<ETF> etfs = new ArrayList<>(128);
-	private static List<Index> indices = new ArrayList<>(128);
+	private static UnorderedList<Stock> stocks = new UnorderedList<>(128);
+	private static UnorderedList<ETF> etfs = new UnorderedList<>(128);
+	private static UnorderedList<Index> indices = new UnorderedList<>(128);
 
 	public static void init() throws AppError {
 		// @Cleanup for Development & Testing only
-		stocks = testStocks();
-		return;
+		// stocks = testStocks();
+		// return;
 
 		// @Cleanup For debugging only
-		// apiTwelvedata.setQuery("exchange", "XNYS");
+		// apiTwelvedata.setQuery("exchange", "XETRA");
 
-		// try {
-		// stocks = apiTwelvedata.getJSON(x -> x.asMap().get("data"), "stocks")
-		// .applyList(x -> new Stock(x.asMap().get("name").asStr(),
-		// x.asMap().get("symbol").asStr(), x.asMap().get("exchange").asStr()));
-		// setTradingPeriods(stocks);
+		try {
+			Parser parser = new Parser();
 
-		// etfs = apiTwelvedata.getJSON(x -> x.asMap().get("data"), "etf")
-		// .applyList(x -> new ETF(x.asMap().get("name").asStr(),
-		// x.asMap().get("symbol").asStr(), x.asMap().get("exchange").asStr()));
-		// setTradingPeriods(etfs);
+			// String stocksRes = apiTwelvedata.makeReq("stocks").body();
+			String stocksRes = Files.readString(Path.of("./src/main/resources/stocks.json"));
+			stocks = new UnorderedList<>(parser.parse(stocksRes, x -> x.asMap().get("data"))
+					.applyList(x -> {
+						Calendar earliest = null, latest = null;
+						try {
+							earliest = DateUtil.calFromDateStr(x.asMap().get("earliest").asStr());
+							latest = DateUtil.calFromDateStr(x.asMap().get("latest").asStr());
+						} catch (Exception e) {
+						}
+						return new Stock(x.asMap().get("name").asStr(),
+								new SonifiableID(x.asMap().get("id").asMap().get("symbol").asStr(),
+										x.asMap().get("id").asMap().get("exchange").asStr()),
+								earliest,
+								latest);
+					}));
+			// setTradingPeriods(stocks);
+			// writeToJSON("stocks.json",
+			// "{ \"data\": " + ArrayFunctions.toStringArr(stocks.getArray(), x ->
+			// ((Sonifiable) x).toJSON(), true)
+			// + " }");
 
-		// indices = apiTwelvedata.getJSON(x -> x.asMap().get("data"), "indices")
-		// .applyList(x -> new Index(x.asMap().get("name").asStr(),
-		// x.asMap().get("symbol").asStr(), x.asMap().get("exchange").asStr()));
-		// setTradingPeriods(indices);
+			// String etfsRes = apiTwelvedata.makeReq("etf").body();
+			String etfsRes = Files.readString(Path.of("./src/main/resources/etfs.json"));
+			etfs = new UnorderedList<>(parser.parse(etfsRes, x -> x.asMap().get("data"))
+					.applyList(x -> new ETF(x.asMap().get("name").asStr(),
+							new SonifiableID(x.asMap().get("symbol").asStr(),
+									x.asMap().get("stock_exchange").asMap().get("acronym").asStr()))));
+			setTradingPeriods(etfs);
+			writeToJSON("etfs.json",
+					"{ \"data\": " + ArrayFunctions.toStringArr(etfs.getArray(), x -> ((Sonifiable) x).toJSON(), true)
+							+ " }");
 
-		// System.out.println("Init done");
-		// } catch (Exception e) {
-		// e.printStackTrace();
-		// }
+			// String indicesRes = apiTwelvedata.makeReq("indices").body();
+			String indicesRes = Files.readString(Path.of("./src/main/resources/indices.json"));
+			indices = new UnorderedList<>(parser.parse(indicesRes, x -> x.asMap().get("data"))
+					.applyList(x -> new Index(x.asMap().get("name").asStr(),
+							new SonifiableID(x.asMap().get("symbol").asStr(),
+									x.asMap().get("stock_exchange").asMap().get("acronym").asStr()))));
+			setTradingPeriods(indices);
+			writeToJSON("indices.json",
+					"{ \"data\": "
+							+ ArrayFunctions.toStringArr(indices.getArray(), x -> ((Sonifiable) x).toJSON(), true)
+							+ " }");
+
+			// @Cleanup for Development only
+
+			System.out.println("Init done");
+			System.out.println(ArrayFunctions.toStringArr(stocks.getArray()));
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new AppError(e.getMessage());
+		}
+	}
+
+	private static <T> void writeToJSON(String filename, String data) throws AppError {
+		try {
+			PrintWriter out = new PrintWriter("./src/main/resources/" + filename);
+			out.write(data);
+			out.close();
+		} catch (Exception e) {
+			throw new AppError(e.getMessage());
+		}
 	}
 
 	private static <T extends Sonifiable> void setTradingPeriods(List<T> list) {
 		// @Cleanup `i < 5` is only for debugging
-		for (int i = 0; i < list.size() && i < 5; i++) {
+		for (int i = 0; i < list.size(); i++) {
 			T s = list.get(i);
 			try {
 				HashMap<String, JsonPrimitive<?>> json = apiLeeway.getJSON(x -> x.asMap(),
 						"general/tradingperiod/" + s.getId().toString());
 				s.setEarliest(DateUtil.calFromDateStr(json.get("start").asStr()));
 				s.setLatest(DateUtil.calFromDateStr(json.get("end").asStr()));
+
+				/*
+				 * apiTwelvedata.setQueries("symbol", s.getId().getSymbol(), "exchange",
+				 * s.getId().getExchange(),
+				 * "outputsize", "10", "interval", IntervalLength.DAY.toString(API.TWELVEDATA));
+				 *
+				 * List<JsonPrimitive<?>> vals = apiTwelvedata.getJSON(x ->
+				 * x.asMap().get("values").asList(),
+				 * "/time_series", "order", "ASC", "start_date", "1990-01-01");
+				 * if (vals.isEmpty())
+				 * throw new Exception(); // throw exception to fall into catch-branch
+				 * s.setEarliest(DateUtil.calFromDateStr(vals.get(0).asMap().get("datetime").
+				 * asStr()));
+				 *
+				 * vals = apiTwelvedata.getJSON(x -> x.asMap().get("values").asList(),
+				 * "/time_series", "order", "DESC", "end_date",
+				 * DateUtil.formatDate(Calendar.getInstance()));
+				 * if (vals.isEmpty())
+				 * throw new Exception(); // throw exception to fall into catch-branch
+				 * s.setEarliest(DateUtil.calFromDateStr(vals.get(0).asMap().get("datetime").
+				 * asStr()));
+				 */
 			} catch (Exception e) {
 				// We assume tht if an error occured, that we don't have access to the given
-				// symbol
-				// This might be a wrong assumption
+				// symbol. This might be a wrong assumption
 				System.out.println("Remove element");
 				list.remove(i);
 				i--;
 			}
 		}
+		// apiTwelvedata.resetQueries();
 	}
 
 	public static List<Sonifiable> findByPrefix(String prefix, FilterFlag... filters) {
