@@ -1,14 +1,13 @@
 package audio.harmonizer;
 
 import app.AppError;
+import app.mapping.InstrumentDataRaw;
 import audio.Constants;
 import audio.synth.InstrumentData;
 import audio.synth.fx.FilterData;
 
 import java.util.Arrays;
 import java.util.Random;
-
-import app.mapping.InstrumentDataRaw;
 
 public class Harmonizer {
     private final InstrumentDataRaw dataRaw;
@@ -60,6 +59,7 @@ public class Harmonizer {
                 sum += scale[offsetIndex];
                 if (pitch[i] <= sum) {
                     output[i] = 36 + offsetIndex;
+                    break;
                 }
             }
         }
