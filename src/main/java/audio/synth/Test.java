@@ -3,6 +3,7 @@ package audio.synth;
 // freq: 440,  493.88,  523.25,  587.33,  659.25,  698.46,  783.99,  880.00
 
 import audio.Constants;
+import audio.mixer.SampleLoader;
 import audio.synth.envelopes.ADSR;
 import audio.synth.fx.Effect;
 import audio.synth.fx.FilterData;
@@ -19,9 +20,9 @@ import java.util.Scanner;
 import static audio.synth.Util.findMax;
 
 public class Test {
-    static String waveFileName = "./src/main/resources/Casio-MT-45-Beguine.wav";
-    static String waveFileFunk = "./src/main/resources/Yamaha-PSS-280-Funk.wav";
-    static String waveFileLoFi = "./src/main/resources/lofi_research.wav";
+    static String waveFileName = "Casio-MT-45-Beguine.wav";
+    static String waveFileFunk = "Yamaha-PSS-280-Funk.wav";
+    static String waveFileLoFi = "lofi_research.wav";
 
     public static void main(String[] args) {
         System.out.println("Hello Sound");
@@ -48,7 +49,7 @@ public class Test {
                     new double[]{12000}, adsr);
             double[] addedSine = addArrays(sine1, sine2);
 
-            double[] fft = SampleLoader.loadSample(waveFileName);
+            double[] fft = SampleLoader.loadBackingSample(waveFileName);
             FilterData filterData = new FilterData();
             filterData.setCutoff(new double[]{1200, 6000});
             filterData.setBandwidth(new double[]{0.5});
