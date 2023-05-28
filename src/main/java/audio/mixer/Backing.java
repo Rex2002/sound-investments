@@ -22,17 +22,13 @@ public class Backing {
 
     public double[] getBacking() throws AppError {
         setSamplesRandomly();
-
-        int seconds = (int) Math.ceil( (bars * 4) / (Constants.TEMPO / 60f) );
+        int seconds = (int)Math.ceil((bars * 4) / (Constants.TEMPO / 60f) );
         double[] out = new double[seconds * Constants.SAMPLE_RATE * Constants.CHANNEL_NO];
-
-        int bar = 0;
+        int bar = 0, offset = 0;
         while (bar < bars) {
             double[] sample = chooseSample(bar);
-
-            int offset = bar * (Constants.SAMPLE_RATE * Constants.CHANNEL_NO);
-            System.arraycopy(sample, 0, out, offset, sample.length);
-
+            System.arraycopy(sample, 0, out, offset, offset+sample.length > out.length ? 2*sample.length + offset - out.length : sample.length);
+            offset += sample.length;
             bar += SAMPLE_BARS;
         }
 
