@@ -6,10 +6,7 @@ import audio.Constants;
 import audio.synth.envelopes.ADSR;
 import audio.synth.fx.Effect;
 import audio.synth.fx.FilterData;
-import audio.synth.generators.PhaseAdvancers;
-import audio.synth.generators.PhaseContainer;
 import audio.synth.generators.SineWaveGenerator;
-import audio.synth.generators.WaveGenerator;
 import audio.synth.playback.PlaybackController;
 
 import javax.sound.sampled.AudioFormat;
@@ -39,28 +36,26 @@ public class Test {
             sdl.open(af);
             sdl.start();
             ADSR adsr = new ADSR(0.2, 0.2, 0.5, 0.3);
-            WaveGenerator generator = new SineWaveGenerator();
+            SineWaveGenerator generator = new SineWaveGenerator();
 
-            short[] sineEcho = Effect.echo(
-                    generator.generate(new double[] { 440, 493.88, 523.25, 587.33 }, 8, new short[] { 16383 }, adsr),
-                    new double[] { 0.9 }, new int[] { 15000 });
-            short[] sine1 = generator.generate(
-                    new double[] { 440, 440, 493.88, 493.88, 440, 440, 523.25, 587.33, 440, 440 }, 4,
-                    new short[] { 16383 }, adsr);
-            short[] sine2 = generator.generate(new double[] { 523.25, 587.33, 659.25, 698.46, }, 8,
-                    new short[] { 12000 }, adsr);
-            short[] addedSine = addArrays(sine1, sine2);
+            double[] sineEcho = Effect.echo(
+                    generator.generate(new double[]{440, 493.88, 523.25, 587.33}, 8, new double[]{16383}, adsr),
+                    new double[]{0.9}, new int[]{15000});
+            double[] sine1 = generator.generate(
+                    new double[]{440, 440, 493.88, 493.88, 440, 440, 523.25, 587.33, 440, 440}, 4,
+                    new double[]{16383}, adsr);
+            double[] sine2 = generator.generate(new double[]{523.25, 587.33, 659.25, 698.46,}, 8,
+                    new double[]{12000}, adsr);
+            double[] addedSine = addArrays(sine1, sine2);
 
-            // short[] fft = generator.generate(880, 2, new short[]{16383});
-            // short[] fft2 = generator.generate(440, 2, new short[]{16383});
-            // short[] addedfftSine = addArrays(fftSine2, fftSine);
-            short[] fft = SampleLoader.loadSample(waveFileName);
+            double[] fft = SampleLoader.loadSample(waveFileName);
             FilterData filterData = new FilterData();
-            filterData.setCutoff(new double[] { 1200, 6000 });
-            filterData.setBandwidth(new double[] { 0.5 });
+            filterData.setCutoff(new double[]{1200, 6000});
+            filterData.setBandwidth(new double[]{0.5});
             filterData.setHighPass(false);
-            short[] addedFilteredSine = Effect.IIR(fft, filterData);
-            Complex[] fftOfSine = Util.fft(Arrays.copyOfRange(fft, 0, 2048));
+            double[] sin = generator.generate(440.0, 1, (short) 16500);
+            short[] addedFilteredSine = Util.scaleToShort(Effect.IIR(sin, filterData));
+            Complex[] fftOfSine = Util.fft(Arrays.copyOfRange(Util.scaleToShort((fft)), 0, 2048));
             Complex[] fftOfFilteredSine = Util.fft(Arrays.copyOfRange(addedFilteredSine, 0, 2048));
             // Currently stereo samples can be played, but sounds a bit weird and is only
             // half the speed
@@ -73,13 +68,13 @@ public class Test {
             instrData.setPan(new double[] { 0 });
             instrData.setFilterData(filterData);
 
-            short[] synthLine = new SynthLine(instrData, 6).synthesize();
+            double[] synthLine = new SynthLine(instrData, 6).synthesize();
 
             // mod freq factor of 1.5 seems to resemble a clarinet - though rather rough,
             // could not yet figure out how to add more harmonics
             // TODO add calculation to actually play given freq when modulation and not just
             // gcd of carrier and modulation frequency
-            short[] mSine = generator.generate(new double[] { 900 }, 4, new short[] { 15000 }, 2 / 3f);
+            double[] mSine = generator.generate(new double[] { 900 }, 4, new double[] { 15000 }, 2 / 3f);
             // short[] combined = multiplyArrays(sine, lfo);
             //EventQueue.invokeLater(() -> {
             //    FrequencyChart c = new FrequencyChart(Arrays.copyOfRange(fftOfSine, 0, fftOfSine.length), 1,
@@ -106,34 +101,9 @@ public class Test {
 
     // creates a sine wave of given frequency, duration and max amplitude
 
-    private short[] createSawtooth(double[] freq, int duration, int amplitude) {
-        short[] sw = new short[duration * Constants.SAMPLE_RATE * Constants.CHANNEL_NO];
-        PhaseContainer phases = new PhaseContainer();
-        phases.phase = 0;
-        for (int i = 0; i < sw.length; i += 2) {
-            PhaseAdvancers.advancePhaseSawtooth(phases, freq[(int) (((double) i / sw.length) * freq.length)]);
-            sw[i] = (short) (phases.ret * amplitude);
-            sw[i + 1] = (short) (phases.ret * amplitude);
-        }
-        return sw;
-    }
-
-    private short[] createSawtooth(double[] freq, int duration, int amplitude, ADSR env) {
-        short[] sw = new short[duration * Constants.SAMPLE_RATE * Constants.CHANNEL_NO];
-        env.setSectionLen(sw.length / freq.length);
-        PhaseContainer phases = new PhaseContainer();
-        phases.phase = 0;
-        for (int i = 0; i < sw.length; i += 2) {
-            PhaseAdvancers.advancePhaseSawtooth(phases, freq[(int) (((double) i / sw.length) * freq.length)]);
-
-            sw[i] = (short) (phases.ret * amplitude * env.getAmplitudeFactor(i));
-            sw[i + 1] = (short) (phases.ret * amplitude * env.getAmplitudeFactor(i));
-        }
-        return sw;
-    }
-
     // creates a sine wave in double format of given frequency, duration and max
     // amplitude
+    @Deprecated
     private double[] createDoubleSine(int freq, int duration, int amplitude) {
         double[] sin = new double[duration * Constants.SAMPLE_RATE * Constants.CHANNEL_NO];
         double samplingInterval = (double) Constants.SAMPLE_RATE / freq;
@@ -162,7 +132,7 @@ public class Test {
         s.write(data, 0, data.length);
     }
 
-    private void playWithControls(SourceDataLine s, short[] data){
+    private void playWithControls(SourceDataLine s, double[] data){
         PlaybackController p = new PlaybackController(s, data);
         p.startPlayback();
         boolean running = true;
@@ -180,18 +150,18 @@ public class Test {
                     case "jf" -> p.skipForward();
                     // jump backward 1s
                     case "jb" -> p.skipBackward();
-                    case "s" -> {p.stop(); running = false;}
+                    case "s" -> {p.kill(); running = false;}
                     case "rs" -> p.reset();
                 }
         }
         System.out.println("finished scanner loop");
     }
 
-    private static short[] addArrays(short[] first, short[] second) {
+    private static double[] addArrays(double[] first, double[] second) {
         return addArrays(first, second, 0);
     }
 
-    private static short[] addArrays(short[] first, short[] second, int start) {
+    private static double[] addArrays(double[] first, double[] second, int start) {
         // if start is zero, it does not matter which array is longer.
         // if start is not zero, we assume that the second array is meant to be added at
         // the given position
@@ -201,23 +171,22 @@ public class Test {
         int maxLength = Math.max(first.length, second.length);
         int minLength = Math.min(first.length, second.length);
         double resizingFactor = (double) 16383 / Math.max(findMax(first), findMax(second));
-        short[] result = new short[maxLength];
+        double[] result = new double[maxLength];
 
         for (int i = 0; i < start; i++) {
-            result[i] = (short) (first[i] * resizingFactor);
+            result[i] = first[i] * resizingFactor;
         }
 
         for (int i = start; i < minLength + start; i++) {
-            // short secondValue = (short) (second[i - start] * resizingFactor);
-            result[i] = (short) (first[i] * resizingFactor + second[i - start] * resizingFactor);
+            result[i] = first[i] * resizingFactor + second[i - start] * resizingFactor;
         }
         if (maxLength == first.length) {
             for (int i = minLength + start; i < maxLength; i++) {
-                result[i] = (short) (first[i] * resizingFactor);
+                result[i] = first[i] * resizingFactor;
             }
         } else {
             for (int i = minLength; i < maxLength; i++) {
-                result[i] = (short) (second[i] * resizingFactor);
+                result[i] = second[i] * resizingFactor;
             }
         }
         return result;

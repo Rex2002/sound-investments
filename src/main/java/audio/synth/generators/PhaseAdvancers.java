@@ -16,6 +16,7 @@ public class PhaseAdvancers {
         return phase;
     }
 
+    @Deprecated
     public static void advancePhaseSquare(PhaseContainer phases, double freq){
         phases.phase += freq/SAMPLE_RATE;
 
@@ -32,6 +33,8 @@ public class PhaseAdvancers {
             phases.ret = -1.0f;
         }
     }
+
+    @Deprecated
     public static void advancePhaseSawtooth(PhaseContainer phases, double freq){
         phases.phase += freq/SAMPLE_RATE;
         while(phases.phase > 1.0f)
