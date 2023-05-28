@@ -17,8 +17,9 @@ import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.SourceDataLine;
 import java.awt.*;
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.LinkedList;
+import java.util.List;
 
 import static audio.mixer.Mixer.mixAudioStreams;
 import static audio.synth.Util.findMax;
@@ -47,11 +48,22 @@ public class Test {
             short[] sineEcho = Effect.echo(generator.generate(new double[]{440,  493.88,  523.25,  587.33 }, 8, new short[]{16383}, adsr), new double[]{0.9}, new int[]{15000});
             short[] sine1 = generator.generate(new double[]{440,440, 493.88,  493.88, 440,440,  523.25,  587.33, 440, 440 }, 4, new short[]{16383}, adsr);
             short[] sine2 = generator.generate(new double[]{523.25,  587.33,  659.25,  698.46, }, 8, new short[]{12000}, adsr);
-            short[] addedSine = mixAudioStreams(new LinkedList<short[]>(){
+
+            //convert to double
+            double[] sine1Double = new double[sine1.length];
+            double[] sine2Double = new double[sine2.length];
+            for(int i = 0; i < sine1.length; i++){
+                sine1Double[i] = sine1[i];
+                sine2Double[i] = sine2[i];
+            }
+
+
+
+
+            double[] addedSine = mixAudioStreams(new ArrayList<double[]>() {
                 {
-                    add(sine1);
-                    add(sine2);
-                    add(sineEcho);
+                    add(sine1Double);
+                    add(sine2Double);
                 }
             }, new int[]{0, 0, 0});
 
@@ -162,12 +174,6 @@ public class Test {
     }
 
 
-    private static short[] addArrays(short[] first, short[] second) {
-        return mixAudioStreams(new LinkedList<short[]>(){{
-            add(first);
-            add(second);
-        }}, new int[]{0,0});
-    }
 
     private static short[] addArrays(short[] first, short[] second, int start) {
         System.out.println("Adding arrays of lengths " + first.length + " and " + second.length + ", starting at " + start);
