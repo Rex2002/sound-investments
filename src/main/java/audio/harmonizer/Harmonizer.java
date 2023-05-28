@@ -98,20 +98,13 @@ public class Harmonizer {
      *         number of data points into one note.
      */
     private double[] quantizePitch(double[] pitch) {
-        int bufferLength = (int) Math.round(pitch.length / (double) numberBeats);
-
         double[] notes = new double[numberBeats];
-        for (int i = 0; i < notes.length; i++) {
-            double[] buffer;
-            if (i * bufferLength + bufferLength >= notes.length) {
-                int excess = i * bufferLength + bufferLength - notes.length;
-                buffer = Arrays.copyOfRange(pitch, i * bufferLength, i * bufferLength + bufferLength - (excess));
-            } else {
-                buffer = Arrays.copyOfRange(pitch, i * bufferLength, i * bufferLength + bufferLength);
+        int bufferLength = pitch.length / numberBeats;
+        for (int i = 0, bufferStart = 0; i < notes.length; i++, bufferStart += bufferLength) {
+            notes[i] = 0;
+            for (int j = bufferStart; j < bufferStart + bufferLength; j++) {
+                notes[i] += pitch[j] / bufferLength;
             }
-
-            notes[i] = Arrays.stream(buffer).average().orElseThrow(
-                    () -> new RuntimeException("Encountered exception while quantizing pitch: buffer is empty"));
         }
 
         return notes;

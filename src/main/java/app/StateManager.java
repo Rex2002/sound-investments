@@ -1,6 +1,5 @@
 package app;
 
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
@@ -112,12 +111,10 @@ public class StateManager {
 			// a full multiple of 4 bars
 			int numberBeats = (int) Math.round(numberBeatsRaw / 16) * 16;
 			soundLength = (int) Math.ceil(numberBeats / (Constants.TEMPO / 60f));
-			// TODO: Call Harmonizer with numberBeats as argument
 			InstrumentDataRaw instrDataRaw = new InstrumentDataRaw(null, null, pitchData, InstrumentEnum.SYNTH_ONE,
 					null,
 					null, null, null, null, null, null, false, null, null);
-			Harmonizer harmonizer = new Harmonizer(instrDataRaw, numberBeats);
-			InstrumentData instrData = harmonizer.harmonize();
+			InstrumentData instrData = new Harmonizer(instrDataRaw, numberBeats).harmonize();
 			System.out.println(instrData);
 		} catch (Throwable e) {
 			e.printStackTrace();
