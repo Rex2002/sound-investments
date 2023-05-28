@@ -74,7 +74,7 @@ public class Test {
             double[] synthLine = new SynthLine(instrData, 6).synthesize();
 
             // backing track test
-            Backing backing = new Backing(44);
+            Backing backing = new Backing(64);
             double[] b = backing.getBacking();
 
             // mod freq factor of 1.5 seems to resemble a clarinet - though rather rough,
