@@ -1,7 +1,6 @@
 package audio.mixer;
 
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 
 public class Mixer {
@@ -12,18 +11,6 @@ public class Mixer {
      * @param arrayList list of short-arrays
      * @return maximum value as short
      */
-    private static double findMax(List<double[]> arrayList) {
-        double max = 0;
-        for (double[] array : arrayList) {
-            for (double k : array) {
-                if (Math.abs(k) > max) {
-                    max = Math.abs(k);
-                }
-            }
-        }
-        //System.out.println("Found max value: " + max);
-        return max;
-    }
 
 
     /**
@@ -66,9 +53,7 @@ public class Mixer {
 
         // because we want to add all arrays on top of the first one, we need to add the values of the first array
         // to the result array up to the first startPosition (minStartPosition)
-        for (int j = 0; j < minStartPosition; j++) {
-            result[j] =  audioStreams.get(0)[j];
-        }
+        System.arraycopy(audioStreams.get(0), 0, result, 0, minStartPosition);
 
         for (int i = 0; i < audioStreams.size(); i++) {
             double[] audioStream = audioStreams.get(i);
@@ -102,9 +87,8 @@ public class Mixer {
                         result[j] = (result[j] + audioStream[j]);
                     }
                 } else {
-                    for (int j = minLength + startPosition; j < maxLength; j++) {
-                        result[j] = audioStream[j];
-                    }
+                    if (maxLength - (minLength + startPosition) >= 0)
+                        System.arraycopy(audioStream, minLength + startPosition, result, minLength + startPosition, maxLength - (minLength + startPosition));
                 }
             } else {
                 for (int j = minLength; j < audioStream.length; j++) {
