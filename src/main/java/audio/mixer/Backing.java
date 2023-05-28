@@ -26,8 +26,7 @@ public class Backing {
         int seconds = (int) Math.ceil( (bars * 4) / (Constants.TEMPO / 60f) );
         double[] out = new double[seconds * Constants.SAMPLE_RATE * Constants.CHANNEL_NO];
 
-        int bar = 0;
-        int offset = 0;
+        int bar = 0, offset = 0;
         while (bar < bars) {
             double[] sample = chooseSample(bar);
 
@@ -51,9 +50,8 @@ public class Backing {
             throw new AppError("Encountered error while selecting backing track: No valid backings of matching tempo found");
         }
 
-        String randomSample = backings.get( random.nextInt(backings.size()) );
-        String[] metaData = randomSample.split("_");
         // all backings have to be named like BPM_LENGTH-IN-BARS_TYPE_INDEX_NAME.wav
+        String[] metaData = backings.get( random.nextInt(backings.size()) ).split("_");
 
         // filters out all backings where NAME doesn't match chosen file
         backings = backings.stream().filter((string) -> string.contains(metaData[4])).toList();
@@ -73,7 +71,7 @@ public class Backing {
      * this currently assumes that all backing samples are of length 4, might be expanded
      */
     private double[] chooseSample(int bar) {
-        if (bar % 8 == 4) {
+        if (bar % 8 == 5) {
             return fills[random.nextInt(fills.length)];
         } else {
             return groove;
