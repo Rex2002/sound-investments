@@ -1,6 +1,7 @@
 package audio.harmonizer;
 
 import app.AppError;
+import app.mapping.InstrumentDataRaw;
 import audio.Constants;
 import audio.synth.InstrumentData;
 import audio.synth.fx.FilterData;
@@ -8,13 +9,13 @@ import audio.synth.fx.FilterData;
 import java.util.Arrays;
 import java.util.Random;
 
-import app.mapping.InstrumentDataRaw;
-
 public class Harmonizer {
     private final InstrumentDataRaw dataRaw;
+    private final int numberBeats;
 
-    public Harmonizer(InstrumentDataRaw dataRaw) {
+    public Harmonizer(InstrumentDataRaw dataRaw, int numberBeats) {
         this.dataRaw = dataRaw;
+        this.numberBeats = numberBeats;
     }
 
     public InstrumentData harmonize() throws AppError {
@@ -29,7 +30,8 @@ public class Harmonizer {
             data.setFeedbackEcho(normalizeFeedbackEcho(dataRaw.getFeedbackEcho(), dataRaw.getOnOffEcho()));
         }
 
-        if (!(dataRaw.getDelayReverb() == null && dataRaw.getFeedbackReverb() == null && dataRaw.getOnOffReverb() == null)) {
+        if (!(dataRaw.getDelayReverb() == null && dataRaw.getFeedbackReverb() == null
+                && dataRaw.getOnOffReverb() == null)) {
             data.setDelayReverb(normalizeDelayReverb(dataRaw.getDelayReverb()));
             data.setFeedbackReverb(normalizeFeedbackReverb(dataRaw.getFeedbackReverb(), dataRaw.getOnOffReverb()));
         }
@@ -46,6 +48,8 @@ public class Harmonizer {
     private int[] normalizePitch(double[] pitch) throws AppError {
         double[] scale = getRandomScale();
 
+        pitch = quantizePitch(pitch);
+
         int[] output = new int[pitch.length];
         for (int i = 0; i < pitch.length; i++) {
             checkDouble(pitch[i], "pitch", i);
@@ -55,6 +59,7 @@ public class Harmonizer {
                 sum += scale[offsetIndex];
                 if (pitch[i] <= sum) {
                     output[i] = 36 + offsetIndex;
+                    break;
                 }
             }
         }
@@ -63,10 +68,14 @@ public class Harmonizer {
 
     private double[] getRandomScale() {
         double[] scale = new double[] {
-                2/76f, 1/76f, 2/76f, 1/76f, 2/76f, 2/76f, 1/76f, 2/76f, 1/76f, 2/76f, 1/76f, 2/76f,
-                2/76f, 1/76f, 2/76f, 1/76f, 2/76f, 2/76f, 1/76f, 2/76f, 1/76f, 2/76f, 1/76f, 2/76f,
-                2/76f, 1/76f, 2/76f, 1/76f, 2/76f, 2/76f, 1/76f, 2/76f, 1/76f, 2/76f, 1/76f, 2/76f,
-                2/76f, 1/76f, 2/76f, 1/76f, 2/76f, 2/76f, 1/76f, 2/76f, 1/76f, 2/76f, 1/76f, 2/76f
+                2 / 76f, 1 / 76f, 2 / 76f, 1 / 76f, 2 / 76f, 2 / 76f, 1 / 76f, 2 / 76f, 1 / 76f, 2 / 76f, 1 / 76f,
+                2 / 76f,
+                2 / 76f, 1 / 76f, 2 / 76f, 1 / 76f, 2 / 76f, 2 / 76f, 1 / 76f, 2 / 76f, 1 / 76f, 2 / 76f, 1 / 76f,
+                2 / 76f,
+                2 / 76f, 1 / 76f, 2 / 76f, 1 / 76f, 2 / 76f, 2 / 76f, 1 / 76f, 2 / 76f, 1 / 76f, 2 / 76f, 1 / 76f,
+                2 / 76f,
+                2 / 76f, 1 / 76f, 2 / 76f, 1 / 76f, 2 / 76f, 2 / 76f, 1 / 76f, 2 / 76f, 1 / 76f, 2 / 76f, 1 / 76f,
+                2 / 76f
         };
 
         int shift = new Random().nextInt(12);
@@ -78,6 +87,27 @@ public class Harmonizer {
         }
 
         return scale;
+    }
+
+    /**
+     * @param pitch data array which is presumed to be much longer than the amount
+     *              of beats needed
+     * @return data array that has the exact length where one data point can be
+     *         sonified as one note
+     *         compresses long data array to the required length by averaging a
+     *         number of data points into one note.
+     */
+    private double[] quantizePitch(double[] pitch) {
+        double[] notes = new double[numberBeats];
+        int bufferLength = pitch.length / numberBeats;
+        for (int i = 0, bufferStart = 0; i < notes.length; i++, bufferStart += bufferLength) {
+            notes[i] = 0;
+            for (int j = bufferStart; j < bufferStart + bufferLength; j++) {
+                notes[i] += pitch[j] / bufferLength;
+            }
+        }
+
+        return notes;
     }
 
     private double[] normalizeVolume(double[] relVolume, boolean[] absVolume) throws AppError {
@@ -105,7 +135,8 @@ public class Harmonizer {
     private int[] normalizeDelayEcho(double[] delayEcho) throws AppError {
         // TODO: test delay times
         if (delayEcho != null) {
-            double[] delays = new double[] { 4/96f, 6/96f, 8/96f, 12/96f, 16/96f, 24/96f, 32/96f, 48/96f, 1f };
+            double[] delays = new double[] { 4 / 96f, 6 / 96f, 8 / 96f, 12 / 96f, 16 / 96f, 24 / 96f, 32 / 96f,
+                    48 / 96f, 1f };
             int[] output = new int[delayEcho.length];
             for (int i = 0; i < delayEcho.length; i++) {
                 checkDouble(delayEcho[i], "delayEcho", i);
@@ -115,7 +146,7 @@ public class Harmonizer {
             }
             return output;
         } else {
-            return new int[]{(int) ( 12/96f * (Constants.SAMPLE_RATE * 60 / (Constants.TEMPO * 4) ) ) };
+            return new int[] { (int) (12 / 96f * (Constants.SAMPLE_RATE * 60 / (Constants.TEMPO * 4))) };
         }
     }
 
@@ -139,7 +170,7 @@ public class Harmonizer {
             }
             return feedback;
         } else {
-            return new double[]{ 0.7 };
+            return new double[] { 0.7 };
         }
     }
 
@@ -154,7 +185,7 @@ public class Harmonizer {
             return output;
         } else {
             // TODO: test value
-            return new int[]{ 1600 };
+            return new int[] { 1600 };
         }
     }
 
@@ -178,7 +209,7 @@ public class Harmonizer {
             }
             return feedback;
         } else {
-            return new double[]{ 0.6 };
+            return new double[] { 0.6 };
         }
     }
 
@@ -218,7 +249,7 @@ public class Harmonizer {
             }
             return pan;
         } else {
-            return new double[]{0.0};
+            return new double[] { 0.0 };
         }
     }
 
