@@ -1,19 +1,20 @@
 package audio.harmonizer;
 
 import app.AppError;
+import app.mapping.InstrumentDataRaw;
 import audio.Constants;
 import audio.synth.InstrumentData;
 import audio.synth.fx.FilterData;
 import java.util.Arrays;
 import java.util.Random;
 
-import app.mapping.InstrumentDataRaw;
-
 public class Harmonizer {
     private final InstrumentDataRaw dataRaw;
+    private final int numberBeats;
 
-    public Harmonizer(InstrumentDataRaw dataRaw) {
+    public Harmonizer(InstrumentDataRaw dataRaw, int numberBeats) {
         this.dataRaw = dataRaw;
+        this.numberBeats = numberBeats;
     }
 
     public InstrumentData harmonize() throws AppError {
@@ -47,6 +48,8 @@ public class Harmonizer {
     private int[] normalizePitch(double[] pitch) throws AppError {
         double[] scale = getRandomScale();
 
+        pitch = quantizePitch(pitch);
+
         int[] output = new int[pitch.length];
         for (int i = 0; i < pitch.length; i++) {
             checkDouble(pitch[i], "pitch", i);
@@ -56,6 +59,7 @@ public class Harmonizer {
                 sum += scale[offsetIndex];
                 if (pitch[i] <= sum) {
                     output[i] = 36 + offsetIndex;
+                    break;
                 }
             }
         }
@@ -85,6 +89,27 @@ public class Harmonizer {
         return scale;
     }
 
+    /**
+     * @param pitch data array which is presumed to be much longer than the amount
+     *              of beats needed
+     * @return data array that has the exact length where one data point can be
+     *         sonified as one note
+     *         compresses long data array to the required length by averaging a
+     *         number of data points into one note.
+     */
+    private double[] quantizePitch(double[] pitch) {
+        double[] notes = new double[numberBeats];
+        int bufferLength = pitch.length / numberBeats;
+        for (int i = 0, bufferStart = 0; i < notes.length; i++, bufferStart += bufferLength) {
+            notes[i] = 0;
+            for (int j = bufferStart; j < bufferStart + bufferLength; j++) {
+                notes[i] += pitch[j] / bufferLength;
+            }
+        }
+
+        return notes;
+    }
+
     private double[] normalizeVolume(double[] relVolume, boolean[] absVolume) throws AppError {
         if (relVolume == null && absVolume == null) {
             return new double[] { 1.0 };
@@ -106,10 +131,12 @@ public class Harmonizer {
         }
     }
 
+
     private int[] normalizeDelayEcho(double[] delayEcho) throws AppError {
         // TODO: test delay times
         if (delayEcho != null) {
-            double[] delays = new double[] { 4/96f, 6/96f, 8/96f, 12/96f, 16/96f, 24/96f, 32/96f, 48/96f, 1f };
+            double[] delays = new double[] { 4 / 96f, 6 / 96f, 8 / 96f, 12 / 96f, 16 / 96f, 24 / 96f, 32 / 96f,
+                    48 / 96f, 1f };
             int[] output = new int[delayEcho.length];
 
             for (int i = 0; i < delayEcho.length; i++) {
@@ -120,7 +147,7 @@ public class Harmonizer {
             }
             return output;
         } else {
-            return new int[]{(int) ( 12/96f * (Constants.SAMPLE_RATE * 60 / (Constants.TEMPO * 4) ) ) };
+            return new int[] { (int) (12 / 96f * (Constants.SAMPLE_RATE * 60 / (Constants.TEMPO * 4))) };
         }
     }
 
