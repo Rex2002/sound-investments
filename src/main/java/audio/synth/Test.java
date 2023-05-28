@@ -2,7 +2,9 @@ package audio.synth;
 
 // freq: 440,  493.88,  523.25,  587.33,  659.25,  698.46,  783.99,  880.00
 
+import app.AppError;
 import audio.Constants;
+import audio.mixer.Backing;
 import audio.mixer.SampleLoader;
 import audio.synth.envelopes.ADSR;
 import audio.synth.fx.Effect;
@@ -71,6 +73,10 @@ public class Test {
 
             double[] synthLine = new SynthLine(instrData, 6).synthesize();
 
+            // backing track test
+            Backing backing = new Backing(44);
+            double[] b = backing.getBacking();
+
             // mod freq factor of 1.5 seems to resemble a clarinet - though rather rough,
             // could not yet figure out how to add more harmonics
             // TODO add calculation to actually play given freq when modulation and not just
@@ -90,12 +96,15 @@ public class Test {
                 // c1.setVisible(true);
                 // c2.setVisible(true);
             //});
+            playWithControls(sdl, b);
             playWithControls(sdl, sine1);
             System.out.println("we have reached the point");
             sdl.drain();
             sdl.close();
             System.out.println("ended main method");
         } catch (LineUnavailableException e) {
+            throw new RuntimeException(e);
+        } catch (AppError e) {
             throw new RuntimeException(e);
         }
     }
