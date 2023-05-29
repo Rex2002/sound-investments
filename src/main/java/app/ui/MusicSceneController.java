@@ -4,11 +4,14 @@ import java.io.IOException;
 import java.net.URL;
 import java.time.Duration;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ResourceBundle;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
 
+import javafx.application.Platform;
 import javafx.css.converter.StringConverter;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
@@ -39,21 +42,34 @@ public class MusicSceneController implements Initializable {
 	private Label test;
 	@FXML
 	private LineChart lineChart;
-
+	private double addDuration;
+	private double duration;
+	private LocalDateTime startDate;
+	private LocalDateTime endDate;
+	private long daysBetween;
+	DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd MM yyyy");
 	@FXML
 	// Wahrscheinlich irgendwie zwei deminsionales Array oder so
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
-		addData();
-		musicSlider.setOnMouseReleased(event -> {
-            test.setText(String.valueOf(musicSlider.getValue()));
-        });
+		Platform.runLater(() -> {
+			startSlider();
+			beginTimer();
+			test.setText(String.valueOf(daysBetween));
+		});
 		//übergabe der Kurse wie viele usw mit Statemanager oder per Scene
 	}
-	private void startSlider(LocalDate startDate, LocalDate endDate){
+	void passData(double newDuration, LocalDate start, LocalDate end){
+		duration = newDuration;
+		startDate = start.atStartOfDay();
+		endDate  = end.atStartOfDay();
+		daysBetween = Duration.between( startDate, endDate).toDays();
+		addDuration = (daysBetween)/(duration);
+		addData();
+	}
+	private void startSlider(){
 		//Übergebene Daten, von MainScene 
 		musicSlider.setMinorTickCount(0);
-		long daysBetween = Duration.between(startDate, endDate).toDays();
 		musicSlider.setMajorTickUnit(daysBetween);
 		musicSlider.setBlockIncrement(daysBetween/10);
 	}
@@ -92,31 +108,27 @@ public class MusicSceneController implements Initializable {
 
 	public void stopSound() {
 	}
-	
+	Timer myTimer = new Timer();
 	public void beginTimer() {
 
-		Timer timer = new Timer();
+		
+          myTimer.schedule(new TimerTask(){
 
-		TimerTask task = new TimerTask() {
-
-			public void run() {
-				// songProgressBar.setProgress(current/end);
-
-				/*
-				 * if(current/end == 1) {
-				 *
-				 * cancelTimer();
-				 * }
-				 */
-			}
-
-		};
-
-		// timer.scheduleAtFixedRate(task, 0, 1000);
+            @Override
+            public void run() {
+				if(musicSlider.getValue() != duration){
+				musicSlider.setValue(musicSlider.getValue()+ addDuration);
+				}
+				else{
+					myTimer.cancel();
+				}
+            }
+          }, 0,1000);
+        
 
 	}
 
 	public void cancelTimer() {
-		// timer.cancel();
+		myTimer.cancel();
 	}
 }

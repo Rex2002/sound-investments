@@ -88,6 +88,8 @@ public class MainSceneController implements Initializable {
     private VBox checkVBox;
     @FXML
     private VBox instCheckBox;
+    @FXML
+    private double duration;
 
     private Stage stage;
     private Scene scene;
@@ -146,6 +148,7 @@ public class MainSceneController implements Initializable {
         startPicker.valueProperty().addListener((observable, oldValue, newValue) -> {
             try {
                 mapping.setStartDate(DateUtil.localDateToCalendar(newValue));
+
                 enableBtnIfValid();
             } catch (Exception e) {
                 // TODO: Error Handling
@@ -167,8 +170,9 @@ public class MainSceneController implements Initializable {
                 if(Integer.parseInt(audioLength.getText()) <= 59){
                     if(audioLength1.getText() != null ){
                         Integer minValue = Integer.parseInt(audioLength1.getText());
-                        newValue += (minValue *60);
-                        mapping.setSoundLength(newVal);         
+                        Integer passValue = Integer.parseInt(newValue) + minValue*60;
+                        mapping.setSoundLength(passValue); 
+                        duration = passValue;        
                     }
                 }
                 else{
@@ -194,8 +198,9 @@ public class MainSceneController implements Initializable {
                     }
                  if(audioLength.getText() != null){
                     Integer secValue = Integer.parseInt(audioLength.getText());
-                    newValue += (secValue);
-                    mapping.setSoundLength(newVal);
+                    Integer passValue = Integer.parseInt(newValue) + secValue;
+                    mapping.setSoundLength(passValue);
+                    duration = passValue;  
                     enableBtnIfValid();   
                  }  
                 }
@@ -220,7 +225,10 @@ public class MainSceneController implements Initializable {
     }
 
     public void switchToMusicScene(ActionEvent event) throws IOException {
-		root = FXMLLoader.load(getClass().getResource("/MusicScene.fxml"));
+        FXMLLoader loader = new FXMLLoader( getClass().getResource("/MusicScene.fxml"));
+        root = loader.load();
+        MusicSceneController controller = loader.getController();
+        controller.passData(duration, startPicker.getValue(),  endPicker.getValue());
 		stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
 		scene = new Scene(root);
 		String css = this.getClass().getResource("/choice.css").toExternalForm();
