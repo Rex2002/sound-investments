@@ -87,4 +87,22 @@ public class MovingAverage implements TrendAnalyzer{
 		return minMax;
 	
 	}
+
+	@Override
+	public List<Boolean> GraphIntersectsMinMax(List<Price> priceList, List<Double> minMax){
+		List<Boolean> intersectsminMax = new ArrayList<>();
+		double min = minMax.get(0);
+		double max = minMax.get(1);
+		for (int i = 0; i <= priceList.size(); i++) {
+			double graphLow = priceList.get(i).getlow();
+			double graphHigh = priceList.get(i).gethigh();
+			double graphOpen = priceList.get(i).getopen();
+			double graphClose = priceList.get(i).getclose();
+			if(min==graphLow|| min==graphClose|| min==graphOpen ||max==graphHigh|| max==graphClose|| max==graphOpen){
+				boolean intersects = true;
+				intersectsminMax.add(intersects);	
+			}
+		}
+		return intersectsminMax;
+	}
 }
