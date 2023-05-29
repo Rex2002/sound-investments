@@ -83,7 +83,11 @@ public class MainSceneController implements Initializable {
     @FXML
     private TextField audioLength;
     @FXML
+    private TextField audioLength1;
+    @FXML
     private VBox checkVBox;
+    @FXML
+    private VBox instCheckBox;
 
     private Stage stage;
     private Scene scene;
@@ -126,7 +130,7 @@ public class MainSceneController implements Initializable {
         checkEQService.start();
 
         // @nocheckin Uncomment this before committing
-        // displayError("Testing", "Test");
+        displayError("Testing", "Test");
 
         categoriesChoice.getSelectionModel().selectedIndexProperty().addListener((observable, oldIdx, newIdx) -> {
             EventQueues.toSM.add(new Msg<>(MsgToSMType.FILTERED_SONIFIABLES,
@@ -160,17 +164,54 @@ public class MainSceneController implements Initializable {
         audioLength.textProperty().addListener((observable, oldValue, newValue) -> {
             try {
                 Integer newVal = Integer.parseInt(newValue);
-                mapping.setSoundLength(newVal);
+                if(Integer.parseInt(audioLength.getText()) <= 59){
+                    if(audioLength1.getText() != null ){
+                        Integer minValue = Integer.parseInt(audioLength1.getText());
+                        newValue += (minValue *60);
+                        mapping.setSoundLength(newVal);         
+                    }
+                }
+                else{
+                    //falsche Eingabe
+                    audioLength.setText(null);
+                    audioLength.setPromptText("0-59");
+                }
                 enableBtnIfValid();
             } catch (Exception e) {
                 // TODO: Error Handling
             }
         });
-
+        audioLength1.textProperty().addListener((observable, oldValue, newValue) -> {
+            try {
+                Integer newVal = Integer.parseInt(newValue)*60;
+                if(Integer.parseInt(audioLength1.getText()) <= 5){
+                    if(Integer.parseInt(audioLength1.getText()) == 5){
+                        audioLength.setText("0");
+                        audioLength.setDisable(true);
+                    }
+                    else{
+                        audioLength.setDisable(false);
+                    }
+                 if(audioLength.getText() != null){
+                    Integer secValue = Integer.parseInt(audioLength.getText());
+                    newValue += (secValue);
+                    mapping.setSoundLength(newVal);
+                    enableBtnIfValid();   
+                 }  
+                }
+                else{
+                    //Error zu hoch eingestellt
+                    audioLength1.setText(null);
+                    audioLength1.setPromptText("0-5");
+                }
+            } catch (Exception e) {
+                // TODO: Error Handling
+            }
+        });
         startBtn.setOnAction(ev -> {
             try {
                 EventQueues.toSM.add(new Msg<>(MsgToSMType.START, mapping));
-                switchToMusicScene(ev);
+               switchToMusicScene(ev);
             } catch (Exception e) {
                 e.printStackTrace();
                 // TODO: Error handling
@@ -178,14 +219,16 @@ public class MainSceneController implements Initializable {
         });
     }
 
-    @FXML
-    public void switchToMusicScene(ActionEvent event) throws IOException { // Wechsel auf die Music Scene
-        root = FXMLLoader.load(getClass().getResource("/MusicScene.fxml"));
-        stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-        scene = new Scene(root);
-        stage.show();
-    }
-
+    public void switchToMusicScene(ActionEvent event) throws IOException {
+		root = FXMLLoader.load(getClass().getResource("/MusicScene.fxml"));
+		stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+		scene = new Scene(root);
+		String css = this.getClass().getResource("/choice.css").toExternalForm();
+        // Set the stylesheet after the scene creation
+        scene.getStylesheets().add(css);
+		stage.setScene(scene);
+		stage.show();
+	}
     @FXML
     private void displayError(String errorMessage, String errorTitle) {
         Pane errorPane = new Pane();
@@ -434,7 +477,7 @@ public class MainSceneController implements Initializable {
     public void enableBtnIfValid() {
         if (mapping.isValid())
             startBtn.setDisable(false);
-        else
-            startBtn.setDisable(true);
+       // else
+            //startBtn.setDisable(true);
     }
 }
