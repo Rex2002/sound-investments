@@ -166,7 +166,6 @@ public class MainSceneController implements Initializable {
 
         audioLength.textProperty().addListener((observable, oldValue, newValue) -> {
             try {
-                Integer newVal = Integer.parseInt(newValue);
                 if(Integer.parseInt(audioLength.getText()) <= 59){
                     if(audioLength1.getText() != null ){
                         Integer minValue = Integer.parseInt(audioLength1.getText());
@@ -187,7 +186,6 @@ public class MainSceneController implements Initializable {
         });
         audioLength1.textProperty().addListener((observable, oldValue, newValue) -> {
             try {
-                Integer newVal = Integer.parseInt(newValue)*60;
                 if(Integer.parseInt(audioLength1.getText()) <= 5){
                     if(Integer.parseInt(audioLength1.getText()) == 5){
                         audioLength.setText("0");
