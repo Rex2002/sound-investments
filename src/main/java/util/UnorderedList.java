@@ -20,6 +20,8 @@ public class UnorderedList<E> implements List<E>, RandomAccess, Cloneable {
 	private int cap = DEFAULT_CAPACITY;
 	private int len = 0;
 	private Object[] arr;
+	private int toRemoveAmount = 0;
+	private int[] toRemove = new int[16];
 
 	public UnorderedList(int capacity) {
 		if (capacity < 0)
@@ -172,13 +174,48 @@ public class UnorderedList<E> implements List<E>, RandomAccess, Cloneable {
 		return true;
 	}
 
+	public void quickRemove(int index) {
+		len--;
+		arr[index] = arr[len];
+		arr[len] = null;
+	}
+
+	public void removeLater(int index) {
+		// Assumes that `index` isn't already in the `toRemove` array
+		if (toRemove.length == toRemoveAmount) {
+			toRemove = Arrays.copyOf(toRemove, toRemove.length + (toRemove.length >> 1));
+		}
+		toRemove[toRemoveAmount] = index;
+		toRemoveAmount++;
+	}
+
+	public void applyRemoves() {
+		for (int i = 0; i < toRemoveAmount; i++) {
+			// Find smallest index in sublist
+			int min = i;
+			for (int j = i + 1; j < toRemoveAmount; j++) {
+				if (toRemove[j] < toRemove[min])
+					min = j;
+			}
+			// Remove element at that index
+			quickRemove(toRemove[min] - i); // offset by i, because we already removed i elements before
+		}
+		// Shrink toRemove array if it's more than double toRemoveAmount
+		if (toRemoveAmount < toRemove.length >> 1) {
+			toRemove = new int[toRemoveAmount];
+		}
+		toRemoveAmount = 0;
+	}
+
 	@SuppressWarnings("unchecked")
 	public E remove(int index) {
+		for (int i = 0; i < toRemoveAmount; i++)
+			if (index < toRemove[i])
+				index--;
+		applyRemoves();
 		Objects.checkIndex(index, len);
-		arr[index] = arr[len - 1];
-		len--;
-		E res = (E) arr[len];
-		arr[len] = null;
+		E res = (E) arr[index];
+		quickRemove(index);
 		return res;
 	}
 

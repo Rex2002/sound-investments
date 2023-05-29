@@ -16,10 +16,20 @@ public class APIReq {
 	// Conditions based on the debug-variable will be evaluated at compile time
 	// See: https://stackoverflow.com/a/1813873/13764271
 	private static final boolean debug = true;
+	private static int reqCounter = 0;
 
 	private static final List<StrTuple> defaultHeaders = new ArrayList<>(
 			List.of(new StrTuple("Content-Type", "application/json")));
 	private static final HttpClient client = HttpClient.newHttpClient();
+
+	public static ErrHandler defaultErrHandler() {
+		return new ErrHandler() {
+			@Override
+			public HttpResponse<String> handle(HttpResponse<String> res) throws APIErr {
+				throw new APIErr(res.statusCode(), res.body());
+			}
+		};
+	}
 
 	private final String base;
 	private List<StrTuple> headers;
@@ -28,33 +38,46 @@ public class APIReq {
 	private final String apiTokQueryKey;
 	private final String[] apiToks;
 	private int curTokIdx;
-	private Function<JsonPrimitive<?>, HandledPagination> paginationHandler = null;
-	private Consumer<Integer> setQueryPage = null;
+	private Function<JsonPrimitive<?>, HandledPagination> paginationHandler;
+	private Consumer<Integer> setQueryPage;
+	private ErrHandler errorHandler;
 
-	public APIReq(String base, String[] apiToks, AuthPolicy authPolicy, String apiTokQueryKey) {
+	public APIReq(String base, String[] apiToks, AuthPolicy authPolicy, String apiTokQueryKey,
+			Function<JsonPrimitive<?>, HandledPagination> handler,
+			Consumer<Integer> setQueryPage, ErrHandler errorHandler) {
 		this.base = base.endsWith("/") ? base : base + "/";
 		this.authPolicy = authPolicy;
 		this.apiTokQueryKey = apiTokQueryKey;
 		this.apiToks = apiToks;
 		this.curTokIdx = 0;
+		this.paginationHandler = handler;
+		this.setQueryPage = setQueryPage;
+		this.errorHandler = errorHandler;
 		reset();
+	}
+
+	public APIReq(String base, String[] apiToks, AuthPolicy authPolicy, String apiTokQueryKey,
+			Function<JsonPrimitive<?>, HandledPagination> handler,
+			Consumer<Integer> setQueryPage) {
+		this(base, apiToks, authPolicy, apiTokQueryKey, handler, setQueryPage, defaultErrHandler());
+	}
+
+	public APIReq(String base, String[] apiToks, AuthPolicy authPolicy, String apiTokQueryKey) {
+		this(base, apiToks, authPolicy, apiTokQueryKey, null, null, defaultErrHandler());
 	}
 
 	public APIReq(String base, String[] apiToks, AuthPolicy authPolicy) {
-		this.base = base.endsWith("/") ? base : base + "/";
-		this.authPolicy = authPolicy;
-		this.apiTokQueryKey = null;
-		this.apiToks = apiToks;
-		this.curTokIdx = 0;
-		reset();
+		this(base, apiToks, authPolicy, null, null, null, defaultErrHandler());
 	}
 
-	// Return `this` to allow chaining
-	public APIReq setPaginationHandler(Function<JsonPrimitive<?>, HandledPagination> handler,
+	public void setPaginationHandler(Function<JsonPrimitive<?>, HandledPagination> handler,
 			Consumer<Integer> setQueryPage) {
 		this.paginationHandler = handler;
 		this.setQueryPage = setQueryPage;
-		return this;
+	}
+
+	public void setErrorHandler(ErrHandler errorHandler) {
+		this.errorHandler = errorHandler;
 	}
 
 	public void reset() {
@@ -174,7 +197,7 @@ public class APIReq {
 
 		String url = sb.toString().replace(" ", "%20");
 		if (debug)
-			System.out.println("URL: " + url);
+			System.out.println((reqCounter++) + ". URL: " + url);
 		URI uri = new URI(url);
 
 		HttpRequest.Builder rb = HttpRequest.newBuilder(uri);
@@ -188,7 +211,7 @@ public class APIReq {
 			throws URISyntaxException, IOException, InterruptedException, APIErr {
 		HttpResponse<String> res = client.send(prepReq(endPoint, queries), HttpResponse.BodyHandlers.ofString());
 		if (res.statusCode() >= 300 || res.statusCode() < 200) {
-			throw new APIErr(res.statusCode(), res.body());
+			errorHandler.handle(res);
 		}
 		return res;
 	}

@@ -19,6 +19,7 @@ import audio.harmonizer.Harmonizer;
 import audio.synth.InstrumentData;
 import audio.synth.InstrumentEnum;
 import dataRepo.DataRepo;
+import dataRepo.FilterFlag;
 import dataRepo.Sonifiable;
 import dataRepo.json.Parser;
 import javafx.application.Application;
@@ -30,8 +31,10 @@ import javafx.application.Application;
 
 public class StateManager {
 	public static void main(String[] args) {
-		testSound(args);
+		testUI(args);
 	}
+
+	public static SonifiableFilter sonifiableFilter = new SonifiableFilter("", FilterFlag.ALL);
 
 	public static void testUI(String[] args) {
 		try {
@@ -43,16 +46,19 @@ public class StateManager {
 			Timer timer = new Timer();
 			timer.scheduleAtFixedRate(new TimerTask() {
 				public void run() {
+					if (!th.isAlive()) {
+						System.exit(0);
+					}
+
+					// Go through messages from UI
 					while (!EventQueues.toSM.isEmpty()) {
 						try {
 							Msg<MsgToSMType> msg = EventQueues.toSM.take();
 							switch (msg.type) {
 								case FILTERED_SONIFIABLES -> {
-									SonifiableFilter filter = (SonifiableFilter) msg.data;
-									List<Sonifiable> list = StateManager
-											.call(() -> DataRepo.findByPrefix(filter.prefix, filter.categoryFilter),
-													List.of());
-									EventQueues.toUI.add(new Msg<>(MsgToUIType.FILTERED_SONIFIABLES, list));
+									sonifiableFilter = (SonifiableFilter) msg.data;
+									DataRepo.updatedData.compareAndSet(true, false);
+									sendFilteredSonifiables();
 								}
 								case START -> {
 									Mapping mapping = (Mapping) msg.data;
@@ -66,20 +72,37 @@ public class StateManager {
 								});
 							}
 						} catch (InterruptedException e) {
-							e.printStackTrace();
-							System.exit(1);
+							StateManager.handleException(e);
 						}
 					}
 
-					if (!th.isAlive()) {
-						System.exit(0);
+					// Check if DataRepo has updated data for us
+					if (DataRepo.updatedData.compareAndSet(true, false)) {
+						try {
+							System.out.println("DataRepo has updated Data");
+							sendFilteredSonifiables();
+						} catch (InterruptedException e) {
+							StateManager.handleException(e);
+						}
 					}
 				};
 			}, 10, 100);
 		} catch (Exception e) {
-			e.printStackTrace();
-			System.exit(1);
+			handleException(e);
 		}
+	}
+
+	private static void handleException(Exception e) {
+		e.printStackTrace();
+		System.exit(1);
+	}
+
+	private static void sendFilteredSonifiables() throws InterruptedException {
+		List<Sonifiable> list = StateManager
+				.call(() -> DataRepo.findByPrefix(sonifiableFilter.prefix,
+						sonifiableFilter.categoryFilter),
+						List.of());
+		EventQueues.toUI.add(new Msg<>(MsgToUIType.FILTERED_SONIFIABLES, list));
 	}
 
 	public static <T> T call(AppSupplier<T> func, T alternative) throws InterruptedException {

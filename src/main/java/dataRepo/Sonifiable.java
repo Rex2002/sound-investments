@@ -74,12 +74,11 @@ public abstract class Sonifiable {
 	}
 
 	public String toJSON() {
-		return "{" + "\"name\": \"" + name.toString() + "\", " +
+		return "{ " + "\"name\": " + "\"" + name.toString() + "\"" + ", " +
 				"\"id\": " + id.toJSON() + ", " +
-				"\"earliest\": \"" + (earliest == null ? "null"
-						: DateUtil.formatDate(earliest))
-				+ "\", " +
-				"\"latest\": \"" + (latest == null ? "null" : DateUtil.formatDate(latest)) + "\" " + "}";
+				"\"earliest\": " + (earliest == null ? "null" : "\"" + DateUtil.formatDate(earliest) + "\"")
+				+ ", " +
+				"\"latest\": " + (latest == null ? "null" : "\"" + DateUtil.formatDate(latest) + "\"") + " }";
 	}
 
 	@Override
