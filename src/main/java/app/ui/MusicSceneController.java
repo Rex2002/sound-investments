@@ -1,6 +1,5 @@
 package app.ui;
 
-
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
@@ -11,11 +10,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ResourceBundle;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.concurrent.TimeUnit;
-
-
 import javafx.application.Platform;
-import javafx.css.converter.StringConverter;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
@@ -59,12 +54,13 @@ public class MusicSceneController implements Initializable {
 	@FXML
 	private ImageView pBtn;
 	private boolean paused;
-	File playFile = new File("/pause_btn.png");//Wahrscheinlich Path Problem zeigt nichts
+	File playFile = new File("/pause_btn.png");// Wahrscheinlich Path Problem zeigt nichts
 	File pauseFile = new File("/pause_btn.png");
 	Image playImage = new Image(playFile.toURI().toString());
 	Image pauseImage = new Image(pauseFile.toURI().toString());
 
 	DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd MM yyyy");
+
 	@FXML
 	// Wahrscheinlich irgendwie zwei deminsionales Array oder so
 	@Override
@@ -75,24 +71,25 @@ public class MusicSceneController implements Initializable {
 			test.setText(String.valueOf(daysBetween));
 			addbtn();
 		});
-		//addbtn();
-		//übergabe der Kurse wie viele usw mit Statemanager oder per Scene
+		// addbtn();
+		// übergabe der Kurse wie viele usw mit Statemanager oder per Scene
 	}
-	void passData(double newDuration, LocalDate start, LocalDate end){
+
+	void passData(double newDuration, LocalDate start, LocalDate end) {
 		duration = newDuration;
 		startDate = start.atStartOfDay();
-		endDate  = end.atStartOfDay();
-		daysBetween = Duration.between( startDate, endDate).toDays();
-		addDuration = (daysBetween)/(duration);
+		endDate = end.atStartOfDay();
+		daysBetween = Duration.between(startDate, endDate).toDays();
+		addDuration = (daysBetween) / (duration);
 		addData();
 	}
-	private void addbtn(){
-		try{
-		pBtn.setImage(playImage);
-		pBtn.setCache(true);
-		}
-		catch(Exception e){
-			
+
+	private void addbtn() {
+		try {
+			pBtn.setImage(playImage);
+			pBtn.setCache(true);
+		} catch (Exception e) {
+
 		}
 		pBtn.prefHeight(80);
 		pBtn.prefWidth(285);
@@ -102,26 +99,26 @@ public class MusicSceneController implements Initializable {
 
 			@Override
 			public void handle(MouseEvent event) {
-				if(pBtn.getImage() == playImage)
-				{
+				if (pBtn.getImage() == playImage) {
 					pBtn.setImage(pauseImage);
-					
-				}
-				else{
+
+				} else {
 					pBtn.setImage(playImage);
 					myTimer.cancel();
-					
-					//pause Song
+
+					// pause Song
 				}
 			}
-	   });
+		});
 	}
-	private void startSlider(){
-		//Übergebene Daten, von MainScene 
+
+	private void startSlider() {
+		// Übergebene Daten, von MainScene
 		musicSlider.setMinorTickCount(0);
 		musicSlider.setMajorTickUnit(daysBetween);
-		musicSlider.setBlockIncrement(daysBetween/10);
+		musicSlider.setBlockIncrement(daysBetween / 10);
 	}
+
 	// Könten den ALLMIGHTY den Kursnamenn eben und dann wirft er ein 2D Array
 	// raus(Möglichkeit)
 	public void addData() {
@@ -144,49 +141,47 @@ public class MusicSceneController implements Initializable {
 		stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
 		scene = new Scene(root);
 		String css = this.getClass().getResource("/choice.css").toExternalForm();
-        // Set the stylesheet after the scene creation
-        scene.getStylesheets().add(css);
+		// Set the stylesheet after the scene creation
+		scene.getStylesheets().add(css);
 		stage.setScene(scene);
 		stage.show();
 	}
-	
+
 	public void pausePlaySound(ActionEvent e) {
-		if(PlayBtn.getText() == "Play")
-		{
+		if (PlayBtn.getText() == "Play") {
 			PlayBtn.setText("Pause");
 			paused = false;
-		}
-		else{
+		} else {
 			PlayBtn.setText("Play");
 			paused = true;
-			//pause Song
+			// pause Song
 		}
-		
+
 	}
 
-	public void stopSound(ActionEvent event) throws IOException{
+	public void stopSound(ActionEvent event) throws IOException {
 		myTimer.cancel();
 		myTimer.purge();
 		switchToMainScene(event);
 	}
+
 	Timer myTimer = new Timer();
+
 	public void beginTimer() {
 
-		
-          myTimer.schedule(new TimerTask(){
+		myTimer.schedule(new TimerTask() {
 
-            @Override
-            public void run() {
-				if(paused == false){
-				if(musicSlider.getValue() != duration){
-				musicSlider.setValue(musicSlider.getValue()+ addDuration);
+			@Override
+			public void run() {
+				if (paused == false) {
+					if (musicSlider.getValue() != duration) {
+						musicSlider.setValue(musicSlider.getValue() + addDuration);
+					} else {
+						myTimer.cancel();
+					}
 				}
-				else{
-					myTimer.cancel();
-				}}
-            }
-          }, 0,1000);
-        
+			}
+		}, 0, 1000);
 
 	}
 

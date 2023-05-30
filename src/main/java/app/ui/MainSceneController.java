@@ -3,11 +3,8 @@ package app.ui;
 import java.io.IOException;
 import java.net.URL;
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -20,7 +17,6 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ChoiceBox;
-import javafx.scene.control.Control;
 import javafx.scene.control.DateCell;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
@@ -32,9 +28,6 @@ import javafx.scene.layout.VBox;
 import javafx.scene.shape.Line;
 import javafx.stage.Stage;
 import javafx.util.Duration;
-import java.util.Calendar;
-import java.time.Instant;
-
 import app.AppError;
 import app.communication.EventQueues;
 import app.communication.Msg;
@@ -148,7 +141,6 @@ public class MainSceneController implements Initializable {
         startPicker.valueProperty().addListener((observable, oldValue, newValue) -> {
             try {
                 mapping.setStartDate(DateUtil.localDateToCalendar(newValue));
-
                 enableBtnIfValid();
             } catch (Exception e) {
                 // TODO: Error Handling
@@ -166,16 +158,15 @@ public class MainSceneController implements Initializable {
 
         audioLength.textProperty().addListener((observable, oldValue, newValue) -> {
             try {
-                if(Integer.parseInt(audioLength.getText()) <= 59){
-                    if(audioLength1.getText() != null ){
+                if (Integer.parseInt(audioLength.getText()) <= 59) {
+                    if (audioLength1.getText() != null) {
                         Integer minValue = Integer.parseInt(audioLength1.getText());
-                        Integer passValue = Integer.parseInt(newValue) + minValue*60;
-                        mapping.setSoundLength(passValue); 
-                        duration = passValue;        
+                        Integer passValue = Integer.parseInt(newValue) + minValue * 60;
+                        mapping.setSoundLength(passValue);
+                        duration = passValue;
                     }
-                }
-                else{
-                    //falsche Eingabe
+                } else {
+                    // falsche Eingabe
                     audioLength.setText(null);
                     audioLength.setPromptText("0-59");
                 }
@@ -186,24 +177,22 @@ public class MainSceneController implements Initializable {
         });
         audioLength1.textProperty().addListener((observable, oldValue, newValue) -> {
             try {
-                if(Integer.parseInt(audioLength1.getText()) <= 5){
-                    if(Integer.parseInt(audioLength1.getText()) == 5){
+                if (Integer.parseInt(audioLength1.getText()) <= 5) {
+                    if (Integer.parseInt(audioLength1.getText()) == 5) {
                         audioLength.setText("0");
                         audioLength.setDisable(true);
-                    }
-                    else{
+                    } else {
                         audioLength.setDisable(false);
                     }
-                 if(audioLength.getText() != null){
-                    Integer secValue = Integer.parseInt(audioLength.getText());
-                    Integer passValue = Integer.parseInt(newValue) + secValue;
-                    mapping.setSoundLength(passValue);
-                    duration = passValue;  
-                    enableBtnIfValid();   
-                 }  
-                }
-                else{
-                    //Error zu hoch eingestellt
+                    if (audioLength.getText() != null) {
+                        Integer secValue = Integer.parseInt(audioLength.getText());
+                        Integer passValue = Integer.parseInt(newValue) + secValue;
+                        mapping.setSoundLength(passValue);
+                        duration = passValue;
+                        enableBtnIfValid();
+                    }
+                } else {
+                    // Error zu hoch eingestellt
                     audioLength1.setText(null);
                     audioLength1.setPromptText("0-5");
                 }
@@ -214,7 +203,7 @@ public class MainSceneController implements Initializable {
         startBtn.setOnAction(ev -> {
             try {
                 EventQueues.toSM.add(new Msg<>(MsgToSMType.START, mapping));
-               switchToMusicScene(ev);
+                switchToMusicScene(ev);
             } catch (Exception e) {
                 e.printStackTrace();
                 // TODO: Error handling
@@ -223,18 +212,19 @@ public class MainSceneController implements Initializable {
     }
 
     public void switchToMusicScene(ActionEvent event) throws IOException {
-        FXMLLoader loader = new FXMLLoader( getClass().getResource("/MusicScene.fxml"));
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("/MusicScene.fxml"));
         root = loader.load();
         MusicSceneController controller = loader.getController();
-        controller.passData(duration, startPicker.getValue(),  endPicker.getValue());
-		stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-		scene = new Scene(root);
-		String css = this.getClass().getResource("/choice.css").toExternalForm();
+        controller.passData(duration, startPicker.getValue(), endPicker.getValue());
+        stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
+        scene = new Scene(root);
+        String css = this.getClass().getResource("/choice.css").toExternalForm();
         // Set the stylesheet after the scene creation
         scene.getStylesheets().add(css);
-		stage.setScene(scene);
-		stage.show();
-	}
+        stage.setScene(scene);
+        stage.show();
+    }
+
     @FXML
     private void displayError(String errorMessage, String errorTitle) {
         Pane errorPane = new Pane();
@@ -483,7 +473,7 @@ public class MainSceneController implements Initializable {
     public void enableBtnIfValid() {
         if (mapping.isValid())
             startBtn.setDisable(false);
-       // else
-            //startBtn.setDisable(true);
+        else
+            startBtn.setDisable(true);
     }
 }

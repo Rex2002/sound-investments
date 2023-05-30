@@ -6,27 +6,50 @@ import audio.synth.InstrumentEnum;
 @Data
 public class InstrumentDataRaw {
     // Volume
-    double[] relVolume;
-    boolean[] absVolume;
+    public double[] relVolume;
+    public boolean[] absVolume;
 
     // Pitch
-    double[] pitch;
+    public double[] pitch;
 
     // Timbre
-    InstrumentEnum instrument;
+    public InstrumentEnum instrument;
 
     // Echo parameters
-    double[] delayEcho;
-    double[] feedbackEcho;
+    public double[] delayEcho;
+    public double[] feedbackEcho;
+    public boolean[] onOffEcho;
 
     // Reverb parameters
-    double[] delayReverb;
-    double[] feedbackReverb;
+    public double[] delayReverb;
+    public double[] feedbackReverb;
+    public boolean[] onOffReverb;
 
     // Filter parameters
-    double[] frequency;
-    boolean highPass;
+    public double[] frequency;
+    public boolean highPass;
+    public boolean[] onOffFilter;
 
     // Panning
-    double[] pan;
+    public double[] pan;
+
+    public InstrumentDataRaw(double[] relVolume, boolean[] absVolume, double[] pitch, InstrumentEnum instrument,
+            double[] delayEcho, double[] feedbackEcho, boolean[] onOffEcho, double[] delayReverb,
+            double[] feedbackReverb, boolean[] onOffReverb, double[] frequency, boolean highPass, boolean[] onOffFilter,
+            double[] pan) {
+        this.relVolume = relVolume;
+        this.absVolume = absVolume;
+        this.pitch = pitch;
+        this.instrument = instrument;
+        this.delayEcho = delayEcho;
+        this.feedbackEcho = feedbackEcho;
+        this.onOffEcho = onOffEcho;
+        this.delayReverb = delayReverb;
+        this.feedbackReverb = feedbackReverb;
+        this.onOffReverb = onOffReverb;
+        this.frequency = frequency;
+        this.highPass = highPass;
+        this.onOffFilter = onOffFilter;
+        this.pan = pan;
+    }
 }

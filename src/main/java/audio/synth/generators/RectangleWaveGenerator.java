@@ -8,6 +8,7 @@ import static audio.Constants.SAMPLE_RATE;
 
 
 // TODO work in progress -> figure out whether this is acutally needed or if frequency modualtion of sines is the way to go.
+@Deprecated
 public class RectangleWaveGenerator{
 
 
