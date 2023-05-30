@@ -1,11 +1,10 @@
 package audio.synth;
 
-import lombok.Data;
 import audio.synth.envelopes.ADSR;
 import audio.synth.envelopes.Envelope;
 import audio.synth.fx.Effect;
 import audio.synth.generators.SineWaveGenerator;
-import audio.synth.generators.WaveGenerator;
+import lombok.Data;
 
 import static audio.Constants.CHANNEL_NO;
 import static audio.Constants.SAMPLE_RATE;
@@ -22,19 +21,19 @@ public class SynthLine {
     static class UnpackedInstr{
         private WaveTypes waveType;
         private double modFactor;
-        private double[] envFactors;
-        private double[] modEnvFactors;
+        private Envelope env;
+        private Envelope modEnv;
     }
 
     InstrumentData data;
-    short[] out;
+    double[] out;
     int length;
     public SynthLine(InstrumentData data, int length){
         this.data = data;
         this.length = length;
     }
 
-    public short[] synthesize(){
+    public double[] synthesize() {
         this.applyVolume();
         this.applyTimbre();
         this.applyEcho();
@@ -45,9 +44,9 @@ public class SynthLine {
     }
 
     private void applyVolume(){
-        out = new short[length * SAMPLE_RATE * CHANNEL_NO];
+        out = new double[length * SAMPLE_RATE * CHANNEL_NO];
         for(int i = 0; i < data.volume.length; i++){
-            out[i] = (short) (Short.MAX_VALUE * data.volume[i]);
+            out[i] = Short.MAX_VALUE * data.volume[Util.getRelPosition(i, out.length, data.volume.length)];
         }
     }
 
@@ -57,10 +56,8 @@ public class SynthLine {
 
         switch (instr.waveType) {
             case SINE -> {
-                WaveGenerator gen = new SineWaveGenerator();
-                Envelope modEnv = new ADSR(instr.getModEnvFactors()[0], instr.getModEnvFactors()[1], instr.getModEnvFactors()[2], instr.getModEnvFactors()[3]);
-                Envelope env = new ADSR(instr.getEnvFactors()[0], instr.getEnvFactors()[1], instr.getEnvFactors()[2], instr.getEnvFactors()[3]);
-                out = gen.generate(transformedPitch, length, out, env, instr.getModFactor(), modEnv);
+                SineWaveGenerator gen = new SineWaveGenerator();
+                out = gen.generate(transformedPitch, length, out, instr.env, instr.getModFactor(), instr.modEnv);
             }
             case SQUARE, SAWTOOTH -> throw new RuntimeException("implement Sawtooth, square");
         }
@@ -84,12 +81,12 @@ public class SynthLine {
 
     private void applyPan(){
         for(int pos = 0; pos < out.length; pos+=2){
-            double panValue = data.getPan()[(int) (((double) pos / out.length) * data.getPan().length)];
+            double panValue = data.getPan()[Util.getRelPosition(pos, out.length, data.getPan().length)];
             if(panValue < 0){
-                out[pos] = (short) (out[pos] * (1- panValue) * -1);
+                out[pos] = out[pos] * (1 - panValue) * -1;
             }
             else if(panValue > 0){
-                out[pos + 1] = (short) (out[pos + 1] * (1- panValue));
+                out[pos + 1] = out[pos + 1] * (1 - panValue);
             }
         }
     }
@@ -114,8 +111,8 @@ public class SynthLine {
             case SYNTH_ONE -> {
                 uInstr.setWaveType(WaveTypes.SINE);
                 uInstr.setModFactor(1.5);
-                uInstr.setEnvFactors(new double[]{0.1,0.3, 0.5, 0.2});
-                uInstr.setModEnvFactors(new double[]{0.1,0.3, 0.5, 0.2});
+                uInstr.env = new ADSR(.1, .3, .5, .2);
+                uInstr.modEnv = new ADSR(.1,.3,.5,.2);
             }
             case SYNTH_TWO -> throw new RuntimeException("implement instruments");
         }

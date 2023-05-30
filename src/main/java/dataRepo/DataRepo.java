@@ -8,27 +8,31 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 
-import apiTest.APIReq;
-import apiTest.AuthPolicy;
-import apiTest.HandledPagination;
-import json.JsonPrimitive;
-import json.Parser;
+import app.AppError;
+import dataRepo.api.APIReq;
+import dataRepo.api.AuthPolicy;
+import dataRepo.api.HandledPagination;
+import dataRepo.json.JsonPrimitive;
+import dataRepo.json.Parser;
 
 public class DataRepo {
 	private static List<Stock> testStocks() {
 		try {
 			return List
 					.of(
-							new Stock("SAP SE", "SAP", "XETRA", Util.calFromDateStr("1994-02-01"),
-									Util.calFromDateStr("2023-05-17")),
-							new Stock("Siemens Energy AG", "ENR", "XETRA", Util.calFromDateStr("2020-09-28"),
-									Util.calFromDateStr("2023-05-17")),
-							new Stock("Dropbox Inc", "1Q5", "XETRA", Util.calFromDateStr("2021-01-07"),
-									Util.calFromDateStr("2023-05-17")),
-							new Stock("1&1 AG", "1U1", "XETRA", Util.calFromDateStr("1998-12-04"),
-									Util.calFromDateStr("2023-05-17")),
-							new Stock("123fahrschule SE", "123F", "XETRA", Util.calFromDateStr("2021-11-02"),
-									Util.calFromDateStr("2023-05-17")));
+							new Stock("SAP SE", new SonifiableID("SAP", "XETRA"), DateUtil.calFromDateStr("1994-02-01"),
+									DateUtil.calFromDateStr("2023-05-17")),
+							new Stock("Siemens Energy AG", new SonifiableID("ENR", "XETRA"),
+									DateUtil.calFromDateStr("2020-09-28"),
+									DateUtil.calFromDateStr("2023-05-17")),
+							new Stock("Dropbox Inc", new SonifiableID("1Q5", "XETRA"),
+									DateUtil.calFromDateStr("2021-01-07"),
+									DateUtil.calFromDateStr("2023-05-17")),
+							new Stock("1&1 AG", new SonifiableID("1U1", "XETRA"), DateUtil.calFromDateStr("1998-12-04"),
+									DateUtil.calFromDateStr("2023-05-17")),
+							new Stock("123fahrschule SE", new SonifiableID("123F", "XETRA"),
+									DateUtil.calFromDateStr("2021-11-02"),
+									DateUtil.calFromDateStr("2023-05-17")));
 		} catch (Exception e) {
 			return List.of();
 		}
@@ -42,8 +46,8 @@ public class DataRepo {
 			List<Price> prices = parser.parse(fname, json).applyList(x -> {
 				try {
 					HashMap<String, JsonPrimitive<?>> m = x.asMap();
-					Calendar startDay = Util.calFromDateStr(m.get("datetime").asStr());
-					Instant startTime = Util.fmtDatetime.parse(m.get("datetime").asStr()).toInstant();
+					Calendar startDay = DateUtil.calFromDateStr(m.get("datetime").asStr());
+					Instant startTime = DateUtil.fmtDatetime.parse(m.get("datetime").asStr()).toInstant();
 					Instant endTime = IntervalLength.HOUR.addToInstant(startTime);
 
 					return new Price(startDay, startTime, endTime, m.get("open").asDouble(),
@@ -73,42 +77,31 @@ public class DataRepo {
 
 		public Instant addToInstant(Instant x) {
 			long millis = 1000;
-			if (this == MIN)
-				millis *= 60;
-			else if (this == HOUR)
-				millis *= 60 * 60;
-			else if (this == DAY)
-				millis *= 60 * 60 * 12;
-			else
-				assert false : "Inexhaustive handling of cases for IntervalLength";
+			millis *= switch (this) {
+				case MIN -> 60;
+				case HOUR -> 60 * 60;
+				case DAY -> 12 * 60 * 60;
+			};
 			long res = x.toEpochMilli() + millis;
 			return Instant.ofEpochMilli(res);
 		}
 
 		public String toString(API api) {
-			if (this == MIN) {
-				if (api == API.LEEWAY)
-					return "1m";
-				else
-					return "1min";
-			} else if (this == HOUR) {
-				if (api == API.MARKETSTACK)
-					return "1hour";
-				else
-					return "1h";
-			} else if (this == DAY) {
-				if (api == API.LEEWAY)
-					assert false : "Daily intervals can't be used for intraday requests in Leeway's API";
-				else if (api == API.MARKETSTACK)
-					return "24hour";
-				else if (api == API.TWELVEDATA)
-					return "1day";
-				else
-					assert false : "Inexhaustive handling of cases for API enum";
-			} else {
-				assert false : "Inexhaustive handling of cases for IntervalLength enum";
-			}
-			return ""; // sto shut up the type checker
+			return switch (this) {
+				case MIN -> switch (api) {
+					case LEEWAY -> "1m";
+					default -> "1min";
+				};
+				case HOUR -> switch (api) {
+					case MARKETSTACK -> "1hour";
+					default -> "1h";
+				};
+				case DAY -> switch (api) {
+					case LEEWAY -> null; // Leeway doesn't support 24hour intraday -> use /eod endpoint instead
+					case MARKETSTACK -> "24hour";
+					case TWELVEDATA -> "1day";
+				};
+			};
 		}
 	}
 
@@ -175,7 +168,7 @@ public class DataRepo {
 	private static List<ETF> etfs = new ArrayList<>(128);
 	private static List<Index> indices = new ArrayList<>(128);
 
-	public static void init() {
+	public static void init() throws AppError {
 		// @Cleanup for Development & Testing only
 		stocks = testStocks();
 		return;
@@ -211,9 +204,9 @@ public class DataRepo {
 			T s = list.get(i);
 			try {
 				HashMap<String, JsonPrimitive<?>> json = apiLeeway.getJSON(x -> x.asMap(),
-						"general/tradingperiod/" + s.getSymbolExchange());
-				s.setEarliest(Util.calFromDateStr(json.get("start").asStr()));
-				s.setLatest(Util.calFromDateStr(json.get("end").asStr()));
+						"general/tradingperiod/" + s.getId().toString());
+				s.setEarliest(DateUtil.calFromDateStr(json.get("start").asStr()));
+				s.setLatest(DateUtil.calFromDateStr(json.get("end").asStr()));
 			} catch (Exception e) {
 				// We assume tht if an error occured, that we don't have access to the given
 				// symbol
@@ -240,7 +233,7 @@ public class DataRepo {
 	private static void findByPrefix(String prefix, List<? extends Sonifiable> src, List<Sonifiable> dst) {
 		for (Sonifiable s : src) {
 			if (s.name.toLowerCase().startsWith(prefix.toLowerCase())
-					|| s.symbol.toLowerCase().startsWith(prefix.toLowerCase())) {
+					|| s.getId().symbol.toLowerCase().startsWith(prefix.toLowerCase())) {
 				dst.add(s);
 			}
 		}
@@ -272,7 +265,7 @@ public class DataRepo {
 
 	private static <T extends Sonifiable> T getSonifable(String symbol, List<T> list) {
 		for (T x : list) {
-			if (x.symbol == symbol)
+			if (x.getId().symbol == symbol)
 				return x;
 		}
 		return null;
