@@ -9,6 +9,8 @@ import audio.synth.fx.FilterData;
 import java.util.Arrays;
 import java.util.Random;
 
+import app.mapping.InstrumentDataRaw;
+
 public class Harmonizer {
     private final InstrumentDataRaw dataRaw;
     private final int numberBeats;
@@ -130,7 +132,6 @@ public class Harmonizer {
             return relVolume;
         }
     }
-
 
     private int[] normalizeDelayEcho(double[] delayEcho) throws AppError {
         // TODO: test delay times

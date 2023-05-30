@@ -3,7 +3,6 @@
 <?import javafx.geometry.Insets?>
 <?import javafx.scene.Cursor?>
 <?import javafx.scene.control.Button?>
-<?import javafx.scene.control.CheckBox?>
 <?import javafx.scene.control.ChoiceBox?>
 <?import javafx.scene.control.DatePicker?>
 <?import javafx.scene.control.Label?>
@@ -72,7 +71,7 @@
 			<Line endX="290.0" layoutX="33.0" layoutY="71.0" strokeWidth="2.0" />
 			<ScrollPane fx:id="shareScrollPanel" hbarPolicy="NEVER" layoutX="32.0" layoutY="97.0" prefHeight="540.0" prefWidth="740.0" vbarPolicy="NEVER">
 				<content>
-      					<VBox fx:id="paneBoxSonifiables" prefHeight="1800.0" prefWidth="740.0" style="-fx-background-color: #D9D9D9;" />
+            					<VBox fx:id="paneBoxSonifiables" prefHeight="1800.0" prefWidth="740.0" style="-fx-background-color: #D9D9D9;" />
 				</content>
 			</ScrollPane>
 		</children>
@@ -108,47 +107,65 @@
 					<Font size="20.0" />
 				</font>
 			</Label>
-			<TextField id="audioLength" fx:id="audioLength" layoutX="181.0" layoutY="186.0" prefHeight="27.0" prefWidth="131.0" />
+			<TextField id="audioLength" fx:id="audioLength" layoutX="255.0" layoutY="186.0" prefHeight="27.0" prefWidth="57.0" />
 
-			<Label layoutX="12.0" layoutY="232.0" prefHeight="53.0" prefWidth="147.0" style="-fx-font-style: &quot;Roboto&quot;;" text="Delay Reverb">
+			<Label layoutX="12.0" layoutY="464.0" prefHeight="53.0" prefWidth="98.0" style="-fx-font-style: &quot;Roboto&quot;;" text="Filter">
 				<font>
 					<Font size="20.0" />
 				</font>
 			</Label>
-			<ChoiceBox fx:id="delayReverbChoice" layoutX="171.0" layoutY="238.0" prefHeight="42.0" prefWidth="153.0" style="-fx-background-radius: 10; -fx-background-color: #4D505B;" />
-
-			<Label layoutX="12.0" layoutY="291.0" prefHeight="53.0" prefWidth="153.0" style="-fx-font-style: &quot;Roboto&quot;;" text="Feedback Reverb">
-				<font>
-					<Font size="20.0" />
-				</font>
-			</Label>
-			<ChoiceBox fx:id="feedbackReverbChoice" layoutX="171.0" layoutY="297.0" prefHeight="42.0" prefWidth="153.0" style="-fx-background-radius: 10; -fx-background-color: #4D505B;" />
-
-			<Label layoutX="12.0" layoutY="347.0" prefHeight="53.0" prefWidth="153.0" style="-fx-font-style: &quot;Roboto&quot;;" text="Cutoff">
-				<font>
-					<Font size="20.0" />
-				</font>
-			</Label>
-			<ChoiceBox fx:id="cutoffChoice" layoutX="171.0" layoutY="353.0" prefHeight="42.0" prefWidth="153.0" style="-fx-background-radius: 10; -fx-background-color: #4D505B;" />
-
-			<Label layoutX="12.0" layoutY="403.0" prefHeight="53.0" prefWidth="153.0" style="-fx-font-style: &quot;Roboto&quot;;" text="On-Off Filter">
-				<font>
-					<Font size="20.0" />
-				</font>
-			</Label>
-			<ChoiceBox fx:id="filterChoice" layoutX="170.0" layoutY="408.0" prefHeight="42.0" prefWidth="153.0" style="-fx-background-radius: 10; -fx-background-color: #4D505B;" />
-
-			<Label layoutX="12.0" layoutY="464.0" prefHeight="53.0" prefWidth="153.0" style="-fx-font-style: &quot;Roboto&quot;;" text="High-Pass">
-				<font>
-					<Font size="20.0" />
-				</font>
-			</Label>
-			<CheckBox layoutX="235.0" layoutY="482.0" style="-fx-font-style: &quot;Roboto&quot;;" />
             <ScrollPane hbarPolicy="NEVER" layoutX="14.0" layoutY="517.0" maxWidth="1.7976931348623157E308" prefHeight="125.0" prefWidth="305.0" style="-fx-background-color: #4D505B; -fx-border-color: #4D505B;">
                <content>
-                  <VBox fx:id="checkVBox1" prefHeight="217.0" prefWidth="296.0" />
+                  <VBox fx:id="instCheckBox" prefHeight="121.0" prefWidth="296.0" />
                </content>
             </ScrollPane>
+            <ChoiceBox fx:id="feedbackReverbChoice2" layoutX="165.0" layoutY="470.0" prefHeight="42.0" prefWidth="153.0" style="-fx-background-radius: 10; -fx-background-color: #4D505B;" />
+            <ScrollPane layoutY="220.0" prefHeight="236.0" prefWidth="332.0" style="-fx-background-color: #D9D9D9; -fx-border-color: #D9D9D9;">
+               <content>
+                  <Pane prefHeight="428.0" prefWidth="314.0" style="-fx-background-color: #D9D9D9; -fx-border-color: #D9D9D9;">
+                     <children>
+            
+                                                                              			<Label layoutX="12.0" layoutY="22.0" prefHeight="53.0" prefWidth="147.0" style="-fx-font-style: &quot;Roboto&quot;;" text="Delay Reverb">
+            				<font>
+            					<Font size="20.0" />
+            				</font>
+            			</Label>
+            			<ChoiceBox fx:id="delayReverbChoice" layoutX="155.0" prefHeight="42.0" prefWidth="153.0" style="-fx-background-radius: 10; -fx-background-color: #4D505B;" />
+                        <ChoiceBox fx:id="delayReverbChoice1" layoutX="155.0" layoutY="45.0" prefHeight="42.0" prefWidth="153.0" style="-fx-background-radius: 10; -fx-background-color: #4D505B;" />
+            
+            			<Label layoutY="121.0" prefHeight="53.0" prefWidth="153.0" style="-fx-font-style: &quot;Roboto&quot;;" text="Feedback Reverb">
+            				<font>
+            					<Font size="20.0" />
+            				</font>
+            			</Label>
+            			<ChoiceBox fx:id="feedbackReverbChoice" layoutX="155.0" layoutY="104.0" prefHeight="42.0" prefWidth="153.0" style="-fx-background-radius: 10; -fx-background-color: #4D505B;" />
+                        <ChoiceBox fx:id="feedbackReverbChoice1" layoutX="155.0" layoutY="150.0" prefHeight="42.0" prefWidth="153.0" style="-fx-background-radius: 10; -fx-background-color: #4D505B;" />
+            
+            			<Label layoutX="12.0" layoutY="244.0" prefHeight="38.0" prefWidth="153.0" style="-fx-font-style: &quot;Roboto&quot;;" text="Cutoff">
+            				<font>
+            					<Font size="20.0" />
+            				</font>
+            			</Label>
+            			<ChoiceBox fx:id="cutoffChoice" layoutX="155.0" layoutY="210.0" prefHeight="42.0" prefWidth="153.0" style="-fx-background-radius: 10; -fx-background-color: #4D505B;" />
+                        <ChoiceBox fx:id="cutoffChoice1" layoutX="155.0" layoutY="255.0" prefHeight="42.0" prefWidth="153.0" style="-fx-background-radius: 10; -fx-background-color: #4D505B;" />
+            
+            			<Label layoutX="12.0" layoutY="334.0" prefHeight="53.0" prefWidth="153.0" style="-fx-font-style: &quot;Roboto&quot;;" text="On-Off Filter">
+            				<font>
+            					<Font size="20.0" />
+            				</font>
+            			</Label>
+            			<ChoiceBox fx:id="filterChoice" layoutX="155.0" layoutY="315.0" prefHeight="42.0" prefWidth="153.0" style="-fx-background-radius: 10; -fx-background-color: #4D505B;" />
+                        <ChoiceBox fx:id="filterChoice1" layoutX="155.0" layoutY="360.0" prefHeight="42.0" prefWidth="153.0" style="-fx-background-radius: 10; -fx-background-color: #4D505B;" />
+                     </children>
+                  </Pane>
+               </content>
+            </ScrollPane>
+            <TextField id="audioLength1" fx:id="audioLength1" layoutX="182.0" layoutY="186.0" prefHeight="27.0" prefWidth="57.0" />
+            <Label layoutX="245.0" layoutY="182.0" text=":">
+               <font>
+                  <Font size="24.0" />
+               </font>
+            </Label>
 		</children>
 	</Pane>
 

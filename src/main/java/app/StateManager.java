@@ -30,7 +30,7 @@ import javafx.application.Application;
 
 public class StateManager {
 	public static void main(String[] args) {
-		testSound(args);
+		testUI(args);
 	}
 
 	public static void testUI(String[] args) {
