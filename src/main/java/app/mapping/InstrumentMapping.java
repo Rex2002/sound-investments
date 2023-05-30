@@ -14,27 +14,28 @@ public class InstrumentMapping {
 	// Optional fields represent that the user can leave those empty
 	// Any other fields have to be set for a valid mapping
 	// They can still be null, if the mapping isn't finished
+	// Fields are set to public, so methods like `isEmpty` can use introspection
 	public final InstrumentEnum instrument;
 	// Pitch
-	private ExchangeData<LineData> pitch = null;
+	public ExchangeData<LineData> pitch = null;
 	// Volume
-	private Optional<ExchangeData<LineData>> relVolume = Optional.empty();
-	private Optional<ExchangeData<RangeData>> absVolume = Optional.empty();
+	public Optional<ExchangeData<LineData>> relVolume = Optional.empty();
+	public Optional<ExchangeData<RangeData>> absVolume = Optional.empty();
 	// Echo
-	private Optional<ExchangeData<LineData>> delayEcho = Optional.empty();
-	private Optional<ExchangeData<LineData>> feedbackEcho = Optional.empty();
-	private Optional<ExchangeData<RangeData>> onOffEcho = Optional.empty();
+	public Optional<ExchangeData<LineData>> delayEcho = Optional.empty();
+	public Optional<ExchangeData<LineData>> feedbackEcho = Optional.empty();
+	public Optional<ExchangeData<RangeData>> onOffEcho = Optional.empty();
 	// Reverb parameters
-	private Optional<ExchangeData<LineData>> delayReverb = Optional.empty();
-	private Optional<ExchangeData<LineData>> feedbackReverb = Optional.empty();
-	private Optional<ExchangeData<RangeData>> onOffReverb = Optional.empty();
+	public Optional<ExchangeData<LineData>> delayReverb = Optional.empty();
+	public Optional<ExchangeData<LineData>> feedbackReverb = Optional.empty();
+	public Optional<ExchangeData<RangeData>> onOffReverb = Optional.empty();
 	// Filter parameters
-	private Optional<ExchangeData<LineData>> cutoff = Optional.empty();
-	private Optional<ExchangeData<LineData>> order = Optional.empty();
-	private Optional<ExchangeData<RangeData>> onOffFilter = Optional.empty();
-	private boolean highPass = false;
+	public Optional<ExchangeData<LineData>> cutoff = Optional.empty();
+	public Optional<ExchangeData<LineData>> order = Optional.empty();
+	public Optional<ExchangeData<RangeData>> onOffFilter = Optional.empty();
+	public boolean highPass = false;
 	// Panning
-	private Optional<ExchangeData<LineData>> pan = Optional.empty();
+	public Optional<ExchangeData<LineData>> pan = Optional.empty();
 
 	InstrumentMapping(InstrumentEnum instrument) {
 		this.instrument = instrument;

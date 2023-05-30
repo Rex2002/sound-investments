@@ -3,11 +3,8 @@ package app.ui;
 import java.io.IOException;
 import java.net.URL;
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -20,7 +17,6 @@ import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ChoiceBox;
-import javafx.scene.control.Control;
 import javafx.scene.control.DateCell;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
@@ -32,9 +28,6 @@ import javafx.scene.layout.VBox;
 import javafx.scene.shape.Line;
 import javafx.stage.Stage;
 import javafx.util.Duration;
-import java.util.Calendar;
-import java.time.Instant;
-
 import app.AppError;
 import app.communication.EventQueues;
 import app.communication.Msg;
@@ -83,7 +76,13 @@ public class MainSceneController implements Initializable {
     @FXML
     private TextField audioLength;
     @FXML
+    private TextField audioLength1;
+    @FXML
     private VBox checkVBox;
+    @FXML
+    private VBox instCheckBox;
+    @FXML
+    private double duration;
 
     private Stage stage;
     private Scene scene;
@@ -130,7 +129,7 @@ public class MainSceneController implements Initializable {
         checkEQService.start();
 
         // @nocheckin Uncomment this before committing
-        // displayError("Testing", "Test");
+        displayError("Testing", "Test");
 
         categoriesChoice.getSelectionModel().selectedIndexProperty().addListener((observable, oldIdx, newIdx) -> {
             EventQueues.toSM.add(new Msg<>(MsgToSMType.FILTERED_SONIFIABLES,
@@ -163,14 +162,48 @@ public class MainSceneController implements Initializable {
 
         audioLength.textProperty().addListener((observable, oldValue, newValue) -> {
             try {
-                Integer newVal = Integer.parseInt(newValue);
-                mapping.setSoundLength(newVal);
+                if (Integer.parseInt(audioLength.getText()) <= 59) {
+                    if (audioLength1.getText() != null) {
+                        Integer minValue = Integer.parseInt(audioLength1.getText());
+                        Integer passValue = Integer.parseInt(newValue) + minValue * 60;
+                        mapping.setSoundLength(passValue);
+                        duration = passValue;
+                    }
+                } else {
+                    // falsche Eingabe
+                    audioLength.setText(null);
+                    audioLength.setPromptText("0-59");
+                }
                 enableBtnIfValid();
             } catch (Exception e) {
                 // TODO: Error Handling
             }
         });
-
+        audioLength1.textProperty().addListener((observable, oldValue, newValue) -> {
+            try {
+                if (Integer.parseInt(audioLength1.getText()) <= 5) {
+                    if (Integer.parseInt(audioLength1.getText()) == 5) {
+                        audioLength.setText("0");
+                        audioLength.setDisable(true);
+                    } else {
+                        audioLength.setDisable(false);
+                    }
+                    if (audioLength.getText() != null) {
+                        Integer secValue = Integer.parseInt(audioLength.getText());
+                        Integer passValue = Integer.parseInt(newValue) + secValue;
+                        mapping.setSoundLength(passValue);
+                        duration = passValue;
+                        enableBtnIfValid();
+                    }
+                } else {
+                    // Error zu hoch eingestellt
+                    audioLength1.setText(null);
+                    audioLength1.setPromptText("0-5");
+                }
+            } catch (Exception e) {
+                // TODO: Error Handling
+            }
+        });
         startBtn.setOnAction(ev -> {
             try {
                 EventQueues.toSM.add(new Msg<>(MsgToSMType.START, mapping));
@@ -182,11 +215,17 @@ public class MainSceneController implements Initializable {
         });
     }
 
-    @FXML
-    public void switchToMusicScene(ActionEvent event) throws IOException { // Wechsel auf die Music Scene
-        root = FXMLLoader.load(getClass().getResource("/MusicScene.fxml"));
+    public void switchToMusicScene(ActionEvent event) throws IOException {
+        FXMLLoader loader = new FXMLLoader(getClass().getResource("/MusicScene.fxml"));
+        root = loader.load();
+        MusicSceneController controller = loader.getController();
+        controller.passData(duration, startPicker.getValue(), endPicker.getValue());
         stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
         scene = new Scene(root);
+        String css = this.getClass().getResource("/choice.css").toExternalForm();
+        // Set the stylesheet after the scene creation
+        scene.getStylesheets().add(css);
+        stage.setScene(scene);
         stage.show();
     }
 

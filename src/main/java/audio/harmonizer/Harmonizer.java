@@ -131,7 +131,6 @@ public class Harmonizer {
         }
     }
 
-
     private int[] normalizeDelayEcho(double[] delayEcho) throws AppError {
         // TODO: test delay times
         if (delayEcho != null) {
