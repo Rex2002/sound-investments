@@ -1,24 +1,14 @@
 package audio.mixer;
 
 import java.util.ArrayList;
-import java.util.List;
 
 public class Mixer {
-
-    /**
-     * Finds the maximum value of all arrays in the given list.
-     *
-     * @param arrayList list of short-arrays
-     * @return maximum value as short
-     */
-
-
     /**
      * Mixes the given audio streams together.
      *
-     * @param audioStreams   list of short-arrays
+     * @param audioStreams   list of double-arrays
      * @param startPositions list of start positions for each audio stream (int[0] should always be 0)
-     * @return mixed audio stream as short-array
+     * @return mixed audio stream as double-array
      * @throws MixerException if the length of the audio streams does not match
      */
     public static double[] mixAudioStreams(ArrayList<double[]> audioStreams, int[] startPositions) throws MixerException {
@@ -36,8 +26,6 @@ public class Mixer {
         double[] result = new double[maxLength];
 
 
-
-
         // find the minimum start position (except of startPositions[0] which should always be 0)
         int minStartPosition = maxLength;
         for (int i = 1; i < startPositions.length; i++) {
@@ -48,7 +36,7 @@ public class Mixer {
         if (minStartPosition < 0) {
             throw new MixerException("Illegal start position, must be >= 0!");
         } else if (minStartPosition > maxLength) {
-            throw new MixerException("Illegal start position, must be <= minLength!");
+            throw new MixerException("Illegal start position, must be <= maxLength!");
         }
 
         // because we want to add all arrays on top of the first one, we need to add the values of the first array
@@ -64,19 +52,11 @@ public class Mixer {
 
             // add the values of the array to the result array starting at the given startPosition
             for (int j = startPosition; j < audioStream.length + startPosition; j++) {
-                result[j] = (result[j] + audioStream[j]);
+                result[j] += audioStream[j];
             }
         }
 
-        int maxLengthCount = 0;
-        //check if there are multiple arrays with the maxLength
-        for (double[] audioStream : audioStreams) {
-            if (maxLength == audioStream.length) {
-                maxLengthCount++;
-            }
-        }
-
-        // add the remaining values of the longest array
+        /*// add the remaining values of the longest array
         for (int i = 0; i < audioStreams.size(); i++) {
             double[] audioStream = audioStreams.get(i);
             int startPosition = startPositions[i];
@@ -84,7 +64,7 @@ public class Mixer {
                 //check if there are multiple arrays with the maxLength
                 if (maxLengthCount > 1 && i != 0) {
                     for (int j = minLength + startPosition; j < maxLength; j++) {
-                        result[j] = (result[j] + audioStream[j]);
+                        result[j] += audioStream[j];
                     }
                 } else {
                     if (maxLength - (minLength + startPosition) >= 0)
@@ -95,7 +75,7 @@ public class Mixer {
                     result[j] = result[j] + audioStream[j];
                 }
             }
-        }
+        }*/
 
         return result;
     }
