@@ -1,5 +1,6 @@
 package util;
 
+import java.util.Arrays;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
@@ -33,5 +34,18 @@ public class ArrayFunctions {
 		}
 		sb.append("]");
 		return sb.toString();
+	}
+
+	public static <T> T[] add(T[] a, T[] b) {
+		T[] res = Arrays.copyOf(a, a.length + b.length);
+		for (int i = 0; i < b.length; i++)
+			res[i + a.length] = b[i];
+		return res;
+	}
+
+	public static <T> void setRange(T[] src, T[] valsToSet, int offset) {
+		for (int i = 0; i + offset < src.length; i++) {
+			src[i + offset] = valsToSet[i];
+		}
 	}
 }
