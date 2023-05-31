@@ -1,27 +1,19 @@
 package util;
 
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.ConcurrentModificationException;
-import java.util.Iterator;
-import java.util.List;
-import java.util.ListIterator;
-import java.util.NoSuchElementException;
-import java.util.Objects;
-import java.util.RandomAccess;
+import java.util.*;
 import java.util.function.Predicate;
 
 // Basically ArrayList, but much faster when having to remove a lot of elements.
 // The speedup is possible, because this List implementation doesn't keep elements in the same order.
 // For Benchmarking see: https://github.com/ArtInLines/speedy-java
-public class UnorderedList<E> implements List<E>, RandomAccess, Cloneable {
+public class UnorderedList<E> implements List<E>, RandomAccess {
 	private static final int DEFAULT_CAPACITY = 16;
 
 	private int cap = DEFAULT_CAPACITY;
 	private int len = 0;
 	private Object[] arr;
 	private int toRemoveAmount = 0;
-	private int[] toRemove = new int[16];
+	private int[] toRemove = new int[DEFAULT_CAPACITY];
 
 	public UnorderedList(int capacity) {
 		if (capacity < 0)
@@ -145,14 +137,14 @@ public class UnorderedList<E> implements List<E>, RandomAccess, Cloneable {
 	public boolean shrink(int maxCapacity) {
 		if (len >= maxCapacity)
 			return false;
-		Arrays.copyOf(arr, maxCapacity);
+		arr = Arrays.copyOf(arr, maxCapacity);
 		cap = maxCapacity;
 		return true;
 	}
 
 	public boolean shrink() {
 		int maxCapacity = Math.max(len, cap >> 1);
-		Arrays.copyOf(arr, maxCapacity);
+		arr = Arrays.copyOf(arr, maxCapacity);
 		cap = maxCapacity;
 		return true;
 	}
@@ -198,7 +190,9 @@ public class UnorderedList<E> implements List<E>, RandomAccess, Cloneable {
 					min = j;
 			}
 			// Remove element at that index
-			quickRemove(toRemove[min] - i); // offset by i, because we already removed i elements before
+			int idxToRemove = toRemove[min] - i; // offset by i, because we already removed i elements before
+			if (idxToRemove >= 0 && idxToRemove < len)
+				quickRemove(idxToRemove);
 		}
 		// Shrink toRemove array if it's more than double toRemoveAmount
 		if (toRemoveAmount < toRemove.length >> 1) {
@@ -311,9 +305,169 @@ public class UnorderedList<E> implements List<E>, RandomAccess, Cloneable {
 		return c.size() > 0;
 	}
 
+	public static void subListRangeCheck(int fromIndex, int toIndex, int size) {
+		if (fromIndex < 0)
+			throw new IndexOutOfBoundsException("fromIndex = " + fromIndex);
+		if (toIndex > size)
+			throw new IndexOutOfBoundsException("toIndex = " + toIndex);
+		if (fromIndex > toIndex)
+			throw new IllegalArgumentException("fromIndex(" + fromIndex +
+					") > toIndex(" + toIndex + ")");
+	}
+
 	public List<E> subList(int fromIndex, int toIndex) {
 		// TODO
-		throw new UnsupportedOperationException();
+		subListRangeCheck(fromIndex, toIndex, len);
+		return new SubList<>(this, fromIndex, toIndex);
+	}
+
+	private static class SubList<E> implements List<E>, RandomAccess {
+		private UnorderedList<E> root;
+		private int from;
+		private int to;
+
+		public SubList(UnorderedList<E> root, int from, int to) {
+			this.root = root;
+			this.from = from;
+			this.to = to;
+		}
+
+		public E set(int index, E element) {
+			return root.set(from + index, element);
+		}
+
+		public boolean retainAll(Collection<?> c) {
+			throw new UnsupportedOperationException();
+		}
+
+		public boolean contains(Object o) {
+			for (int i = from; i < to; i++) {
+				if (root.get(i) == o)
+					return true;
+			}
+			return false;
+		}
+
+		public void clear() {
+			for (int i = from; i < to; i++) {
+				root.remove(from);
+			}
+		}
+
+		public Iterator<E> iterator() {
+			throw new UnsupportedOperationException();
+		}
+
+		public boolean removeAll(Collection<?> c) {
+			boolean changed = false;
+			for (int i = from; i < to; i++) {
+				if (c.contains(root.get(i))) {
+					root.remove(i);
+					i--;
+					to--;
+					changed = true;
+				}
+			}
+			return changed;
+		}
+
+		public ListIterator<E> listIterator() {
+			throw new UnsupportedOperationException();
+		}
+
+		public ListIterator<E> listIterator(int index) {
+			throw new UnsupportedOperationException();
+		}
+
+		public Object[] toArray() {
+			return Arrays.copyOfRange(root.arr, from, to);
+		}
+
+		@SuppressWarnings("unchecked")
+		public <T> T[] toArray(T[] a) {
+			int size = to - from;
+			if (a.length < size) {
+				return (T[]) Arrays.copyOfRange(
+						root.arr, from, to, a.getClass());
+			} else {
+				System.arraycopy(root.arr, from, a, 0, size);
+				if (a.length > size)
+					a[size] = null;
+				return a;
+			}
+		}
+
+		public boolean containsAll(Collection<?> c) {
+			for (Object x : c) {
+				if (!contains(x))
+					return false;
+			}
+			return true;
+		}
+
+		public int indexOf(Object o) {
+			int index = root.indexOfRange(o, from, to);
+			return index >= 0 ? index - from : -1;
+		}
+
+		public int lastIndexOf(Object o) {
+			int index = root.lastIndexOfRange(o, from, to);
+			return index >= 0 ? index - from : -1;
+		}
+
+		public E get(int index) {
+			return root.get(from + index);
+		}
+
+		public boolean isEmpty() {
+			return to - from == 0;
+		}
+
+		public boolean add(E e) {
+			root.add(to, e);
+			to++;
+			return true;
+		}
+
+		public void add(int index, E element) {
+			root.add(from + index, element);
+			to++;
+		}
+
+		public int size() {
+			return to - from;
+		}
+
+		public E remove(int index) {
+			E res = root.get(from + index);
+			root.arr[from + index] = root.arr[to];
+			root.remove(to);
+			to--;
+			return res;
+		}
+
+		public boolean remove(Object o) {
+			int i = indexOf(o);
+			if (i < 0)
+				return false;
+			remove(i);
+			return true;
+		}
+
+		public boolean addAll(int index, Collection<? extends E> c) {
+			boolean res = root.addAll(from + index, c);
+			to += c.size();
+			return res;
+		}
+
+		public boolean addAll(Collection<? extends E> c) {
+			return addAll(to - from, c);
+		}
+
+		public List<E> subList(int fromIndex, int toIndex) {
+			subListRangeCheck(fromIndex, toIndex, size());
+			return new SubList<>(root, from + fromIndex, from + toIndex);
+		}
 	}
 
 	public Iterator<E> iterator() {
@@ -342,7 +496,6 @@ public class UnorderedList<E> implements List<E>, RandomAccess, Cloneable {
 			return (E) UnorderedList.this.arr[cur++];
 		}
 
-		@Override
 		public boolean hasNext() {
 			return cur < UnorderedList.this.len;
 		}
