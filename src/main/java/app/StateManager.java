@@ -2,26 +2,32 @@ package app;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Scanner;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import app.communication.EventQueues;
-import app.communication.Msg;
-import app.communication.MsgToSMType;
-import app.communication.MsgToUIType;
-import app.communication.SonifiableFilter;
-import app.mapping.InstrumentDataRaw;
-import app.mapping.Mapping;
+import javax.sound.sampled.AudioFormat;
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.SourceDataLine;
+
+import javafx.application.Application;
+
+import app.communication.*;
+import app.mapping.*;
 import app.ui.App;
 import audio.Constants;
 import audio.harmonizer.Harmonizer;
 import audio.synth.InstrumentData;
 import audio.synth.InstrumentEnum;
-import dataRepo.DataRepo;
-import dataRepo.Sonifiable;
-import dataRepo.json.Parser;
-import javafx.application.Application;
+import audio.synth.SynthLine;
+import audio.synth.playback.PlaybackController;
+import dataAnalyzer.*;
+import dataRepo.*;
+import dataRepo.DataRepo.IntervalLength;
 
 // This class runs in the main thread and coordinates all tasks and the creation of the UI thread
 // This is atypical, as JavaFX's UI thread is usually the main thread as well
@@ -30,7 +36,7 @@ import javafx.application.Application;
 
 public class StateManager {
 	public static void main(String[] args) {
-		testUI(args);
+		testSound(args);
 	}
 
 	public static void testUI(String[] args) {
@@ -99,23 +105,220 @@ public class StateManager {
 		}
 	}
 
-	public static void testSound(String[] args) {
-		// Get Test-Data
-		try {
-			String jsonData = Files.readString(Path.of("./src/main/resources/TestDoubles.json"));
-			double[] pitchData = new Parser().parse(jsonData).toDoubleArray();
+	public static double[] getPriceValues(List<Price> prices) {
+		double[] out = new double[prices.size()];
+		for (int i = 0; i < out.length; i++)
+			out[i] = prices.get(i).getOpen();
+		return out;
+	}
 
-			int soundLength = 60; // only for testing purposes, will actually be taken from Mapping
-			double numberBeatsRaw = (Constants.TEMPO / 60f) * soundLength;
+	// Normalizes the values to be in the range of 0 to 1 (inclusive on both ends)
+	public static double[] normalizeValues(double[] prices) {
+		double[] normalized = new double[prices.length];
+		// Find min & max
+		double min = Double.MAX_VALUE;
+		double max = Double.MIN_VALUE;
+		for (double x : prices) {
+			if (x < min)
+				min = x;
+			else if (x > max)
+				max = x;
+		}
+		// Normalize values
+		for (int i = 0; i < normalized.length; i++)
+			normalized[i] = (prices[i] - min) / (max - min);
+		return normalized;
+	}
+
+	public static double[] calcLineData(ExchangeData<LineData> ed, HashMap<SonifiableID, List<Price>> priceMap)
+			throws AppError {
+		List<Price> prices = priceMap.get(ed.getId());
+		return switch (ed.getData()) {
+			case PRICE -> normalizeValues(getPriceValues(prices));
+			case MOVINGAVG -> normalizeValues(new MovingAverage().calculateMovingAverage(prices));
+			case RELCHANGE -> throw new AppError("RELCHANGE is not yet implemented");
+		};
+	}
+
+	public static boolean isDateInFormations(List<FormationResult> formations, Calendar date) {
+		for (FormationResult f : formations) {
+			if (date.equals(f.getStartDate()) || date.equals(f.getEndDate())
+					|| (date.after(f.getStartDate()) && date.before(f.getEndDate())))
+				return true;
+		}
+		return false;
+	}
+
+	public static boolean[] formationResultToBool(List<FormationResult> formations,
+			List<Price> prices) {
+		boolean[] out = new boolean[prices.size()];
+		for (int i = 0; i < out.length; i++) {
+			Calendar currentDate = prices.get(i).getDay();
+			out[i] = isDateInFormations(formations, currentDate);
+		}
+		return out;
+	}
+
+	public static boolean[] calcRangeData(ExchangeData<RangeData> ed, HashMap<SonifiableID, List<Price>> priceMap) {
+		List<Price> prices = priceMap.get(ed.getId());
+		return switch (ed.getData()) {
+			case FLAG -> formationResultToBool(new FlagFormationAnalyzer().analyzeFormations(prices), prices);
+			case TRIANGLE -> formationResultToBool(new TriangleFormationAnalyzer().analyzeFormations(prices), prices);
+			case VFORM -> formationResultToBool(new VFormationAnalyzer().analyzeFormations(prices), prices);
+		};
+	}
+
+	public static boolean[] calcPointData(ExchangeData<PointData> ed, HashMap<SonifiableID, List<Price>> priceMap)
+			throws AppError {
+		List<Price> prices = priceMap.get(ed.getId());
+		return switch (ed.getData()) {
+			case EQMOVINGAVG ->
+				new MovingAverage().AverageIntersectsStock(new MovingAverage().calculateMovingAverage(prices), prices);
+			case TRENDBREAK -> throw new AppError("TRENDBREAK is not yet implemented");
+			case EQSUPPORT -> throw new AppError("EQSUPPORT is not yet implemented");
+			case EQRESIST -> throw new AppError("EQRESIST is not yet implemented");
+		};
+	}
+
+	// Change the mapping to test different functionalities
+	public static Mapping getTestMapping() {
+		Mapping mapping = new Mapping();
+		try {
+			mapping.setStartDate(DateUtil.calFromDateStr("2022-06-16"));
+			mapping.setEndDate(DateUtil.calFromDateStr("2023-05-16"));
+			mapping.setSoundLength(60);
+
+			SonifiableID s = new SonifiableID("XETRA", "SAP");
+			mapping.setParam(InstrumentEnum.SYNTH_ONE, s, InstrParam.PITCH, LineData.PRICE);
+			mapping.setParam(InstrumentEnum.SYNTH_ONE, s, InstrParam.RELVOLUME, LineData.MOVINGAVG);
+			mapping.setParam(InstrumentEnum.SYNTH_ONE, s, InstrParam.ABSVOLUME, RangeData.TRIANGLE);
+			mapping.setHighPass(true);
+		} catch (Throwable e) {
+			e.printStackTrace();
+		}
+		return mapping;
+	}
+
+	public static void testSound(String[] args) {
+		try {
+			// Get Mapping & Price Data
+			call(() -> DataRepo.init());
+			Mapping mapping = getTestMapping();
+			HashMap<SonifiableID, List<Price>> sonifiablePriceMap = new HashMap<>();
+			SonifiableID[] sonifiableSet = mapping.getSonifiables().toArray(new SonifiableID[0]);
+			for (int i = 0; i < sonifiableSet.length; i++)
+				sonifiablePriceMap.put(
+						sonifiableSet[i],
+						DataRepo.getPrices(sonifiableSet[i], mapping.getStartDate(), mapping.getEndDate(),
+								IntervalLength.HOUR));
+
+			// Create InstrumentDataRaw objects for Harmonizer
+			InstrumentMapping[] instrMappings = mapping.getMappedInstruments();
+			List<InstrumentDataRaw> instrRawDatas = new ArrayList<>(instrMappings.length);
+			for (InstrumentMapping instrMap : instrMappings) {
+				if (instrMap.getPitch() == null)
+					continue;
+
+				InstrumentEnum instrument = instrMap.getInstrument();
+				double[] pitch = calcLineData(instrMap.getPitch(), sonifiablePriceMap);
+				double[] relVolume = instrMap.getRelVolume().isPresent()
+						? calcLineData(instrMap.getRelVolume().get(), sonifiablePriceMap)
+						: null;
+				boolean[] absVolume = instrMap.getAbsVolume().isPresent()
+						? calcRangeData(instrMap.getAbsVolume().get(), sonifiablePriceMap)
+						: null;
+				;
+				double[] delayEcho = instrMap.getDelayEcho().isPresent()
+						? calcLineData(instrMap.getDelayEcho().get(), sonifiablePriceMap)
+						: null;
+				;
+				double[] feedbackEcho = instrMap.getFeedbackEcho().isPresent()
+						? calcLineData(instrMap.getFeedbackEcho().get(), sonifiablePriceMap)
+						: null;
+				;
+				boolean[] onOffEcho = instrMap.getOnOffEcho().isPresent()
+						? calcRangeData(instrMap.getOnOffEcho().get(), sonifiablePriceMap)
+						: null;
+				;
+				double[] delayReverb = instrMap.getDelayReverb().isPresent()
+						? calcLineData(instrMap.getDelayReverb().get(), sonifiablePriceMap)
+						: null;
+				;
+				double[] feedbackReverb = instrMap.getFeedbackReverb().isPresent()
+						? calcLineData(instrMap.getFeedbackReverb().get(), sonifiablePriceMap)
+						: null;
+				;
+				boolean[] onOffReverb = instrMap.getOnOffReverb().isPresent()
+						? calcRangeData(instrMap.getOnOffReverb().get(), sonifiablePriceMap)
+						: null;
+				;
+				double[] frequency = null; // TODO: The mapping doesn't have a frequency parameter (yet)
+				;
+				boolean highPass = instrMap.getHighPass();
+				;
+				boolean[] onOffFilter = instrMap.getOnOffFilter().isPresent()
+						? calcRangeData(instrMap.getOnOffFilter().get(), sonifiablePriceMap)
+						: null;
+				;
+				double[] pan = instrMap.getPan().isPresent()
+						? calcLineData(instrMap.getPan().get(), sonifiablePriceMap)
+						: null;
+				;
+
+				instrRawDatas.add(new InstrumentDataRaw(relVolume, absVolume, pitch, instrument, delayEcho,
+						feedbackEcho,
+						onOffEcho, delayReverb, feedbackReverb, onOffReverb, frequency, highPass, onOffFilter, pan));
+			}
+
+			// Set valid sound length:
+			double numberBeatsRaw = (Constants.TEMPO / 60f) * mapping.getSoundLength();
 			// get number of beats to nearest multiple of 16 so that audio always lasts for
 			// a full multiple of 4 bars
 			int numberBeats = (int) Math.round(numberBeatsRaw / 16) * 16;
-			soundLength = (int) Math.ceil(numberBeats / (Constants.TEMPO / 60f));
-			InstrumentDataRaw instrDataRaw = new InstrumentDataRaw(null, null, pitchData, InstrumentEnum.SYNTH_ONE,
-					null,
-					null, null, null, null, null, null, false, null, null);
-			InstrumentData instrData = new Harmonizer(instrDataRaw, numberBeats).harmonize();
-			System.out.println(instrData);
+			mapping.setSoundLength((int) Math.ceil(numberBeats / (Constants.TEMPO / 60f)));
+
+			// Give data to Harmonizer
+
+			int outLen = mapping.getSoundLength() * Constants.SAMPLE_RATE * Constants.CHANNEL_NO;
+			double[][] audioLines = new double[outLen][instrRawDatas.size()];
+			for (int i = 0; i < instrRawDatas.size(); i++) {
+				InstrumentData instrData = new Harmonizer(instrRawDatas.get(i), numberBeats).harmonize();
+				SynthLine synthLine = new SynthLine(instrData, mapping.getSoundLength());
+				audioLines[i] = synthLine.synthesize();
+			}
+
+			// TODO: Give audioLines to mixer
+			// For now, only the first instrument is being played
+			AudioFormat af = new AudioFormat(Constants.SAMPLE_RATE, 16, Constants.CHANNEL_NO, true, true);
+			SourceDataLine sdl = AudioSystem.getSourceDataLine(af);
+			sdl.open(af);
+			sdl.start();
+			PlaybackController pbc = new PlaybackController(sdl, audioLines[0]);
+			pbc.startPlayback();
+			boolean running = true;
+			while (running) {
+				System.out.println("Please enter your next control action: ");
+				Scanner in = new Scanner(System.in);
+				String controlAction = in.next();
+
+				switch (controlAction) {
+					// resume
+					case "r" -> pbc.play();
+					// pause
+					case "p" -> pbc.pause();
+					// jump forward 1s
+					case "jf" -> pbc.skipForward();
+					// jump backward 1s
+					case "jb" -> pbc.skipBackward();
+					case "s" -> {
+						pbc.kill();
+						running = false;
+					}
+					case "rs" -> pbc.reset();
+				}
+			}
+			sdl.drain();
+			sdl.close();
 		} catch (Throwable e) {
 			e.printStackTrace();
 			System.out.println(e.getMessage());

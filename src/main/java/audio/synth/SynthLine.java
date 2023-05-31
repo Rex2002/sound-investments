@@ -18,7 +18,7 @@ public class SynthLine {
     }
 
     @Data
-    static class UnpackedInstr{
+    static class UnpackedInstr {
         private WaveTypes waveType;
         private double modFactor;
         private Envelope env;
@@ -28,7 +28,8 @@ public class SynthLine {
     InstrumentData data;
     double[] out;
     int length;
-    public SynthLine(InstrumentData data, int length){
+
+    public SynthLine(InstrumentData data, int length) {
         this.data = data;
         this.length = length;
     }
@@ -43,14 +44,14 @@ public class SynthLine {
         return out;
     }
 
-    private void applyVolume(){
+    private void applyVolume() {
         out = new double[length * SAMPLE_RATE * CHANNEL_NO];
-        for(int i = 0; i < data.volume.length; i++){
+        for (int i = 0; i < data.volume.length; i++) {
             out[i] = Short.MAX_VALUE * data.volume[Util.getRelPosition(i, out.length, data.volume.length)];
         }
     }
 
-    private void applyTimbre(){
+    private void applyTimbre() {
         UnpackedInstr instr = this.unpackInstrument();
         double[] transformedPitch = this.transformNotesToFreq();
 
@@ -63,56 +64,55 @@ public class SynthLine {
         }
     }
 
-    private void applyEcho(){
-        if(data.feedbackEcho != null && data.delayEcho != null) {
+    private void applyEcho() {
+        if (data.feedbackEcho != null && data.delayEcho != null) {
             out = Effect.echo(out, data.feedbackEcho, data.delayEcho);
         }
     }
 
-    private void applyReverb(){
-        if(data.feedbackReverb != null && data.delayReverb != null) {
+    private void applyReverb() {
+        if (data.feedbackReverb != null && data.delayReverb != null) {
             out = Effect.echo(out, data.feedbackReverb, data.delayReverb);
         }
     }
 
-    private void applyFilter(){
-        Effect.IIR(out, data.getFilterData());
+    private void applyFilter() {
+        if (data.getFilterData() != null)
+            Effect.IIR(out, data.getFilterData());
     }
 
-    private void applyPan(){
-        for(int pos = 0; pos < out.length; pos+=2){
+    private void applyPan() {
+        for (int pos = 0; pos < out.length; pos += 2) {
             double panValue = data.getPan()[Util.getRelPosition(pos, out.length, data.getPan().length)];
-            if(panValue < 0){
+            if (panValue < 0) {
                 out[pos] = out[pos] * (1 - panValue) * -1;
-            }
-            else if(panValue > 0){
+            } else if (panValue > 0) {
                 out[pos + 1] = out[pos + 1] * (1 - panValue);
             }
         }
     }
 
-    private double[] transformNotesToFreq(){
+    private double[] transformNotesToFreq() {
         double[] tPitch = new double[data.pitch.length];
-        for( int i = 0; i < data.getPitch().length; i++){
+        for (int i = 0; i < data.getPitch().length; i++) {
             tPitch[i] = getFreqFromRelValue(data.getPitch()[i]);
         }
         return tPitch;
     }
 
-    private double getFreqFromRelValue(int rel){
-        return Math.pow(2, ((double)rel-69)/12) * 440;
+    private double getFreqFromRelValue(int rel) {
+        return Math.pow(2, ((double) rel - 69) / 12) * 440;
     }
 
-
-    private UnpackedInstr unpackInstrument(){
+    private UnpackedInstr unpackInstrument() {
 
         UnpackedInstr uInstr = new UnpackedInstr();
-        switch (this.data.getInstrument()){
+        switch (this.data.getInstrument()) {
             case SYNTH_ONE -> {
                 uInstr.setWaveType(WaveTypes.SINE);
                 uInstr.setModFactor(1.5);
                 uInstr.env = new ADSR(.1, .3, .5, .2);
-                uInstr.modEnv = new ADSR(.1,.3,.5,.2);
+                uInstr.modEnv = new ADSR(.1, .3, .5, .2);
             }
             case SYNTH_TWO -> throw new RuntimeException("implement instruments");
         }

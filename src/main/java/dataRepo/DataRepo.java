@@ -271,7 +271,7 @@ public class DataRepo {
 		return null;
 	}
 
-	public static List<Price> getPrices(Sonifiable s, Calendar start, Calendar end, IntervalLength interval) {
+	public static List<Price> getPrices(SonifiableID s, Calendar start, Calendar end, IntervalLength interval) {
 		return testPrices();
 
 		// try {

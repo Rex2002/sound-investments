@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Calendar;
 
+import dataRepo.Price;
+
 public class TriangleFormationAnalyzer implements FormationAnalyzer {
     @Override
     public List<FormationResult> analyzeFormations(List<Price> priceList) {
@@ -11,27 +13,28 @@ public class TriangleFormationAnalyzer implements FormationAnalyzer {
 
         for (int i = 0; i < priceList.size(); i++) {
             Price startPrice = priceList.get(i);
-            double startOpen = startPrice.getopen();
-            double startClose = startPrice.getclose();
-            double startHigh = startPrice.gethigh();
-            double startLow = startPrice.getlow();
-            Calendar startDate = startPrice.getday();
+            double startOpen = startPrice.getOpen();
+            double startClose = startPrice.getClose();
+            double startHigh = startPrice.getHigh();
+            double startLow = startPrice.getLow();
+            Calendar startDate = startPrice.getDay();
 
             for (int j = i + 1; j < priceList.size(); j++) {
                 Price endPrice = priceList.get(j);
-                double endOpen = endPrice.getopen();
-                double endClose = endPrice.getclose();
-                double endHigh = endPrice.gethigh();
-                double endLow = endPrice.getlow();
-                Calendar endDate = endPrice.getday();
+                double endOpen = endPrice.getOpen();
+                double endClose = endPrice.getClose();
+                double endHigh = endPrice.getHigh();
+                double endLow = endPrice.getLow();
+                Calendar endDate = endPrice.getDay();
 
                 if (endHigh < startHigh && endLow > startLow) {
-                    // Überprüfen, ob die Handelsspanne zwischen oberer und unterer Begrenzung sich sukzessive verkleinert
+                    // Überprüfen, ob die Handelsspanne zwischen oberer und unterer Begrenzung sich
+                    // sukzessive verkleinert
                     boolean decreasingRange = true;
                     for (int k = i + 1; k < j; k++) {
                         Price intermediatePrice = priceList.get(k);
-                        double intermediateHigh = intermediatePrice.gethigh();
-                        double intermediateLow = intermediatePrice.getlow();
+                        double intermediateHigh = intermediatePrice.getHigh();
+                        double intermediateLow = intermediatePrice.getLow();
 
                         if (intermediateHigh >= startHigh || intermediateLow <= startLow) {
                             decreasingRange = false;
@@ -48,8 +51,8 @@ public class TriangleFormationAnalyzer implements FormationAnalyzer {
                             Price intermediatePrice1 = priceList.get(k);
                             Price intermediatePrice2 = priceList.get(k + 1);
 
-                            double intermediateClose1 = intermediatePrice1.getclose();
-                            double intermediateClose2 = intermediatePrice2.getclose();
+                            double intermediateClose1 = intermediatePrice1.getClose();
+                            double intermediateClose2 = intermediatePrice2.getClose();
 
                             if (intermediateClose2 > intermediateClose1) {
                                 increasingTrend = true;
