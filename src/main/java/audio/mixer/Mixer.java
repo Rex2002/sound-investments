@@ -56,27 +56,6 @@ public class Mixer {
             }
         }
 
-        /*// add the remaining values of the longest array
-        for (int i = 0; i < audioStreams.size(); i++) {
-            double[] audioStream = audioStreams.get(i);
-            int startPosition = startPositions[i];
-            if (maxLength == audioStream.length) {
-                //check if there are multiple arrays with the maxLength
-                if (maxLengthCount > 1 && i != 0) {
-                    for (int j = minLength + startPosition; j < maxLength; j++) {
-                        result[j] += audioStream[j];
-                    }
-                } else {
-                    if (maxLength - (minLength + startPosition) >= 0)
-                        System.arraycopy(audioStream, minLength + startPosition, result, minLength + startPosition, maxLength - (minLength + startPosition));
-                }
-            } else {
-                for (int j = minLength; j < audioStream.length; j++) {
-                    result[j] = result[j] + audioStream[j];
-                }
-            }
-        }*/
-
         return result;
     }
 }
