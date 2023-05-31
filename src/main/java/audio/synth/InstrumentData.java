@@ -12,18 +12,18 @@ public class InstrumentData {
     int[] pitch;
 
     // Timbre
-    InstrumentEnum instrument;
+    InstrumentEnum instrument = null;
 
     // Echo parameters
-    int[] delayEcho;
-    double[] feedbackEcho;
+    int[] delayEcho = null;
+    double[] feedbackEcho = null;
 
     // Reverb parameters
-    int[] delayReverb;
-    double[] feedbackReverb;
+    int[] delayReverb = null;
+    double[] feedbackReverb = null;
 
     // Filter parameters
-    FilterData filterData;
+    FilterData filterData = null;
     // Panning
-    double[] pan;
+    double[] pan = null;
 }

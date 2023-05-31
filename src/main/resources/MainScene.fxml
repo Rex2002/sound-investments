@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.Cursor?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.CheckBox?>
+<?import javafx.scene.control.ChoiceBox?>
+<?import javafx.scene.control.DatePicker?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.Pane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.shape.Line?>
+<?import javafx.scene.shape.Rectangle?>
+<?import javafx.scene.text.Font?>
+
+<AnchorPane fx:id="anchor" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="823.0" prefWidth="1584.0" style="-fx-background-color: #09080E;" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="app.ui.MainSceneController">
+<children>
+	<!-- Title -->
+	<Rectangle arcHeight="5.0" arcWidth="5.0" fill="#121315" height="85.6" stroke="#121315" strokeType="INSIDE" width="1584.0" />
+	<Label fx:id="headerTitle" layoutX="59.0" layoutY="-20.0" prefHeight="125.0" prefWidth="885.0" text="Sound Investments" textFill="WHITE">
+		<font>
+			<Font name="Rage Italic" size="80.0" />
+		</font>
+	</Label>
+
+	<!-- "Choosing Sonifiables"-Box -->
+	<Pane layoutX="29.0" layoutY="110.0" prefHeight="557.0" prefWidth="332.0" style="-fx-background-color: #D9D9D9; -fx-background-radius: 30;">
+		<children>
+			<Label layoutX="24.0" layoutY="21.0" prefHeight="53.0" prefWidth="131.0" style="-fx-font-style: &quot;Roboto&quot;;" text="Aktien">
+				<font>
+					<Font name="System Bold" size="29.0" />
+				</font>
+			</Label>
+			<TextField id="searchBar" fx:id="searchBar" layoutX="15.0" layoutY="94.0" prefHeight="63.0" prefWidth="305.0" promptText="Suche" style="-fx-background-color: #4D505B; -fx-background-radius: 30;">
+				<font>
+					<Font size="20.0" />
+				</font>
+			</TextField>
+			<Label layoutX="17.0" layoutY="245.6" prefHeight="53.0" prefWidth="165.0" style="-fx-font-style: &quot;Roboto&quot;;" text="Kategorie">
+				<font>
+					<Font size="24.0" />
+				</font>
+			</Label>
+			<ChoiceBox id="categoriesChoice" fx:id="categoriesChoice" layoutX="151.0" layoutY="248.0" prefHeight="49.0" prefWidth="165.0" style="-fx-background-radius: 10; -fx-background-color: #4D505B;" />
+			<Label layoutX="17.0" layoutY="177.0" prefHeight="53.0" prefWidth="165.0" style="-fx-font-style: &quot;Roboto&quot;;" text="Standort">
+				<font>
+					<Font size="24.0" />
+				</font>
+			</Label>
+			<ChoiceBox fx:id="locationChoice" layoutX="151.0" layoutY="179.0" prefHeight="49.0" prefWidth="165.0" style="-fx-background-radius: 10; -fx-background-color: #4D505B;" />
+			<ScrollPane hbarPolicy="NEVER" layoutX="17.0" layoutY="315.0" maxWidth="1.7976931348623157E308" prefHeight="211.0" prefWidth="299.0" style="-fx-background-color: #4D505B; -fx-border-color: #4D505B;">
+				<content>
+					<VBox fx:id="checkVBox" prefHeight="217.0" prefWidth="296.0" />
+				</content>
+			</ScrollPane>
+			<Line endX="290.0" layoutX="25.0" layoutY="70.0" strokeWidth="2.0" />
+		</children>
+
+	</Pane>
+
+	<!-- "Sonifiable Parameters"-Box -->
+	<Pane layoutX="380.0" layoutY="110.0" prefHeight="655.0" prefWidth="816.0" style="-fx-background-color: #D9D9D9; -fx-background-radius: 30;">
+		<children>
+			<Label layoutX="35.0" layoutY="18.0" prefHeight="53.0" prefWidth="305.0" style="-fx-font-style: &quot;Roboto&quot;;" text="Konfigurationen">
+				<font>
+					<Font name="System Bold" size="29.0" />
+				</font>
+			</Label>
+			<Line endX="290.0" layoutX="33.0" layoutY="71.0" strokeWidth="2.0" />
+			<ScrollPane fx:id="shareScrollPanel" hbarPolicy="NEVER" layoutX="32.0" layoutY="97.0" prefHeight="540.0" prefWidth="740.0" vbarPolicy="NEVER">
+				<content>
+      					<VBox fx:id="paneBoxSonifiables" prefHeight="1800.0" prefWidth="740.0" style="-fx-background-color: #D9D9D9;" />
+				</content>
+			</ScrollPane>
+		</children>
+	</Pane>
+
+	<!-- "Global Settings" Box -->
+	<Pane layoutX="1210.0" layoutY="114.0" prefHeight="655.0" prefWidth="332.0" style="-fx-background-color: #D9D9D9; -fx-background-radius: 30;">
+		<children>
+			<!-- Title -->
+			<Label layoutX="18.0" layoutY="20.0" prefHeight="53.0" prefWidth="305.0" style="-fx-font-style: &quot;Roboto&quot;;" text="Einstellungen">
+				<font>
+					<Font name="System Bold" size="29.0" />
+				</font>
+			</Label>
+			<Line endX="290.0" layoutX="14.0" layoutY="74.0" strokeWidth="2.0" />
+
+			<Label layoutX="12.0" layoutY="80.0" prefHeight="53.0" prefWidth="153.0" style="-fx-font-style: &quot;Roboto&quot;;" text="Startdatum">
+				<font>
+					<Font size="20.0" />
+				</font>
+			</Label>
+			<DatePicker fx:id="startPicker" layoutX="182.0" layoutY="93.0" prefHeight="27.0" prefWidth="131.0" />
+
+			<Label layoutX="12.0" layoutY="126.0" prefHeight="53.0" prefWidth="138.0" style="-fx-font-style: &quot;Roboto&quot;;" text="Enddatum">
+				<font>
+					<Font size="20.0" />
+				</font>
+			</Label>
+			<DatePicker fx:id="endPicker" layoutX="182.0" layoutY="139.0" prefHeight="27.0" prefWidth="131.0" />
+
+			<Label layoutX="12.0" layoutY="173.0" prefHeight="53.0" prefWidth="138.0" style="-fx-font-style: &quot;Roboto&quot;;" text="Dauer">
+				<font>
+					<Font size="20.0" />
+				</font>
+			</Label>
+			<TextField id="audioLength" fx:id="audioLength" layoutX="181.0" layoutY="186.0" prefHeight="27.0" prefWidth="131.0" />
+
+			<Label layoutX="12.0" layoutY="232.0" prefHeight="53.0" prefWidth="147.0" style="-fx-font-style: &quot;Roboto&quot;;" text="Delay Reverb">
+				<font>
+					<Font size="20.0" />
+				</font>
+			</Label>
+			<ChoiceBox fx:id="delayReverbChoice" layoutX="171.0" layoutY="238.0" prefHeight="42.0" prefWidth="153.0" style="-fx-background-radius: 10; -fx-background-color: #4D505B;" />
+
+			<Label layoutX="12.0" layoutY="291.0" prefHeight="53.0" prefWidth="153.0" style="-fx-font-style: &quot;Roboto&quot;;" text="Feedback Reverb">
+				<font>
+					<Font size="20.0" />
+				</font>
+			</Label>
+			<ChoiceBox fx:id="feedbackReverbChoice" layoutX="171.0" layoutY="297.0" prefHeight="42.0" prefWidth="153.0" style="-fx-background-radius: 10; -fx-background-color: #4D505B;" />
+
+			<Label layoutX="12.0" layoutY="347.0" prefHeight="53.0" prefWidth="153.0" style="-fx-font-style: &quot;Roboto&quot;;" text="Cutoff">
+				<font>
+					<Font size="20.0" />
+				</font>
+			</Label>
+			<ChoiceBox fx:id="cutoffChoice" layoutX="171.0" layoutY="353.0" prefHeight="42.0" prefWidth="153.0" style="-fx-background-radius: 10; -fx-background-color: #4D505B;" />
+
+			<Label layoutX="12.0" layoutY="403.0" prefHeight="53.0" prefWidth="153.0" style="-fx-font-style: &quot;Roboto&quot;;" text="On-Off Filter">
+				<font>
+					<Font size="20.0" />
+				</font>
+			</Label>
+			<ChoiceBox fx:id="filterChoice" layoutX="170.0" layoutY="408.0" prefHeight="42.0" prefWidth="153.0" style="-fx-background-radius: 10; -fx-background-color: #4D505B;" />
+
+			<Label layoutX="12.0" layoutY="464.0" prefHeight="53.0" prefWidth="153.0" style="-fx-font-style: &quot;Roboto&quot;;" text="High-Pass">
+				<font>
+					<Font size="20.0" />
+				</font>
+			</Label>
+			<CheckBox layoutX="235.0" layoutY="482.0" style="-fx-font-style: &quot;Roboto&quot;;" />
+            <ScrollPane hbarPolicy="NEVER" layoutX="14.0" layoutY="517.0" maxWidth="1.7976931348623157E308" prefHeight="125.0" prefWidth="305.0" style="-fx-background-color: #4D505B; -fx-border-color: #4D505B;">
+               <content>
+                  <VBox fx:id="checkVBox1" prefHeight="217.0" prefWidth="296.0" />
+               </content>
+            </ScrollPane>
+		</children>
+	</Pane>
+
+      	<!-- Start Button -->
+	<Button fx:id="startBtn" layoutX="29.0" layoutY="679.0" mnemonicParsing="false" prefHeight="86.0" prefWidth="332.0" style="-fx-background-color: #9C5EEB; -fx-background-radius: 30;" text="Start" textFill="WHITE">
+		<font>
+			<Font size="40.0" />
+		</font>
+		<opaqueInsets>
+			<Insets />
+		</opaqueInsets>
+		<cursor>
+			<Cursor fx:constant="HAND" />
+		</cursor>
+	</Button>
+</children>
+</AnchorPane>

@@ -6,7 +6,7 @@ public class Util {
 
     public static Complex[] fft(short[] vTd){
         Complex[] complexValues = new Complex[(int) Math.pow(2, (int) (Math.log(vTd.length)/Math.log(2)))];
-        for(int i =0 ; i< complexValues.length; i++){
+        for(int i = 0 ; i< complexValues.length; i++){
             complexValues[i] = new Complex(vTd[i], 0);
         }
         transform(complexValues);
@@ -39,6 +39,10 @@ public class Util {
         }
     }
 
+    public static int getRelPosition(int p, int sourceLength, int destinationLength){
+        return (int) (((double) p / sourceLength) * destinationLength);
+    }
+
     public static short findMax(short[] array){
         short max = 0;
         for(short k : array){
@@ -61,7 +65,7 @@ public class Util {
     }
     public static double findMin(double[] array) { return Arrays.stream(array).summaryStatistics().getMax(); }
 
-    public static short[] scale(double[] in){
+    public static short[] scaleToShort(double[] in){
         short[] out = new short[in.length];
         double max = Math.max(Math.abs(findMin(in)), findMax(in));
         double resFactor = 1;
