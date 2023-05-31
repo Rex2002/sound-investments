@@ -1,7 +1,5 @@
 package app;
 
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
@@ -80,7 +78,7 @@ public class StateManager {
 					if (!th.isAlive()) {
 						timer.cancel();
 					}
-				};
+				}
 			}, 10, 100);
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -206,11 +204,12 @@ public class StateManager {
 			Mapping mapping = getTestMapping();
 			HashMap<SonifiableID, List<Price>> sonifiablePriceMap = new HashMap<>();
 			SonifiableID[] sonifiableSet = mapping.getSonifiables().toArray(new SonifiableID[0]);
-			for (int i = 0; i < sonifiableSet.length; i++)
+			for (SonifiableID sonifiableID : sonifiableSet) {
 				sonifiablePriceMap.put(
-						sonifiableSet[i],
-						DataRepo.getPrices(sonifiableSet[i], mapping.getStartDate(), mapping.getEndDate(),
+						sonifiableID,
+						DataRepo.getPrices(sonifiableID, mapping.getStartDate(), mapping.getEndDate(),
 								IntervalLength.HOUR));
+			}
 
 			// Create InstrumentDataRaw objects for Harmonizer
 			InstrumentMapping[] instrMappings = mapping.getMappedInstruments();
@@ -227,43 +226,34 @@ public class StateManager {
 				boolean[] absVolume = instrMap.getAbsVolume().isPresent()
 						? calcRangeData(instrMap.getAbsVolume().get(), sonifiablePriceMap)
 						: null;
-				;
 				double[] delayEcho = instrMap.getDelayEcho().isPresent()
 						? calcLineData(instrMap.getDelayEcho().get(), sonifiablePriceMap)
 						: null;
-				;
 				double[] feedbackEcho = instrMap.getFeedbackEcho().isPresent()
 						? calcLineData(instrMap.getFeedbackEcho().get(), sonifiablePriceMap)
 						: null;
-				;
 				boolean[] onOffEcho = instrMap.getOnOffEcho().isPresent()
 						? calcRangeData(instrMap.getOnOffEcho().get(), sonifiablePriceMap)
 						: null;
-				;
 				double[] delayReverb = instrMap.getDelayReverb().isPresent()
 						? calcLineData(instrMap.getDelayReverb().get(), sonifiablePriceMap)
 						: null;
-				;
 				double[] feedbackReverb = instrMap.getFeedbackReverb().isPresent()
 						? calcLineData(instrMap.getFeedbackReverb().get(), sonifiablePriceMap)
 						: null;
-				;
 				boolean[] onOffReverb = instrMap.getOnOffReverb().isPresent()
 						? calcRangeData(instrMap.getOnOffReverb().get(), sonifiablePriceMap)
 						: null;
-				;
-				double[] frequency = null; // TODO: The mapping doesn't have a frequency parameter (yet)
-				;
+				double[] frequency = instrMap.getCutoff().isPresent()
+						? calcLineData(instrMap.getCutoff().get(), sonifiablePriceMap)
+						: null;
 				boolean highPass = instrMap.getHighPass();
-				;
 				boolean[] onOffFilter = instrMap.getOnOffFilter().isPresent()
 						? calcRangeData(instrMap.getOnOffFilter().get(), sonifiablePriceMap)
 						: null;
-				;
 				double[] pan = instrMap.getPan().isPresent()
 						? calcLineData(instrMap.getPan().get(), sonifiablePriceMap)
 						: null;
-				;
 
 				instrRawDatas.add(new InstrumentDataRaw(relVolume, absVolume, pitch, instrument, delayEcho,
 						feedbackEcho,
@@ -277,14 +267,13 @@ public class StateManager {
 			int numberBeats = (int) Math.round(numberBeatsRaw / 16) * 16;
 			mapping.setSoundLength((int) Math.ceil(numberBeats / (Constants.TEMPO / 60f)));
 
-			// Give data to Harmonizer
-
+			// Give data to Harmonizer and Synthesizer
 			int outLen = mapping.getSoundLength() * Constants.SAMPLE_RATE * Constants.CHANNEL_NO;
 			double[][] audioLines = new double[outLen][instrRawDatas.size()];
 			for (int i = 0; i < instrRawDatas.size(); i++) {
 				InstrumentData instrData = new Harmonizer(instrRawDatas.get(i), numberBeats).harmonize();
-				SynthLine synthLine = new SynthLine(instrData, mapping.getSoundLength());
-				audioLines[i] = synthLine.synthesize();
+
+				audioLines[i] = new SynthLine(instrData, mapping.getSoundLength()).synthesize();
 			}
 
 			// TODO: Give audioLines to mixer
