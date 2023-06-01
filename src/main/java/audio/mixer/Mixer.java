@@ -99,8 +99,14 @@ public class Mixer {
         return result;
     }
 
-
-    public static double[] mixAudioStreams(double[][] in){
-        return new double[]{0};
+    // temporary method while complex mixer is in development
+    public static double[] mixAudioStreams(double[][] in) {
+        double[] out = new double[in[0].length];
+        for (double[] audioStream : in) {
+            for (int j = 0; j < audioStream.length && j < out.length; j++) {
+                out[j] += audioStream[j];
+            }
+        }
+        return out;
     }
 }

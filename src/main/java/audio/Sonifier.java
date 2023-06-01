@@ -3,6 +3,7 @@ package audio;
 import app.AppError;
 import app.mapping.InstrumentDataRaw;
 import audio.harmonizer.Harmonizer;
+import audio.mixer.Backing;
 import audio.mixer.Mixer;
 import audio.synth.EvInstrData;
 import audio.synth.EvInstrLine;
@@ -18,19 +19,23 @@ import javax.sound.sampled.SourceDataLine;
 import static audio.Util.concatArrays;
 
 public class Sonifier {
-    public static PlaybackController sonify(InstrumentDataRaw[] instrumentDataRaw, EvInstrData[] evInstrData, int length) throws AppError{
-        InstrumentData[] instrumentData = new InstrumentData[instrumentDataRaw.length];
-        double[][] synthLines = new double[instrumentDataRaw.length][];
-        for(int i = 0; i < instrumentDataRaw.length; i++){
-            InstrumentData instrData = new Harmonizer(instrumentDataRaw[i], length).harmonize();
+    public static PlaybackController sonify(InstrumentDataRaw[] instrumentDataRaw, EvInstrData[] evInstrData, int lenghtInBeats) throws AppError{
+        double lengthInSeconds = lenghtInBeats / (Constants.TEMPO / 60f);
 
-            synthLines[i] = new SynthLine(instrData, length).synthesize();
+        double[][] synthLines = new double[instrumentDataRaw.length + 1][];
+        for(int i = 0; i < instrumentDataRaw.length; i++){
+            InstrumentData instrData = new Harmonizer(instrumentDataRaw[i], lenghtInBeats).harmonize();
+
+            synthLines[i] = new SynthLine(instrData, lengthInSeconds).synthesize();
         }
 
         double[][] evInstrs = new double[evInstrData.length][];
         for(int i = 0; i < evInstrData.length; i++){
-            evInstrs[i] = new EvInstrLine(evInstrData[i], length).synthesize();
+            evInstrs[i] = new EvInstrLine(evInstrData[i], lengthInSeconds).synthesize();
         }
+
+        double[] backing = new Backing(lenghtInBeats).getBacking();
+        synthLines[synthLines.length - 1] = backing;
 
         double[][] outArrays = concatArrays(synthLines, evInstrs);
 
@@ -43,9 +48,8 @@ public class Sonifier {
             // TODO exception handling
             throw new RuntimeException(e);
         }
-        PlaybackController controller = new PlaybackController(sdl, out);
 
-        return controller;
+        return new PlaybackController(sdl, out);
     }
 
 

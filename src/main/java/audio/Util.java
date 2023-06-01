@@ -41,8 +41,8 @@ public class Util {
         }
     }
 
-    public static int getRelPosition(int p, int sourceLength, int destinationLength){
-        return (int) (((double) p / sourceLength) * destinationLength);
+    public static int getRelPosition(int pos, int sourceLength, int destinationLength){
+        return (int) (((double) pos / sourceLength) * destinationLength);
     }
 
     public static short findMax(short[] array){
@@ -59,6 +59,7 @@ public class Util {
     public static int findMax(int[] array){
         return Arrays.stream(array).summaryStatistics().getMax();
     }
+    @Deprecated
     public static int findMin(int[] array){
         return Arrays.stream(array).summaryStatistics().getMax();
     }

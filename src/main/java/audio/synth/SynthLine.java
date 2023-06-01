@@ -4,6 +4,7 @@ import audio.Util;
 import audio.synth.envelopes.ADSR;
 import audio.synth.envelopes.Envelope;
 import audio.synth.fx.Effect;
+import audio.synth.fx.FilterData;
 import audio.synth.generators.SineWaveGenerator;
 import lombok.Data;
 
@@ -28,11 +29,11 @@ public class SynthLine {
 
     InstrumentData data;
     double[] out;
-    int length;
+    int sampleNumber;
 
-    public SynthLine(InstrumentData data, int length) {
+    public SynthLine(InstrumentData data, double length) {
         this.data = data;
-        this.length = length;
+        this.sampleNumber = (int) (length * SAMPLE_RATE * CHANNEL_NO);
     }
 
     public double[] synthesize() {
@@ -46,10 +47,15 @@ public class SynthLine {
     }
 
     private void applyVolume() {
-        out = new double[length * SAMPLE_RATE * CHANNEL_NO];
-        for (int i = 0; i < data.volume.length; i++) {
-            out[i] = Short.MAX_VALUE * data.volume[Util.getRelPosition(i, out.length, data.volume.length)];
+        out = new double[sampleNumber];
+        for (int i = 0; i < out.length; i++) {
+            out[i] = 32767.0 * data.volume[Util.getRelPosition(i, out.length, data.volume.length)];
         }
+        FilterData filter = new FilterData();
+        filter.setHighPass(false);
+        filter.setCutoff(new double[]{200});
+        filter.setBandwidth(new double[]{.1});
+        out = Effect.IIR(out, filter);
     }
 
     private void applyTimbre() {
@@ -59,7 +65,7 @@ public class SynthLine {
         switch (instr.waveType) {
             case SINE -> {
                 SineWaveGenerator gen = new SineWaveGenerator();
-                out = gen.generate(transformedPitch, length, out, instr.env, instr.getModFactor(), instr.modEnv);
+                out = gen.generate(transformedPitch, sampleNumber, out, instr.env, instr.getModFactor(), instr.modEnv);
             }
             case SQUARE, SAWTOOTH -> throw new RuntimeException("implement Sawtooth, square");
         }

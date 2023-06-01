@@ -3,6 +3,7 @@ package app;
 import app.communication.*;
 import app.mapping.*;
 import app.ui.App;
+import audio.Constants;
 import audio.Sonifier;
 import audio.synth.EvInstrData;
 import audio.synth.InstrumentEnum;
@@ -22,14 +23,14 @@ import java.util.function.Consumer;
 
 public class StateManager {
 	public static void main(String[] args) {
-		// testUI(args);
+		//testUI(args);
 		testSound(args);
 	}
 
 	public static void testUI(String[] args) {
 		Thread th = new Thread(() -> Application.launch(App.class, args));
 		th.start();
-		call(() -> DataRepo.init());
+		call(DataRepo::init);
 
 		// Check for messages in EventQueue every 100ms
 		Timer timer = new Timer();
@@ -152,7 +153,6 @@ public class StateManager {
 			SonifiableID s = new SonifiableID("XETRA", "SAP");
 			mapping.setParam(InstrumentEnum.SYNTH_ONE, s, InstrParam.PITCH, LineData.PRICE);
 			mapping.setParam(InstrumentEnum.SYNTH_ONE, s, InstrParam.RELVOLUME, LineData.MOVINGAVG);
-			mapping.setParam(InstrumentEnum.SYNTH_ONE, s, InstrParam.ABSVOLUME, RangeData.TRIANGLE);
 			mapping.setHighPass(true);
 		} catch (Throwable e) {
 			e.printStackTrace();
@@ -224,13 +224,19 @@ public class StateManager {
 			EvInstrData[] evInstrDatas = new EvInstrData[] {};
 			InstrumentDataRaw[] passedInstrRawDatas = new InstrumentDataRaw[instrRawDatas.size()];
 			passedInstrRawDatas = instrRawDatas.toArray(passedInstrRawDatas);
-			return Sonifier.sonify(passedInstrRawDatas, evInstrDatas, mapping.getSoundLength());
+
+			double numberBeatsRaw = (Constants.TEMPO / 60f) * mapping.getSoundLength();
+			// get number of beats to nearest multiple of 16 so that audio always lasts for
+			// a full multiple of 4 bars
+			int numberBeats = (int) Math.round(numberBeatsRaw / 16) * 16;
+
+			return Sonifier.sonify(passedInstrRawDatas, evInstrDatas, numberBeats);
 		}, null);
 	}
 
 	public static void testSound(String[] args) {
 		// Get Mapping & Price Data
-		call(() -> DataRepo.init());
+		call(DataRepo::init);
 		Mapping mapping = getTestMapping();
 		PlaybackController pbc = sonifyMapping(mapping);
 		pbc.startPlayback();

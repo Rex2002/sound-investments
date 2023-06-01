@@ -5,11 +5,6 @@ import audio.synth.envelopes.Envelope;
 import audio.synth.envelopes.OneEnvelope;
 import audio.synth.envelopes.ZeroEnvelope;
 
-import static audio.Constants.CHANNEL_NO;
-import static audio.Constants.SAMPLE_RATE;
-
-
-//TODO or discuss: amplitude generally as short
 public class SineWaveGenerator {
 
     public double[] generate(double freq, int duration, short amplitude){
@@ -34,8 +29,8 @@ public class SineWaveGenerator {
         Envelope oneEnvelope = new OneEnvelope();
         return generate(freq, duration, amplitude, env, modFactor, oneEnvelope);
     }
-    public double[] generate(double[] freq, int duration, double[] amplitude, Envelope env, double modFactor, Envelope modEnv) {
-        double[] sin = new double[duration * SAMPLE_RATE * CHANNEL_NO];
+    public double[] generate(double[] freq, int sampleNumber, double[] amplitude, Envelope env, double modFactor, Envelope modEnv) {
+        double[] sin = new double[sampleNumber];
         env.setSectionLen(sin.length/freq.length);
         modEnv.setSectionLen(sin.length/freq.length);
         double phase = 0;

@@ -7,14 +7,15 @@ import static audio.Constants.*;
 
 public class EvInstrLine {
     EvInstrData data;
-    int length;
-    public EvInstrLine(EvInstrData data, int length){
+    int sampleNumber;
+
+    public EvInstrLine(EvInstrData data, double length){
         this.data = data;
-        this.length = length;
+        this.sampleNumber = (int) (length * SAMPLE_RATE * CHANNEL_NO);
     }
 
     public double[] synthesize(){
-        double[] out = new double[length * SAMPLE_RATE * CHANNEL_NO];
+        double[] out = new double[sampleNumber];
         double[] sample = SampleLoader.loadEventSample(data.type.toFileName());
 
 

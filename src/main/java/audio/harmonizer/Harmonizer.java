@@ -9,8 +9,6 @@ import audio.synth.fx.FilterData;
 import java.util.Arrays;
 import java.util.Random;
 
-import app.mapping.InstrumentDataRaw;
-
 public class Harmonizer {
     private final InstrumentDataRaw dataRaw;
     private final int numberBeats;
@@ -95,7 +93,7 @@ public class Harmonizer {
      * @param pitch data array which is presumed to be much longer than the amount
      *              of beats needed
      * @return data array that has the exact length where one data point can be
-     *         sonified as one note
+     *         sonified as one quarter note
      *         compresses long data array to the required length by averaging a
      *         number of data points into one note.
      */
