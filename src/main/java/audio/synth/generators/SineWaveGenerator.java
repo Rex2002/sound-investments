@@ -1,6 +1,6 @@
 package audio.synth.generators;
 
- import audio.synth.Util;
+ import audio.Util;
 import audio.synth.envelopes.Envelope;
 import audio.synth.envelopes.OneEnvelope;
 import audio.synth.envelopes.ZeroEnvelope;

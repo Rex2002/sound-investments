@@ -2,6 +2,7 @@ package audio.synth.playback;
 
 import app.communication.EventQueues;
 
+import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.SourceDataLine;
 
 public class Playback implements Runnable {
@@ -30,6 +31,15 @@ public class Playback implements Runnable {
         running = true;
         System.out.println("started thread for playback controller.");
         System.out.println("playBackSampleSize/data.length: " + data.length / PLAYBACK_SAMPLE_SIZE);
+
+        try {
+            s.open();
+            s.start();
+        } catch (LineUnavailableException e) {
+            // TODO
+            throw new RuntimeException(e);
+        }
+
         byte[] outBuffer = new byte[PLAYBACK_SAMPLE_SIZE * 2];
         while (running) {
             if (!paused && positionPointer < data.length / PLAYBACK_SAMPLE_SIZE) {
@@ -63,6 +73,8 @@ public class Playback implements Runnable {
                 }
             }
         }
+        s.drain();
+        s.close();
         System.out.println("finished loop");
     }
 }

@@ -1,5 +1,7 @@
-package audio.synth;
+package audio;
 
+
+import audio.synth.Complex;
 
 import java.util.Arrays;
 public class Util {
@@ -76,5 +78,13 @@ public class Util {
             out[i] = (short) (resFactor * in[i]);
         }
         return out;
+    }
+
+    public static double[][] concatArrays(double[][] arr1, double[][] arr2){
+        double[][] ret = new double[arr1.length + arr2.length][];
+        System.arraycopy(arr1, 0, ret, 0, arr1.length);
+        System.arraycopy(arr2, 0, ret, arr1.length, arr2.length);
+
+        return ret;
     }
 }

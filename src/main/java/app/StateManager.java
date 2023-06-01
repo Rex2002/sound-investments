@@ -1,31 +1,18 @@
 package app;
 
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Scanner;
-import java.util.Timer;
-import java.util.TimerTask;
-
-import javax.sound.sampled.AudioFormat;
-import javax.sound.sampled.AudioSystem;
-import javax.sound.sampled.SourceDataLine;
-
-import javafx.application.Application;
-
 import app.communication.*;
 import app.mapping.*;
 import app.ui.App;
-import audio.Constants;
-import audio.harmonizer.Harmonizer;
-import audio.synth.InstrumentData;
+import audio.Sonifier;
+import audio.synth.EvInstrData;
 import audio.synth.InstrumentEnum;
-import audio.synth.SynthLine;
 import audio.synth.playback.PlaybackController;
 import dataAnalyzer.*;
 import dataRepo.*;
 import dataRepo.DataRepo.IntervalLength;
+import javafx.application.Application;
+
+import java.util.*;
 
 // This class runs in the main thread and coordinates all tasks and the creation of the UI thread
 // This is atypical, as JavaFX's UI thread is usually the main thread as well
@@ -148,7 +135,7 @@ public class StateManager {
 	}
 
 	public static boolean[] formationResultToBool(List<FormationResult> formations,
-			List<Price> prices) {
+												  List<Price> prices) {
 		boolean[] out = new boolean[prices.size()];
 		for (int i = 0; i < out.length; i++) {
 			Calendar currentDate = prices.get(i).getDay();
@@ -170,8 +157,7 @@ public class StateManager {
 			throws AppError {
 		List<Price> prices = priceMap.get(ed.getId());
 		return switch (ed.getData()) {
-			case EQMOVINGAVG ->
-				new MovingAverage().AverageIntersectsStock(new MovingAverage().calculateMovingAverage(prices), prices);
+			case EQMOVINGAVG -> new MovingAverage().AverageIntersectsStock(new MovingAverage().calculateMovingAverage(prices), prices);
 			case TRENDBREAK -> throw new AppError("TRENDBREAK is not yet implemented");
 			case EQSUPPORT -> throw new AppError("EQSUPPORT is not yet implemented");
 			case EQRESIST -> throw new AppError("EQRESIST is not yet implemented");
@@ -259,30 +245,12 @@ public class StateManager {
 						feedbackEcho,
 						onOffEcho, delayReverb, feedbackReverb, onOffReverb, frequency, highPass, onOffFilter, pan));
 			}
+			EvInstrData[] evInstrDatas = new EvInstrData[]{};
+			InstrumentDataRaw[] passedInstrRawDatas = new InstrumentDataRaw[instrRawDatas.size()];
+			passedInstrRawDatas = instrRawDatas.toArray(passedInstrRawDatas);
+			PlaybackController pbc = Sonifier.sonify(passedInstrRawDatas, evInstrDatas, mapping.getSoundLength());
 
-			// Set valid sound length:
-			double numberBeatsRaw = (Constants.TEMPO / 60f) * mapping.getSoundLength();
-			// get number of beats to nearest multiple of 16 so that audio always lasts for
-			// a full multiple of 4 bars
-			int numberBeats = (int) Math.round(numberBeatsRaw / 16) * 16;
-			mapping.setSoundLength((int) Math.ceil(numberBeats / (Constants.TEMPO / 60f)));
-
-			// Give data to Harmonizer and Synthesizer
-			int outLen = mapping.getSoundLength() * Constants.SAMPLE_RATE * Constants.CHANNEL_NO;
-			double[][] audioLines = new double[outLen][instrRawDatas.size()];
-			for (int i = 0; i < instrRawDatas.size(); i++) {
-				InstrumentData instrData = new Harmonizer(instrRawDatas.get(i), numberBeats).harmonize();
-
-				audioLines[i] = new SynthLine(instrData, mapping.getSoundLength()).synthesize();
-			}
-
-			// TODO: Give audioLines to mixer
-			// For now, only the first instrument is being played
-			AudioFormat af = new AudioFormat(Constants.SAMPLE_RATE, 16, Constants.CHANNEL_NO, true, true);
-			SourceDataLine sdl = AudioSystem.getSourceDataLine(af);
-			sdl.open(af);
-			sdl.start();
-			PlaybackController pbc = new PlaybackController(sdl, audioLines[0]);
+			//PlaybackController pbc = new PlaybackController(sdl, audioLines[0]);
 			pbc.startPlayback();
 			boolean running = true;
 			while (running) {
@@ -306,8 +274,6 @@ public class StateManager {
 					case "rs" -> pbc.reset();
 				}
 			}
-			sdl.drain();
-			sdl.close();
 		} catch (Throwable e) {
 			e.printStackTrace();
 			System.out.println(e.getMessage());

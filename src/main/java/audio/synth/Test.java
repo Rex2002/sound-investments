@@ -4,6 +4,7 @@ package audio.synth;
 
 import app.AppError;
 import audio.Constants;
+import audio.Util;
 import audio.mixer.Backing;
 import audio.mixer.SampleLoader;
 import audio.synth.envelopes.ADSR;
@@ -19,7 +20,7 @@ import javax.sound.sampled.SourceDataLine;
 import java.util.Arrays;
 import java.util.Scanner;
 
-import static audio.synth.Util.findMax;
+import static audio.Util.findMax;
 
 public class Test {
     static String waveFileName = "Casio-MT-45-Beguine.wav";
@@ -52,6 +53,7 @@ public class Test {
             double[] addedSine = addArrays(sine1, sine2);
 
             double[] fft = SampleLoader.loadBackingSample(waveFileName);
+
             FilterData filterData = new FilterData();
             filterData.setCutoff(new double[]{1200, 6000});
             filterData.setBandwidth(new double[]{0.5});
@@ -167,10 +169,12 @@ public class Test {
         System.out.println("finished scanner loop");
     }
 
+    @Deprecated
     private static double[] addArrays(double[] first, double[] second) {
         return addArrays(first, second, 0);
     }
 
+    @Deprecated
     private static double[] addArrays(double[] first, double[] second, int start) {
         // if start is zero, it does not matter which array is longer.
         // if start is not zero, we assume that the second array is meant to be added at

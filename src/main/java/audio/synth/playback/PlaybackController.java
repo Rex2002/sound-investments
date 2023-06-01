@@ -1,7 +1,7 @@
 package audio.synth.playback;
 
-import audio.synth.Util;
 import app.communication.EventQueues;
+import audio.Util;
 
 import javax.sound.sampled.SourceDataLine;
 

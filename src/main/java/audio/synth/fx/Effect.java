@@ -1,7 +1,7 @@
 package audio.synth.fx;
 
 
-  import audio.synth.Util;
+  import audio.Util;
 
 import static audio.Constants.SAMPLE_RATE;
 
