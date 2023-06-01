@@ -151,8 +151,8 @@ public class StateManager {
 			mapping.setSoundLength(60);
 
 			SonifiableID s = new SonifiableID("XETRA", "SAP");
-			mapping.setParam(InstrumentEnum.SYNTH_ONE, s, InstrParam.PITCH, LineData.PRICE);
-			mapping.setParam(InstrumentEnum.SYNTH_ONE, s, InstrParam.RELVOLUME, LineData.MOVINGAVG);
+			mapping.setParam(InstrumentEnum.RETRO_SYNTH, s, InstrParam.PITCH, LineData.PRICE);
+			mapping.setParam(InstrumentEnum.RETRO_SYNTH, s, InstrParam.RELVOLUME, LineData.MOVINGAVG);
 			mapping.setHighPass(true);
 		} catch (Throwable e) {
 			e.printStackTrace();
