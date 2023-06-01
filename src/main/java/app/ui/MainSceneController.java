@@ -359,12 +359,18 @@ public class MainSceneController implements Initializable {
             paramCB.getItems().addAll(iparams);
             paramCB.setLayoutX(cb2X);
             paramCB.setLayoutY(cb2Y);
+            paramCB.setDisable(true);
 
             instCB.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
                 SelectionModel<InstrParam> paramCBSelect = paramCB.getSelectionModel();
                 // Mapping isn't effected if the parameter ChoiceBox isn't selected yet
+                paramCB.setDisable(false);
+                //Add welche die nochnicht benutzt sind nachdem das gesetzt ist
+                paramCB.getItems().addAll(iparams);
+
                 if (!paramCBSelect.isEmpty()) {
                     try {
+                        
                         mapping.setParam(newValue, sonifiableId, paramCBSelect.getSelectedItem(), eparam);
                         if (oldValue != null)
                             mapping.rmParam(sonifiableId, oldValue, paramCBSelect.getSelectedItem());
@@ -375,7 +381,15 @@ public class MainSceneController implements Initializable {
                     }
                 }
             });
+            paramCB.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
 
+                @Override
+                public void handle(MouseEvent event) {
+                    paramCB.getItems().addAll(iparams);
+                }
+            });
+
+            }
             paramCB.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
                 SelectionModel<InstrumentEnum> instCBSelect = instCB.getSelectionModel();
                 if (!instCBSelect.isEmpty()) {
@@ -443,6 +457,19 @@ public class MainSceneController implements Initializable {
         return stockPane;
     }
 
+    private void addInstToBox(String inst){
+        Label choosenInst = new Label(inst);
+        choosenInst.getStyleClass().add("instLabel");
+        instCheckBox.getChildren().add(choosenInst);
+    }
+    private void showErrorMes( ObservableList<Node> children){
+        Pane errorPane = new Pane();
+        errorPane.getStyleClass().add("errorPane");
+        errorPane.setLayoutX(180);
+        errorPane.setLayoutY(60);
+        children.add(errorPane);
+
+    }
     LocalDate minDateStart = LocalDate.of(2023, 4, 16);
     LocalDate maxDateStart = LocalDate.now();
 

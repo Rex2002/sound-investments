@@ -134,3 +134,13 @@
 .pinkLine {
 	-fx-stroke: #9c5eeb;
 }
+.instLabel{
+	-fx-pref-height: 35px;
+	-fx-pref-width: 296px;
+	-fx-font-size: 20;
+}
+.errorPane{
+	-fx-pref-height: 42px;
+	-fx-pref-width: 153px;
+	-fx-background-color: red;
+}
