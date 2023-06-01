@@ -67,7 +67,7 @@ public class Test {
             // short[] drumSample = SampleLoader.loadSample(waveFileName);
 
             InstrumentData instrData = new InstrumentData();
-            instrData.setInstrument(InstrumentEnum.SYNTH_ONE);
+            instrData.setInstrument(InstrumentEnum.RETRO_SYNTH);
             instrData.setVolume(new double[] { 15000, 7000 });
             instrData.setPitch(new int[] { 69, 70, 80 });
             instrData.setPan(new double[] { 0 });
