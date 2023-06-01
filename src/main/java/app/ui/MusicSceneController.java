@@ -10,6 +10,8 @@ import java.time.format.DateTimeFormatter;
 import java.util.ResourceBundle;
 import java.util.Timer;
 import java.util.TimerTask;
+
+import audio.synth.playback.PlaybackController;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -46,6 +48,7 @@ public class MusicSceneController implements Initializable {
 	private Label test;
 	@FXML
 	private LineChart lineChart;
+	private PlaybackController pbc;
 	private double addDuration;
 	private double duration;
 	private LocalDateTime startDate;
@@ -61,12 +64,19 @@ public class MusicSceneController implements Initializable {
 
 	DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd MM yyyy");
 
+	// TODO: Listen to when the user moves the musicSlider
+	// TODO: Kill Playback-Thread when Window is closed (or scene is switched back again)
+	// TODO: Get data for visualization from StateManager
+	// TODO: Get updated audio length from StateManager (since the audio-length may have been updated in the SM)
+	// TODO: Make sure the musicSlider is in sync with the Playback
+
 	@FXML
-	// Wahrscheinlich irgendwie zwei deminsionales Array oder so
+	// Wahrscheinlich irgendwie zwei dimensionales Array oder so
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
 		Platform.runLater(() -> {
 			startSlider();
+			pbc.startPlayback();
 			beginTimer();
 			test.setText(String.valueOf(daysBetween));
 			addbtn();
@@ -75,7 +85,8 @@ public class MusicSceneController implements Initializable {
 		// übergabe der Kurse wie viele usw mit Statemanager oder per Scene
 	}
 
-	void passData(double newDuration, LocalDate start, LocalDate end) {
+	void passData(PlaybackController pbc, double newDuration, LocalDate start, LocalDate end) {
+		this.pbc = pbc;
 		duration = newDuration;
 		startDate = start.atStartOfDay();
 		endDate = end.atStartOfDay();
@@ -148,10 +159,12 @@ public class MusicSceneController implements Initializable {
 	}
 
 	public void pausePlaySound(ActionEvent e) {
-		if (PlayBtn.getText() == "Play") {
+		if (paused) {
+			pbc.play();
 			PlayBtn.setText("Pause");
 			paused = false;
 		} else {
+			pbc.pause();
 			PlayBtn.setText("Play");
 			paused = true;
 			// pause Song
@@ -160,6 +173,7 @@ public class MusicSceneController implements Initializable {
 	}
 
 	public void stopSound(ActionEvent event) throws IOException {
+		pbc.kill();
 		myTimer.cancel();
 		myTimer.purge();
 		switchToMainScene(event);
@@ -168,9 +182,7 @@ public class MusicSceneController implements Initializable {
 	Timer myTimer = new Timer();
 
 	public void beginTimer() {
-
 		myTimer.schedule(new TimerTask() {
-
 			@Override
 			public void run() {
 				if (paused == false) {

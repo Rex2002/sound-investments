@@ -6,5 +6,5 @@ public enum MsgToUIType implements MsgType {
 	ERROR, // data: String
 	VALIDATION_DONE, // data: null
 	VALIDATION_ERROR, // data: String
-	FINISHED; // data: TODO
+	FINISHED; // data: PlaybackController
 }

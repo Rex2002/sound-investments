@@ -13,6 +13,7 @@ import dataRepo.DataRepo.IntervalLength;
 import javafx.application.Application;
 
 import java.util.*;
+import java.util.function.Consumer;
 
 // This class runs in the main thread and coordinates all tasks and the creation of the UI thread
 // This is atypical, as JavaFX's UI thread is usually the main thread as well
@@ -21,73 +22,49 @@ import java.util.*;
 
 public class StateManager {
 	public static void main(String[] args) {
+		// testUI(args);
 		testSound(args);
 	}
 
 	public static void testUI(String[] args) {
-		try {
-			Thread th = new Thread(() -> Application.launch(App.class, args));
-			th.start();
-			call(() -> DataRepo.init());
+		Thread th = new Thread(() -> Application.launch(App.class, args));
+		th.start();
+		call(() -> DataRepo.init());
 
-			// Check for messages in EventQueue every 100ms
-			Timer timer = new Timer();
-			timer.scheduleAtFixedRate(new TimerTask() {
-				public void run() {
-					while (!EventQueues.toSM.isEmpty()) {
-						try {
-							Msg<MsgToSMType> msg = EventQueues.toSM.take();
-							switch (msg.type) {
-								case FILTERED_SONIFIABLES -> {
-									SonifiableFilter filter = (SonifiableFilter) msg.data;
-									List<Sonifiable> list = StateManager
-											.call(() -> DataRepo.findByPrefix(filter.prefix, filter.categoryFilter),
-													List.of());
-									EventQueues.toUI.add(new Msg<>(MsgToUIType.FILTERED_SONIFIABLES, list));
-								}
-								case START -> {
-									Mapping mapping = (Mapping) msg.data;
-									System.out.println(mapping);
-									// TODO: Start sonification
-								}
-								default -> StateManager.call(() -> {
-									throw new AppError(
-											"Msg-Type " + msg.type.toString()
-													+ " is not yet handled by the StateManager.");
-								});
+		// Check for messages in EventQueue every 100ms
+		Timer timer = new Timer();
+		timer.scheduleAtFixedRate(new TimerTask() {
+			public void run() {
+				while (!EventQueues.toSM.isEmpty()) {
+					try {
+						Msg<MsgToSMType> msg = EventQueues.toSM.take();
+						switch (msg.type) {
+							case FILTERED_SONIFIABLES -> {
+								SonifiableFilter filter = (SonifiableFilter) msg.data;
+								List<Sonifiable> list = StateManager
+										.call(() -> DataRepo.findByPrefix(filter.prefix, filter.categoryFilter),
+												List.of());
+								EventQueues.toUI.add(new Msg<>(MsgToUIType.FILTERED_SONIFIABLES, list));
 							}
-						} catch (InterruptedException e) {
-							e.printStackTrace();
-							System.exit(1);
+							case SAVE_MAPPING -> EventQueues.toUI.add(new Msg<>(MsgToUIType.ERROR, "SAVE_MAPPING is not yet implemented"));
+							case LOAD_MAPPING -> EventQueues.toUI.add(new Msg<>(MsgToUIType.ERROR, "LOAD_MAPPING is not yet implemented"));
+							case START -> {
+								Mapping mapping = (Mapping) msg.data;
+								PlaybackController pbc = sonifyMapping(mapping);
+								EventQueues.toUI.add(new Msg<>(MsgToUIType.FINISHED, pbc));
+							}
 						}
-					}
-
-					if (!th.isAlive()) {
-						timer.cancel();
+					} catch (InterruptedException ie) {
+						getInterruptedExceptionHandler().accept(ie);
 					}
 				}
-			}, 10, 100);
-		} catch (Exception e) {
-			e.printStackTrace();
-			System.exit(1);
-		}
-	}
 
-	public static <T> T call(AppSupplier<T> func, T alternative) throws InterruptedException {
-		try {
-			return func.call();
-		} catch (AppError e) {
-			EventQueues.toUI.put(new Msg<>(MsgToUIType.ERROR, e.getMessage()));
-			return alternative;
-		}
-	}
-
-	public static void call(AppFunction func) throws InterruptedException {
-		try {
-			func.call();
-		} catch (AppError e) {
-			EventQueues.toUI.put(new Msg<>(MsgToUIType.ERROR, e.getMessage()));
-		}
+				if (!th.isAlive()) {
+					// Stop timer to allow app to close
+					timer.cancel();
+				}
+			}
+		}, 10, 100);
 	}
 
 	public static double[] getPriceValues(List<Price> prices) {
@@ -183,20 +160,18 @@ public class StateManager {
 		return mapping;
 	}
 
-	public static void testSound(String[] args) {
-		try {
-			// Get Mapping & Price Data
-			call(() -> DataRepo.init());
-			Mapping mapping = getTestMapping();
-			HashMap<SonifiableID, List<Price>> sonifiablePriceMap = new HashMap<>();
-			SonifiableID[] sonifiableSet = mapping.getSonifiables().toArray(new SonifiableID[0]);
-			for (SonifiableID sonifiableID : sonifiableSet) {
-				sonifiablePriceMap.put(
-						sonifiableID,
-						DataRepo.getPrices(sonifiableID, mapping.getStartDate(), mapping.getEndDate(),
-								IntervalLength.HOUR));
-			}
+	public static PlaybackController sonifyMapping(Mapping mapping) {
+		// TODO: Validate that we have enough price data for mapping
+		HashMap<SonifiableID, List<Price>> priceMap = new HashMap<>();
+		SonifiableID[] sonifiableSet = mapping.getSonifiables().toArray(new SonifiableID[0]);
+		for (SonifiableID sonifiableID : sonifiableSet) {
+			priceMap.put(
+				sonifiableID,
+				DataRepo.getPrices(sonifiableID, mapping.getStartDate(), mapping.getEndDate(), IntervalLength.HOUR)
+			);
+		}
 
+		return call(() -> {
 			// Create InstrumentDataRaw objects for Harmonizer
 			InstrumentMapping[] instrMappings = mapping.getMappedInstruments();
 			List<InstrumentDataRaw> instrRawDatas = new ArrayList<>(instrMappings.length);
@@ -205,78 +180,125 @@ public class StateManager {
 					continue;
 
 				InstrumentEnum instrument = instrMap.getInstrument();
-				double[] pitch = calcLineData(instrMap.getPitch(), sonifiablePriceMap);
+				double[] pitch = calcLineData(instrMap.getPitch(), priceMap);
 				double[] relVolume = instrMap.getRelVolume().isPresent()
-						? calcLineData(instrMap.getRelVolume().get(), sonifiablePriceMap)
+						? calcLineData(instrMap.getRelVolume().get(), priceMap)
 						: null;
 				boolean[] absVolume = instrMap.getAbsVolume().isPresent()
-						? calcRangeData(instrMap.getAbsVolume().get(), sonifiablePriceMap)
+						? calcRangeData(instrMap.getAbsVolume().get(), priceMap)
 						: null;
 				double[] delayEcho = instrMap.getDelayEcho().isPresent()
-						? calcLineData(instrMap.getDelayEcho().get(), sonifiablePriceMap)
+						? calcLineData(instrMap.getDelayEcho().get(), priceMap)
 						: null;
 				double[] feedbackEcho = instrMap.getFeedbackEcho().isPresent()
-						? calcLineData(instrMap.getFeedbackEcho().get(), sonifiablePriceMap)
+						? calcLineData(instrMap.getFeedbackEcho().get(), priceMap)
 						: null;
 				boolean[] onOffEcho = instrMap.getOnOffEcho().isPresent()
-						? calcRangeData(instrMap.getOnOffEcho().get(), sonifiablePriceMap)
+						? calcRangeData(instrMap.getOnOffEcho().get(), priceMap)
 						: null;
 				double[] delayReverb = instrMap.getDelayReverb().isPresent()
-						? calcLineData(instrMap.getDelayReverb().get(), sonifiablePriceMap)
+						? calcLineData(instrMap.getDelayReverb().get(), priceMap)
 						: null;
 				double[] feedbackReverb = instrMap.getFeedbackReverb().isPresent()
-						? calcLineData(instrMap.getFeedbackReverb().get(), sonifiablePriceMap)
+						? calcLineData(instrMap.getFeedbackReverb().get(), priceMap)
 						: null;
 				boolean[] onOffReverb = instrMap.getOnOffReverb().isPresent()
-						? calcRangeData(instrMap.getOnOffReverb().get(), sonifiablePriceMap)
+						? calcRangeData(instrMap.getOnOffReverb().get(), priceMap)
 						: null;
 				double[] frequency = instrMap.getCutoff().isPresent()
-						? calcLineData(instrMap.getCutoff().get(), sonifiablePriceMap)
+						? calcLineData(instrMap.getCutoff().get(), priceMap)
 						: null;
 				boolean highPass = instrMap.getHighPass();
 				boolean[] onOffFilter = instrMap.getOnOffFilter().isPresent()
-						? calcRangeData(instrMap.getOnOffFilter().get(), sonifiablePriceMap)
+						? calcRangeData(instrMap.getOnOffFilter().get(), priceMap)
 						: null;
 				double[] pan = instrMap.getPan().isPresent()
-						? calcLineData(instrMap.getPan().get(), sonifiablePriceMap)
+						? calcLineData(instrMap.getPan().get(), priceMap)
 						: null;
 
 				instrRawDatas.add(new InstrumentDataRaw(relVolume, absVolume, pitch, instrument, delayEcho,
 						feedbackEcho,
 						onOffEcho, delayReverb, feedbackReverb, onOffReverb, frequency, highPass, onOffFilter, pan));
 			}
-			EvInstrData[] evInstrDatas = new EvInstrData[]{};
+
+			EvInstrData[] evInstrDatas = new EvInstrData[] {};
 			InstrumentDataRaw[] passedInstrRawDatas = new InstrumentDataRaw[instrRawDatas.size()];
 			passedInstrRawDatas = instrRawDatas.toArray(passedInstrRawDatas);
-			PlaybackController pbc = Sonifier.sonify(passedInstrRawDatas, evInstrDatas, mapping.getSoundLength());
+			return Sonifier.sonify(passedInstrRawDatas, evInstrDatas, mapping.getSoundLength());
+		}, null);
+	}
 
-			//PlaybackController pbc = new PlaybackController(sdl, audioLines[0]);
-			pbc.startPlayback();
-			boolean running = true;
-			while (running) {
-				System.out.println("Please enter your next control action: ");
-				Scanner in = new Scanner(System.in);
-				String controlAction = in.next();
+	public static void testSound(String[] args) {
+		// Get Mapping & Price Data
+		call(() -> DataRepo.init());
+		Mapping mapping = getTestMapping();
+		PlaybackController pbc = sonifyMapping(mapping);
+		pbc.startPlayback();
+		boolean running = true;
+		while (running) {
+			System.out.println("Please enter your next control action: ");
+			Scanner in = new Scanner(System.in);
+			String controlAction = in.next();
 
-				switch (controlAction) {
-					// resume
-					case "r" -> pbc.play();
-					// pause
-					case "p" -> pbc.pause();
-					// jump forward 1s
-					case "jf" -> pbc.skipForward();
-					// jump backward 1s
-					case "jb" -> pbc.skipBackward();
-					case "s" -> {
-						pbc.kill();
-						running = false;
-					}
-					case "rs" -> pbc.reset();
+			switch (controlAction) {
+				// resume
+				case "r" -> pbc.play();
+				// pause
+				case "p" -> pbc.pause();
+				// jump forward 1s
+				case "jf" -> pbc.skipForward();
+				// jump backward 1s
+				case "jb" -> pbc.skipBackward();
+				case "s" -> {
+					pbc.kill();
+					running = false;
 				}
+				case "rs" -> pbc.reset();
 			}
-		} catch (Throwable e) {
-			e.printStackTrace();
-			System.out.println(e.getMessage());
 		}
+	}
+
+	public static Consumer<InterruptedException> getInterruptedExceptionHandler() {
+		return (ie -> {
+			// TODO: For now we just crash the application when we fail to establish connection with the UI
+			// Is that really what we want to do?
+			// What else could we even do?
+			ie.printStackTrace();
+			System.exit(1);
+		});
+	}
+
+	public static <T> T call(AppSupplier<T> func, T alternative, Consumer<InterruptedException> errHandler) {
+		try {
+			try {
+				return func.call();
+			} catch (AppError e) {
+				EventQueues.toUI.put(new Msg<>(MsgToUIType.ERROR, e.getMessage()));
+				return alternative;
+			}
+		} catch (InterruptedException ie) {
+			errHandler.accept(ie);
+			return alternative;
+		}
+	}
+
+	public static <T> T call(AppSupplier<T> func, T alternative) {
+		return call(func, alternative, getInterruptedExceptionHandler());
+	}
+
+	public static void call(AppFunction func, Consumer<InterruptedException> errHandler) {
+		try {
+			try {
+				func.call();
+			} catch (AppError e) {
+				EventQueues.toUI.put(new Msg<>(MsgToUIType.ERROR, e.getMessage()));
+			}
+		} catch (InterruptedException ie) {
+			errHandler.accept(ie);
+		}
+	}
+
+	public static void call(AppFunction func) {
+		call(func, getInterruptedExceptionHandler());
 	}
 }

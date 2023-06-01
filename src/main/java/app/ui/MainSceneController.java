@@ -40,6 +40,7 @@ import app.mapping.LineData;
 import app.mapping.Mapping;
 import app.mapping.PointData;
 import audio.synth.InstrumentEnum;
+import audio.synth.playback.PlaybackController;
 import dataRepo.DateUtil;
 import dataRepo.Sonifiable;
 import dataRepo.SonifiableID;
@@ -118,13 +119,16 @@ public class MainSceneController implements Initializable {
                             addToCheckList(s);
                         }
                     }
-                    default -> System.out.println("ERROR: Msg-Type " + msg.type + " not yet implemented");
+                    case LOADABLE_MAPPINGS -> System.out.println("ERROR: Msg-Type LOADABLE_MAPPINGS is not yet implemented");
+                    case ERROR -> displayError((String) msg.data, "Interner Fehler");
+                    case VALIDATION_DONE -> System.out.println("ERROR: Msg-Type VALIDATION_DONE is not yet implemented");
+                    case VALIDATION_ERROR -> displayError((String) msg.data, "Ungültiges Mapping");
+                    case FINISHED -> switchToMusicScene((PlaybackController) msg.data);
                 }
             }
         });
         checkEQService.start();
 
-        // @nocheckin Uncomment this before committing
         displayError("Testing", "Test");
 
         categoriesChoice.getSelectionModel().selectedIndexProperty().addListener((observable, oldIdx, newIdx) -> {
@@ -203,7 +207,8 @@ public class MainSceneController implements Initializable {
         startBtn.setOnAction(ev -> {
             try {
                 EventQueues.toSM.add(new Msg<>(MsgToSMType.START, mapping));
-                switchToMusicScene(ev);
+                System.out.println("UI gave mapping to StateManager");
+                // TODO: Show loading bar or something like that
             } catch (Exception e) {
                 e.printStackTrace();
                 // TODO: Error handling
@@ -211,18 +216,23 @@ public class MainSceneController implements Initializable {
         });
     }
 
-    public void switchToMusicScene(ActionEvent event) throws IOException {
-        FXMLLoader loader = new FXMLLoader(getClass().getResource("/MusicScene.fxml"));
-        root = loader.load();
-        MusicSceneController controller = loader.getController();
-        controller.passData(duration, startPicker.getValue(), endPicker.getValue());
-        stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-        scene = new Scene(root);
-        String css = this.getClass().getResource("/choice.css").toExternalForm();
-        // Set the stylesheet after the scene creation
-        scene.getStylesheets().add(css);
-        stage.setScene(scene);
-        stage.show();
+    public void switchToMusicScene(PlaybackController pbc) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/MusicScene.fxml"));
+            root = loader.load();
+            MusicSceneController controller = loader.getController();
+            controller.passData(pbc, duration, startPicker.getValue(), endPicker.getValue());
+            stage = (Stage) startBtn.getScene().getWindow();
+            scene = new Scene(root);
+            String css = this.getClass().getResource("/choice.css").toExternalForm();
+            // Set the stylesheet after the scene creation
+            scene.getStylesheets().add(css);
+            stage.setScene(scene);
+            stage.show();
+        } catch (IOException e) {
+            e.printStackTrace();
+            displayError("Fehler beim Laden de nächsten UI-Szene", "Interner Fehler");
+        }
     }
 
     @FXML
