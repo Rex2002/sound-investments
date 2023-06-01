@@ -98,7 +98,7 @@ public class StateManager {
 		List<Price> prices = priceMap.get(ed.getId());
 		return switch (ed.getData()) {
 			case PRICE -> normalizeValues(getPriceValues(prices));
-			case MOVINGAVG -> normalizeValues(new MovingAverage().calculateMovingAverage(prices));
+			case MOVINGAVG -> normalizeValues(GeneralTrends.calculateMovingAverage(prices));
 			case RELCHANGE -> throw new AppError("RELCHANGE is not yet implemented");
 		};
 	}
@@ -112,23 +112,13 @@ public class StateManager {
 		return false;
 	}
 
-	public static boolean[] formationResultToBool(List<FormationResult> formations,
-												  List<Price> prices) {
-		boolean[] out = new boolean[prices.size()];
-		for (int i = 0; i < out.length; i++) {
-			Calendar currentDate = prices.get(i).getDay();
-			out[i] = isDateInFormations(formations, currentDate);
-		}
-		return out;
-	}
-
 	public static boolean[] calcRangeData(ExchangeData<RangeData> ed, HashMap<SonifiableID, List<Price>> priceMap) throws AppError {
 		if (ed == null) return null;
 		List<Price> prices = priceMap.get(ed.getId());
 		return switch (ed.getData()) {
-			case FLAG -> formationResultToBool(new FlagFormationAnalyzer().analyzeFormations(prices), prices);
-			case TRIANGLE -> formationResultToBool(new TriangleFormationAnalyzer().analyzeFormations(prices), prices);
-			case VFORM -> formationResultToBool(new VFormationAnalyzer().analyzeFormations(prices), prices);
+			case FLAG -> FlagFormationAnalyzer.analyze(prices);
+			case TRIANGLE -> new TriangleFormationAnalyzer().analyze(prices);
+			case VFORM -> new VFormationAnalyzer().analyze(prices);
 		};
 	}
 
@@ -136,7 +126,7 @@ public class StateManager {
 		if (ed == null) return null;
 		List<Price> prices = priceMap.get(ed.getId());
 		return switch (ed.getData()) {
-			case EQMOVINGAVG -> new MovingAverage().AverageIntersectsStock(new MovingAverage().calculateMovingAverage(prices), prices);
+			case EQMOVINGAVG -> GeneralTrends.AverageIntersectsStock(GeneralTrends.calculateMovingAverage(prices), prices);
 			case TRENDBREAK -> throw new AppError("TRENDBREAK is not yet implemented");
 			case EQSUPPORT -> throw new AppError("EQSUPPORT is not yet implemented");
 			case EQRESIST -> throw new AppError("EQRESIST is not yet implemented");

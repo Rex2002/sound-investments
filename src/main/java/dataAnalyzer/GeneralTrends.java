@@ -6,7 +6,7 @@ import java.util.List;
 import dataRepo.Price;
 
 public class GeneralTrends {
-	public double[] calculateMovingAverage(List<Price> priceList) {
+	public static double[] calculateMovingAverage(List<Price> priceList) {
 		// Implementiere die Berechnung des gleitenden Durchschnitts (Moving Average)
 		// Gib den Durchschnitt zu jedem Zeitpunkt als Liste von Double-Wert zurück
 
@@ -22,7 +22,7 @@ public class GeneralTrends {
 		return priceAverages;
 	}
 
-	private double calculateAverage(double[] prices) {
+	private static double calculateAverage(double[] prices) {
 		double sum = 0.0;
 		for (double price : prices) {
 			sum += price;
@@ -30,7 +30,7 @@ public class GeneralTrends {
 		return sum / prices.length;
 	}
 
-	public boolean[] AverageIntersectsStock(double[] priceAverages, List<Price> prices) {
+	public static boolean[] AverageIntersectsStock(double[] priceAverages, List<Price> prices) {
 		boolean[] intersections = new boolean[priceAverages.length];
 
 		// Implementiert eine Funktion welche Testet, ob der Moving Average für einen
@@ -45,7 +45,7 @@ public class GeneralTrends {
 		return intersections;
 	}
 
-	public List<Double> calculateMinAndMax(List<Price> priceList){
+	public static List<Double> calculateMinAndMax(List<Price> priceList) {
 		List<Double> minMax = new ArrayList<>();
 		// Implementiert die Erkennung von lokalen Minima/Maxima
 		// Vergleicht alle gegebenen Min/Max Werte
@@ -69,17 +69,17 @@ public class GeneralTrends {
 		return minMax;
 	}
 
-	public Double[] calculateSlope(List<Price> priceList) {
+	public static Double[] calculateSlope(List<Price> priceList) {
 		Double[] Slope = new Double[priceList.size()];
 		for (int i = 0; i <= priceList.size(); i++) {
-			double graphClose = priceList.get(i).getclose();
-			double graphOpen = priceList.get(i+1).getopen();
+			double graphClose = priceList.get(i).getClose();
+			double graphOpen = priceList.get(i+1).getOpen();
 			Slope[i] = graphClose - graphOpen;
 		}
 		return Slope;
 	}
 
-	public boolean[] GraphIntersectsMinMax(List<Price> priceList, List<Double> minMax){
+	public static boolean[] GraphIntersectsMinMax(List<Price> priceList, List<Double> minMax){
 		boolean[] intersectsminMax = new boolean[minMax.size()];
 		double min = minMax.get(0);
 		double max = minMax.get(1);

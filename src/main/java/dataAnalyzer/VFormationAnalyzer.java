@@ -1,19 +1,17 @@
 package dataAnalyzer;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Calendar;
 
 import dataRepo.Price;
 
-public class VFormationAnalyzer implements FormationAnalyzer {
-    @Override
-    public List<FormationResult> analyzeFormations(List<Price> priceList) {
+public class VFormationAnalyzer {
+    public boolean[] analyze(List<Price> priceList) {
         // Implementiere die V-Formation Analyse
         // Gib eine Liste von Booleans zurück, die zu jedem Zeitpunkt angibt, ob eine
         // V-Formation vorliegt
 
-        List<FormationResult> Vformations = new ArrayList<>();
+        boolean[] Vformations = new boolean[priceList.size()];
 
         for (int i = 0; i < priceList.size(); i++) {
             Price startPrice = priceList.get(i);
@@ -39,10 +37,9 @@ public class VFormationAnalyzer implements FormationAnalyzer {
 
                 if (downwardImpulse && endClose > startClose) {
                     // V-Formation gefunden
-                    Vformations.add(new FormationResult(startDate, endDate, j - i, "V-Formation"));
-                } else if (!downwardImpulse && endClose < startClose) {
-                    // Inverse V-Formation gefunden
-                    Vformations.add(new FormationResult(startDate, endDate, j - i, "Inverse V-Formation"));
+                    Vformations[i] = true;
+                } else {
+                    Vformations[i] = false;
                 }
             }
         }
