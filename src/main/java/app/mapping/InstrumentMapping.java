@@ -43,21 +43,21 @@ public class InstrumentMapping {
 		this.instrument = instrument;
 	}
 
-	public String[] getEmptyParams() {
-		List<String> params = new ArrayList<>();
-		if (pitch == null) params.add(InstrParam.PITCH.toString());
-		if (relVolume.isEmpty()) params.add(InstrParam.RELVOLUME.toString());
-		if (absVolume.isEmpty()) params.add(InstrParam.ABSVOLUME.toString());
-		if (delayEcho.isEmpty()) params.add(InstrParam.DELAY_ECHO.toString());
-		if (feedbackEcho.isEmpty()) params.add(InstrParam.FEEDBACK_ECHO.toString());
-		if (onOffEcho.isEmpty()) params.add(InstrParam.ON_OFF_ECHO.toString());
-		if (delayReverb.isEmpty()) params.add(InstrParam.DELAY_REVERB.toString());
-		if (feedbackReverb.isEmpty()) params.add(InstrParam.FEEDBACK_REVERB.toString());
-		if (onOffReverb.isEmpty()) params.add(InstrParam.ON_OFF_REVERB.toString());
-		if (cutoff.isEmpty()) params.add(InstrParam.CUTOFF.toString());
-		if (order.isEmpty()) params.add(InstrParam.ORDER.toString());
-		if (onOffFilter.isEmpty()) params.add(InstrParam.ON_OFF_FILTER.toString());
-		return (String[]) params.toArray();
+	public InstrParam[] getEmptyParams() {
+		List<InstrParam> params = new ArrayList<>();
+		if (pitch == null) params.add(InstrParam.PITCH);
+		if (relVolume.isEmpty()) params.add(InstrParam.RELVOLUME);
+		if (absVolume.isEmpty()) params.add(InstrParam.ABSVOLUME);
+		if (delayEcho.isEmpty()) params.add(InstrParam.DELAY_ECHO);
+		if (feedbackEcho.isEmpty()) params.add(InstrParam.FEEDBACK_ECHO);
+		if (onOffEcho.isEmpty()) params.add(InstrParam.ON_OFF_ECHO);
+		if (delayReverb.isEmpty()) params.add(InstrParam.DELAY_REVERB);
+		if (feedbackReverb.isEmpty()) params.add(InstrParam.FEEDBACK_REVERB);
+		if (onOffReverb.isEmpty()) params.add(InstrParam.ON_OFF_REVERB);
+		if (cutoff.isEmpty()) params.add(InstrParam.CUTOFF);
+		if (order.isEmpty()) params.add(InstrParam.ORDER);
+		if (onOffFilter.isEmpty()) params.add(InstrParam.ON_OFF_FILTER);
+		return (InstrParam[]) params.toArray();
 	}
 
 	public boolean isEmpty() {

@@ -78,7 +78,7 @@ public class Mapping {
 		return null;
 	}
 
-	public String[] getEmptyInstrumentParams(InstrumentEnum instr) {
+	public InstrParam[] getEmptyInstrumentParams(InstrumentEnum instr) {
 		InstrumentMapping instrMap = Util.find(mappedInstruments, x -> x != null && x.getInstrument() == instr);
 		return instrMap.getEmptyParams();
 	}
