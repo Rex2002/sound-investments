@@ -4,13 +4,12 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Calendar;
 
-public class MovingAverage implements TrendAnalyzer{
-    @Override
-    public List<PriceData> calculateMovingAverage(List<Price> priceList) {
+public class GeneralTrends {
+    public List<AverageDayPrice> calculateMovingAverage(List<Price> priceList) {
         // Implementiere die Berechnung des gleitenden Durchschnitts (Moving Average)
         // Gib den Durchschnitt zu jedem Zeitpunkt als Liste von Double-Wert zurück
 
-	List<PriceData> priceAverages = new ArrayList<>();
+	List<AverageDayPrice> priceAverages = new ArrayList<>();
     List<Double> previousPrices = new ArrayList<>();
 
     for (Price price : priceList) {
@@ -23,7 +22,7 @@ public class MovingAverage implements TrendAnalyzer{
         double average = calculateAverage(previousPrices);
         Calendar date = price.getday();
 
-        PriceData priceData = new PriceData(average, date);
+        AverageDayPrice priceData = new AverageDayPrice(average, date);
         priceAverages.add(priceData);
     }
 
@@ -38,10 +37,8 @@ public class MovingAverage implements TrendAnalyzer{
     	return sum / prices.size();
 	}
 
-
-	@Override
-	public List<Boolean> AverageIntersectsStock(List<PriceData> priceAverages, List<Price> priceList){
-		List<Boolean> intersections = new ArrayList<>();
+	public Boolean[] AverageIntersectsStock(List<AverageDayPrice> priceAverages, List<Price> priceList){
+		Boolean[] intersections = new Boolean[priceAverages.size()];
 	
 		 //Implementiert eine Funktion welche Testet, ob der Moving Average für einen Zeitpunkt gleich dem Stockpreis ist
 		 //Gibt die Ergebnise als Liste von Booleans zurück
@@ -50,19 +47,17 @@ public class MovingAverage implements TrendAnalyzer{
 			double average = priceAverages.get(i).getAverage();
 			double graphLow = priceList.get(i).getlow();
 			double graphHigh = priceList.get(i).gethigh();
-			double graphOpen = priceList.get(i).getopen();
-			double graphClose = priceList.get(i).getclose();
-	
-			
-			if(average==graphLow|| average == graphHigh|| average==graphClose|| average==graphOpen){
-				boolean intersects = true;
-				intersections.add(intersects);	
+			if(average >= graphLow && average <= graphHigh){
+				intersections[i] = true;	
+			}
+			else{
+				intersections[i] = false;
 			}
 		}
 	
 		return intersections;
 	}
-	@Override
+	
 	public List<Double> calculateMinAndMax(List<Price> priceList){
 		List<Double> minMax = new ArrayList<>();
 		//Implementiert die Erkennung von lokalen Minima/Maxima
@@ -88,19 +83,27 @@ public class MovingAverage implements TrendAnalyzer{
 	
 	}
 
-	@Override
-	public List<Boolean> GraphIntersectsMinMax(List<Price> priceList, List<Double> minMax){
-		List<Boolean> intersectsminMax = new ArrayList<>();
+	public Double[] calculateSlope(List<Price> priceList){
+		Double[] Slope = new Double[priceList.size()];
+		for (int i = 0; i <= priceList.size(); i++) {
+			double graphClose = priceList.get(i).getclose();
+			double graphOpen = priceList.get(i+1).getopen();
+			Slope[i] = graphClose-graphOpen;
+		}
+		return Slope;
+	}
+	public Boolean[] GraphIntersectsMinMax(List<Price> priceList, List<Double> minMax){
+		Boolean[] intersectsminMax = new Boolean[minMax.size()];
 		double min = minMax.get(0);
 		double max = minMax.get(1);
 		for (int i = 0; i <= priceList.size(); i++) {
 			double graphLow = priceList.get(i).getlow();
 			double graphHigh = priceList.get(i).gethigh();
-			double graphOpen = priceList.get(i).getopen();
-			double graphClose = priceList.get(i).getclose();
-			if(min==graphLow|| min==graphClose|| min==graphOpen ||max==graphHigh|| max==graphClose|| max==graphOpen){
-				boolean intersects = true;
-				intersectsminMax.add(intersects);	
+			if(min==graphLow|| max==graphHigh){
+				intersectsminMax[i]=true;	
+			}
+			else{
+				intersectsminMax[i]=false;
 			}
 		}
 		return intersectsminMax;

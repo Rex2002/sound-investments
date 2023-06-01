@@ -46,8 +46,8 @@ public class FlagFormationAnalyzer implements FormationAnalyzer {
 		
 					if (formationLength >= 2 && formationLength <= 60) {
 						int duration = formationLength + 1; // Zeitraum der Formation
-						String namingShit = new String("Flag");
-						FormationResult result = new FormationResult(startDay, endDay, duration, namingShit);
+						String namingFormation = new String("Flag");
+						FormationResult result = new FormationResult(startDay, endDay, duration, namingFormation);
 						flagFormations.add(result);
 					}
 				}
