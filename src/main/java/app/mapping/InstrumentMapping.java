@@ -2,7 +2,9 @@ package app.mapping;
 
 import java.lang.reflect.Field;
 import java.util.Set;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
 
 import audio.synth.InstrumentEnum;
@@ -39,6 +41,23 @@ public class InstrumentMapping {
 
 	InstrumentMapping(InstrumentEnum instrument) {
 		this.instrument = instrument;
+	}
+
+	public String[] getEmptyParams() {
+		List<String> params = new ArrayList<>();
+		if (pitch == null) params.add(InstrParam.PITCH.toString());
+		if (relVolume.isEmpty()) params.add(InstrParam.RELVOLUME.toString());
+		if (absVolume.isEmpty()) params.add(InstrParam.ABSVOLUME.toString());
+		if (delayEcho.isEmpty()) params.add(InstrParam.DELAY_ECHO.toString());
+		if (feedbackEcho.isEmpty()) params.add(InstrParam.FEEDBACK_ECHO.toString());
+		if (onOffEcho.isEmpty()) params.add(InstrParam.ON_OFF_ECHO.toString());
+		if (delayReverb.isEmpty()) params.add(InstrParam.DELAY_REVERB.toString());
+		if (feedbackReverb.isEmpty()) params.add(InstrParam.FEEDBACK_REVERB.toString());
+		if (onOffReverb.isEmpty()) params.add(InstrParam.ON_OFF_REVERB.toString());
+		if (cutoff.isEmpty()) params.add(InstrParam.CUTOFF.toString());
+		if (order.isEmpty()) params.add(InstrParam.ORDER.toString());
+		if (onOffFilter.isEmpty()) params.add(InstrParam.ON_OFF_FILTER.toString());
+		return (String[]) params.toArray();
 	}
 
 	public boolean isEmpty() {
