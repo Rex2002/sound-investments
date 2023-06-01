@@ -1,25 +1,26 @@
 package app.ui;
 
-import java.io.File;
 import java.io.IOException;
 import java.net.URL;
-import java.time.format.DateTimeFormatter;
 import java.util.ResourceBundle;
 import java.util.Timer;
 import java.util.TimerTask;
 import audio.synth.playback.PlaybackController;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
-import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.control.Slider;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
+import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.Pane;
+import javafx.scene.paint.Paint;
+import javafx.scene.shape.Circle;
 import javafx.stage.Stage;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -29,8 +30,20 @@ import javafx.scene.Node;
 import app.communication.MusicData;
 
 public class MusicSceneController implements Initializable {
+	// Colors have to be kept in sync with colors in css file
+	// In css the colors are specified under .default-color-<x>.chart-series-line
+	// TODO: Find a way to set the colors of the chart lines without css
+	// so we don't need to keep both places updated
+	private static Paint[] colors = {
+		Paint.valueOf("#ff1fec"), Paint.valueOf("#071d32"), Paint.valueOf("#3b4854"), Paint.valueOf("#ff5a1f"),
+		Paint.valueOf("#e3ff1f"), Paint.valueOf("#7a4d69"), Paint.valueOf("#1fff43"), Paint.valueOf("#ff2121"),
+		Paint.valueOf("#891fff"), Paint.valueOf("#07321d")
+	};
+
 	@FXML
-	private Button PlayBtn;
+	private AnchorPane anchor;
+	@FXML
+	private Pane legendPane;
 	@FXML
 	private TextField headerTitle;
 	@FXML
@@ -48,64 +61,76 @@ public class MusicSceneController implements Initializable {
 	private double[][] prices;
 	private Timer myTimer = new Timer();
 	@FXML
-	private ImageView pBtn;
+	private ImageView playBtn;
 	private boolean paused;
-	File playFile = new File("/pause_btn.png");// Wahrscheinlich Path Problem zeigt nichts
-	File pauseFile = new File("/pause_btn.png");
-	Image playImage = new Image(playFile.toURI().toString());
-	Image pauseImage = new Image(pauseFile.toURI().toString());
+	private Image playImage;
+	private Image pauseImage;
 
-	DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd MM yyyy");
-
-	// TODO: Show the sonifiableNames
-	// TODO: Show the graph of prices
-	// TODO: Show the playback button images
+	// TODO: Show the graph of prices (needs debugging)
+	// TODO: Add playback button image for play, stop, forward, backward, reset
 
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
+		playImage = new Image(getClass().getResource("/pause_btn.png").toString());
+		pauseImage = new Image(getClass().getResource("/pause_btn.png").toString());
+
 		Platform.runLater(() -> {
 			pbc.startPlayback();
 			setupSlider();
 			beginTimer();
-			addbtn();
+			addbtn(pauseImage, 1050, 669).setOnMouseClicked(ev -> pausePlaySound());
 		});
-		// addbtn();
-		// übergabe der Kurse wie viele usw mit Statemanager oder per Scene
 	}
 
 	void passData(MusicData musicData) {
 		this.pbc = musicData.pbc;
 		this.sonifiableNames = musicData.sonifiableNames;
 		this.prices = musicData.prices;
-		addData();
+
+		assert sonifiableNames.length <= colors.length;
+		// Show legend of sonifiable names
+		legendPane.getChildren().clear();
+		for (int i = 0; i < sonifiableNames.length; i++) {
+			addSonifiableName(sonifiableNames[i], colors[i], 50 + (i % 4) * 240, 646 + ((int) (i / 4)) * 50);
+		}
+
+		// Show price data in line chart
+		// TODO: Crashes the app when uncommented, so there's still some debugging to do here
+		// for (int i = 0; i < prices.length; i++) {
+		// 	XYChart.Series<Integer, Double> series = new XYChart.Series<>();
+		// 	for (int j = 0; j < prices[i].length; j++) {
+		// 		series.getData().add(new XYChart.Data<>(j, prices[i][j]));
+		// 	}
+		// 	lineChart.getData().add(series);
+		// }
 	}
 
-	private void addbtn() {
-		try {
-			pBtn.setImage(playImage);
-			pBtn.setCache(true);
-		} catch (Exception e) {
+	private Label addSonifiableName(String name, Paint color, double x, double y) {
+		Circle circle = new Circle(14.4);
+		circle.setFill(color);
+		circle.setLayoutX(x);
+		circle.setLayoutY(y + 7.2);
 
-		}
-		pBtn.prefHeight(80);
-		pBtn.prefWidth(285);
-		pBtn.setLayoutY(684);
-		pBtn.setLayoutX(1247);
-		pBtn.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
+		Label label = new Label(name);
+		label.setPrefWidth(150);
+		label.setLayoutX(x + 35);
+		label.setLayoutY(y);
+		label.setTextFill(Paint.valueOf("#fefefe"));
 
-			@Override
-			public void handle(MouseEvent event) {
-				if (pBtn.getImage() == playImage) {
-					pBtn.setImage(pauseImage);
+		legendPane.getChildren().add(circle);
+		legendPane.getChildren().add(label);
+		return label;
+	}
 
-				} else {
-					pBtn.setImage(playImage);
-					myTimer.cancel();
-
-					// pause Song
-				}
-			}
-		});
+	private ImageView addbtn(Image img, double x, double y) {
+		playBtn = new ImageView(img);
+		playBtn.setCache(true);
+		playBtn.setFitHeight(80);
+		playBtn.setFitWidth(80);
+		playBtn.setLayoutX(x);
+		playBtn.setLayoutY(y);
+		anchor.getChildren().add(playBtn);
+		return playBtn;
 	}
 
 	private void setupSlider() {
@@ -123,23 +148,6 @@ public class MusicSceneController implements Initializable {
 		pbc.goToRelative(perc);
 	}
 
-	// Könten den ALLMIGHTY den Kursnamenn eben und dann wirft er ein 2D Array
-	// raus(Möglichkeit)
-	public void addData() {
-		// int x = 0;
-		// int y = 0;
-		// XYChart.Series series = new XYChart.Series();
-		// while (Array groß nocnicht leer){
-		//
-		// while(Array nochnicht leer){
-		// series.getData().add(new XYChart.Data(Array[1], Array[1][x]));
-		// x+1
-		// }
-		// y+1
-		// x = 0;
-		// }
-	}
-
 	public void switchToMainScene(ActionEvent event) throws IOException {
 		root = FXMLLoader.load(getClass().getResource("/MainScene.fxml"));
 		stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
@@ -151,14 +159,14 @@ public class MusicSceneController implements Initializable {
 		stage.show();
 	}
 
-	public void pausePlaySound(ActionEvent e) {
+	public void pausePlaySound() {
 		if (paused) {
 			pbc.play();
-			PlayBtn.setText("Pause");
+			playBtn.setImage(pauseImage);
 			paused = false;
 		} else {
 			pbc.pause();
-			PlayBtn.setText("Play");
+			playBtn.setImage(playImage);
 			paused = true;
 			// pause Song
 		}

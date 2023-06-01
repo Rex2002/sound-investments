@@ -41,7 +41,6 @@ import app.mapping.LineData;
 import app.mapping.Mapping;
 import app.mapping.PointData;
 import audio.synth.InstrumentEnum;
-import audio.synth.playback.PlaybackController;
 import dataRepo.DateUtil;
 import dataRepo.Sonifiable;
 import dataRepo.SonifiableID;
@@ -130,8 +129,6 @@ public class MainSceneController implements Initializable {
         });
         checkEQService.start();
 
-        displayError("Testing", "Test");
-
         categoriesChoice.getSelectionModel().selectedIndexProperty().addListener((observable, oldIdx, newIdx) -> {
             EventQueues.toSM.add(new Msg<>(MsgToSMType.FILTERED_SONIFIABLES,
                     new SonifiableFilter(searchBar.getText(), categoryValues[(int) newIdx])));
@@ -151,7 +148,6 @@ public class MainSceneController implements Initializable {
                 // TODO: Error Handling
             }
         });
-
         endPicker.valueProperty().addListener((observable, oldValue, newValue) -> {
             try {
                 mapping.setEndDate(DateUtil.localDateToCalendar(newValue));
@@ -160,61 +156,51 @@ public class MainSceneController implements Initializable {
                 // TODO: Error Handling
             }
         });
+        // Set default values
+        startPicker.valueProperty().setValue(LocalDate.now().minusMonths(1));
+        endPicker.valueProperty().setValue(LocalDate.now());
 
-        audioLength.textProperty().addListener((observable, oldValue, newValue) -> {
-            try {
-                if (Integer.parseInt(audioLength.getText()) <= 59) {
-                    if (audioLength1.getText() != null) {
-                        Integer minValue = Integer.parseInt(audioLength1.getText());
-                        Integer passValue = Integer.parseInt(newValue) + minValue * 60;
-                        mapping.setSoundLength(passValue);
-                        duration = passValue;
-                    }
-                } else {
-                    // falsche Eingabe
-                    audioLength.setText(null);
-                    audioLength.setPromptText("0-59");
-                }
-                enableBtnIfValid();
-            } catch (Exception e) {
-                // TODO: Error Handling
-            }
-        });
-        audioLength1.textProperty().addListener((observable, oldValue, newValue) -> {
-            try {
-                if (Integer.parseInt(audioLength1.getText()) <= 5) {
-                    if (Integer.parseInt(audioLength1.getText()) == 5) {
-                        audioLength.setText("0");
-                        audioLength.setDisable(true);
-                    } else {
-                        audioLength.setDisable(false);
-                    }
-                    if (audioLength.getText() != null) {
-                        Integer secValue = Integer.parseInt(audioLength.getText());
-                        Integer passValue = Integer.parseInt(newValue) + secValue;
-                        mapping.setSoundLength(passValue);
-                        duration = passValue;
-                        enableBtnIfValid();
-                    }
-                } else {
-                    // Error zu hoch eingestellt
-                    audioLength1.setText(null);
-                    audioLength1.setPromptText("0-5");
-                }
-            } catch (Exception e) {
-                // TODO: Error Handling
-            }
-        });
+        audioLength.textProperty().addListener((o, oldVal, newVal) -> updateSoundLength());
+        audioLength1.textProperty().addListener((o, oldVal, newVal) -> updateSoundLength());
+        // Set default values
+        audioLength.textProperty().setValue("30");
+        audioLength1.textProperty().setValue("0");
+
         startBtn.setOnAction(ev -> {
             try {
                 EventQueues.toSM.add(new Msg<>(MsgToSMType.START, mapping));
-                System.out.println("UI gave mapping to StateManager");
                 // TODO: Show loading bar or something like that
             } catch (Exception e) {
                 e.printStackTrace();
                 // TODO: Error handling
             }
         });
+    }
+
+    private void updateSoundLength() {
+        if (Integer.parseInt(audioLength.getText()) <= 59) {
+            if (audioLength1.getText() != null) {
+                Integer minValue = 0;
+                try {
+                    minValue = Integer.parseInt(audioLength1.getText());
+                } catch (NumberFormatException e) {
+                }
+
+                Integer passValue = minValue * 60;
+                try {
+                    passValue += Integer.parseInt(audioLength.getText());
+                } catch (NumberFormatException e) {
+                }
+
+                mapping.setSoundLength(passValue);
+                duration = passValue;
+            }
+        } else {
+            // falsche Eingabe
+            audioLength.setText(null);
+            audioLength.setPromptText("0-59");
+        }
+        enableBtnIfValid();
     }
 
     public void switchToMusicScene(MusicData musicData) {
