@@ -23,7 +23,7 @@ import java.util.function.Consumer;
 
 public class StateManager {
 	public static void main(String[] args) {
-		//testUI(args);
+		// testUI(args);
 		testSound(args);
 	}
 
@@ -93,8 +93,8 @@ public class StateManager {
 		return normalized;
 	}
 
-	public static double[] calcLineData(ExchangeData<LineData> ed, HashMap<SonifiableID, List<Price>> priceMap)
-			throws AppError {
+	public static double[] calcLineData(ExchangeData<LineData> ed, HashMap<SonifiableID, List<Price>> priceMap) throws AppError {
+		if (ed == null) return null;
 		List<Price> prices = priceMap.get(ed.getId());
 		return switch (ed.getData()) {
 			case PRICE -> normalizeValues(getPriceValues(prices));
@@ -122,7 +122,8 @@ public class StateManager {
 		return out;
 	}
 
-	public static boolean[] calcRangeData(ExchangeData<RangeData> ed, HashMap<SonifiableID, List<Price>> priceMap) {
+	public static boolean[] calcRangeData(ExchangeData<RangeData> ed, HashMap<SonifiableID, List<Price>> priceMap) throws AppError {
+		if (ed == null) return null;
 		List<Price> prices = priceMap.get(ed.getId());
 		return switch (ed.getData()) {
 			case FLAG -> formationResultToBool(new FlagFormationAnalyzer().analyzeFormations(prices), prices);
@@ -131,8 +132,8 @@ public class StateManager {
 		};
 	}
 
-	public static boolean[] calcPointData(ExchangeData<PointData> ed, HashMap<SonifiableID, List<Price>> priceMap)
-			throws AppError {
+	public static boolean[] calcPointData(ExchangeData<PointData> ed, HashMap<SonifiableID, List<Price>> priceMap) throws AppError {
+		if (ed == null) return null;
 		List<Price> prices = priceMap.get(ed.getId());
 		return switch (ed.getData()) {
 			case EQMOVINGAVG -> new MovingAverage().AverageIntersectsStock(new MovingAverage().calculateMovingAverage(prices), prices);
@@ -181,40 +182,18 @@ public class StateManager {
 
 				InstrumentEnum instrument = instrMap.getInstrument();
 				double[] pitch = calcLineData(instrMap.getPitch(), priceMap);
-				double[] relVolume = instrMap.getRelVolume().isPresent()
-						? calcLineData(instrMap.getRelVolume().get(), priceMap)
-						: null;
-				boolean[] absVolume = instrMap.getAbsVolume().isPresent()
-						? calcRangeData(instrMap.getAbsVolume().get(), priceMap)
-						: null;
-				double[] delayEcho = instrMap.getDelayEcho().isPresent()
-						? calcLineData(instrMap.getDelayEcho().get(), priceMap)
-						: null;
-				double[] feedbackEcho = instrMap.getFeedbackEcho().isPresent()
-						? calcLineData(instrMap.getFeedbackEcho().get(), priceMap)
-						: null;
-				boolean[] onOffEcho = instrMap.getOnOffEcho().isPresent()
-						? calcRangeData(instrMap.getOnOffEcho().get(), priceMap)
-						: null;
-				double[] delayReverb = instrMap.getDelayReverb().isPresent()
-						? calcLineData(instrMap.getDelayReverb().get(), priceMap)
-						: null;
-				double[] feedbackReverb = instrMap.getFeedbackReverb().isPresent()
-						? calcLineData(instrMap.getFeedbackReverb().get(), priceMap)
-						: null;
-				boolean[] onOffReverb = instrMap.getOnOffReverb().isPresent()
-						? calcRangeData(instrMap.getOnOffReverb().get(), priceMap)
-						: null;
-				double[] frequency = instrMap.getCutoff().isPresent()
-						? calcLineData(instrMap.getCutoff().get(), priceMap)
-						: null;
+				double[] relVolume = calcLineData(instrMap.getRelVolume(), priceMap);
+				boolean[] absVolume = calcRangeData(instrMap.getAbsVolume(), priceMap);
+				double[] delayEcho = calcLineData(instrMap.getDelayEcho(), priceMap);
+				double[] feedbackEcho = calcLineData(instrMap.getFeedbackEcho(), priceMap);
+				boolean[] onOffEcho = calcRangeData(instrMap.getOnOffEcho(), priceMap);
+				double[] delayReverb = calcLineData(instrMap.getDelayReverb(), priceMap);
+				double[] feedbackReverb = calcLineData(instrMap.getFeedbackReverb(), priceMap);
+				boolean[] onOffReverb = calcRangeData(instrMap.getOnOffReverb(), priceMap);
+				double[] frequency = calcLineData(instrMap.getCutoff(), priceMap);
 				boolean highPass = instrMap.getHighPass();
-				boolean[] onOffFilter = instrMap.getOnOffFilter().isPresent()
-						? calcRangeData(instrMap.getOnOffFilter().get(), priceMap)
-						: null;
-				double[] pan = instrMap.getPan().isPresent()
-						? calcLineData(instrMap.getPan().get(), priceMap)
-						: null;
+				boolean[] onOffFilter = calcRangeData(instrMap.getOnOffFilter(), priceMap);
+				double[] pan = calcLineData(instrMap.getPan(), priceMap);
 
 				instrRawDatas.add(new InstrumentDataRaw(relVolume, absVolume, pitch, instrument, delayEcho,
 						feedbackEcho,

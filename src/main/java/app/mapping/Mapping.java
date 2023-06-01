@@ -1,9 +1,6 @@
 package app.mapping;
 
-import java.util.Calendar;
-import java.util.Optional;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.*;
 import app.Util;
 
 import app.AppError;
@@ -26,12 +23,12 @@ public class Mapping {
 	private Calendar startDate = null;
 	private Calendar endDate = null;
 	// Reverb parameters
-	private Optional<ExchangeData<LineData>> delayReverb = Optional.empty();
-	private Optional<ExchangeData<LineData>> feedbackReverb = Optional.empty();
-	private Optional<ExchangeData<RangeData>> onOffReverb = Optional.empty();
+	private ExchangeData<LineData> delayReverb = null;
+	private ExchangeData<LineData> feedbackReverb = null;
+	private ExchangeData<RangeData> onOffReverb = null;
 	// Filter parameters
-	private Optional<ExchangeData<LineData>> cutoff = Optional.empty();
-	private Optional<ExchangeData<RangeData>> onOffFilter = Optional.empty();
+	private ExchangeData<LineData> cutoff = null;
+	private ExchangeData<RangeData> onOffFilter = null;
 	private Boolean highPass = false;
 
 	public Mapping() {
@@ -81,6 +78,10 @@ public class Mapping {
 	////////
 	// Getters & Setters
 	////////
+
+	// public boolean isLegalChange(SonifiableID sonifiable, ExchangeParam eparam, InstrumentMapping instrMap, InstrParam iparam)	{
+	// 	if (instrMap.get(iparam))
+	// }
 
 	public void addSonifiable(SonifiableID sonifiable) {
 		sonifiables.add(sonifiable);
@@ -142,11 +143,6 @@ public class Mapping {
 		}
 	}
 
-	private static <T extends ExchangeParam> Optional<ExchangeData<T>> setOptParamHelper(SonifiableID sonifiable,
-			ExchangeParam eparam, InstrParam iparam) throws AppError {
-		return Optional.of(setParamHelper(sonifiable, eparam, iparam));
-	}
-
 	// TODO: Make sure the switch cases don't forget any important parameters
 
 	// Important to keep in mind:
@@ -156,15 +152,15 @@ public class Mapping {
 		InstrumentMapping instrMap = Util.find(mappedInstruments, x -> x != null && x.getInstrument() == instr);
 		switch (iparam) {
 			case PITCH -> instrMap.setPitch(setParamHelper(sonifiable, eparam, iparam));
-			case RELVOLUME -> instrMap.setRelVolume(setOptParamHelper(sonifiable, eparam, iparam));
-			case ABSVOLUME -> instrMap.setAbsVolume(setOptParamHelper(sonifiable, eparam, iparam));
-			case DELAY_ECHO -> instrMap.setDelayEcho(setOptParamHelper(sonifiable, eparam, iparam));
-			case FEEDBACK_ECHO -> instrMap.setFeedbackEcho(setOptParamHelper(sonifiable, eparam, iparam));
-			case ON_OFF_REVERB -> instrMap.setOnOffReverb(setOptParamHelper(sonifiable, eparam, iparam));
-			case CUTOFF -> instrMap.setCutoff(setOptParamHelper(sonifiable, eparam, iparam));
-			case ORDER -> instrMap.setOrder(setOptParamHelper(sonifiable, eparam, iparam));
-			case ON_OFF_FILTER -> instrMap.setOnOffFilter(setOptParamHelper(sonifiable, eparam, iparam));
-			case PAN -> instrMap.setPan(setOptParamHelper(sonifiable, eparam, iparam));
+			case RELVOLUME -> instrMap.setRelVolume(setParamHelper(sonifiable, eparam, iparam));
+			case ABSVOLUME -> instrMap.setAbsVolume(setParamHelper(sonifiable, eparam, iparam));
+			case DELAY_ECHO -> instrMap.setDelayEcho(setParamHelper(sonifiable, eparam, iparam));
+			case FEEDBACK_ECHO -> instrMap.setFeedbackEcho(setParamHelper(sonifiable, eparam, iparam));
+			case ON_OFF_REVERB -> instrMap.setOnOffReverb(setParamHelper(sonifiable, eparam, iparam));
+			case CUTOFF -> instrMap.setCutoff(setParamHelper(sonifiable, eparam, iparam));
+			case ORDER -> instrMap.setOrder(setParamHelper(sonifiable, eparam, iparam));
+			case ON_OFF_FILTER -> instrMap.setOnOffFilter(setParamHelper(sonifiable, eparam, iparam));
+			case PAN -> instrMap.setPan(setParamHelper(sonifiable, eparam, iparam));
 			default ->
 				throw new AppError(eparam.toString() + " kann nicht auf " + iparam.toString() + "gemappt werden.");
 		}
@@ -175,15 +171,15 @@ public class Mapping {
 		InstrumentMapping instrMap = Util.find(mappedInstruments, x -> x.getInstrument() == instr);
 		switch (iparam) {
 			case PITCH -> instrMap.setPitch(null);
-			case RELVOLUME -> instrMap.setRelVolume(Optional.empty());
-			case ABSVOLUME -> instrMap.setAbsVolume(Optional.empty());
-			case DELAY_ECHO -> instrMap.setDelayEcho(Optional.empty());
-			case FEEDBACK_ECHO -> instrMap.setFeedbackEcho(Optional.empty());
-			case ON_OFF_REVERB -> instrMap.setOnOffReverb(Optional.empty());
-			case CUTOFF -> instrMap.setCutoff(Optional.empty());
-			case ORDER -> instrMap.setOrder(Optional.empty());
-			case ON_OFF_FILTER -> instrMap.setOnOffFilter(Optional.empty());
-			case PAN -> instrMap.setPan(Optional.empty());
+			case RELVOLUME -> instrMap.setRelVolume(null);
+			case ABSVOLUME -> instrMap.setAbsVolume(null);
+			case DELAY_ECHO -> instrMap.setDelayEcho(null);
+			case FEEDBACK_ECHO -> instrMap.setFeedbackEcho(null);
+			case ON_OFF_REVERB -> instrMap.setOnOffReverb(null);
+			case CUTOFF -> instrMap.setCutoff(null);
+			case ORDER -> instrMap.setOrder(null);
+			case ON_OFF_FILTER -> instrMap.setOnOffFilter(null);
+			case PAN -> instrMap.setPan(null);
 			default ->
 				throw new AppError(iparam.toString() + " kann nicht gelöscht werden.");
 		}
@@ -191,11 +187,11 @@ public class Mapping {
 
 	public void setParam(SonifiableID sonifiable, InstrParam iparam, ExchangeParam eparam) throws AppError {
 		switch (iparam) {
-			case DELAY_REVERB -> this.delayReverb = setOptParamHelper(sonifiable, eparam, iparam);
-			case FEEDBACK_REVERB -> this.feedbackReverb = setOptParamHelper(sonifiable, eparam, iparam);
-			case ON_OFF_REVERB -> this.onOffReverb = setOptParamHelper(sonifiable, eparam, iparam);
-			case CUTOFF -> this.cutoff = setOptParamHelper(sonifiable, eparam, iparam);
-			case ON_OFF_FILTER -> this.onOffFilter = setOptParamHelper(sonifiable, eparam, iparam);
+			case DELAY_REVERB -> this.delayReverb = setParamHelper(sonifiable, eparam, iparam);
+			case FEEDBACK_REVERB -> this.feedbackReverb = setParamHelper(sonifiable, eparam, iparam);
+			case ON_OFF_REVERB -> this.onOffReverb = setParamHelper(sonifiable, eparam, iparam);
+			case CUTOFF -> this.cutoff = setParamHelper(sonifiable, eparam, iparam);
+			case ON_OFF_FILTER -> this.onOffFilter = setParamHelper(sonifiable, eparam, iparam);
 			default ->
 				throw new AppError(eparam.toString() + " kann nicht auf " + iparam.toString() + "gemappt werden.");
 		}
@@ -204,11 +200,11 @@ public class Mapping {
 
 	public void rmParam(SonifiableID sonifiable, InstrParam iparam) throws AppError {
 		switch (iparam) {
-			case DELAY_REVERB -> this.delayReverb = Optional.empty();
-			case FEEDBACK_REVERB -> this.feedbackReverb = Optional.empty();
-			case ON_OFF_REVERB -> this.onOffReverb = Optional.empty();
-			case CUTOFF -> this.cutoff = Optional.empty();
-			case ON_OFF_FILTER -> this.onOffFilter = Optional.empty();
+			case DELAY_REVERB -> this.delayReverb = null;
+			case FEEDBACK_REVERB -> this.feedbackReverb = null;
+			case ON_OFF_REVERB -> this.onOffReverb = null;
+			case CUTOFF -> this.cutoff = null;
+			case ON_OFF_FILTER -> this.onOffFilter = null;
 			default ->
 				throw new AppError(iparam.toString() + " kann nicht gelöscht werden.");
 		}
@@ -259,23 +255,23 @@ public class Mapping {
 		return this.endDate;
 	}
 
-	public Optional<ExchangeData<LineData>> getDelayReverb() {
+	public ExchangeData<LineData> getDelayReverb() {
 		return this.delayReverb;
 	}
 
-	public Optional<ExchangeData<LineData>> getFeedbackReverb() {
+	public ExchangeData<LineData> getFeedbackReverb() {
 		return this.feedbackReverb;
 	}
 
-	public Optional<ExchangeData<RangeData>> getOnOffReverb() {
+	public ExchangeData<RangeData> getOnOffReverb() {
 		return this.onOffReverb;
 	}
 
-	public Optional<ExchangeData<LineData>> getCutoff() {
+	public ExchangeData<LineData> getCutoff() {
 		return this.cutoff;
 	}
 
-	public Optional<ExchangeData<RangeData>> getOnOffFilter() {
+	public ExchangeData<RangeData> getOnOffFilter() {
 		return this.onOffFilter;
 	}
 
