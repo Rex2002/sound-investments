@@ -7,6 +7,8 @@ import audio.Constants;
 import audio.Sonifier;
 import audio.synth.EvInstrData;
 import audio.synth.InstrumentEnum;
+import audio.synth.playback.PlayControlEvent;
+import audio.synth.playback.PlayControlEventsEnum;
 import audio.synth.playback.PlaybackController;
 import dataAnalyzer.*;
 import dataRepo.*;
@@ -23,8 +25,8 @@ import java.util.function.Consumer;
 
 public class StateManager {
 	public static void main(String[] args) {
-		// testUI(args);
-		testSound(args);
+		testUI(args);
+		// testSound(args);
 	}
 
 	public static void testUI(String[] args) {
@@ -51,8 +53,8 @@ public class StateManager {
 							case LOAD_MAPPING -> EventQueues.toUI.add(new Msg<>(MsgToUIType.ERROR, "LOAD_MAPPING is not yet implemented"));
 							case START -> {
 								Mapping mapping = (Mapping) msg.data;
-								PlaybackController pbc = sonifyMapping(mapping);
-								EventQueues.toUI.add(new Msg<>(MsgToUIType.FINISHED, pbc));
+								MusicData musicData = sonifyMapping(mapping);
+								EventQueues.toUI.add(new Msg<>(MsgToUIType.FINISHED, musicData));
 							}
 						}
 					} catch (InterruptedException ie) {
@@ -61,8 +63,20 @@ public class StateManager {
 				}
 
 				if (!th.isAlive()) {
-					// Stop timer to allow app to close
+					// Cleanup & close app
 					timer.cancel();
+					// @Cleanup It feels a bit hacky to close the Playback-Thread like this
+					// I can't seem to figure out how to listen to the UI closing from within the MusicSceneController,
+					// where killing the Playback-Thread via PlaybackController would be simple and make sense
+					// instead, I send a KILL message to the Playback thread to make sure it gets closed cleanly
+					// For some reason though, the app still doesn't get closed then, so I exit the application anyways
+					PlayControlEvent p = new PlayControlEvent(PlayControlEventsEnum.KILL);
+					try {
+						EventQueues.toPlayback.put(p);
+						System.exit(0);
+					} catch (InterruptedException ie) {
+						System.exit(1);
+					}
 				}
 			}
 		}, 10, 100);
@@ -151,18 +165,19 @@ public class StateManager {
 		return mapping;
 	}
 
-	public static PlaybackController sonifyMapping(Mapping mapping) {
-		// TODO: Validate that we have enough price data for mapping
-		HashMap<SonifiableID, List<Price>> priceMap = new HashMap<>();
-		SonifiableID[] sonifiableSet = mapping.getSonifiables().toArray(new SonifiableID[0]);
-		for (SonifiableID sonifiableID : sonifiableSet) {
-			priceMap.put(
-				sonifiableID,
-				DataRepo.getPrices(sonifiableID, mapping.getStartDate(), mapping.getEndDate(), IntervalLength.HOUR)
-			);
-		}
-
+	public static MusicData sonifyMapping(Mapping mapping) {
 		return call(() -> {
+			// TODO: Validate that we have enough price data for mapping
+			int pricesLen = 0;
+			HashMap<SonifiableID, List<Price>> priceMap = new HashMap<>();
+			SonifiableID[] sonifiableSet = mapping.getMappedSonifiables().toArray(new SonifiableID[0]);
+			for (SonifiableID sonifiableID : sonifiableSet) {
+				// TODO: Make sure all prices lists have the same length
+				List<Price> prices = DataRepo.getPrices(sonifiableID, mapping.getStartDate(), mapping.getEndDate(), IntervalLength.HOUR);
+				pricesLen = prices.size();
+				priceMap.put(sonifiableID, prices);
+			}
+
 			// Create InstrumentDataRaw objects for Harmonizer
 			InstrumentMapping[] instrMappings = mapping.getMappedInstruments();
 			List<InstrumentDataRaw> instrRawDatas = new ArrayList<>(instrMappings.length);
@@ -199,7 +214,15 @@ public class StateManager {
 			// a full multiple of 4 bars
 			int numberBeats = (int) Math.round(numberBeatsRaw / 16) * 16;
 
-			return Sonifier.sonify(passedInstrRawDatas, evInstrDatas, numberBeats);
+			PlaybackController pbc = Sonifier.sonify(passedInstrRawDatas, evInstrDatas, numberBeats);
+
+			double[][] pricesForMusicData = new double[pricesLen][sonifiableSet.length];
+			String[] sonifiableNames = new String[sonifiableSet.length];
+			for (int i = 0; i < sonifiableNames.length; i++) {
+				pricesForMusicData[i] = getPriceValues(priceMap.get(sonifiableSet[i]));
+				sonifiableNames[i] = DataRepo.getSonifiableName(sonifiableSet[i]);
+			}
+			return new MusicData(pbc, sonifiableNames, pricesForMusicData);
 		}, null);
 	}
 
@@ -207,7 +230,7 @@ public class StateManager {
 		// Get Mapping & Price Data
 		call(DataRepo::init);
 		Mapping mapping = getTestMapping();
-		PlaybackController pbc = sonifyMapping(mapping);
+		PlaybackController pbc = sonifyMapping(mapping).pbc;
 		pbc.startPlayback();
 		boolean running = true;
 		while (running) {
@@ -230,6 +253,8 @@ public class StateManager {
 				}
 				case "rs" -> pbc.reset();
 			}
+
+			in.close();
 		}
 	}
 

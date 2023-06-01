@@ -83,6 +83,15 @@ public class Mapping {
 	// 	if (instrMap.get(iparam))
 	// }
 
+	public Set<SonifiableID> getMappedSonifiables() {
+		Set<SonifiableID> out = new HashSet<>();
+		for (InstrumentMapping instrMap : mappedInstruments) {
+			if (instrMap.isEmpty()) continue;
+			out.addAll(instrMap.getMappedSonifiables());
+		}
+		return out;
+	}
+
 	public void addSonifiable(SonifiableID sonifiable) {
 		sonifiables.add(sonifiable);
 	}
@@ -143,10 +152,8 @@ public class Mapping {
 		}
 	}
 
-	// TODO: Make sure the switch cases don't forget any important parameters
-
 	// Important to keep in mind:
-	// setParam does not make sure to remove old parameter
+	// setParam does not check if the change is even allowed
 	public void setParam(InstrumentEnum instr, SonifiableID sonifiable, InstrParam iparam, ExchangeParam eparam)
 			throws AppError {
 		InstrumentMapping instrMap = Util.find(mappedInstruments, x -> x != null && x.getInstrument() == instr);

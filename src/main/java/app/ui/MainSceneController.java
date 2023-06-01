@@ -33,6 +33,7 @@ import app.communication.EventQueues;
 import app.communication.Msg;
 import app.communication.MsgToSMType;
 import app.communication.MsgToUIType;
+import app.communication.MusicData;
 import app.communication.SonifiableFilter;
 import app.mapping.ExchangeParam;
 import app.mapping.InstrParam;
@@ -123,7 +124,7 @@ public class MainSceneController implements Initializable {
                     case ERROR -> displayError((String) msg.data, "Interner Fehler");
                     case VALIDATION_DONE -> System.out.println("ERROR: Msg-Type VALIDATION_DONE is not yet implemented");
                     case VALIDATION_ERROR -> displayError((String) msg.data, "Ungültiges Mapping");
-                    case FINISHED -> switchToMusicScene((PlaybackController) msg.data);
+                    case FINISHED -> switchToMusicScene((MusicData) msg.data);
                 }
             }
         });
@@ -216,12 +217,12 @@ public class MainSceneController implements Initializable {
         });
     }
 
-    public void switchToMusicScene(PlaybackController pbc) {
+    public void switchToMusicScene(MusicData musicData) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/MusicScene.fxml"));
             root = loader.load();
             MusicSceneController controller = loader.getController();
-            controller.passData(pbc, duration, startPicker.getValue(), endPicker.getValue());
+            controller.passData(musicData);
             stage = (Stage) startBtn.getScene().getWindow();
             scene = new Scene(root);
             String css = this.getClass().getResource("/choice.css").toExternalForm();

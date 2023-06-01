@@ -3,14 +3,10 @@ package app.ui;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
-import java.time.Duration;
-import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ResourceBundle;
 import java.util.Timer;
 import java.util.TimerTask;
-
 import audio.synth.playback.PlaybackController;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
@@ -19,7 +15,6 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.control.Button;
-import javafx.scene.control.Label;
 import javafx.scene.control.Slider;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
@@ -30,6 +25,8 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.chart.LineChart;
 import javafx.scene.Node;
+
+import app.communication.MusicData;
 
 public class MusicSceneController implements Initializable {
 	@FXML
@@ -45,15 +42,11 @@ public class MusicSceneController implements Initializable {
 	@FXML
 	private Parent root;
 	@FXML
-	private Label test;
-	@FXML
 	private LineChart lineChart;
 	private PlaybackController pbc;
-	private double addDuration;
-	private double duration;
-	private LocalDateTime startDate;
-	private LocalDateTime endDate;
-	private long daysBetween;
+	private String[] sonifiableNames;
+	private double[][] prices;
+	private Timer myTimer = new Timer();
 	@FXML
 	private ImageView pBtn;
 	private boolean paused;
@@ -64,34 +57,26 @@ public class MusicSceneController implements Initializable {
 
 	DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd MM yyyy");
 
-	// TODO: Listen to when the user moves the musicSlider
-	// TODO: Kill Playback-Thread when Window is closed (or scene is switched back again)
-	// TODO: Get data for visualization from StateManager
-	// TODO: Get updated audio length from StateManager (since the audio-length may have been updated in the SM)
-	// TODO: Make sure the musicSlider is in sync with the Playback
+	// TODO: Show the sonifiableNames
+	// TODO: Show the graph of prices
+	// TODO: Show the playback button images
 
-	@FXML
-	// Wahrscheinlich irgendwie zwei dimensionales Array oder so
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
 		Platform.runLater(() -> {
-			startSlider();
 			pbc.startPlayback();
+			setupSlider();
 			beginTimer();
-			test.setText(String.valueOf(daysBetween));
 			addbtn();
 		});
 		// addbtn();
 		// übergabe der Kurse wie viele usw mit Statemanager oder per Scene
 	}
 
-	void passData(PlaybackController pbc, double newDuration, LocalDate start, LocalDate end) {
-		this.pbc = pbc;
-		duration = newDuration;
-		startDate = start.atStartOfDay();
-		endDate = end.atStartOfDay();
-		daysBetween = Duration.between(startDate, endDate).toDays();
-		addDuration = (daysBetween) / (duration);
+	void passData(MusicData musicData) {
+		this.pbc = musicData.pbc;
+		this.sonifiableNames = musicData.sonifiableNames;
+		this.prices = musicData.prices;
 		addData();
 	}
 
@@ -123,11 +108,19 @@ public class MusicSceneController implements Initializable {
 		});
 	}
 
-	private void startSlider() {
-		// Übergebene Daten, von MainScene
-		musicSlider.setMinorTickCount(0);
-		musicSlider.setMajorTickUnit(daysBetween);
-		musicSlider.setBlockIncrement(daysBetween / 10);
+	private void setupSlider() {
+		// My idea was to set a minor tick per millisecond in a second
+		// and a major tick per second in a minute
+		// (with 5*60 being the maximum supported amount of seconds)
+		musicSlider.setMinorTickCount(1000);
+		musicSlider.setMajorTickUnit(5*60);
+		musicSlider.setOnMouseClicked(ev -> sliderGoto(ev));
+		// TODO: call PBC's goto when the slider is being dragged too
+	}
+
+	private void sliderGoto(MouseEvent ev) {
+		double perc = ev.getX() / musicSlider.getWidth();
+		pbc.goToRelative(perc);
 	}
 
 	// Könten den ALLMIGHTY den Kursnamenn eben und dann wirft er ein 2D Array
@@ -172,28 +165,23 @@ public class MusicSceneController implements Initializable {
 
 	}
 
-	public void stopSound(ActionEvent event) throws IOException {
+	public void onClose() {
 		pbc.kill();
 		myTimer.cancel();
-		myTimer.purge();
-		switchToMainScene(event);
 	}
 
-	Timer myTimer = new Timer();
+	public void stopSound(ActionEvent event) throws IOException {
+		onClose();
+		switchToMainScene(event);
+	}
 
 	public void beginTimer() {
 		myTimer.schedule(new TimerTask() {
 			@Override
 			public void run() {
-				if (paused == false) {
-					if (musicSlider.getValue() != duration) {
-						musicSlider.setValue(musicSlider.getValue() + addDuration);
-					} else {
-						myTimer.cancel();
-					}
-				}
+				musicSlider.setValue(pbc.getPlayedPercentage() * musicSlider.getMax());
 			}
-		}, 0, 1000);
+		}, 0, 50);
 
 	}
 

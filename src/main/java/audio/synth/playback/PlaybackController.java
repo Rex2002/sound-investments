@@ -6,7 +6,6 @@ import audio.Util;
 import javax.sound.sampled.SourceDataLine;
 
 public class PlaybackController {
-
     public final int SKIP_LENGTH = 10;
     private final SourceDataLine s;
     private final short[] data;
@@ -20,15 +19,19 @@ public class PlaybackController {
         this.s = s;
         this.data = Util.scaleToShort(data);
     }
-    public void startPlayback(){
+
+    public double getPlayedPercentage() {
+        return Playback.playedPercentage;
+    }
+
+    public void startPlayback() {
         EventQueues.toPlayback.clear();
         Thread playController = new Thread(new Playback(s, data));
         playController.start();
     }
 
     public void play() {
-        PlayControlEvent p = new PlayControlEvent();
-        p.setType(PlayControlEventsEnum.PLAY);
+        PlayControlEvent p = new PlayControlEvent(PlayControlEventsEnum.PLAY);
         try {
             EventQueues.toPlayback.put(p);
         } catch (InterruptedException e) {
@@ -38,8 +41,7 @@ public class PlaybackController {
     }
 
     public void pause() {
-        PlayControlEvent p = new PlayControlEvent();
-        p.setType(PlayControlEventsEnum.PAUSE);
+        PlayControlEvent p = new PlayControlEvent(PlayControlEventsEnum.PAUSE);
         try {
             EventQueues.toPlayback.put(p);
         } catch (InterruptedException e) {
@@ -48,8 +50,7 @@ public class PlaybackController {
     }
 
     public void reset() {
-        PlayControlEvent p = new PlayControlEvent();
-        p.setType(PlayControlEventsEnum.RESET);
+        PlayControlEvent p = new PlayControlEvent(PlayControlEventsEnum.RESET);
         try {
             EventQueues.toPlayback.put(p);
         } catch (InterruptedException e) {
@@ -58,9 +59,7 @@ public class PlaybackController {
     }
 
     public void skipForward() {
-        PlayControlEvent p = new PlayControlEvent();
-        p.setType(PlayControlEventsEnum.SKIP_FORWARD);
-        p.setDuration(SKIP_LENGTH);
+        PlayControlEvent p = new PlayControlEvent(PlayControlEventsEnum.SKIP_FORWARD, SKIP_LENGTH);
         try {
             EventQueues.toPlayback.put(p);
         } catch (InterruptedException e) {
@@ -69,9 +68,19 @@ public class PlaybackController {
     }
 
     public void skipBackward() {
-        PlayControlEvent p = new PlayControlEvent();
-        p.setType(PlayControlEventsEnum.SKIP_BACKWARD);
-        p.setDuration(SKIP_LENGTH);
+        PlayControlEvent p = new PlayControlEvent(PlayControlEventsEnum.SKIP_BACKWARD, SKIP_LENGTH);
+        try {
+            EventQueues.toPlayback.put(p);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+
+    // Goes to a specific time in the audio stream
+    // The input is the percentage of the entire audio stream
+    // that should be skipped to
+    public void goToRelative(double percentage) {
+        PlayControlEvent p = new PlayControlEvent(PlayControlEventsEnum.GOTO, percentage);
         try {
             EventQueues.toPlayback.put(p);
         } catch (InterruptedException e) {
@@ -80,8 +89,7 @@ public class PlaybackController {
     }
 
     public void stop() {
-        PlayControlEvent p = new PlayControlEvent();
-        p.setType(PlayControlEventsEnum.STOP);
+        PlayControlEvent p = new PlayControlEvent(PlayControlEventsEnum.STOP);
         try {
             EventQueues.toPlayback.put(p);
         } catch (InterruptedException e) {
@@ -90,8 +98,7 @@ public class PlaybackController {
     }
 
     public void kill() {
-        PlayControlEvent p = new PlayControlEvent();
-        p.setType(PlayControlEventsEnum.KILL);
+        PlayControlEvent p = new PlayControlEvent(PlayControlEventsEnum.KILL);
         try {
             EventQueues.toPlayback.put(p);
         } catch (InterruptedException e) {

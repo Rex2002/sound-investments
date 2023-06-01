@@ -157,11 +157,6 @@
          </image>
       </ImageView>
       <Slider fx:id="musicSlider" layoutX="35.0" layoutY="601.0" prefHeight="14.0" prefWidth="1534.0" />
-      <Label fx:id="test" layoutX="853.0" layoutY="670.0" prefHeight="50.0" prefWidth="147.2" text="Kurs_1" textFill="WHITE">
-         <font>
-            <Font size="28.8" />
-         </font>
-      </Label>
       <Button layoutX="1144.0" layoutY="699.0" mnemonicParsing="false" onAction="#stopSound" text="stop" />
       <Button fx:id="PlayBtn" layoutX="1078.0" layoutY="699.0" mnemonicParsing="false" onAction="#pausePlaySound" text="Pause" />
    </children>

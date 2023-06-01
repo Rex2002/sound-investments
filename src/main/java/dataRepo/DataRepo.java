@@ -251,6 +251,14 @@ public class DataRepo {
 		return l;
 	}
 
+	public static String getSonifiableName(SonifiableID id) {
+		Sonifiable s = getSonifable(id.getSymbol(), stocks);
+		if (s == null) s = getSonifable(id.getSymbol(), etfs);
+		if (s == null) s = getSonifable(id.getSymbol(), indices);
+		if (s == null) return null;
+		else return s.getName();
+	}
+
 	public static Stock getStock(String symbol) {
 		return getSonifable(symbol, stocks);
 	}
