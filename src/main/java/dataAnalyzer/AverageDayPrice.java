@@ -2,12 +2,12 @@ package dataAnalyzer;
 
 import java.util.Calendar;
 
-public class PriceData {
+public class AverageDayPrice {
     private double average;
     private Calendar date;
 
 
-    public PriceData(double average, Calendar date) {
+    public AverageDayPrice(double average, Calendar date) {
         this.average = average;
         this.date = date;
     }
