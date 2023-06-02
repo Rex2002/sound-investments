@@ -161,7 +161,7 @@ public class StateManager {
 			mapping.setEndDate(DateUtil.calFromDateStr("2023-05-16"));
 			mapping.setSoundLength(60);
 
-			SonifiableID s = new SonifiableID("XETRA", "SAP");
+			Sonifiable s = new Stock("SAP", new SonifiableID("XETRA", "SAP"));
 			mapping.setParam(InstrumentEnum.RETRO_SYNTH, s, InstrParam.PITCH, LineData.PRICE);
 			mapping.setParam(InstrumentEnum.RETRO_SYNTH, s, InstrParam.RELVOLUME, LineData.MOVINGAVG);
 			mapping.setHighPass(true);
@@ -176,7 +176,7 @@ public class StateManager {
 			// TODO: Validate that we have enough price data for mapping
 			int pricesLen = 0;
 			HashMap<SonifiableID, List<Price>> priceMap = new HashMap<>();
-			SonifiableID[] sonifiableSet = mapping.getMappedSonifiables().toArray(new SonifiableID[0]);
+			SonifiableID[] sonifiableSet = mapping.getMappedSonifiableIDs().toArray(new SonifiableID[0]);
 			for (SonifiableID sonifiableID : sonifiableSet) {
 				// TODO: Make sure all prices lists have the same length
 				List<Price> prices = DataRepo.getPrices(sonifiableID, mapping.getStartDate(), mapping.getEndDate(), IntervalLength.HOUR);

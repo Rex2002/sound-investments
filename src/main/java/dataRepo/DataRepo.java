@@ -21,18 +21,18 @@ public class DataRepo {
 			return List
 					.of(
 							new Stock("SAP SE", new SonifiableID("SAP", "XETRA"), DateUtil.calFromDateStr("1994-02-01"),
-									DateUtil.calFromDateStr("2023-05-17")),
+									DateUtil.calFromDateStr("2023-06-30")),
 							new Stock("Siemens Energy AG", new SonifiableID("ENR", "XETRA"),
 									DateUtil.calFromDateStr("2020-09-28"),
-									DateUtil.calFromDateStr("2023-05-17")),
+									DateUtil.calFromDateStr("2023-06-30")),
 							new Stock("Dropbox Inc", new SonifiableID("1Q5", "XETRA"),
 									DateUtil.calFromDateStr("2021-01-07"),
-									DateUtil.calFromDateStr("2023-05-17")),
+									DateUtil.calFromDateStr("2023-06-30")),
 							new Stock("1&1 AG", new SonifiableID("1U1", "XETRA"), DateUtil.calFromDateStr("1998-12-04"),
-									DateUtil.calFromDateStr("2023-05-17")),
+									DateUtil.calFromDateStr("2023-06-30")),
 							new Stock("123fahrschule SE", new SonifiableID("123F", "XETRA"),
 									DateUtil.calFromDateStr("2021-11-02"),
-									DateUtil.calFromDateStr("2023-05-17")));
+									DateUtil.calFromDateStr("2023-06-30")));
 		} catch (Exception e) {
 			return List.of();
 		}

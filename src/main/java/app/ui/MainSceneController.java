@@ -3,6 +3,7 @@ package app.ui;
 import java.io.IOException;
 import java.net.URL;
 import java.time.LocalDate;
+import java.util.Calendar;
 import java.util.List;
 import java.util.ResourceBundle;
 import java.util.Timer;
@@ -92,6 +93,11 @@ public class MainSceneController implements Initializable {
     private VBox instCheckBox;
     @FXML
     private double duration;
+
+    private LocalDate minDateStart = LocalDate.now().minusMonths(3);
+    private LocalDate maxDateStart = LocalDate.now().minusDays(3);
+    private LocalDate minDateEnd = LocalDate.now().minusMonths(3).plusDays(3);
+    private LocalDate maxDateEnd = LocalDate.now();
 
     private ImageView loading;
     private CheckEQService checkEQService;
@@ -356,10 +362,7 @@ public class MainSceneController implements Initializable {
         children.add(line);
     }
 
-    private void addStockParamToPane(String text, String cssClass, int labelX, int labelY, int cb1X, int cb1Y, int cb2X,
-            int cb2Y, SonifiableID sonifiableId,
-            ExchangeParam eparam,
-            ObservableList<Node> children) {
+    private void addStockParamToPane(String text, String cssClass, int labelX, int labelY, int cb1X, int cb1Y, int cb2X, int cb2Y, Sonifiable sonifiable, ExchangeParam eparam, ObservableList<Node> children) {
         Label label = new Label(text);
         label.getStyleClass().add(cssClass);
         label.setLayoutX(labelX);
@@ -397,12 +400,12 @@ public class MainSceneController implements Initializable {
                     paramCBSelect.select(null);
                     paramCB.getItems().clear();
                     if (newValue != null && paramVal != null) {
-                        mapping.rmParam(oldValue, sonifiableId, paramVal);
+                        mapping.rmParam(oldValue, sonifiable.getId(), paramVal);
 
                         if (!mapping.isMapped(newValue, paramVal)) {
                             paramCB.getItems().addAll(mapping.getEmptyInstrumentParams(newValue, paramVal));
                             paramCBSelect.select(paramVal);
-                            mapping.setParam(newValue, sonifiableId, paramVal, eparam);
+                            mapping.setParam(newValue, sonifiable, paramVal, eparam);
                         } else {
                             paramCB.getItems().addAll(mapping.getEmptyInstrumentParams(newValue, null));
                         }
@@ -415,17 +418,6 @@ public class MainSceneController implements Initializable {
                     displayError(e.getMessage(), "Interner Fehler");
                 }
             });
-            // paramCB.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
-            //     @Override
-            //     public void handle(MouseEvent event) {
-            //         paramCB.getItems().clear();
-            //         paramCB.getItems().addAll(mapping.getEmptyInstrumentParams(instCB.getValue(), paramCB.getValue()));
-            //     }
-            // });
-            // paramCB.setOnMouseClicked(event -> {
-            //     paramCB.getItems().clear();
-            //     paramCB.getItems().addAll(mapping.getEmptyInstrumentParams(instCB.getValue(), paramCB.getValue()));
-            // });
             paramCB.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
                 try {
                     if (currentlyUpdatingCB) return;
@@ -433,9 +425,9 @@ public class MainSceneController implements Initializable {
                     SelectionModel<InstrumentEnum> instCBSelect = instCB.getSelectionModel();
                     if (!instCBSelect.isEmpty()) {
                         if (oldValue != null)
-                            mapping.rmParam(instCBSelect.getSelectedItem(), sonifiableId, oldValue);
+                            mapping.rmParam(instCBSelect.getSelectedItem(), sonifiable.getId(), oldValue);
                         if (newValue != null)
-                            mapping.setParam(instCBSelect.getSelectedItem(), sonifiableId, newValue, eparam);
+                            mapping.setParam(instCBSelect.getSelectedItem(), sonifiable, newValue, eparam);
                         enableBtnIfValid();
                     }
                     currentlyUpdatingCB = false;
@@ -451,10 +443,10 @@ public class MainSceneController implements Initializable {
     }
 
     private Pane createSharePane(Sonifiable sonifiable) { // initialize and dek the Share Pane
-        mapping.addSonifiable(sonifiable.getId());
+        mapping.addSonifiable(sonifiable);
+        updateDateRange();
 
         Pane stockPane = new Pane();
-        stockPane.setUserData(sonifiable.getId());
         stockPane.getStyleClass().add("stockPane");
         TextField tField = new TextField();
         tField.setText(sonifiable.getName());
@@ -467,41 +459,47 @@ public class MainSceneController implements Initializable {
         addLine("pinkline", 306, 168, -100, -60, -100, 263, stockPane.getChildren());
         addLine("pinkline", 512, 177, -100, -60, -100, 263, stockPane.getChildren());
 
-        addStockParamToPane("Price", "paneShareLabel", 14, 80, 14, 115, 14, 160, sonifiable.getId(), LineData.PRICE,
+        addStockParamToPane("Price", "paneShareLabel", 14, 80, 14, 115, 14, 160, sonifiable, LineData.PRICE,
                 stockPane.getChildren());
-        addStockParamToPane("Trend Line Break", "paneShareLabel", 14, 215, 14, 250, 14, 295, sonifiable.getId(),
+        addStockParamToPane("Trend Line Break", "paneShareLabel", 14, 215, 14, 250, 14, 295, sonifiable,
                 LineData.PRICE, stockPane.getChildren());
-        addStockParamToPane("Derivate", "paneShareLabel", 14, 350, 14, 385, 14, 430, sonifiable.getId(), LineData.PRICE,
+        addStockParamToPane("Derivate", "paneShareLabel", 14, 350, 14, 385, 14, 430, sonifiable, LineData.PRICE,
                 stockPane.getChildren());
-        addStockParamToPane("Flag", "paneShareLabel", 226, 80, 226, 115, 226, 160, sonifiable.getId(), LineData.PRICE,
+        addStockParamToPane("Flag", "paneShareLabel", 226, 80, 226, 115, 226, 160, sonifiable, LineData.PRICE,
                 stockPane.getChildren());
-        addStockParamToPane("Triangle", "paneShareLabel", 226, 215, 226, 250, 226, 295, sonifiable.getId(),
+        addStockParamToPane("Triangle", "paneShareLabel", 226, 215, 226, 250, 226, 295, sonifiable,
                 LineData.PRICE,
                 stockPane.getChildren());
-        addStockParamToPane("Vform", "paneShareLabel", 226, 350, 226, 385, 226, 430, sonifiable.getId(), LineData.PRICE,
+        addStockParamToPane("Vform", "paneShareLabel", 226, 350, 226, 385, 226, 430, sonifiable, LineData.PRICE,
                 stockPane.getChildren());
-        addStockParamToPane("Trend-", "paneShareLabel", 422, 80, 500, 70, 500, 115, sonifiable.getId(), LineData.PRICE,
+        addStockParamToPane("Trend-", "paneShareLabel", 422, 80, 500, 70, 500, 115, sonifiable, LineData.PRICE,
                 stockPane.getChildren());
         Label label = new Label("Break");
         label.getStyleClass().add("paneShareLabel");
         label.setLayoutX(422);
         label.setLayoutY(100);
         stockPane.getChildren().add(label);
-        addStockParamToPane("Movin", "paneShareLabel", 422, 203, 500, 175, 500, 220, sonifiable.getId(), LineData.PRICE,
+        addStockParamToPane("Movin", "paneShareLabel", 422, 203, 500, 175, 500, 220, sonifiable, LineData.PRICE,
                 stockPane.getChildren());
-        addStockParamToPane("Support", "paneShareLabel", 422, 305, 500, 280, 500, 325, sonifiable.getId(),
+        addStockParamToPane("Support", "paneShareLabel", 422, 305, 500, 280, 500, 325, sonifiable,
                 LineData.PRICE, stockPane.getChildren());
-        addStockParamToPane("Resist", "paneShareLabel", 422, 410, 500, 385, 500, 430, sonifiable.getId(),
+        addStockParamToPane("Resist", "paneShareLabel", 422, 410, 500, 385, 500, 430, sonifiable,
                 LineData.PRICE, stockPane.getChildren());
 
         return stockPane;
     }
 
-    LocalDate minDateStart = LocalDate.of(2023, 4, 16);
-    LocalDate maxDateStart = LocalDate.now();
+    private void updateDateRange() {
+        Calendar[] minMaxDates = mapping.getDateRange();
+        minDateStart = DateUtil.calendarToLocalDate(minMaxDates[0]);
+        maxDateEnd = DateUtil.calendarToLocalDate(minMaxDates[1]);
+        maxDateStart = maxDateEnd.minusDays(3);
+        minDateEnd = minDateStart.minusDays(3);
+        updateStartPicker();
+        updateEndPicker();
+    }
 
-    private void updateStartPicker() { // Datum Blockers WARNING: Müsen schauen dass wir die angegebenen Daten bei
-                                       // Änderung der Aktien überprüfen
+    private void updateStartPicker() {
         startPicker.setDayCellFactory(d -> new DateCell() {
             @Override
             public void updateItem(LocalDate item, boolean empty) {
@@ -511,10 +509,7 @@ public class MainSceneController implements Initializable {
         });
     }
 
-    LocalDate minDateEnd = LocalDate.of(2023, 4, 16);
-    LocalDate maxDateEnd = LocalDate.now();
-
-    private void updateEndPicker() { // Datum Blockers
+    private void updateEndPicker() {
         endPicker.setDayCellFactory(d -> new DateCell() {
             @Override
             public void updateItem(LocalDate item, boolean empty) {
