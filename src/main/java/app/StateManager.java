@@ -57,6 +57,7 @@ public class StateManager {
 								if (StateManager.isAlreadySonifying) return;
 								StateManager.isAlreadySonifying = true;
 								Mapping mapping = (Mapping) msg.data;
+								Thread.sleep(1000); // Just to show the loading animation working
 								MusicData musicData = sonifyMapping(mapping);
 								EventQueues.toUI.add(new Msg<>(MsgToUIType.FINISHED, musicData));
 							}

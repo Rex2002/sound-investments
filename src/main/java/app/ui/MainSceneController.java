@@ -5,6 +5,9 @@ import java.net.URL;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.ResourceBundle;
+import java.util.Timer;
+import java.util.TimerTask;
+
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -22,6 +25,8 @@ import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
 import javafx.scene.control.SelectionModel;
 import javafx.scene.control.TextField;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
@@ -85,10 +90,7 @@ public class MainSceneController implements Initializable {
     @FXML
     private double duration;
 
-    private Stage stage;
-    private Scene scene;
-    private Parent root;
-
+    private ImageView loading;
     private CheckEQService checkEQService;
     private Mapping mapping = new Mapping();
     private String[] locations = { "Deutschland" };
@@ -170,7 +172,25 @@ public class MainSceneController implements Initializable {
             try {
                 EventQueues.toSM.add(new Msg<>(MsgToSMType.START, mapping));
                 // startBtn.setDisable(true);
-                // TODO: Show loading bar or something like that
+                // Show loading image
+                loading = new ImageView(new Image(getClass().getResource("/loading.png").toExternalForm()));
+                double loadingWidth = 300;
+                double loadingHeight = 300;
+                loading.setFitWidth(loadingWidth);
+                loading.setFitHeight(loadingHeight);
+                loading.setLayoutX(anchor.getScene().getWidth() / 2 - loadingWidth / 2);
+                loading.setLayoutY(anchor.getScene().getHeight() / 2 - loadingHeight / 2);
+                anchor.getChildren().add(loading);
+                // Animate loading image
+                Timer loadingAnimTimer = new Timer();
+                int nextFrameInMs = 60;
+                loadingAnimTimer.scheduleAtFixedRate(new TimerTask() {
+                    private int counter = 1;
+                    public void run() {
+                        loading.setRotate(360 * counter / 12);
+                        counter = (counter + 1) % 12;
+                    }
+                }, nextFrameInMs, nextFrameInMs);
             } catch (Exception e) {
                 e.printStackTrace();
                 // TODO: Error handling
@@ -207,11 +227,11 @@ public class MainSceneController implements Initializable {
     public void switchToMusicScene(MusicData musicData) {
         try {
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/MusicScene.fxml"));
-            root = loader.load();
+            Parent root = loader.load();
             MusicSceneController controller = loader.getController();
             controller.passData(musicData);
-            stage = (Stage) startBtn.getScene().getWindow();
-            scene = new Scene(root);
+            Stage stage = (Stage) startBtn.getScene().getWindow();
+            Scene scene = new Scene(root);
             String css = this.getClass().getResource("/choice.css").toExternalForm();
             // Set the stylesheet after the scene creation
             scene.getStylesheets().add(css);
