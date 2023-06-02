@@ -36,7 +36,9 @@ public class SineWaveGenerator {
         double phase = 0;
         double mPhase = 0; // modulation phase
         double sin1, ampFactor, modAmpFactor;
-        int freqIdx = -1, ampIdx, sectionLen, sectionOffset = 0;
+        int freqIdx = -1, ampIdx;
+        int sectionLen;
+        int sectionOffset = 0;
         // quick explanation:
         //  freqIdx: index of the current frequency
         //  ampIdx: same as freqIdx, just for amplitude

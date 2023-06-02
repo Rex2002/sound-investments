@@ -20,6 +20,8 @@ import javax.sound.sampled.SourceDataLine;
 import java.util.Arrays;
 import java.util.Scanner;
 
+import static audio.Constants.CHANNEL_NO;
+import static audio.Constants.SAMPLE_RATE;
 import static audio.Util.findMax;
 
 public class Test {
@@ -33,7 +35,7 @@ public class Test {
     }
 
     public Test() {
-        AudioFormat af = new AudioFormat(Constants.SAMPLE_RATE, 16, Constants.CHANNEL_NO, true, true);
+        AudioFormat af = new AudioFormat(SAMPLE_RATE, 16, Constants.CHANNEL_NO, true, true);
 
         try {
             SourceDataLine sdl = AudioSystem.getSourceDataLine(af);
@@ -43,12 +45,12 @@ public class Test {
             SineWaveGenerator generator = new SineWaveGenerator();
 
             double[] sineEcho = Effect.echo(
-                    generator.generate(new double[]{440, 493.88, 523.25, 587.33}, 8, new double[]{16383}, adsr),
+                    generator.generate(new double[]{440, 493.88, 523.25, 587.33, 440}, 4 * SAMPLE_RATE * CHANNEL_NO, new double[]{16383}, adsr),
                     new double[]{0.9}, new int[]{15000});
             double[] sine1 = generator.generate(
-                    new double[]{440, 440, 493.88, 493.88, 440, 440, 523.25, 587.33, 440, 440}, 4,
+                    new double[]{440, 440, 493.88, 493.88, 440, 440, 523.25, 587.33, 440}, 4  * SAMPLE_RATE * CHANNEL_NO,
                     new double[]{16383}, adsr);
-            double[] sine2 = generator.generate(new double[]{523.25, 587.33, 659.25, 698.46,}, 8,
+            double[] sine2 = generator.generate(new double[]{523.25, 587.33, 659.25, 698.46,}, 8  * SAMPLE_RATE * CHANNEL_NO,
                     new double[]{12000}, adsr);
             double[] addedSine = addArrays(sine1, sine2);
 
@@ -58,7 +60,7 @@ public class Test {
             filterData.setCutoff(new double[]{1200, 6000});
             filterData.setBandwidth(new double[]{0.5});
             filterData.setHighPass(false);
-            double[] sin = generator.generate(440.0, 1, (short) 16500);
+            double[] sin = generator.generate(440.0, 1 * SAMPLE_RATE * CHANNEL_NO, (short) 16500);
             short[] addedFilteredSine = Util.scaleToShort(Effect.IIR(sin, filterData));
             Complex[] fftOfSine = Util.fft(Arrays.copyOfRange(Util.scaleToShort((fft)), 0, 2048));
             Complex[] fftOfFilteredSine = Util.fft(Arrays.copyOfRange(addedFilteredSine, 0, 2048));
@@ -83,7 +85,16 @@ public class Test {
             // could not yet figure out how to add more harmonics
             // TODO add calculation to actually play given freq when modulation and not just
             // gcd of carrier and modulation frequency
-            double[] mSine = generator.generate(new double[] {110.0, 130.8127826502993, 110.0, 97.99885899543733, 103.82617439498628, 97.99885899543733, 123.47082531403103, 116.54094037952248, 123.47082531403103, 146.8323839587038, 146.8323839587038, 138.59131548843604, 116.54094037952248, 92.49860567790861, 87.30705785825097, 92.49860567790861, 97.99885899543733, 82.40688922821748, 73.41619197935188, 77.78174593052022, 97.99885899543733, 97.99885899543733, 97.99885899543733, 123.47082531403103, 164.81377845643496, 195.99771799087463, 184.99721135581723, 246.94165062806206, 329.6275569128699, 329.6275569128699, 329.6275569128699, 329.6275569128699, 277.1826309768721, 261.6255653005986, 220.0, 195.99771799087463, 184.99721135581723, 220.0, 293.6647679174076, 369.99442271163446, 369.99442271163446, 311.12698372208087, 369.99442271163446, 466.1637615180899, 440.0, 440.0, 391.99543598174927, 391.99543598174927, 391.99543598174927, 440.0, 391.99543598174927, 523.2511306011972, 554.3652619537442, 587.3295358348151, 659.2551138257398, 622.2539674441618, 622.2539674441618, 830.6093951598903, 987.7666025122483, 932.3275230361799}, 60, new double[] { 15000 }, 2 / 3f);
+            double[] mSine = generator.generate(new double[] { 440, 880 }, 4 * SAMPLE_RATE * CHANNEL_NO, new double[] { 15000 }, 2 / 3f);
+            double[] silence = new double[8 * 44100 * 2];
+            mSine = addArrays(mSine, silence);
+            mSine = Effect.echo(mSine, new double[]{0.5}, new int[]{44100, 11050, 20});
+            FilterData d = new FilterData();
+            d.setBandwidth(new double[]{0.01});
+            d.setHighPass(false);
+            d.setCutoff(new double[]{20000});
+            //mSine = Effect.IIR(mSine, d);
+            //double[] mSine = generator.generate(new double[] {110.0, 130.8127826502993, 110.0, 97.99885899543733, 103.82617439498628, 97.99885899543733, 123.47082531403103, 116.54094037952248, 123.47082531403103, 146.8323839587038, 146.8323839587038, 138.59131548843604, 116.54094037952248, 92.49860567790861, 87.30705785825097, 92.49860567790861, 97.99885899543733, 82.40688922821748, 73.41619197935188, 77.78174593052022, 97.99885899543733, 97.99885899543733, 97.99885899543733, 123.47082531403103, 164.81377845643496, 195.99771799087463, 184.99721135581723, 246.94165062806206, 329.6275569128699, 329.6275569128699, 329.6275569128699, 329.6275569128699, 277.1826309768721, 261.6255653005986, 220.0, 195.99771799087463, 184.99721135581723, 220.0, 293.6647679174076, 369.99442271163446, 369.99442271163446, 311.12698372208087, 369.99442271163446, 466.1637615180899, 440.0, 440.0, 391.99543598174927, 391.99543598174927, 391.99543598174927, 440.0, 391.99543598174927, 523.2511306011972, 554.3652619537442, 587.3295358348151, 659.2551138257398, 622.2539674441618, 622.2539674441618, 830.6093951598903, 987.7666025122483, 932.3275230361799}, 60, new double[] { 15000 }, 2 / 3f);
             // short[] combined = multiplyArrays(sine, lfo);
             //EventQueue.invokeLater(() -> {
             //    FrequencyChart c = new FrequencyChart(Arrays.copyOfRange(fftOfSine, 0, fftOfSine.length), 1,
@@ -117,8 +128,8 @@ public class Test {
     // amplitude
     @Deprecated
     private double[] createDoubleSine(int freq, int duration, int amplitude) {
-        double[] sin = new double[duration * Constants.SAMPLE_RATE * Constants.CHANNEL_NO];
-        double samplingInterval = (double) Constants.SAMPLE_RATE / freq;
+        double[] sin = new double[duration * SAMPLE_RATE * Constants.CHANNEL_NO];
+        double samplingInterval = (double) SAMPLE_RATE / freq;
         for (int i = 0; i < sin.length; i += 2) {
             double angle = ((2 * Math.PI) / (samplingInterval)) * i; // full circle: 2*Math.PI -> one step: divide by
                                                                      // sampling interval
