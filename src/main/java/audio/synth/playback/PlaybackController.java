@@ -3,7 +3,13 @@ package audio.synth.playback;
 import app.communication.EventQueues;
 import audio.Util;
 
+import javax.sound.sampled.AudioFileFormat;
+import javax.sound.sampled.AudioInputStream;
+import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.SourceDataLine;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.IOException;
 
 public class PlaybackController {
     public final int SKIP_LENGTH = 10;
@@ -94,6 +100,17 @@ public class PlaybackController {
             EventQueues.toPlayback.put(p);
         } catch (InterruptedException e) {
             e.printStackTrace();
+        }
+    }
+
+    public void save(String filename) {
+        byte[] byteData = Util.convertShortToByte(data);
+        AudioInputStream stream = new AudioInputStream(new ByteArrayInputStream(byteData), s.getFormat(), byteData.length);
+        File outFile = new File(filename);
+        try {
+            AudioSystem.write(stream, AudioFileFormat.Type.WAVE, outFile);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
     }
 

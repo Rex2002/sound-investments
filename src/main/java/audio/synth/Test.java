@@ -13,10 +13,10 @@ import audio.synth.fx.FilterData;
 import audio.synth.generators.SineWaveGenerator;
 import audio.synth.playback.PlaybackController;
 
-import javax.sound.sampled.AudioFormat;
-import javax.sound.sampled.AudioSystem;
-import javax.sound.sampled.LineUnavailableException;
-import javax.sound.sampled.SourceDataLine;
+import javax.sound.sampled.*;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Scanner;
 
@@ -48,9 +48,9 @@ public class Test {
                     generator.generate(new double[]{440, 493.88, 523.25, 587.33, 440}, 4 * SAMPLE_RATE * CHANNEL_NO, new double[]{16383}, adsr),
                     new double[]{0.9}, new int[]{15000});
             double[] sine1 = generator.generate(
-                    new double[]{440, 440, 493.88, 493.88, 440, 440, 523.25, 587.33, 440}, 4  * SAMPLE_RATE * CHANNEL_NO,
+                    new double[]{440, 440, 493.88, 493.88, 440, 440, 523.25, 587.33, 440}, 4 * SAMPLE_RATE * CHANNEL_NO,
                     new double[]{16383}, adsr);
-            double[] sine2 = generator.generate(new double[]{523.25, 587.33, 659.25, 698.46,}, 8  * SAMPLE_RATE * CHANNEL_NO,
+            double[] sine2 = generator.generate(new double[]{523.25, 587.33, 659.25, 698.46,}, 8 * SAMPLE_RATE * CHANNEL_NO,
                     new double[]{12000}, adsr);
             double[] addedSine = addArrays(sine1, sine2);
 
@@ -70,9 +70,9 @@ public class Test {
 
             InstrumentData instrData = new InstrumentData();
             instrData.setInstrument(InstrumentEnum.RETRO_SYNTH);
-            instrData.setVolume(new double[] { 15000, 7000 });
-            instrData.setPitch(new int[] { 69, 70, 80 });
-            instrData.setPan(new double[] { 0 });
+            instrData.setVolume(new double[]{15000, 7000});
+            instrData.setPitch(new int[]{69, 70, 80});
+            instrData.setPan(new double[]{0});
             instrData.setFilterData(filterData);
 
             double[] synthLine = new SynthLine(instrData, 6).synthesize();
@@ -85,7 +85,7 @@ public class Test {
             // could not yet figure out how to add more harmonics
             // TODO add calculation to actually play given freq when modulation and not just
             // gcd of carrier and modulation frequency
-            double[] mSine = generator.generate(new double[] { 440, 880 }, 4 * SAMPLE_RATE * CHANNEL_NO, new double[] { 15000 }, 2 / 3f);
+            double[] mSine = generator.generate(new double[]{440, 880}, 4 * SAMPLE_RATE * CHANNEL_NO, new double[]{15000}, 2 / 3f);
             double[] silence = new double[8 * 44100 * 2];
             mSine = addArrays(mSine, silence);
             mSine = Effect.echo(mSine, new double[]{0.5}, new int[]{44100, 11050, 20});
@@ -102,15 +102,16 @@ public class Test {
             //    FrequencyChart c0 = new FrequencyChart(
             //            Arrays.copyOfRange(fftOfFilteredSine, 0, fftOfFilteredSine.length), 1, "Filtered");
             //    FrequencyChart c1 = new FrequencyChart(Arrays.copyOfRange(addedSine, 0, 44100), 1, "Added");
-                // FrequencyChart c2 = new FrequencyChart(Arrays.copyOfRange(sw,0, 44100),1,
-                // "Sawtooth");
-                // c.setVisible(true);
-                // c0.setVisible(true);
-                // c1.setVisible(true);
-                // c2.setVisible(true);
+            // FrequencyChart c2 = new FrequencyChart(Arrays.copyOfRange(sw,0, 44100),1,
+            // "Sawtooth");
+            // c.setVisible(true);
+            // c0.setVisible(true);
+            // c1.setVisible(true);
+            // c2.setVisible(true);
             //});
-            playWithControls(sdl, mSine);
-            playWithControls(sdl, sine1);
+            writeToFile(Util.scaleToShort(mSine), sdl.getFormat(), "out.wav");
+            //playWithControls(sdl, mSine);
+            //playWithControls(sdl, sine1);
             System.out.println("we have reached the point");
             sdl.drain();
             sdl.close();
@@ -132,7 +133,7 @@ public class Test {
         double samplingInterval = (double) SAMPLE_RATE / freq;
         for (int i = 0; i < sin.length; i += 2) {
             double angle = ((2 * Math.PI) / (samplingInterval)) * i; // full circle: 2*Math.PI -> one step: divide by
-                                                                     // sampling interval
+            // sampling interval
             // double lfo = ((2*Math.PI)/lfoSamplingInterval) * i;
 
             sin[i] = ((Math.sin(angle)) * (amplitude));
@@ -150,6 +151,25 @@ public class Test {
         s.write(out, 0, out.length);
     }
 
+    public void writeToFile(short[] data, AudioFormat af, String filename) {
+        byte[] byteData = convertShortToByte(data);
+        AudioInputStream stream = new AudioInputStream(new ByteArrayInputStream(byteData), af, byteData.length);
+        File outFile = new File(filename);
+        try {
+            AudioSystem.write(stream, AudioFileFormat.Type.WAVE, outFile);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public byte[] convertShortToByte(short[] data) {
+        byte[] outBuffer = new byte[data.length * 2];
+        for (int i = 0; i < data.length; i++) {
+            outBuffer[2 * i] = (byte) ((data[i] >> 8) & 0xFF);
+            outBuffer[2 * i + 1] = (byte) (data[i] & 0xFF);
+        }
+        return outBuffer;
+    }
 
     private void play(SourceDataLine s, byte[] data) {
         s.write(data, 0, data.length);
