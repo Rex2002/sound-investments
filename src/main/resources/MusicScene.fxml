@@ -40,9 +40,9 @@
             <Font size="19.0" />
          </font>
       </Button>
-      <ImageView fx:id="forBtn" fitHeight="80.0" fitWidth="80.0" layoutX="1020.0" layoutY="684.0" pickOnBounds="true" preserveRatio="true">
+      <ImageView fx:id="backBtn" fitHeight="80.0" fitWidth="80.0" layoutX="1020.0" layoutY="684.0" pickOnBounds="true" preserveRatio="true">
          <image>
-            <Image url="/for_btn.png" />
+            <Image url="/back_btn.png" />
          </image>
       </ImageView>
       <Slider fx:id="musicSlider" layoutX="35.0" layoutY="601.0" prefHeight="14.0" prefWidth="1534.0" />
@@ -53,9 +53,9 @@
             <Image url="/stop_btn.png" />
          </image>
       </ImageView>
-      <ImageView fx:id="backBtn" fitHeight="80.0" fitWidth="80.0" layoutX="1449.0" layoutY="684.0" pickOnBounds="true" preserveRatio="true">
+      <ImageView fx:id="forBtn" fitHeight="80.0" fitWidth="80.0" layoutX="1449.0" layoutY="684.0" pickOnBounds="true" preserveRatio="true">
          <image>
-            <Image url="/back_btn.png" />
+            <Image url="/for_btn.png" />
          </image>
       </ImageView>
    </children>

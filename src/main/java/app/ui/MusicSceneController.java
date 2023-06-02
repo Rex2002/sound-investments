@@ -114,16 +114,13 @@ public class MusicSceneController implements Initializable {
 		forBtn.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
 			@Override
 			public void handle(MouseEvent event) {
-				double perc =  musicSlider.getValue() / musicSlider.getWidth() ; //derzeitige Prozent+(duration/musicSlider.width()*10);
-				pbc.goToRelative(perc);
+				pbc.skipForward();
 			}
 		});
 		backBtn.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
 			@Override
 			public void handle(MouseEvent event) {
-				
-				double perc =  musicSlider.getValue() / musicSlider.getWidth() ; //derzeitige Prozent-(duration/musicSlider.width()*10);
-				pbc.goToRelative(perc);
+				pbc.skipBackward();
 			}
 		});
 
