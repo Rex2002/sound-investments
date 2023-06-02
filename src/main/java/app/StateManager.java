@@ -24,6 +24,8 @@ import java.util.function.Consumer;
 // however, it makes conceptually more sense to me, as the app's logic should be done in the main thread
 
 public class StateManager {
+	private static boolean isAlreadySonifying = false;
+
 	public static void main(String[] args) {
 		testUI(args);
 		// testSound(args);
@@ -52,10 +54,13 @@ public class StateManager {
 							case SAVE_MAPPING -> EventQueues.toUI.add(new Msg<>(MsgToUIType.ERROR, "SAVE_MAPPING is not yet implemented"));
 							case LOAD_MAPPING -> EventQueues.toUI.add(new Msg<>(MsgToUIType.ERROR, "LOAD_MAPPING is not yet implemented"));
 							case START -> {
+								if (StateManager.isAlreadySonifying) return;
+								StateManager.isAlreadySonifying = true;
 								Mapping mapping = (Mapping) msg.data;
 								MusicData musicData = sonifyMapping(mapping);
 								EventQueues.toUI.add(new Msg<>(MsgToUIType.FINISHED, musicData));
 							}
+							case BACK_IN_MAIN_SCENE -> StateManager.isAlreadySonifying = false;
 						}
 					} catch (InterruptedException ie) {
 						getInterruptedExceptionHandler().accept(ie);

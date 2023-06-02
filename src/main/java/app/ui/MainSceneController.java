@@ -169,6 +169,7 @@ public class MainSceneController implements Initializable {
         startBtn.setOnAction(ev -> {
             try {
                 EventQueues.toSM.add(new Msg<>(MsgToSMType.START, mapping));
+                // startBtn.setDisable(true);
                 // TODO: Show loading bar or something like that
             } catch (Exception e) {
                 e.printStackTrace();

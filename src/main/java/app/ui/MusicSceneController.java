@@ -26,7 +26,9 @@ import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.chart.LineChart;
 import javafx.scene.Node;
-
+import app.communication.EventQueues;
+import app.communication.Msg;
+import app.communication.MsgToSMType;
 import app.communication.MusicData;
 
 public class MusicSceneController implements Initializable {
@@ -149,6 +151,13 @@ public class MusicSceneController implements Initializable {
 	}
 
 	public void switchToMainScene(ActionEvent event) throws IOException {
+		// Tell StateManager, that we are back in the main scene again
+		try {
+		EventQueues.toSM.put(new Msg<>(MsgToSMType.BACK_IN_MAIN_SCENE));
+		} catch (InterruptedException ie) {
+			// TODO: Error Handling
+		}
+
 		root = FXMLLoader.load(getClass().getResource("/MainScene.fxml"));
 		stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
 		scene = new Scene(root);
