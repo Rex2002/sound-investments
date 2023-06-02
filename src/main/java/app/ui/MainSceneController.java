@@ -11,6 +11,7 @@ import java.util.TimerTask;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
+import javafx.event.EventType;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
@@ -24,6 +25,7 @@ import javafx.scene.control.DateCell;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
 import javafx.scene.control.SelectionModel;
+import javafx.scene.control.SingleSelectionModel;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
@@ -94,6 +96,7 @@ public class MainSceneController implements Initializable {
     private ImageView loading;
     private CheckEQService checkEQService;
     private Mapping mapping = new Mapping();
+    private boolean currentlyUpdatingCB = false;
     private String[] locations = { "Deutschland" };
     private static String[] categoryKeys = { "Alle Kategorien", "Aktien", "ETFs", "Indizes" };
     private static FilterFlag[] categoryValues = { FilterFlag.ALL, FilterFlag.STOCK, FilterFlag.ETF, FilterFlag.INDEX };
@@ -380,42 +383,65 @@ public class MainSceneController implements Initializable {
             paramCB.setLayoutY(cb2Y);
             paramCB.setDisable(true);
             instCB.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
-                SelectionModel<InstrParam> paramCBSelect = paramCB.getSelectionModel();
-                // Mapping isn't effected if the parameter ChoiceBox isn't selected yet
-                paramCB.setDisable(false);
-                paramCB.getItems().clear();
-                paramCB.getItems().addAll(mapping.getEmptyInstrumentParams(newValue));
-                if (!paramCBSelect.isEmpty()) {
-                    try {
-                        mapping.setParam(newValue, sonifiableId, paramCBSelect.getSelectedItem(), eparam);
-                        if (oldValue != null)
-                            mapping.rmParam(sonifiableId, oldValue, paramCBSelect.getSelectedItem());
-                        enableBtnIfValid();
-                    } catch (AppError e) {
-                        instCB.getSelectionModel().select(oldValue);
-                        displayError(e.getMessage(), "Interner Fehler");
-                    }
-                }
-            });
-            paramCB.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
-                @Override
-                public void handle(MouseEvent event) {
+                try {
+                    // If the new instrument already has the selected parameter mapped or if newValue is null
+                    // then we need to remove the parameter in the UI
+                    // otherwise we also need to set the parameter in the mapping
+                    // in any case, we need to remove the old mapping with the old instrument
+                    if (currentlyUpdatingCB) return;
+                    currentlyUpdatingCB = true;
+                    SingleSelectionModel<InstrParam> paramCBSelect = paramCB.getSelectionModel();
+                    InstrParam paramVal = paramCBSelect.getSelectedItem();
+
+                    paramCB.setDisable(newValue == null);
+                    paramCBSelect.select(null);
                     paramCB.getItems().clear();
-                    paramCB.getItems().addAll(mapping.getEmptyInstrumentParams(instCB.getValue()));
+                    if (newValue != null && paramVal != null) {
+                        mapping.rmParam(oldValue, sonifiableId, paramVal);
+
+                        if (!mapping.isMapped(newValue, paramVal)) {
+                            paramCB.getItems().addAll(mapping.getEmptyInstrumentParams(newValue, paramVal));
+                            paramCBSelect.select(paramVal);
+                            mapping.setParam(newValue, sonifiableId, paramVal, eparam);
+                        } else {
+                            paramCB.getItems().addAll(mapping.getEmptyInstrumentParams(newValue, null));
+                        }
+                    } else {
+                        paramCB.getItems().addAll(mapping.getEmptyInstrumentParams(newValue, null));
+                    }
+                    enableBtnIfValid();
+                    currentlyUpdatingCB = false;
+                } catch (AppError e) {
+                    displayError(e.getMessage(), "Interner Fehler");
                 }
             });
+            // paramCB.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
+            //     @Override
+            //     public void handle(MouseEvent event) {
+            //         paramCB.getItems().clear();
+            //         paramCB.getItems().addAll(mapping.getEmptyInstrumentParams(instCB.getValue(), paramCB.getValue()));
+            //     }
+            // });
+            // paramCB.setOnMouseClicked(event -> {
+            //     paramCB.getItems().clear();
+            //     paramCB.getItems().addAll(mapping.getEmptyInstrumentParams(instCB.getValue(), paramCB.getValue()));
+            // });
             paramCB.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
-                SelectionModel<InstrumentEnum> instCBSelect = instCB.getSelectionModel();
-                if (!instCBSelect.isEmpty()) {
-                    try {
-                        mapping.setParam(instCBSelect.getSelectedItem(), sonifiableId, newValue, eparam);
+                try {
+                    if (currentlyUpdatingCB) return;
+                    currentlyUpdatingCB = true;
+                    SelectionModel<InstrumentEnum> instCBSelect = instCB.getSelectionModel();
+                    if (!instCBSelect.isEmpty()) {
                         if (oldValue != null)
-                            mapping.rmParam(sonifiableId, instCBSelect.getSelectedItem(), oldValue);
+                            mapping.rmParam(instCBSelect.getSelectedItem(), sonifiableId, oldValue);
+                        if (newValue != null)
+                            mapping.setParam(instCBSelect.getSelectedItem(), sonifiableId, newValue, eparam);
                         enableBtnIfValid();
-                    } catch (AppError e) {
-                        paramCB.getSelectionModel().select(oldValue);
-                        displayError(e.getMessage(), "Interner Fehler");
                     }
+                    currentlyUpdatingCB = false;
+                } catch (AppError e) {
+                    paramCB.getSelectionModel().select(oldValue);
+                    displayError(e.getMessage(), "Interner Fehler");
                 }
             });
 

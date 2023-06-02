@@ -39,9 +39,11 @@ public class Mapping {
 		}
 	}
 
+	// TODO: Add method to get allowed date range for UI
+
 	// Indicates whether the current mapping can already be used for sonification
 	public boolean isValid() {
-		System.out.println(verify());
+		// System.out.println(verify());
 		return verify() == null;
 	}
 
@@ -75,18 +77,10 @@ public class Mapping {
 			return "Es muss min. 1 Instrument gemappt werden.";
 		return null;
 	}
-	public InstrParam[] getEmptyInstrumentParams(InstrumentEnum instr) {
+	public InstrParam[] getEmptyInstrumentParams(InstrumentEnum instr, InstrParam oldVal) {
 		InstrumentMapping instrMap = Util.find(mappedInstruments, x -> x != null && x.getInstrument() == instr);
-		return instrMap.getEmptyParams();
+		return instrMap.getEmptyParams(oldVal);
 	}
-
-	////////
-	// Getters & Setters
-	////////
-
-	// public boolean isLegalChange(SonifiableID sonifiable, ExchangeParam eparam, InstrumentMapping instrMap, InstrParam iparam)	{
-	// 	if (instrMap.get(iparam))
-	// }
 
 	public Set<SonifiableID> getMappedSonifiables() {
 		Set<SonifiableID> out = new HashSet<>();
@@ -109,19 +103,6 @@ public class Mapping {
 	public boolean hasSonifiable(SonifiableID sonifiable) {
 		return sonifiables.contains(sonifiable);
 	}
-
-	// Do we even need this?
-	// private boolean isSonifiableStillMapped(SonifiableID sonifiable) {
-	// for (int i = 0; i < evInstrAmount; i++) {
-	// if (eventInstruments[i].getData().getId() == sonifiable)
-	// return true;
-	// }
-	// for (int i = 0; i < mappedInstruments.length; i++) {
-	// if (mappedInstruments[i].hasSonifiableMapped(sonifiable))
-	// return true;
-	// }
-	// return false;
-	// }
 
 	public void addEvInstr(EvInstrEnum instr, SonifiableID sonifiable, PointData eparam) throws AppError {
 		if (evInstrAmount == MAX_EV_INSTR_SIZE)
@@ -179,7 +160,25 @@ public class Mapping {
 		sonifiables.add(sonifiable);
 	}
 
-	public void rmParam(SonifiableID sonifiable, InstrumentEnum instr, InstrParam iparam) throws AppError {
+	public boolean isMapped(InstrumentEnum instr, InstrParam iparam) throws AppError {
+		InstrumentMapping instrMap = Util.find(mappedInstruments, x -> x.getInstrument() == instr);
+		return switch (iparam) {
+			case PITCH -> instrMap.getPitch() != null;
+			case RELVOLUME -> instrMap.getRelVolume() != null;
+			case ABSVOLUME -> instrMap.getAbsVolume() != null;
+			case DELAY_ECHO -> instrMap.getDelayEcho() != null;
+			case FEEDBACK_ECHO -> instrMap.getFeedbackEcho() != null;
+			case ON_OFF_REVERB -> instrMap.getOnOffReverb() != null;
+			case CUTOFF -> instrMap.getCutoff() != null;
+			case ORDER -> instrMap.getOrder() != null;
+			case ON_OFF_FILTER -> instrMap.getOnOffFilter() != null;
+			case PAN -> instrMap.getPan() != null;
+			default ->
+				throw new AppError(iparam.toString() + " kann nicht gelöscht werden.");
+		};
+	}
+
+	public void rmParam(InstrumentEnum instr, SonifiableID sonifiable, InstrParam iparam) throws AppError {
 		InstrumentMapping instrMap = Util.find(mappedInstruments, x -> x.getInstrument() == instr);
 		switch (iparam) {
 			case PITCH -> instrMap.setPitch(null);
@@ -208,6 +207,18 @@ public class Mapping {
 				throw new AppError(eparam.toString() + " kann nicht auf " + iparam.toString() + "gemappt werden.");
 		}
 		sonifiables.add(sonifiable);
+	}
+
+	public boolean isMapped(InstrParam iparam) throws AppError {
+		return switch (iparam) {
+			case DELAY_REVERB -> this.delayReverb != null;
+			case FEEDBACK_REVERB -> this.feedbackReverb != null;
+			case ON_OFF_REVERB -> this.onOffReverb != null;
+			case CUTOFF -> this.cutoff != null;
+			case ON_OFF_FILTER -> this.onOffFilter != null;
+			default ->
+				throw new AppError(iparam.toString() + " kann nicht gemappt sein.");
+		};
 	}
 
 	public void rmParam(SonifiableID sonifiable, InstrParam iparam) throws AppError {
