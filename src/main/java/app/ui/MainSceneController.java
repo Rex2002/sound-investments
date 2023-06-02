@@ -27,6 +27,7 @@ import javafx.scene.control.SelectionModel;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
@@ -377,10 +378,13 @@ public class MainSceneController implements Initializable {
             paramCB.getItems().addAll(iparams);
             paramCB.setLayoutX(cb2X);
             paramCB.setLayoutY(cb2Y);
-
+            paramCB.setDisable(true);
             instCB.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
                 SelectionModel<InstrParam> paramCBSelect = paramCB.getSelectionModel();
                 // Mapping isn't effected if the parameter ChoiceBox isn't selected yet
+                paramCB.setDisable(false);
+                paramCB.getItems().clear();
+                paramCB.getItems().addAll(mapping.getEmptyInstrumentParams(newValue));
                 if (!paramCBSelect.isEmpty()) {
                     try {
                         mapping.setParam(newValue, sonifiableId, paramCBSelect.getSelectedItem(), eparam);
@@ -393,7 +397,13 @@ public class MainSceneController implements Initializable {
                     }
                 }
             });
-
+            paramCB.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
+                @Override
+                public void handle(MouseEvent event) {
+                    paramCB.getItems().clear();
+                    paramCB.getItems().addAll(mapping.getEmptyInstrumentParams(instCB.getValue()));
+                }
+            });
             paramCB.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
                 SelectionModel<InstrumentEnum> instCBSelect = instCB.getSelectionModel();
                 if (!instCBSelect.isEmpty()) {

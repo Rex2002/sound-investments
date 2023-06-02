@@ -2,7 +2,9 @@ package app.mapping;
 
 import java.lang.reflect.Field;
 import java.util.Set;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 
 import audio.synth.InstrumentEnum;
 import dataRepo.SonifiableID;
@@ -36,6 +38,24 @@ public class InstrumentMapping {
 
 	InstrumentMapping(InstrumentEnum instrument) {
 		this.instrument = instrument;
+	}
+
+	public InstrParam[] getEmptyParams() {
+		List<InstrParam> params = new ArrayList<>();
+		if (pitch == null) params.add(InstrParam.PITCH);
+		if (relVolume == null) params.add(InstrParam.RELVOLUME);
+		if (absVolume == null) params.add(InstrParam.ABSVOLUME);
+		if (delayEcho == null) params.add(InstrParam.DELAY_ECHO);
+		if (feedbackEcho == null) params.add(InstrParam.FEEDBACK_ECHO);
+		if (onOffEcho == null) params.add(InstrParam.ON_OFF_ECHO);
+		if (delayReverb == null) params.add(InstrParam.DELAY_REVERB);
+		if (feedbackReverb == null) params.add(InstrParam.FEEDBACK_REVERB);
+		if (onOffReverb == null) params.add(InstrParam.ON_OFF_REVERB);
+		if (cutoff == null) params.add(InstrParam.CUTOFF);
+		if (order == null) params.add(InstrParam.ORDER);
+		if (onOffFilter == null) params.add(InstrParam.ON_OFF_FILTER);
+		InstrParam[] out = new InstrParam[params.size()];
+		return params.toArray(out);
 	}
 
 	public boolean isEmpty() {
