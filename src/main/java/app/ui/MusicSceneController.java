@@ -8,6 +8,7 @@ import java.util.TimerTask;
 import audio.synth.playback.PlaybackController;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
+import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
@@ -66,6 +67,9 @@ public class MusicSceneController implements Initializable {
 	private Parent root;
 	@FXML
 	private ImageView playBtn;
+	@FXML
+	private ImageView stopBtn;
+
 	private PlaybackController pbc;
 	private String[] sonifiableNames;
 	private double[][] prices;
@@ -73,19 +77,38 @@ public class MusicSceneController implements Initializable {
 	private boolean paused = false;
 	private Image playImage;
 	private Image pauseImage;
+	
 
 	// TODO: Add playback button image for play, stop, forward, backward, reset
 	// TODO: Make line-chart colors the same as in the legend
 
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
-		playImage = new Image(getClass().getResource("/pause_btn.png").toString());
+		playImage = new Image(getClass().getResource("/play_btn.png").toString());
 		pauseImage = new Image(getClass().getResource("/pause_btn.png").toString());
+		playBtn.setImage(pauseImage);
+		playBtn.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
 
+			@Override
+			public void handle(MouseEvent event) {
+				pausePlaySound();
+			}
+	   });
+	   stopBtn.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
+
+		@Override
+		public void handle(MouseEvent event) {
+			try {
+				stopSound(event);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+   });
 		Platform.runLater(() -> {
 			setupSlider();
 			beginTimer();
-			addbtn(pauseImage, 1050, 669).setOnMouseClicked(ev -> pausePlaySound());
 		});
 	}
 
@@ -144,17 +167,6 @@ public class MusicSceneController implements Initializable {
 		return label;
 	}
 
-	private ImageView addbtn(Image img, double x, double y) {
-		playBtn = new ImageView(img);
-		playBtn.setCache(true);
-		playBtn.setFitHeight(80);
-		playBtn.setFitWidth(80);
-		playBtn.setLayoutX(x);
-		playBtn.setLayoutY(y);
-		anchor.getChildren().add(playBtn);
-		return playBtn;
-	}
-
 	private void setupSlider() {
 		// My idea was to set a minor tick per millisecond in a second
 		// and a major tick per second in a minute
@@ -170,7 +182,7 @@ public class MusicSceneController implements Initializable {
 		pbc.goToRelative(perc);
 	}
 
-	public void switchToMainScene(ActionEvent event) throws IOException {
+	public void switchToMainScene(MouseEvent event) throws IOException {
 		// Tell StateManager, that we are back in the main scene again
 		try {
 		EventQueues.toSM.put(new Msg<>(MsgToSMType.BACK_IN_MAIN_SCENE));
@@ -188,7 +200,7 @@ public class MusicSceneController implements Initializable {
 		stage.show();
 	}
 
-	public void pausePlaySound() {
+	public void pausePlaySound(){
 		if (paused) {
 			pbc.play();
 			playBtn.setImage(pauseImage);
@@ -207,7 +219,7 @@ public class MusicSceneController implements Initializable {
 		myTimer.cancel();
 	}
 
-	public void stopSound(ActionEvent event) throws IOException {
+	public void stopSound(MouseEvent event) throws IOException {
 		onClose();
 		switchToMainScene(event);
 	}
