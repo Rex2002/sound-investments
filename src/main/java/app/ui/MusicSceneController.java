@@ -69,6 +69,10 @@ public class MusicSceneController implements Initializable {
 	private ImageView playBtn;
 	@FXML
 	private ImageView stopBtn;
+	@FXML
+	private ImageView backBtn;
+	@FXML
+	private ImageView forBtn;
 
 	private PlaybackController pbc;
 	private String[] sonifiableNames;
@@ -96,16 +100,33 @@ public class MusicSceneController implements Initializable {
 	   });
 	   stopBtn.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
 
-		@Override
-		public void handle(MouseEvent event) {
-			try {
-				stopSound(event);
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				@Override
+				public void handle(MouseEvent event) {
+					try {
+						stopSound(event);
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+				}
+		});
+
+		forBtn.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
+			@Override
+			public void handle(MouseEvent event) {
+				double perc =  musicSlider.getValue() / musicSlider.getWidth() ; //derzeitige Prozent+(duration/musicSlider.width()*10);
+				pbc.goToRelative(perc);
 			}
-		}
-   });
+		});
+		backBtn.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
+			@Override
+			public void handle(MouseEvent event) {
+				
+				double perc =  musicSlider.getValue() / musicSlider.getWidth() ; //derzeitige Prozent-(duration/musicSlider.width()*10);
+				pbc.goToRelative(perc);
+			}
+		});
+
 		Platform.runLater(() -> {
 			setupSlider();
 			beginTimer();
