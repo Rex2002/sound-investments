@@ -27,8 +27,8 @@ public class StateManager {
 	private static boolean isAlreadySonifying = false;
 
 	public static void main(String[] args) {
-		// testUI(args);
-		testSound(args);
+		testUI(args);
+		// testSound(args);
 
 	}
 
@@ -232,7 +232,7 @@ public class StateManager {
 		}, null);
 	}
 
-	public static void testSound(String[] args) {
+	public static void testSound(String[] args) throws AppError {
 		// Get Mapping & Price Data
 		call(DataRepo::init);
 		Mapping mapping = getTestMapping();

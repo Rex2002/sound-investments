@@ -1,5 +1,6 @@
 package audio.synth.playback;
 
+import app.AppError;
 import app.communication.EventQueues;
 import audio.Util;
 
@@ -103,14 +104,14 @@ public class PlaybackController {
         }
     }
 
-    public void save(String filename) {
+    public void save(String filename) throws AppError {
         byte[] byteData = Util.convertShortToByte(data);
         AudioInputStream stream = new AudioInputStream(new ByteArrayInputStream(byteData), s.getFormat(), byteData.length);
         File outFile = new File(filename);
         try {
             AudioSystem.write(stream, AudioFileFormat.Type.WAVE, outFile);
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new AppError("Cannot create file " +  filename + " to save audioStream");
         }
     }
 
