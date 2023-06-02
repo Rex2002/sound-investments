@@ -5,4 +5,5 @@ public enum MsgToSMType implements MsgType {
 	SAVE_MAPPING, // data: NamedMapping
 	LOAD_MAPPING, // data: String
 	START, // data: Mapping
+	BACK_IN_MAIN_SCENE; // data: null
 }

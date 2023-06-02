@@ -1,7 +1,7 @@
 package audio.synth.fx;
 
 
-  import audio.synth.Util;
+  import audio.Util;
 
 import static audio.Constants.SAMPLE_RATE;
 
@@ -50,8 +50,7 @@ public class Effect {
     }
 
     public static double[] echo(double[] input, double[] feedback, int[] delayArray){
-        // TODO fix echo to deal with delayArray instead of fixed value (see Issue #31);
-        int delay = delayArray[0];
+        int delay;
         double[] preOut = new double[input.length];
         double[] bufferL = new double[input.length / 2];
         double[] bufferR = new double[input.length / 2];
@@ -59,6 +58,7 @@ public class Effect {
         bufferR[0] = input[1];
         int cursor = 0;
         for(int pos = 0; pos < input.length/2; pos++){
+            delay = delayArray[Util.getRelPosition(pos, input.length, delayArray.length)];
             double inL = input[2 * pos];
             double inR = input[2 * pos + 1];
             double bL = bufferL[cursor];

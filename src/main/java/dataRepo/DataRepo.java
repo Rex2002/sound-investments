@@ -359,27 +359,35 @@ public class DataRepo {
 		return l;
 	}
 
-	public static Stock getStock(String symbol) {
-		return getSonifable(symbol, stocks);
+	public static String getSonifiableName(SonifiableID id) {
+		Sonifiable s = getSonifable(id, stocks);
+		if (s == null) s = getSonifable(id, etfs);
+		if (s == null) s = getSonifable(id, indices);
+		if (s == null) return null;
+		else return s.getName();
 	}
 
-	public static ETF getETF(String symbol) {
-		return getSonifable(symbol, etfs);
+	public static Stock getStock(SonifiableID id) {
+		return getSonifable(id, stocks);
 	}
 
-	public static Index getIndex(String symbol) {
-		return getSonifable(symbol, indices);
+	public static ETF getETF(SonifiableID id) {
+		return getSonifable(id, etfs);
 	}
 
-	private static <T extends Sonifiable> T getSonifable(String symbol, List<T> list) {
+	public static Index getIndex(SonifiableID id) {
+		return getSonifable(id, indices);
+	}
+
+	private static <T extends Sonifiable> T getSonifable(SonifiableID id, List<T> list) {
 		for (T x : list) {
-			if (x.getId().symbol == symbol)
+			if (x.getId() == id)
 				return x;
 		}
 		return null;
 	}
 
-	public static List<Price> getPrices(Sonifiable s, Calendar start, Calendar end, IntervalLength interval) {
+	public static List<Price> getPrices(SonifiableID s, Calendar start, Calendar end, IntervalLength interval) {
 		return testPrices();
 
 		// try {

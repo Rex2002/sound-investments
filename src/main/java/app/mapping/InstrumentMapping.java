@@ -2,13 +2,12 @@ package app.mapping;
 
 import java.lang.reflect.Field;
 import java.util.Set;
+import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.Optional;
+import java.util.List;
 
 import audio.synth.InstrumentEnum;
 import dataRepo.SonifiableID;
-
-// TODO: Remove Optionals
 
 public class InstrumentMapping {
 	// Optional fields represent that the user can leave those empty
@@ -19,38 +18,55 @@ public class InstrumentMapping {
 	// Pitch
 	public ExchangeData<LineData> pitch = null;
 	// Volume
-	public Optional<ExchangeData<LineData>> relVolume = Optional.empty();
-	public Optional<ExchangeData<RangeData>> absVolume = Optional.empty();
+	public ExchangeData<LineData> relVolume = null;
+	public ExchangeData<RangeData> absVolume = null;
 	// Echo
-	public Optional<ExchangeData<LineData>> delayEcho = Optional.empty();
-	public Optional<ExchangeData<LineData>> feedbackEcho = Optional.empty();
-	public Optional<ExchangeData<RangeData>> onOffEcho = Optional.empty();
+	public ExchangeData<LineData> delayEcho = null;
+	public ExchangeData<LineData> feedbackEcho = null;
+	public ExchangeData<RangeData> onOffEcho = null;
 	// Reverb parameters
-	public Optional<ExchangeData<LineData>> delayReverb = Optional.empty();
-	public Optional<ExchangeData<LineData>> feedbackReverb = Optional.empty();
-	public Optional<ExchangeData<RangeData>> onOffReverb = Optional.empty();
+	public ExchangeData<LineData> delayReverb = null;
+	public ExchangeData<LineData> feedbackReverb = null;
+	public ExchangeData<RangeData> onOffReverb = null;
 	// Filter parameters
-	public Optional<ExchangeData<LineData>> cutoff = Optional.empty();
-	public Optional<ExchangeData<LineData>> order = Optional.empty();
-	public Optional<ExchangeData<RangeData>> onOffFilter = Optional.empty();
+	public ExchangeData<LineData> cutoff = null;
+	public ExchangeData<LineData> order = null;
+	public ExchangeData<RangeData> onOffFilter = null;
 	public boolean highPass = false;
 	// Panning
-	public Optional<ExchangeData<LineData>> pan = Optional.empty();
+	public ExchangeData<LineData> pan = null;
 
 	InstrumentMapping(InstrumentEnum instrument) {
 		this.instrument = instrument;
 	}
 
+	public InstrParam[] getEmptyLineParams(InstrParam oldVal) {
+		List<InstrParam> params = new ArrayList<>();
+		if          (pitch == null || oldVal == InstrParam.PITCH)            params.add(InstrParam.PITCH);
+		if      (relVolume == null || oldVal == InstrParam.RELVOLUME)        params.add(InstrParam.RELVOLUME);
+		if      (delayEcho == null || oldVal == InstrParam.DELAY_ECHO)       params.add(InstrParam.DELAY_ECHO);
+		if   (feedbackEcho == null || oldVal == InstrParam.FEEDBACK_ECHO)    params.add(InstrParam.FEEDBACK_ECHO);
+		if    (delayReverb == null || oldVal == InstrParam.DELAY_REVERB)     params.add(InstrParam.DELAY_REVERB);
+		if (feedbackReverb == null || oldVal == InstrParam.FEEDBACK_REVERB)  params.add(InstrParam.FEEDBACK_REVERB);
+		if         (cutoff == null || oldVal == InstrParam.CUTOFF)           params.add(InstrParam.CUTOFF);
+		if          (order == null || oldVal == InstrParam.ORDER)            params.add(InstrParam.ORDER);
+		InstrParam[] out = new InstrParam[params.size()];
+		return params.toArray(out);
+	}
+
+	public InstrParam[] getEmptyRangeParams(InstrParam oldVal) {
+		List<InstrParam> params = new ArrayList<>();
+		if      (absVolume == null || oldVal == InstrParam.ABSVOLUME)        params.add(InstrParam.ABSVOLUME);
+		if      (onOffEcho == null || oldVal == InstrParam.ON_OFF_ECHO)      params.add(InstrParam.ON_OFF_ECHO);
+		if    (onOffReverb == null || oldVal == InstrParam.ON_OFF_REVERB)    params.add(InstrParam.ON_OFF_REVERB);
+		if    (onOffFilter == null || oldVal == InstrParam.ON_OFF_FILTER)    params.add(InstrParam.ON_OFF_FILTER);
+		InstrParam[] out = new InstrParam[params.size()];
+		return params.toArray(out);
+	}
+
 	public boolean isEmpty() {
 		for (Field f : getClass().getFields()) {
-			if (Optional.class.equals(f.getType())) {
-				try {
-					if (((Optional<?>) f.get(this)).isPresent())
-						return false;
-				} catch (Exception e) {
-					// DO nothing
-				}
-			} else if (ExchangeData.class.equals(f.getType())) {
+			if (ExchangeData.class.equals(f.getType())) {
 				try {
 					if (f.get(this) != null)
 						return false;
@@ -67,15 +83,7 @@ public class InstrumentMapping {
 	@SuppressWarnings("unchecked")
 	public boolean hasSonifiableMapped(SonifiableID sonifiable) {
 		for (Field f : getClass().getFields()) {
-			if (Optional.class.equals(f.getType())) {
-				try {
-					Optional<ExchangeData<?>> optField = (Optional<ExchangeData<?>>) f.get(this);
-					if (optField.isPresent() && optField.get().getId() == sonifiable)
-						return true;
-				} catch (Exception e) {
-					// DO nothing
-				}
-			} else if (ExchangeData.class.equals(f.getType())) {
+			if (ExchangeData.class.equals(f.getType())) {
 				try {
 					if (((ExchangeData<?>) f.get(this)).getId() == sonifiable)
 						return true;
@@ -93,15 +101,7 @@ public class InstrumentMapping {
 	public Set<SonifiableID> getMappedSonifiables() {
 		Set<SonifiableID> set = new HashSet<>(10);
 		for (Field f : getClass().getFields()) {
-			if (Optional.class.equals(f.getType())) {
-				try {
-					Optional<ExchangeData<?>> optField = (Optional<ExchangeData<?>>) f.get(this);
-					if (optField.isPresent())
-						set.add(optField.get().getId());
-				} catch (Exception e) {
-					// DO nothing
-				}
-			} else if (ExchangeData.class.equals(f.getType())) {
+			if (ExchangeData.class.equals(f.getType())) {
 				try {
 					set.add(((ExchangeData<?>) f.get(this)).getId());
 				} catch (Exception e) {
@@ -118,23 +118,42 @@ public class InstrumentMapping {
 	// Getters & Setters:
 	/////////
 
+	public ExchangeData<? extends ExchangeParam> get(InstrParam param) {
+		return switch (param) {
+			case PITCH -> getPitch();
+			case RELVOLUME -> getRelVolume();
+			case ABSVOLUME -> getAbsVolume();
+			case DELAY_ECHO -> getDelayEcho();
+			case FEEDBACK_ECHO -> getFeedbackEcho();
+			case ON_OFF_ECHO -> getOnOffEcho();
+			case DELAY_REVERB -> getDelayEcho();
+			case FEEDBACK_REVERB -> getFeedbackEcho();
+			case ON_OFF_REVERB -> getOnOffReverb();
+			case CUTOFF -> getCutoff();
+			case ORDER -> getOrder();
+			case ON_OFF_FILTER -> getOnOffFilter();
+			case PAN -> getPan();
+			default -> null;
+		};
+	}
+
 	public InstrumentEnum getInstrument() {
 		return this.instrument;
 	}
 
-	public Optional<ExchangeData<LineData>> getRelVolume() {
+	public ExchangeData<LineData> getRelVolume() {
 		return this.relVolume;
 	}
 
-	public void setRelVolume(Optional<ExchangeData<LineData>> relVolume) {
+	public void setRelVolume(ExchangeData<LineData> relVolume) {
 		this.relVolume = relVolume;
 	}
 
-	public Optional<ExchangeData<RangeData>> getAbsVolume() {
+	public ExchangeData<RangeData> getAbsVolume() {
 		return this.absVolume;
 	}
 
-	public void setAbsVolume(Optional<ExchangeData<RangeData>> absVolume) {
+	public void setAbsVolume(ExchangeData<RangeData> absVolume) {
 		this.absVolume = absVolume;
 	}
 
@@ -146,75 +165,75 @@ public class InstrumentMapping {
 		this.pitch = pitch;
 	}
 
-	public Optional<ExchangeData<LineData>> getDelayEcho() {
+	public ExchangeData<LineData> getDelayEcho() {
 		return this.delayEcho;
 	}
 
-	public void setDelayEcho(Optional<ExchangeData<LineData>> delayEcho) {
+	public void setDelayEcho(ExchangeData<LineData> delayEcho) {
 		this.delayEcho = delayEcho;
 	}
 
-	public Optional<ExchangeData<LineData>> getFeedbackEcho() {
+	public ExchangeData<LineData> getFeedbackEcho() {
 		return this.feedbackEcho;
 	}
 
-	public void setFeedbackEcho(Optional<ExchangeData<LineData>> feedbackEcho) {
+	public void setFeedbackEcho(ExchangeData<LineData> feedbackEcho) {
 		this.feedbackEcho = feedbackEcho;
 	}
 
-	public Optional<ExchangeData<RangeData>> getOnOffEcho() {
+	public ExchangeData<RangeData> getOnOffEcho() {
 		return this.onOffEcho;
 	}
 
-	public void setOnOffEcho(Optional<ExchangeData<RangeData>> onOffEcho) {
+	public void setOnOffEcho(ExchangeData<RangeData> onOffEcho) {
 		this.onOffEcho = onOffEcho;
 	}
 
-	public Optional<ExchangeData<LineData>> getDelayReverb() {
+	public ExchangeData<LineData> getDelayReverb() {
 		return this.delayReverb;
 	}
 
-	public void setDelayReverb(Optional<ExchangeData<LineData>> delayReverb) {
+	public void setDelayReverb(ExchangeData<LineData> delayReverb) {
 		this.delayReverb = delayReverb;
 	}
 
-	public Optional<ExchangeData<LineData>> getFeedbackReverb() {
+	public ExchangeData<LineData> getFeedbackReverb() {
 		return this.feedbackReverb;
 	}
 
-	public void setFeedbackReverb(Optional<ExchangeData<LineData>> feedbackReverb) {
+	public void setFeedbackReverb(ExchangeData<LineData> feedbackReverb) {
 		this.feedbackReverb = feedbackReverb;
 	}
 
-	public Optional<ExchangeData<RangeData>> getOnOffReverb() {
+	public ExchangeData<RangeData> getOnOffReverb() {
 		return this.onOffReverb;
 	}
 
-	public void setOnOffReverb(Optional<ExchangeData<RangeData>> onOffReverb) {
+	public void setOnOffReverb(ExchangeData<RangeData> onOffReverb) {
 		this.onOffReverb = onOffReverb;
 	}
 
-	public Optional<ExchangeData<LineData>> getCutoff() {
+	public ExchangeData<LineData> getCutoff() {
 		return this.cutoff;
 	}
 
-	public void setCutoff(Optional<ExchangeData<LineData>> cutoff) {
+	public void setCutoff(ExchangeData<LineData> cutoff) {
 		this.cutoff = cutoff;
 	}
 
-	public Optional<ExchangeData<LineData>> getOrder() {
+	public ExchangeData<LineData> getOrder() {
 		return this.order;
 	}
 
-	public void setOrder(Optional<ExchangeData<LineData>> order) {
+	public void setOrder(ExchangeData<LineData> order) {
 		this.order = order;
 	}
 
-	public Optional<ExchangeData<RangeData>> getOnOffFilter() {
+	public ExchangeData<RangeData> getOnOffFilter() {
 		return this.onOffFilter;
 	}
 
-	public void setOnOffFilter(Optional<ExchangeData<RangeData>> onOffFilter) {
+	public void setOnOffFilter(ExchangeData<RangeData> onOffFilter) {
 		this.onOffFilter = onOffFilter;
 	}
 
@@ -226,11 +245,11 @@ public class InstrumentMapping {
 		this.highPass = highPass;
 	}
 
-	public Optional<ExchangeData<LineData>> getPan() {
+	public ExchangeData<LineData> getPan() {
 		return this.pan;
 	}
 
-	public void setPan(Optional<ExchangeData<LineData>> pan) {
+	public void setPan(ExchangeData<LineData> pan) {
 		this.pan = pan;
 	}
 

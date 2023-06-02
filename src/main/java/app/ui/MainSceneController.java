@@ -3,8 +3,13 @@ package app.ui;
 import java.io.IOException;
 import java.net.URL;
 import java.time.LocalDate;
+import java.util.Calendar;
 import java.util.List;
 import java.util.ResourceBundle;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.function.Function;
+
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -21,7 +26,10 @@ import javafx.scene.control.DateCell;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
 import javafx.scene.control.SelectionModel;
+import javafx.scene.control.SingleSelectionModel;
 import javafx.scene.control.TextField;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
@@ -33,12 +41,15 @@ import app.communication.EventQueues;
 import app.communication.Msg;
 import app.communication.MsgToSMType;
 import app.communication.MsgToUIType;
+import app.communication.MusicData;
 import app.communication.SonifiableFilter;
 import app.mapping.ExchangeParam;
 import app.mapping.InstrParam;
 import app.mapping.LineData;
 import app.mapping.Mapping;
 import app.mapping.PointData;
+import app.mapping.RangeData;
+import audio.synth.EvInstrEnum;
 import audio.synth.InstrumentEnum;
 import dataRepo.DateUtil;
 import dataRepo.Sonifiable;
@@ -80,16 +91,19 @@ public class MainSceneController implements Initializable {
     @FXML
     private VBox checkVBox;
     @FXML
-    private VBox instCheckBox;
+    private VBox instBox;
     @FXML
     private double duration;
 
-    private Stage stage;
-    private Scene scene;
-    private Parent root;
+    private LocalDate minDateStart = LocalDate.now().minusMonths(3);
+    private LocalDate maxDateStart = LocalDate.now().minusDays(3);
+    private LocalDate minDateEnd = LocalDate.now().minusMonths(3).plusDays(3);
+    private LocalDate maxDateEnd = LocalDate.now();
 
+    private ImageView loading;
     private CheckEQService checkEQService;
     private Mapping mapping = new Mapping();
+    private boolean currentlyUpdatingCB = false;
     private String[] locations = { "Deutschland" };
     private static String[] categoryKeys = { "Alle Kategorien", "Aktien", "ETFs", "Indizes" };
     private static FilterFlag[] categoryValues = { FilterFlag.ALL, FilterFlag.STOCK, FilterFlag.ETF, FilterFlag.INDEX };
@@ -118,18 +132,15 @@ public class MainSceneController implements Initializable {
                             addToCheckList(s);
                         }
                     }
-                    case ERROR -> {
-                        System.out.println((String) msg.data);
-                        displayError((String) msg.data, "Interner Fehler");
-                    }
-                    default -> System.out.println("ERROR: Msg-Type " + msg.type + " not yet implemented");
+                    case LOADABLE_MAPPINGS -> System.out.println("ERROR: Msg-Type LOADABLE_MAPPINGS is not yet implemented");
+                    case ERROR -> displayError((String) msg.data, "Interner Fehler");
+                    case VALIDATION_DONE -> System.out.println("ERROR: Msg-Type VALIDATION_DONE is not yet implemented");
+                    case VALIDATION_ERROR -> displayError((String) msg.data, "Ungültiges Mapping");
+                    case FINISHED -> switchToMusicScene((MusicData) msg.data);
                 }
             }
         });
         checkEQService.start();
-
-        // @nocheckin Uncomment this before committing
-        displayError("Testing", "Test");
 
         categoriesChoice.getSelectionModel().selectedIndexProperty().addListener((observable, oldIdx, newIdx) -> {
             EventQueues.toSM.add(new Msg<>(MsgToSMType.FILTERED_SONIFIABLES,
@@ -150,7 +161,6 @@ public class MainSceneController implements Initializable {
                 // TODO: Error Handling
             }
         });
-
         endPicker.valueProperty().addListener((observable, oldValue, newValue) -> {
             try {
                 mapping.setEndDate(DateUtil.localDateToCalendar(newValue));
@@ -159,78 +169,100 @@ public class MainSceneController implements Initializable {
                 // TODO: Error Handling
             }
         });
+        // Set default values
+        startPicker.valueProperty().setValue(LocalDate.now().minusMonths(1));
+        endPicker.valueProperty().setValue(LocalDate.now());
 
-        audioLength.textProperty().addListener((observable, oldValue, newValue) -> {
-            try {
-                if (Integer.parseInt(audioLength.getText()) <= 59) {
-                    if (audioLength1.getText() != null) {
-                        Integer minValue = Integer.parseInt(audioLength1.getText());
-                        Integer passValue = Integer.parseInt(newValue) + minValue * 60;
-                        mapping.setSoundLength(passValue);
-                        duration = passValue;
-                    }
-                } else {
-                    // falsche Eingabe
-                    audioLength.setText(null);
-                    audioLength.setPromptText("0-59");
-                }
-                enableBtnIfValid();
-            } catch (Exception e) {
-                // TODO: Error Handling
-            }
-        });
-        audioLength1.textProperty().addListener((observable, oldValue, newValue) -> {
-            try {
-                if (Integer.parseInt(audioLength1.getText()) <= 5) {
-                    if (Integer.parseInt(audioLength1.getText()) == 5) {
-                        audioLength.setText("0");
-                        audioLength.setDisable(true);
-                    } else {
-                        audioLength.setDisable(false);
-                    }
-                    if (audioLength.getText() != null) {
-                        Integer secValue = Integer.parseInt(audioLength.getText());
-                        Integer passValue = Integer.parseInt(newValue) + secValue;
-                        mapping.setSoundLength(passValue);
-                        duration = passValue;
-                        enableBtnIfValid();
-                    }
-                } else {
-                    // Error zu hoch eingestellt
-                    audioLength1.setText(null);
-                    audioLength1.setPromptText("0-5");
-                }
-            } catch (Exception e) {
-                // TODO: Error Handling
-            }
-        });
+        audioLength.textProperty().addListener((o, oldVal, newVal) -> updateSoundLength());
+        audioLength1.textProperty().addListener((o, oldVal, newVal) -> updateSoundLength());
+        // Set default values
+        audioLength.textProperty().setValue("30");
+        audioLength1.textProperty().setValue("0");
+
         startBtn.setOnAction(ev -> {
             try {
                 EventQueues.toSM.add(new Msg<>(MsgToSMType.START, mapping));
-                switchToMusicScene(ev);
+                // startBtn.setDisable(true);
+                // Show loading image
+                loading = new ImageView(new Image(getClass().getResource("/loading.png").toExternalForm()));
+                double loadingWidth = 150;
+                double loadingHeight = 150;
+                loading.setFitWidth(loadingWidth);
+                loading.setFitHeight(loadingHeight);
+                loading.setLayoutX(anchor.getScene().getWidth() / 2 - loadingWidth / 2);
+                loading.setLayoutY(anchor.getScene().getHeight() / 2 - loadingHeight / 2);
+                anchor.getChildren().add(loading);
+                // Animate loading image
+                Timer loadingAnimTimer = new Timer();
+                int nextFrameInMs = 60;
+                loadingAnimTimer.scheduleAtFixedRate(new TimerTask() {
+                    private int counter = 1;
+                    public void run() {
+                        loading.setRotate(360 * counter / 12);
+                        counter = (counter + 1) % 12;
+                    }
+                }, nextFrameInMs, nextFrameInMs);
             } catch (Exception e) {
                 e.printStackTrace();
                 // TODO: Error handling
             }
         });
+
+        mapping.setOnInstrAdded(inst -> instAdded(inst.toString()));
+        mapping.setOnEvInstrAdded(inst -> instAdded(inst.toString()));
+        mapping.setOnInstrRemoved(inst -> instRemoved(inst.toString()));
+        mapping.setOnEvInstrRemoved(inst -> instRemoved(inst.toString()));
     }
 
-    public void switchToMusicScene(ActionEvent event) throws IOException {
-        FXMLLoader loader = new FXMLLoader(getClass().getResource("/MusicScene.fxml"));
-        root = loader.load();
-        MusicSceneController controller = loader.getController();
-        controller.passData(duration, startPicker.getValue(), endPicker.getValue());
-        stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-        scene = new Scene(root);
-        String css = this.getClass().getResource("/choice.css").toExternalForm();
-        // Set the stylesheet after the scene creation
-        scene.getStylesheets().add(css);
-        stage.setScene(scene);
-        stage.show();
+    private void updateSoundLength() {
+        if (Integer.parseInt(audioLength.getText()) <= 59) {
+            if (audioLength1.getText() != null) {
+                Integer minValue = 0;
+                try {
+                    minValue = Integer.parseInt(audioLength1.getText());
+                } catch (NumberFormatException e) {
+                }
+
+                Integer passValue = minValue * 60;
+                try {
+                    passValue += Integer.parseInt(audioLength.getText());
+                } catch (NumberFormatException e) {
+                }
+
+                mapping.setSoundLength(passValue);
+                duration = passValue;
+            }
+        } else {
+            // falsche Eingabe
+            audioLength.setText(null);
+            audioLength.setPromptText("0-59");
+        }
+        enableBtnIfValid();
+    }
+
+    public void switchToMusicScene(MusicData musicData) {
+        try {
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/MusicScene.fxml"));
+            Parent root = loader.load();
+            MusicSceneController controller = loader.getController();
+            controller.passData(musicData);
+            Stage stage = (Stage) startBtn.getScene().getWindow();
+            Scene scene = new Scene(root);
+            String css = this.getClass().getResource("/choice.css").toExternalForm();
+            // Set the stylesheet after the scene creation
+            scene.getStylesheets().add(css);
+            stage.setScene(scene);
+            stage.show();
+        } catch (IOException e) {
+            e.printStackTrace();
+            displayError("Fehler beim Laden de nächsten UI-Szene", "Interner Fehler");
+        }
     }
 
     @FXML
     private void displayError(String errorMessage, String errorTitle) {
+        // TODO: Make prettier & make text actually readable
+        System.out.println(errorMessage);
         Pane errorPane = new Pane();
         errorPane.setId("errorPane");
         errorPane.setLayoutX(542);
@@ -289,6 +321,7 @@ public class MainSceneController implements Initializable {
         });
         checkVBox.setPrefHeight((checkVBox.getChildren().size()) * 74.0);
         checkVBox.getChildren().add(cBox);
+        // TODO: Do we really want that "Nächste Laden" Button after 10 elements?
         if (checkVBox.getChildren().size() == 10) {
             Button loadBtn = new Button("Nächste laden");
             loadBtn.setOnAction(event -> {
@@ -338,10 +371,7 @@ public class MainSceneController implements Initializable {
         children.add(line);
     }
 
-    private void addStockParamToPane(String text, String cssClass, int labelX, int labelY, int cb1X, int cb1Y, int cb2X,
-            int cb2Y, SonifiableID sonifiableId,
-            ExchangeParam eparam,
-            ObservableList<Node> children) {
+    private void addStockParamToPane(String text, String cssClass, int labelX, int labelY, int cb1X, int cb1Y, int cb2X, int cb2Y, Sonifiable sonifiable, ExchangeParam eparam, ObservableList<Node> children) {
         Label label = new Label(text);
         label.getStyleClass().add(cssClass);
         label.setLayoutX(labelX);
@@ -349,9 +379,25 @@ public class MainSceneController implements Initializable {
         children.add(label);
 
         if (eparam instanceof PointData) {
-            // TODO: Add ChoiceBox for Event-Instrument
+            String[] evInsts = EvInstrEnum.displayVals;
+            ChoiceBox<String> evInstCB = new ChoiceBox<>();
+            evInstCB.getItems().add("");
+            evInstCB.getItems().addAll(evInsts);
+            evInstCB.setLayoutX(cb1X);
+            evInstCB.setLayoutY(cb1Y);
+            evInstCB.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
+                try {
+                    if (oldValue != null) mapping.rmEvInstr(sonifiable.getId(), (PointData) eparam);
+                    if (newValue != null) mapping.addEvInstr(EvInstrEnum.fromString(newValue), sonifiable, (PointData) eparam);
+                } catch (AppError e) {
+                    displayError(e.getMessage(), "Interner Fehler");
+                }
+            });
+            children.add(evInstCB);
+
         } else {
-            InstrParam[] iparams = (eparam instanceof LineData) ? InstrParam.LineDataParams
+            boolean isLineParam = (eparam instanceof LineData);
+            InstrParam[] iparams = isLineParam ? InstrParam.LineDataParams
                     : InstrParam.RangeDataParams;
 
             ChoiceBox<InstrumentEnum> instCB = new ChoiceBox<>();
@@ -363,35 +409,59 @@ public class MainSceneController implements Initializable {
             paramCB.getItems().addAll(iparams);
             paramCB.setLayoutX(cb2X);
             paramCB.setLayoutY(cb2Y);
-
+            paramCB.setDisable(true);
             instCB.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
-                SelectionModel<InstrParam> paramCBSelect = paramCB.getSelectionModel();
-                // Mapping isn't effected if the parameter ChoiceBox isn't selected yet
-                if (!paramCBSelect.isEmpty()) {
-                    try {
-                        mapping.setParam(newValue, sonifiableId, paramCBSelect.getSelectedItem(), eparam);
-                        if (oldValue != null)
-                            mapping.rmParam(sonifiableId, oldValue, paramCBSelect.getSelectedItem());
-                        enableBtnIfValid();
-                    } catch (AppError e) {
-                        instCB.getSelectionModel().select(oldValue);
-                        displayError(e.getMessage(), "Interner Fehler");
+                try {
+                    // If the new instrument already has the selected parameter mapped or if newValue is null
+                    // then we need to remove the parameter in the UI
+                    // otherwise we also need to set the parameter in the mapping
+                    // in any case, we need to remove the old mapping with the old instrument
+                    if (currentlyUpdatingCB) return;
+                    currentlyUpdatingCB = true;
+                    SingleSelectionModel<InstrParam> paramCBSelect = paramCB.getSelectionModel();
+                    InstrParam paramVal = paramCBSelect.getSelectedItem();
+
+                    paramCB.setDisable(newValue == null);
+                    paramCBSelect.select(null);
+                    paramCB.getItems().clear();
+                    InstrParam[] newOpts;
+                    Function<InstrParam, InstrParam[]> getOpts = (pv) -> isLineParam ? mapping.getEmptyLineParams(newValue, pv) : mapping.getEmptyRangeParams(newValue, pv);
+                    if (newValue != null && paramVal != null) {
+                        mapping.rmParam(oldValue, sonifiable.getId(), paramVal);
+
+                        if (!mapping.isMapped(newValue, paramVal)) {
+                            newOpts = getOpts.apply(paramVal);
+                            paramCBSelect.select(paramVal);
+                            mapping.setParam(newValue, sonifiable, paramVal, eparam);
+                        } else {
+                            newOpts = getOpts.apply(null);
+                        }
+                    } else {
+                        newOpts = getOpts.apply(null);
                     }
+                    paramCB.getItems().addAll(newOpts);
+                    enableBtnIfValid();
+                    currentlyUpdatingCB = false;
+                } catch (AppError e) {
+                    displayError(e.getMessage(), "Interner Fehler");
                 }
             });
-
             paramCB.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
-                SelectionModel<InstrumentEnum> instCBSelect = instCB.getSelectionModel();
-                if (!instCBSelect.isEmpty()) {
-                    try {
-                        mapping.setParam(instCBSelect.getSelectedItem(), sonifiableId, newValue, eparam);
+                try {
+                    if (currentlyUpdatingCB) return;
+                    currentlyUpdatingCB = true;
+                    SelectionModel<InstrumentEnum> instCBSelect = instCB.getSelectionModel();
+                    if (!instCBSelect.isEmpty()) {
                         if (oldValue != null)
-                            mapping.rmParam(sonifiableId, instCBSelect.getSelectedItem(), oldValue);
+                            mapping.rmParam(instCBSelect.getSelectedItem(), sonifiable.getId(), oldValue);
+                        if (newValue != null)
+                            mapping.setParam(instCBSelect.getSelectedItem(), sonifiable, newValue, eparam);
                         enableBtnIfValid();
-                    } catch (AppError e) {
-                        paramCB.getSelectionModel().select(oldValue);
-                        displayError(e.getMessage(), "Interner Fehler");
                     }
+                    currentlyUpdatingCB = false;
+                } catch (AppError e) {
+                    paramCB.getSelectionModel().select(oldValue);
+                    displayError(e.getMessage(), "Interner Fehler");
                 }
             });
 
@@ -401,10 +471,10 @@ public class MainSceneController implements Initializable {
     }
 
     private Pane createSharePane(Sonifiable sonifiable) { // initialize and dek the Share Pane
-        mapping.addSonifiable(sonifiable.getId());
+        mapping.addSonifiable(sonifiable);
+        updateDateRange();
 
         Pane stockPane = new Pane();
-        stockPane.setUserData(sonifiable.getId());
         stockPane.getStyleClass().add("stockPane");
         TextField tField = new TextField();
         tField.setText(sonifiable.getName());
@@ -417,41 +487,31 @@ public class MainSceneController implements Initializable {
         addLine("pinkline", 306, 168, -100, -60, -100, 263, stockPane.getChildren());
         addLine("pinkline", 512, 177, -100, -60, -100, 263, stockPane.getChildren());
 
-        addStockParamToPane("Price", "paneShareLabel", 14, 80, 14, 115, 14, 160, sonifiable.getId(), LineData.PRICE,
-                stockPane.getChildren());
-        addStockParamToPane("Trend Line Break", "paneShareLabel", 14, 215, 14, 250, 14, 295, sonifiable.getId(),
-                LineData.PRICE, stockPane.getChildren());
-        addStockParamToPane("Derivate", "paneShareLabel", 14, 350, 14, 385, 14, 430, sonifiable.getId(), LineData.PRICE,
-                stockPane.getChildren());
-        addStockParamToPane("Flag", "paneShareLabel", 226, 80, 226, 115, 226, 160, sonifiable.getId(), LineData.PRICE,
-                stockPane.getChildren());
-        addStockParamToPane("Triangle", "paneShareLabel", 226, 215, 226, 250, 226, 295, sonifiable.getId(),
-                LineData.PRICE,
-                stockPane.getChildren());
-        addStockParamToPane("Vform", "paneShareLabel", 226, 350, 226, 385, 226, 430, sonifiable.getId(), LineData.PRICE,
-                stockPane.getChildren());
-        addStockParamToPane("Trend-", "paneShareLabel", 422, 80, 500, 70, 500, 115, sonifiable.getId(), LineData.PRICE,
-                stockPane.getChildren());
-        Label label = new Label("Break");
-        label.getStyleClass().add("paneShareLabel");
-        label.setLayoutX(422);
-        label.setLayoutY(100);
-        stockPane.getChildren().add(label);
-        addStockParamToPane("Movin", "paneShareLabel", 422, 203, 500, 175, 500, 220, sonifiable.getId(), LineData.PRICE,
-                stockPane.getChildren());
-        addStockParamToPane("Support", "paneShareLabel", 422, 305, 500, 280, 500, 325, sonifiable.getId(),
-                LineData.PRICE, stockPane.getChildren());
-        addStockParamToPane("Resist", "paneShareLabel", 422, 410, 500, 385, 500, 430, sonifiable.getId(),
-                LineData.PRICE, stockPane.getChildren());
+        addStockParamToPane("Preis", "paneShareLabel", 14, 80, 14, 115, 14, 160, sonifiable, LineData.PRICE, stockPane.getChildren());
+        addStockParamToPane("Gleitender Durchschnitt", "paneShareLabel", 14, 215, 14, 250, 14, 295, sonifiable, LineData.MOVINGAVG, stockPane.getChildren());
+        addStockParamToPane("Steigungsgrad", "paneShareLabel", 14, 350, 14, 385, 14, 430, sonifiable, LineData.RELCHANGE, stockPane.getChildren());
+        addStockParamToPane("Flagge", "paneShareLabel", 226, 80, 226, 115, 226, 160, sonifiable, RangeData.FLAG, stockPane.getChildren());
+        addStockParamToPane("Dreieck", "paneShareLabel", 226, 215, 226, 250, 226, 295, sonifiable, RangeData.TRIANGLE, stockPane.getChildren());
+        addStockParamToPane("V-Form", "paneShareLabel", 226, 350, 226, 385, 226, 430, sonifiable, RangeData.VFORM, stockPane.getChildren());
+        addStockParamToPane("Trendbrüche", "paneShareLabel", 422, 80, 422, 115, 0, 0, sonifiable, PointData.TRENDBREAK, stockPane.getChildren());
+        addStockParamToPane("EQMOVINGAVG", "paneShareLabel", 422, 180, 422, 215, 0, 0, sonifiable, PointData.EQMOVINGAVG, stockPane.getChildren());
+        addStockParamToPane("EQSUPPORT", "paneShareLabel", 422, 280, 422, 315, 0, 0, sonifiable, PointData.EQSUPPORT, stockPane.getChildren());
+        addStockParamToPane("EQRESIST", "paneShareLabel", 422, 380, 422, 415, 0, 0, sonifiable, PointData.EQRESIST, stockPane.getChildren());
 
         return stockPane;
     }
 
-    LocalDate minDateStart = LocalDate.of(2023, 4, 16);
-    LocalDate maxDateStart = LocalDate.now();
+    private void updateDateRange() {
+        Calendar[] minMaxDates = mapping.getDateRange();
+        minDateStart = DateUtil.calendarToLocalDate(minMaxDates[0]);
+        maxDateEnd = DateUtil.calendarToLocalDate(minMaxDates[1]);
+        maxDateStart = maxDateEnd.minusDays(3);
+        minDateEnd = minDateStart.minusDays(3);
+        updateStartPicker();
+        updateEndPicker();
+    }
 
-    private void updateStartPicker() { // Datum Blockers WARNING: Müsen schauen dass wir die angegebenen Daten bei
-                                       // Änderung der Aktien überprüfen
+    private void updateStartPicker() {
         startPicker.setDayCellFactory(d -> new DateCell() {
             @Override
             public void updateItem(LocalDate item, boolean empty) {
@@ -461,10 +521,7 @@ public class MainSceneController implements Initializable {
         });
     }
 
-    LocalDate minDateEnd = LocalDate.of(2023, 4, 16);
-    LocalDate maxDateEnd = LocalDate.now();
-
-    private void updateEndPicker() { // Datum Blockers
+    private void updateEndPicker() {
         endPicker.setDayCellFactory(d -> new DateCell() {
             @Override
             public void updateItem(LocalDate item, boolean empty) {
@@ -474,10 +531,29 @@ public class MainSceneController implements Initializable {
         });
     }
 
-    public void enableBtnIfValid() {
+    private void enableBtnIfValid() {
         if (mapping.isValid())
             startBtn.setDisable(false);
         else
             startBtn.setDisable(true);
+    }
+
+    private void instAdded(String name) {
+        Label label = new Label(name);
+        label.setId("insLabel");
+        instBox.getChildren().add(label);
+    }
+
+    private void instRemoved(String name) {
+        int idx = 0;
+        for (Node child : instBox.getChildren()) {
+            try {
+                if (((Label) child).getText() == name) break;
+            } catch (Exception e) {
+            }
+            idx++;
+        }
+        if (idx < instBox.getChildren().size())
+            instBox.getChildren().remove(idx);
     }
 }
