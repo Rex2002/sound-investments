@@ -9,28 +9,30 @@ import java.util.function.Predicate;
 public class UnorderedList<E> implements List<E>, RandomAccess {
 	private static final int DEFAULT_CAPACITY = 16;
 
-	private int cap = DEFAULT_CAPACITY;
-	private int len = 0;
+	private int cap;
+	private int len;
 	private Object[] arr;
-	private int toRemoveAmount = 0;
-	private int[] toRemove = new int[DEFAULT_CAPACITY];
+	private int toRemoveAmount;
+	private int[] toRemove;
+
+	private UnorderedList(Object[] arr) {
+		this.arr = arr;
+		this.cap = arr.length;
+		this.len = 0;
+		this.toRemoveAmount = 0;
+		this.toRemove = new int[DEFAULT_CAPACITY];
+	}
 
 	public UnorderedList(int capacity) {
-		if (capacity < 0)
-			throw new IllegalArgumentException("Illegal Capacity: " +
-					capacity);
-		this.arr = new Object[capacity];
-		this.cap = capacity;
+		this(new Object[capacity]);
 	}
 
 	public UnorderedList() {
-		this.arr = new Object[DEFAULT_CAPACITY];
+		this(new Object[DEFAULT_CAPACITY]);
 	}
 
 	public UnorderedList(Collection<? extends E> c) {
-		this.cap = c.size();
-		this.len = cap;
-		this.arr = c.toArray();
+		this(c.toArray());
 	}
 
 	public int capacity() {
@@ -174,7 +176,10 @@ public class UnorderedList<E> implements List<E>, RandomAccess {
 
 	public void removeLater(int index) {
 		// Assumes that `index` isn't already in the `toRemove` array
-		if (toRemove.length == toRemoveAmount) {
+		assert toRemove.length != 0 : "toRemove cannot be an empty array";
+		if (toRemove.length == 0) {
+			toRemove = new int[DEFAULT_CAPACITY];
+		} else if (toRemove.length == toRemoveAmount) {
 			toRemove = Arrays.copyOf(toRemove, toRemove.length + (toRemove.length >> 1));
 		}
 		toRemove[toRemoveAmount] = index;

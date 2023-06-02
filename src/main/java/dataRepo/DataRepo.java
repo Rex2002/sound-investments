@@ -44,15 +44,12 @@ public class DataRepo {
 			"facbd6808e6d436e95c4935ab8cc082e" };
 
 	// TODO: Add specific error handling for the different APIs
-	private static APIReq apiTwelvedata = new APIReq("https://api.twelvedata.com/", apiToksTwelvedata, AuthPolicy.QUERY,
-			"apikey");
-	private static APIReq apiLeeway = new APIReq("https://api.leeway.tech/api/v1/public/", apiToksLeeway,
-			AuthPolicy.QUERY,
-			"apitoken");
-	private static APIReq apiMarketstack = new APIReq("http://api.marketstack.com/v1/", apiToksMarketstack,
-			AuthPolicy.QUERY, "access_key", new PaginationHandler(json -> {
+	private static APIReq apiTwelvedata = new APIReq("https://api.twelvedata.com/", apiToksTwelvedata, AuthPolicy.QUERY, "apikey");
+	private static APIReq apiLeeway = new APIReq("https://api.leeway.tech/api/v1/public/", apiToksLeeway, AuthPolicy.QUERY, "apitoken");
+	private static APIReq apiMarketstack = new APIReq("http://api.marketstack.com/v1/", apiToksMarketstack, AuthPolicy.QUERY, "access_key",
+			new PaginationHandler(json -> {
 				// @Cleanup Remove hardcoded limit
-				return 100;
+				return 30;
 			}, json -> json.asMap().get("data")),
 			(page) -> {
 				// @Cleanup Remove hardcoded offset
@@ -61,7 +58,7 @@ public class DataRepo {
 				// having access to the APIReq object
 				String[] res = { "offset", Integer.toString(10 * page) };
 				return res;
-			}, null);
+			}, APIReq.defaultErrHandler());
 
 	// @Scalability If more than one component would need to react to updated data,
 	// a single boolean flag would not be sufficient of course. Since we know,
@@ -76,13 +73,11 @@ public class DataRepo {
 	private static UnorderedList<ETF> etfs = new UnorderedList<>(128);
 	private static UnorderedList<Index> indices = new UnorderedList<>(128);
 
-	// When updatedStocksTradingPeriods == stocks.size(), all stocks are updated
-	// set by setTradingPeriods()
+	// When updatedStocksTradingPeriods == stocks.size(), all stocks are updated set by setTradingPeriods()
 	private static AtomicInteger updatedStocksTradingPeriods = new AtomicInteger(stocks.size());
 	private static AtomicInteger updatedETFsTradingPeriods = new AtomicInteger(etfs.size());
 	private static AtomicInteger updatedIndicesTradingPeriods = new AtomicInteger(indices.size());
-	private static int updatedTradingPeriodsCounter = 0; // Amount of sonifiables lists, whose trading periods have been
-															// updated
+	private static int updatedTradingPeriodsCounter = 0; // Amount of sonifiables lists, whose trading periods have updated
 
 	private static List<Price> testPrices() {
 		try {
@@ -111,6 +106,7 @@ public class DataRepo {
 	public static void updateSonifiablesList() throws AppError {
 		try {
 			// @Cleanup increase limit to the maximum (1000) for production
+			// @Cleanup As of now this limit value has to be synced with the offset when creating the Marketstack APIReq bc of hardcoded values
 			apiMarketstack.setQueries("limit", "10");
 			FutureList<UnorderedList<Stock>> fl = apiMarketstack.getPaginatedJSONList("tickers", threadPool, 8,
 					(Function<Integer, UnorderedList<Stock>>) (size -> {
@@ -138,9 +134,6 @@ public class DataRepo {
 								if (stocks.get(i) == null)
 									stocks.remove(i);
 							}
-							writeToJSON("stocks.json",
-									ArrayFunctions.toStringArr(stocks.getArray(), x -> ((Sonifiable) x).toJSON(),
-											true));
 
 							setTradingPeriods(stocks, updatedStocksTradingPeriods);
 
@@ -151,7 +144,6 @@ public class DataRepo {
 								public void run() {
 									// TODO: Refactor to reduce code duplication
 									boolean updatedTradingPeriods = false;
-									// @Cleanup exchange 32 with stocks.size()
 									if (updatedStocksTradingPeriods.compareAndSet(stocks.size(), 0)) {
 										updatedTradingPeriods = true;
 										updatedTradingPeriodsCounter++;
@@ -181,6 +173,11 @@ public class DataRepo {
 										updatedTradingPeriodsCounter = 0;
 										System.out.println("Setting Trading Periods done");
 										timer.cancel();
+										try {
+											writeToJSON("stocks.json", ArrayFunctions.toStringArr(stocks.getArray(), x -> ((Sonifiable) x).toJSON(), true));
+										} catch (AppError e) {
+											e.printStackTrace();
+										}
 									}
 								}
 							}, 500, 200);
@@ -271,59 +268,37 @@ public class DataRepo {
 			Calendar[] res = { null, null };
 			T out = null;
 			try {
-				HashMap<String, JsonPrimitive<?>> json = apiLeeway
-						.getJSON("general/tradingperiod/" + s.getId().toString(), x -> x.asMap());
+				HashMap<String, JsonPrimitive<?>> json = apiLeeway.getJSON("general/tradingperiod/" + s.getId().toString(), x -> x.asMap());
 				res[0] = DateUtil.calFromDateStr(json.get("start").asStr());
 				res[1] = DateUtil.calFromDateStr(json.get("end").asStr());
 				out = callback.apply(res);
 			} catch (APIErr e) {
 				// Try again using Twelvedata's API instead
 				try {
-					apiTwelvedata.setQueries("symbol", s.getId().getSymbol(), "exchange",
-							s.getId().getExchange(),
-							"outputsize", "10", "interval", IntervalLength.DAY.toString(API.TWELVEDATA));
+					apiTwelvedata.setQueries("symbol", s.getId().getSymbol(), "exchange", s.getId().getExchange(), "outputsize", "10", "interval", IntervalLength.DAY.toString(API.TWELVEDATA));
 
-					List<JsonPrimitive<?>> vals = apiTwelvedata.getJSON("/time_series",
-							x -> x.asMap().get("values").asList(), "order", "ASC", "start_date", "1990-01-01");
+					List<JsonPrimitive<?>> vals = apiTwelvedata.getJSON("time_series", x -> x.asMap().get("values").asList(), "order", "ASC", "start_date", "1990-01-01");
 					res[0] = DateUtil.calFromDateStr(vals.get(0).asMap().get("datetime").asStr());
 
-					vals = apiTwelvedata.getJSON("/time_series", x -> x.asMap().get("values").asList(), "order", "DESC",
-							"end_date",
-							DateUtil.formatDate(Calendar.getInstance()));
+					vals = apiTwelvedata.getJSON("time_series", x -> x.asMap().get("values").asList(), "order", "DESC", "end_date", DateUtil.formatDate(Calendar.getInstance()));
 					res[1] = DateUtil.calFromDateStr(vals.get(0).asMap().get("datetime").asStr());
 
 					apiTwelvedata.resetQueries();
 					out = callback.apply(res);
 				} catch (Exception e2) {
+					// @Debug
+					// System.out.println("Error in inner getTradingPeriod:");
+					// e2.printStackTrace();
 					out = callback.apply(null);
 				}
 			} catch (Exception e) {
+				// @Debug
+				// System.out.println("Error in outer getTradingPeriod:");
+				// e.printStackTrace();
 				out = callback.apply(null);
 			}
 			return out;
 		});
-		// Alternative implementation:
-		/*
-		 * apiTwelvedata.setQueries("symbol", s.getId().getSymbol(), "exchange",
-		 * s.getId().getExchange(),
-		 * "outputsize", "10", "interval", IntervalLength.DAY.toString(API.TWELVEDATA));
-		 *
-		 * List<JsonPrimitive<?>> vals = apiTwelvedata.getJSON(x ->
-		 * x.asMap().get("values").asList(),
-		 * "/time_series", "order", "ASC", "start_date", "1990-01-01");
-		 * if (vals.isEmpty())
-		 * throw new Exception(); // throw exception to fall into catch-branch
-		 * s.setEarliest(DateUtil.calFromDateStr(vals.get(0).asMap().get("datetime").
-		 * asStr()));
-		 *
-		 * vals = apiTwelvedata.getJSON(x -> x.asMap().get("values").asList(),
-		 * "/time_series", "order", "DESC", "end_date",
-		 * DateUtil.formatDate(Calendar.getInstance()));
-		 * if (vals.isEmpty())
-		 * throw new Exception(); // throw exception to fall into catch-branch
-		 * s.setEarliest(DateUtil.calFromDateStr(vals.get(0).asMap().get("datetime").
-		 * asStr()));
-		 */
 	}
 
 	public static List<Sonifiable> findByPrefix(String prefix, FilterFlag... filters) {

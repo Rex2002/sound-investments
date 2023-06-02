@@ -329,9 +329,6 @@ public class APIReq {
 					received = l.size();
 					for (int i = 0; i < received; i++) {
 						list.set(listStartIdx + i, l.get(i));
-						System.out.println(
-								"Setting " + Integer.toString(listStartIdx + i) + " to " + (l.get(i) == null ? "null"
-										: l.get(i).toString()));
 					}
 				} catch (Exception e) {
 					// Request failed -> Log Error
