@@ -161,7 +161,7 @@ public class StateManager {
 			mapping.setEndDate(DateUtil.calFromDateStr("2023-05-16"));
 			mapping.setSoundLength(60);
 
-			Sonifiable s = new Stock("SAP", new SonifiableID("XETRA", "SAP"));
+			Sonifiable s = new Stock("SAP", new SonifiableID("SAP", "XETRA"));
 			mapping.setParam(InstrumentEnum.RETRO_SYNTH, s, InstrParam.PITCH, LineData.PRICE);
 			mapping.setParam(InstrumentEnum.RETRO_SYNTH, s, InstrParam.RELVOLUME, LineData.MOVINGAVG);
 			mapping.setHighPass(true);

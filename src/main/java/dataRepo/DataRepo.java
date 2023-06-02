@@ -252,28 +252,28 @@ public class DataRepo {
 	}
 
 	public static String getSonifiableName(SonifiableID id) {
-		Sonifiable s = getSonifable(id.getSymbol(), stocks);
-		if (s == null) s = getSonifable(id.getSymbol(), etfs);
-		if (s == null) s = getSonifable(id.getSymbol(), indices);
+		Sonifiable s = getSonifable(id, stocks);
+		if (s == null) s = getSonifable(id, etfs);
+		if (s == null) s = getSonifable(id, indices);
 		if (s == null) return null;
 		else return s.getName();
 	}
 
-	public static Stock getStock(String symbol) {
-		return getSonifable(symbol, stocks);
+	public static Stock getStock(SonifiableID id) {
+		return getSonifable(id, stocks);
 	}
 
-	public static ETF getETF(String symbol) {
-		return getSonifable(symbol, etfs);
+	public static ETF getETF(SonifiableID id) {
+		return getSonifable(id, etfs);
 	}
 
-	public static Index getIndex(String symbol) {
-		return getSonifable(symbol, indices);
+	public static Index getIndex(SonifiableID id) {
+		return getSonifable(id, indices);
 	}
 
-	private static <T extends Sonifiable> T getSonifable(String symbol, List<T> list) {
+	private static <T extends Sonifiable> T getSonifable(SonifiableID id, List<T> list) {
 		for (T x : list) {
-			if (x.getId().symbol == symbol)
+			if (x.getId() == id)
 				return x;
 		}
 		return null;
