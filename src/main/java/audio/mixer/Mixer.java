@@ -27,26 +27,25 @@ public class Mixer {
 
 
         // find the minimum start position (except of startPositions[0] which should always be 0)
+        // check if the start positions are valid
         int minStartPosition = maxLength;
         for (int i = 1; i < startPositions.length; i++) {
             minStartPosition = Math.min(minStartPosition, startPositions[i]);
+            if (startPositions[i] > maxLength) {
+                throw new MixerException("Illegal start position ("+i+"), must be <= maxLength!");
+            }
         }
 
         // check if the start positions are valid
         if (minStartPosition < 0) {
             throw new MixerException("Illegal start position, must be >= 0!");
-        } else if (minStartPosition > maxLength) {
-            throw new MixerException("Illegal start position, must be <= maxLength!");
         }
 
-        // because we want to add all arrays on top of the first one, we need to add the values of the first array
-        // to the result array up to the first startPosition (minStartPosition)
-        System.arraycopy(audioStreams.get(0), 0, result, 0, minStartPosition);
 
         for (int i = 0; i < audioStreams.size(); i++) {
             double[] audioStream = audioStreams.get(i);
             int startPosition = startPositions[i];
-            if (startPosition != 0 && audioStream.length + startPosition > result.length) {
+            if (audioStream.length + startPosition > result.length) {
                 throw new MixerException("Illegal array addition, length not matching! (Array " + i + " too long)");
             }
 
