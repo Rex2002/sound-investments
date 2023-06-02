@@ -10,19 +10,11 @@ import java.util.Random;
 
 public class Backing {
     private final int SAMPLE_BARS = 4;
-    private final int bars;
     private double[] groove;
     private double[][] fills;
     private final Random random = new Random();
 
-    public Backing(int beats) {
-        // int division is fine here because beats will always be multiple of 4
-        this.bars = beats / 4;
-    }
-
-    public double[] getBacking() throws AppError {
-        setSamplesRandomly();
-
+    public double[] getBacking( int bars ) {
         int seconds = (int) Math.ceil( (bars * 4) / (Constants.TEMPO / 60f) );
         double[] out = new double[seconds * Constants.SAMPLE_RATE * Constants.CHANNEL_NO];
 
@@ -39,15 +31,14 @@ public class Backing {
         return out;
     }
 
-    private void setSamplesRandomly() throws AppError {
+    public int setSamplesAndGetTempo() throws AppError {
         //TODO: I think this method of getting file names doesn't work in a JAR. Needs to be changed for release
         File directory = new File("./src/main/resources/audio/backings");
         List<String> backings = List.of(Objects.requireNonNull(directory.list()));
 
         backings = backings.stream().filter((string) -> string.contains("groove") || string.contains("fill")).toList();
-        backings = backings.stream().filter( (string) -> string.startsWith( Integer.toString(Constants.TEMPO) ) ).toList();
         if (backings.isEmpty()) {
-            throw new AppError("Encountered error while selecting backing track: No valid backings of matching tempo found");
+            throw new AppError("Encountered error while selecting backing track: No valid backings found");
         }
 
         String randomSample = backings.get( random.nextInt(backings.size()) );
@@ -65,11 +56,13 @@ public class Backing {
         for (int i = 0; i < fillNames.size(); i++) {
             fills[i] = SampleLoader.loadBackingSample(fillNames.get(i));
         }
+
+        return Integer.parseInt(metaData[0]);
     }
 
 
     /**
-     * this currently assumes that all backing samples are of length 4, might be expanded
+     * this currently assumes that all backing samples are of length 4
      */
     private double[] chooseSample(int bar) {
         if (bar % 8 == 4) {

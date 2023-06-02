@@ -3,7 +3,6 @@ package app;
 import app.communication.*;
 import app.mapping.*;
 import app.ui.App;
-import audio.Constants;
 import audio.Sonifier;
 import audio.synth.EvInstrData;
 import audio.synth.InstrumentEnum;
@@ -215,12 +214,7 @@ public class StateManager {
 			InstrumentDataRaw[] passedInstrRawDatas = new InstrumentDataRaw[instrRawDatas.size()];
 			passedInstrRawDatas = instrRawDatas.toArray(passedInstrRawDatas);
 
-			double numberBeatsRaw = (Constants.TEMPO / 60f) * mapping.getSoundLength();
-			// get number of beats to nearest multiple of 16 so that audio always lasts for
-			// a full multiple of 4 bars
-			int numberBeats = (int) Math.round(numberBeatsRaw / 16) * 16;
-
-			PlaybackController pbc = Sonifier.sonify(passedInstrRawDatas, evInstrDatas, numberBeats);
+			PlaybackController pbc = Sonifier.sonify(passedInstrRawDatas, evInstrDatas, mapping.getSoundLength());
 
 			double[][] pricesForMusicData = new double[sonifiableSet.length][pricesLen];
 			String[] sonifiableNames = new String[sonifiableSet.length];
