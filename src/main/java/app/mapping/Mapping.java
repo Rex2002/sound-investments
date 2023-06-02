@@ -49,6 +49,7 @@ public class Mapping {
 		// TODO: Are there any other ways in which the mapping can be invalid?
 		// evInstrAmount > MAX_EV_INSTR_SIZE doesn't have to be checked, because the
 		// setters don't allow this to happen anyways
+		// TODO: Update Warning messages for invalid Mapping
 		if (startDate == null)
 			return "Start-Datum ist nicht gesetzt.";
 		if (endDate == null)
@@ -71,7 +72,7 @@ public class Mapping {
 						+ "' wurde nicht auf einen Börsenwert gemappt.";
 		}
 		if (!isAnyInstrMapped)
-			return "TODO: Message here";
+			return "Es muss min. 1 Instrument gemappt werden.";
 		return null;
 	}
 

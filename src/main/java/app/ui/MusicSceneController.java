@@ -25,6 +25,8 @@ import javafx.stage.Stage;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.chart.LineChart;
+import javafx.scene.chart.NumberAxis;
+import javafx.scene.chart.XYChart;
 import javafx.scene.Node;
 import app.communication.EventQueues;
 import app.communication.Msg;
@@ -45,6 +47,12 @@ public class MusicSceneController implements Initializable {
 	@FXML
 	private AnchorPane anchor;
 	@FXML
+	private LineChart<Integer, Double> lineChart;
+	@FXML
+	private NumberAxis xAxis;
+	@FXML
+	private NumberAxis yAxis;
+	@FXML
 	private Pane legendPane;
 	@FXML
 	private TextField headerTitle;
@@ -57,19 +65,17 @@ public class MusicSceneController implements Initializable {
 	@FXML
 	private Parent root;
 	@FXML
-	private LineChart lineChart;
+	private ImageView playBtn;
 	private PlaybackController pbc;
 	private String[] sonifiableNames;
 	private double[][] prices;
 	private Timer myTimer = new Timer();
-	@FXML
-	private ImageView playBtn;
-	private boolean paused;
+	private boolean paused = false;
 	private Image playImage;
 	private Image pauseImage;
 
-	// TODO: Show the graph of prices (needs debugging)
 	// TODO: Add playback button image for play, stop, forward, backward, reset
+	// TODO: Make line-chart colors the same as in the legend
 
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
@@ -77,19 +83,25 @@ public class MusicSceneController implements Initializable {
 		pauseImage = new Image(getClass().getResource("/pause_btn.png").toString());
 
 		Platform.runLater(() -> {
-			pbc.startPlayback();
 			setupSlider();
 			beginTimer();
 			addbtn(pauseImage, 1050, 669).setOnMouseClicked(ev -> pausePlaySound());
 		});
 	}
 
-	void passData(MusicData musicData) {
+	public void passData(MusicData musicData) {
 		this.pbc = musicData.pbc;
 		this.sonifiableNames = musicData.sonifiableNames;
 		this.prices = musicData.prices;
 
 		assert sonifiableNames.length <= colors.length;
+		Platform.runLater(() -> {
+			setVisualization();
+			pbc.startPlayback();
+		});
+	}
+
+	private void setVisualization() {
 		// Show legend of sonifiable names
 		legendPane.getChildren().clear();
 		for (int i = 0; i < sonifiableNames.length; i++) {
@@ -97,14 +109,22 @@ public class MusicSceneController implements Initializable {
 		}
 
 		// Show price data in line chart
-		// TODO: Crashes the app when uncommented, so there's still some debugging to do here
-		// for (int i = 0; i < prices.length; i++) {
-		// 	XYChart.Series<Integer, Double> series = new XYChart.Series<>();
-		// 	for (int j = 0; j < prices[i].length; j++) {
-		// 		series.getData().add(new XYChart.Data<>(j, prices[i][j]));
-		// 	}
-		// 	lineChart.getData().add(series);
-		// }
+		xAxis.setAutoRanging(false);
+		xAxis.setLowerBound(0);
+		xAxis.setUpperBound(prices[0].length);
+		xAxis.setOpacity(0);
+		lineChart.setLegendVisible(false);
+		lineChart.setAnimated(false);
+		lineChart.setVerticalGridLinesVisible(false);
+		lineChart.setHorizontalGridLinesVisible(true);
+
+		for (int i = 0; i < prices.length; i++) {
+			XYChart.Series<Integer, Double> series = new XYChart.Series<>();
+			for (int j = 0; j < prices[i].length; j++) {
+				series.getData().add(new XYChart.Data<>(j, prices[i][j]));
+			}
+			lineChart.getData().add(series);
+		}
 	}
 
 	private Label addSonifiableName(String name, Paint color, double x, double y) {

@@ -174,8 +174,8 @@ public class MainSceneController implements Initializable {
                 // startBtn.setDisable(true);
                 // Show loading image
                 loading = new ImageView(new Image(getClass().getResource("/loading.png").toExternalForm()));
-                double loadingWidth = 300;
-                double loadingHeight = 300;
+                double loadingWidth = 150;
+                double loadingHeight = 150;
                 loading.setFitWidth(loadingWidth);
                 loading.setFitHeight(loadingHeight);
                 loading.setLayoutX(anchor.getScene().getWidth() / 2 - loadingWidth / 2);

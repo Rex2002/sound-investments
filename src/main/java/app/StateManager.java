@@ -57,7 +57,6 @@ public class StateManager {
 								if (StateManager.isAlreadySonifying) return;
 								StateManager.isAlreadySonifying = true;
 								Mapping mapping = (Mapping) msg.data;
-								Thread.sleep(1000); // Just to show the loading animation working
 								MusicData musicData = sonifyMapping(mapping);
 								EventQueues.toUI.add(new Msg<>(MsgToUIType.FINISHED, musicData));
 							}
@@ -222,7 +221,7 @@ public class StateManager {
 
 			PlaybackController pbc = Sonifier.sonify(passedInstrRawDatas, evInstrDatas, numberBeats);
 
-			double[][] pricesForMusicData = new double[pricesLen][sonifiableSet.length];
+			double[][] pricesForMusicData = new double[sonifiableSet.length][pricesLen];
 			String[] sonifiableNames = new String[sonifiableSet.length];
 			for (int i = 0; i < sonifiableNames.length; i++) {
 				pricesForMusicData[i] = getPriceValues(priceMap.get(sonifiableSet[i]));

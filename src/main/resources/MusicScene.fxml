@@ -26,12 +26,12 @@
          </font>
       </Label>
       <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#121315" height="200.0" layoutY="623.0" stroke="#121315" strokeType="INSIDE" width="1584.0" />
-      <LineChart fx:id="lineChart" layoutX="-4.0" layoutY="106.0" legendSide="TOP" prefHeight="516.0" prefWidth="1584.0" title="Aktienkurs">
+      <LineChart fx:id="lineChart" layoutX="-4.0" layoutY="106.0" prefHeight="516.0" prefWidth="1584.0">
         <xAxis>
-          <CategoryAxis side="BOTTOM" />
+          <NumberAxis fx:id="xAxis" side="BOTTOM" />
         </xAxis>
         <yAxis>
-          <NumberAxis side="LEFT" />
+          <NumberAxis fx:id="yAxis" side="LEFT" />
         </yAxis>
       </LineChart>
       <Accordion layoutX="221.0" layoutY="880.0" />
