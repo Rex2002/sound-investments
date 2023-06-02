@@ -235,21 +235,29 @@ public class APIReq {
 		return new Parser().parse(body, func);
 	}
 
-	public <T> List<T> getJSONList(String endPoint,
-			Function<JsonPrimitive<?>, T> forEach, String... queries)
+	public <T> List<T> getJSONList(String endPoint, Function<JsonPrimitive<?>, T> forEach, String... queries)
 			throws URISyntaxException, IOException, InterruptedException, APIErr {
-		return getJSONList(endPoint, json -> json, forEach, queries);
+		return getJSONList(endPoint, json -> json, forEach, false, queries);
 	}
 
-	public <T> List<T> getJSONList(String endPoint, Function<JsonPrimitive<?>, JsonPrimitive<?>> jsonToList,
-			Function<JsonPrimitive<?>, T> forEach, String... queries)
+	public <T> List<T> getJSONList(String endPoint, Function<JsonPrimitive<?>, T> forEach, boolean rmNulls, String... queries)
+			throws URISyntaxException, IOException, InterruptedException, APIErr {
+		return getJSONList(endPoint, json -> json, forEach, rmNulls, queries);
+	}
+
+	public <T> List<T> getJSONList(String endPoint, Function<JsonPrimitive<?>, JsonPrimitive<?>> jsonToList, Function<JsonPrimitive<?>, T> forEach, String... queries)
+			throws URISyntaxException, IOException, InterruptedException, APIErr {
+		return getJSONList(endPoint, jsonToList, forEach, false, queries);
+	}
+
+	public <T> List<T> getJSONList(String endPoint, Function<JsonPrimitive<?>, JsonPrimitive<?>> jsonToList, Function<JsonPrimitive<?>, T> forEach, boolean rmNulls, String... queries)
 			throws URISyntaxException, IOException, InterruptedException, APIErr {
 		if (endPoint.startsWith("/"))
 			endPoint = endPoint.substring(1);
 		HttpResponse<String> res = makeReq(endPoint, queries);
 		String body = res.body();
 
-		return new Parser().parse(body, jsonToList).applyList(forEach);
+		return new Parser().parse(body, jsonToList).applyList(forEach, rmNulls);
 	}
 
 	@SuppressWarnings("unchecked")

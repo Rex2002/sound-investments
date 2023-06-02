@@ -183,14 +183,16 @@ public class StateManager {
 
 	public static MusicData sonifyMapping(Mapping mapping) {
 		return call(() -> {
+			// TODO: Normalization of prices is currently only relative to the prices of the same stock - is that the goal?
 			// TODO: Validate that we have enough price data for mapping
 			int pricesLen = 0;
 			HashMap<SonifiableID, List<Price>> priceMap = new HashMap<>();
 			SonifiableID[] sonifiableSet = mapping.getMappedSonifiableIDs().toArray(new SonifiableID[0]);
 			for (SonifiableID sonifiableID : sonifiableSet) {
 				// TODO: Make sure all prices lists have the same length
-				List<Price> prices = DataRepo.getPrices(sonifiableID, mapping.getStartDate(), mapping.getEndDate(), IntervalLength.HOUR);
+				List<Price> prices = DataRepo.getPrices(sonifiableID, mapping.getStartDate(), mapping.getEndDate(), IntervalLength.DAY);
 				pricesLen = prices.size();
+				System.out.println("PricesLen for " + sonifiableID + ": " + pricesLen);
 				priceMap.put(sonifiableID, prices);
 			}
 

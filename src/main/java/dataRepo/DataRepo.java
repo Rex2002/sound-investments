@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -32,6 +31,8 @@ import util.FutureList;
 import util.UnorderedList;
 
 public class DataRepo {
+	private static final boolean GET_PRICES_DYNAMICALLY = true;
+
 	private static final String[] apiToksLeeway = { "pgz64a5qiuvw4qhkoullnx", "9pe3xyaplenvfvbnyxtomm",
 			"r7splaijduabfpcu2z2l14", "o5npdx6elm2pcpp395uaun", "2ja5gszii8g63hzjd41x78" };
 	private static final String[] apiToksMarketstack = { "4b6a78c092537f07bbdedff8f134372d",
@@ -100,6 +101,39 @@ public class DataRepo {
 			return prices;
 		} catch (Exception e) {
 			return List.of();
+		}
+	}
+
+	// Note: You shouldn't call this function twice
+	public static void init() throws AppError {
+		try {
+			// Read cached stocks
+			Parser parser = new Parser();
+			String stocksRes = Files.readString(Path.of("./src/main/resources/stocks.json"));
+			JsonPrimitive<?> json = parser.parse(stocksRes);
+			stocks = json
+					.applyList(x -> {
+						Calendar earliest = null, latest = null;
+						try {
+							earliest = DateUtil.calFromDateStr(x.asMap().get("earliest").asStr());
+							latest = DateUtil.calFromDateStr(x.asMap().get("latest").asStr());
+						} catch (Exception e) {
+						}
+						return new Stock(x.asMap().get("name").asStr(),
+								new SonifiableID(x.asMap().get("id").asMap().get("symbol").asStr(),
+										x.asMap().get("id").asMap().get("exchange").asStr()),
+								earliest,
+								latest);
+					}, new UnorderedList<>(json.asList().size()), true);
+
+			// TODO: Read cached ETFs/Indices
+
+			// @Cleanup uncomment for production
+			// Start updating stocks in background
+			// updateSonifiablesList();
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new AppError(e.getMessage());
 		}
 	}
 
@@ -190,40 +224,6 @@ public class DataRepo {
 					}
 				}
 			}, 1000, 200);
-		} catch (Exception e) {
-			e.printStackTrace();
-			throw new AppError(e.getMessage());
-		}
-	}
-
-	// Note: Don't call this function twice
-	public static void init() throws AppError {
-		try {
-			// Read cached stocks
-			Parser parser = new Parser();
-			String stocksRes = Files.readString(Path.of("./src/main/resources/stocks.json"));
-			JsonPrimitive<?> json = parser.parse(stocksRes);
-			stocks = json
-					.applyList(x -> {
-						Calendar earliest = null, latest = null;
-						try {
-							earliest = DateUtil.calFromDateStr(x.asMap().get("earliest").asStr());
-							latest = DateUtil.calFromDateStr(x.asMap().get("latest").asStr());
-						} catch (Exception e) {
-						}
-						return new Stock(x.asMap().get("name").asStr(),
-								new SonifiableID(x.asMap().get("id").asMap().get("symbol").asStr(),
-										x.asMap().get("id").asMap().get("exchange").asStr()),
-								earliest,
-								latest);
-					}, new UnorderedList<>(json.asList().size()), true);
-
-			// TODO: Read cached ETFs/Indices
-
-			// Start updating stocks in background
-			updateSonifiablesList();
-
-			System.out.println("Init done");
 		} catch (Exception e) {
 			e.printStackTrace();
 			throw new AppError(e.getMessage());
@@ -362,33 +362,41 @@ public class DataRepo {
 		return null;
 	}
 
-	public static List<Price> getPrices(SonifiableID s, Calendar start, Calendar end, IntervalLength interval) {
-		return testPrices();
+	public static List<Price> getPrices(SonifiableID s, Calendar start, Calendar end, IntervalLength interval) throws AppError {
+		if (!GET_PRICES_DYNAMICALLY) return testPrices();
 
-		// try {
-		// String is = interval.toString(API.TWELVEDATA);
-		// return apiTwelvedata.getJSON(x -> x.asMap().get("values"), "time_series",
-		// "interval", is, "start_date",
-		// Util.formatDate(start), "end_date", Util.formatDate(end), "timezone",
-		// "UTC").applyList(x -> {
-		// try {
-		// HashMap<String, JsonPrimitive<?>> m = x.asMap();
-		// Calendar startDay = Util.calFromDateStr(m.get("datetime").asStr());
-		// Instant startTime =
-		// Util.fmtDatetime.parse(m.get("datetime").asStr()).toInstant();
-		// Instant endTime = interval.addToInstant(startTime);
+		// TODO: Add de-facto pagination to price-requests to allow parallelization
+		// Idea for doing this: See how long the date-range in the first response was
+		// then split the rest of the range for start->end into chunks of that range
+		// To achieve this, the signatures for pagination handlers most certainly have to be changed again
 
-		// return new Price(startDay, startTime, endTime, m.get("open").asDouble(),
-		// m.get("close").asDouble(), m.get("low").asDouble(),
-		// m.get("high").asDouble());
-		// } catch (Exception e) {
-		// return null;
-		// }
-		// }, true);
-
-		// } catch (Exception e) {
-		// // @Checkin Make sure we want to indicate errors like this
-		// return null;
-		// }
+		// TODO: Use interval - at the moment we assume that interval == DAY and just make end-of-day API-requests
+		try {
+			List<Price> out = new ArrayList<>(1024);
+			Calendar earliestDay;
+			// TODO Bug: There seems to be an issue with DateUtil parsing the dates of the prices wrong or something
+			// until that bug is fixed, I commented the otherwise potentially endless loop out
+			// do {
+				List<Price> prices = apiLeeway.getJSONList("historicalquotes/" + s,
+					json -> {
+						try {
+							HashMap<String, JsonPrimitive<?>> m = json.asMap();
+							Calendar day = DateUtil.calFromDateStr(m.get("date").asStr());
+							return new Price(day, day.toInstant(), day.toInstant(), m.get("open").asDouble(), m.get("close").asDouble(), m.get("low").asDouble(), m.get("high").asDouble());
+						} catch (Exception e) {
+							return null;
+						}
+					}, true, "from", DateUtil.formatDate(start), "to", DateUtil.formatDate(end));
+				earliestDay = prices.get(prices.size() - 1).getDay();
+				// @Cleanup
+				// Consider using LocalDate everywhere instead of Calendar or find out how to go from day x to day x+1 without going from Calendar to LocalDate
+				end = DateUtil.localDateToCalendar(DateUtil.calendarToLocalDate(earliestDay).minusDays(1));
+				out.addAll(prices);
+			// } while (start.before(earliestDay));
+			return out;
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new AppError("Error in getting Price-Data for " + s + " from " + DateUtil.formatDate(start) + " to " + DateUtil.formatDate(end));
+		}
 	}
 }
