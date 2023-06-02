@@ -540,6 +540,7 @@ public class MainSceneController implements Initializable {
 
     private void instAdded(String name) {
         Label label = new Label(name);
+        label.setId("insLabel");
         instBox.getChildren().add(label);
     }
 
