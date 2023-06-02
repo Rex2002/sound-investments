@@ -19,12 +19,19 @@ import javax.sound.sampled.SourceDataLine;
 import static audio.Util.concatArrays;
 
 public class Sonifier {
-    public static PlaybackController sonify(InstrumentDataRaw[] instrumentDataRaw, EvInstrData[] evInstrData, int lenghtInBeats) throws AppError{
-        double lengthInSeconds = lenghtInBeats / (Constants.TEMPO / 60f);
+    public static PlaybackController sonify(InstrumentDataRaw[] instrumentDataRaw, EvInstrData[] evInstrData, int lengthInSecondsRaw) throws AppError{
+        Backing backing = new Backing();
+        Constants.TEMPO = backing.setSamplesAndGetTempo();
+
+        double numberBeatsRaw = (Constants.TEMPO / 60f) * lengthInSecondsRaw;
+        // get number of beats to nearest multiple of 16 so that audio always lasts for
+        // a full multiple of 4 bars
+        int lengthInBeats = (int) Math.round(numberBeatsRaw / 16) * 16;
+        double lengthInSeconds = lengthInBeats / (Constants.TEMPO / 60f);
 
         double[][] synthLines = new double[instrumentDataRaw.length + 1][];
         for(int i = 0; i < instrumentDataRaw.length; i++){
-            InstrumentData instrData = new Harmonizer(instrumentDataRaw[i], lenghtInBeats).harmonize();
+            InstrumentData instrData = new Harmonizer(instrumentDataRaw[i], lengthInBeats).harmonize();
 
             synthLines[i] = new SynthLine(instrData, lengthInSeconds).synthesize();
         }
@@ -34,8 +41,8 @@ public class Sonifier {
             evInstrs[i] = new EvInstrLine(evInstrData[i], lengthInSeconds).synthesize();
         }
 
-        double[] backing = new Backing(lenghtInBeats).getBacking();
-        synthLines[synthLines.length - 1] = backing;
+        double[] backingLine = backing.getBacking(lengthInBeats / 4);
+        synthLines[synthLines.length - 1] = backingLine;
 
         double[][] outArrays = concatArrays(synthLines, evInstrs);
 
@@ -51,6 +58,4 @@ public class Sonifier {
 
         return new PlaybackController(sdl, out);
     }
-
-
 }
