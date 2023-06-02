@@ -75,6 +75,10 @@ public class Mapping {
 			return "Es muss min. 1 Instrument gemappt werden.";
 		return null;
 	}
+	public InstrParam[] getEmptyInstrumentParams(InstrumentEnum instr) {
+		InstrumentMapping instrMap = Util.find(mappedInstruments, x -> x != null && x.getInstrument() == instr);
+		return instrMap.getEmptyParams();
+	}
 
 	////////
 	// Getters & Setters
