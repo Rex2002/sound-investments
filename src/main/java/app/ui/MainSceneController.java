@@ -91,7 +91,7 @@ public class MainSceneController implements Initializable {
     @FXML
     private VBox checkVBox;
     @FXML
-    private VBox instCheckBox;
+    private VBox instBox;
     @FXML
     private double duration;
 
@@ -207,6 +207,11 @@ public class MainSceneController implements Initializable {
                 // TODO: Error handling
             }
         });
+
+        mapping.setOnInstrAdded(inst -> instAdded(inst.toString()));
+        mapping.setOnEvInstrAdded(inst -> instAdded(inst.toString()));
+        mapping.setOnInstrRemoved(inst -> instRemoved(inst.toString()));
+        mapping.setOnEvInstrRemoved(inst -> instRemoved(inst.toString()));
     }
 
     private void updateSoundLength() {
@@ -316,6 +321,7 @@ public class MainSceneController implements Initializable {
         });
         checkVBox.setPrefHeight((checkVBox.getChildren().size()) * 74.0);
         checkVBox.getChildren().add(cBox);
+        // TODO: Do we really want that "Nächste Laden" Button after 10 elements?
         if (checkVBox.getChildren().size() == 10) {
             Button loadBtn = new Button("Nächste laden");
             loadBtn.setOnAction(event -> {
@@ -525,10 +531,28 @@ public class MainSceneController implements Initializable {
         });
     }
 
-    public void enableBtnIfValid() {
+    private void enableBtnIfValid() {
         if (mapping.isValid())
             startBtn.setDisable(false);
         else
             startBtn.setDisable(true);
+    }
+
+    private void instAdded(String name) {
+        Label label = new Label(name);
+        instBox.getChildren().add(label);
+    }
+
+    private void instRemoved(String name) {
+        int idx = 0;
+        for (Node child : instBox.getChildren()) {
+            try {
+                if (((Label) child).getText() == name) break;
+            } catch (Exception e) {
+            }
+            idx++;
+        }
+        if (idx < instBox.getChildren().size())
+            instBox.getChildren().remove(idx);
     }
 }

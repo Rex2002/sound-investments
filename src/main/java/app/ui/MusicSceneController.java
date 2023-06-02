@@ -81,9 +81,7 @@ public class MusicSceneController implements Initializable {
 	private boolean paused = false;
 	private Image playImage;
 	private Image pauseImage;
-	
 
-	// TODO: Add playback button image for play, stop, forward, backward, reset
 	// TODO: Make line-chart colors the same as in the legend
 
 	@Override
@@ -91,15 +89,11 @@ public class MusicSceneController implements Initializable {
 		playImage = new Image(getClass().getResource("/play_btn.png").toString());
 		pauseImage = new Image(getClass().getResource("/pause_btn.png").toString());
 		playBtn.setImage(pauseImage);
-		playBtn.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
 
-			@Override
-			public void handle(MouseEvent event) {
-				pausePlaySound();
-			}
-	   });
-	   stopBtn.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
-
+		playBtn.setOnMouseClicked(ev -> this.pausePlaySound());
+		forBtn.setOnMouseClicked(ev -> pbc.skipForward());
+		backBtn.setOnMouseClicked(ev -> pbc.skipBackward());
+		stopBtn.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
 				@Override
 				public void handle(MouseEvent event) {
 					try {
@@ -109,19 +103,6 @@ public class MusicSceneController implements Initializable {
 						e.printStackTrace();
 					}
 				}
-		});
-
-		forBtn.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
-			@Override
-			public void handle(MouseEvent event) {
-				pbc.skipForward();
-			}
-		});
-		backBtn.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
-			@Override
-			public void handle(MouseEvent event) {
-				pbc.skipBackward();
-			}
 		});
 
 		Platform.runLater(() -> {
