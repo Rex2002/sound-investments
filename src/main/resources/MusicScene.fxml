@@ -46,7 +46,7 @@
       </Button>
       <ImageView fx:id="stop_btn" fitHeight="79.0" fitWidth="285.0" layoutX="1347.0" layoutY="684.0" onMouseDragExited="#stopSound" pickOnBounds="true" preserveRatio="true">
          <image>
-            <Image url="@../java/UI/Img/stop_btn.png" />
+            <Image url="/stop_btn.png" />
          </image>
       </ImageView>
       <Slider fx:id="musicSlider" layoutX="35.0" layoutY="601.0" prefHeight="14.0" prefWidth="1534.0" />

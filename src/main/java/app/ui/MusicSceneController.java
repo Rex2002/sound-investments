@@ -117,7 +117,7 @@ public class MusicSceneController implements Initializable {
 		lineChart.setAnimated(false);
 		lineChart.setVerticalGridLinesVisible(false);
 		lineChart.setHorizontalGridLinesVisible(true);
-
+ 		lineChart.setCreateSymbols(false);
 		for (int i = 0; i < prices.length; i++) {
 			XYChart.Series<Integer, Double> series = new XYChart.Series<>();
 			for (int j = 0; j < prices[i].length; j++) {
