@@ -8,11 +8,11 @@ import java.util.List;
 import java.util.ResourceBundle;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.function.Function;
 
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
-import javafx.event.EventType;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
@@ -30,7 +30,6 @@ import javafx.scene.control.SingleSelectionModel;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
@@ -49,6 +48,8 @@ import app.mapping.InstrParam;
 import app.mapping.LineData;
 import app.mapping.Mapping;
 import app.mapping.PointData;
+import app.mapping.RangeData;
+import audio.synth.EvInstrEnum;
 import audio.synth.InstrumentEnum;
 import dataRepo.DateUtil;
 import dataRepo.Sonifiable;
@@ -255,6 +256,8 @@ public class MainSceneController implements Initializable {
 
     @FXML
     private void displayError(String errorMessage, String errorTitle) {
+        // TODO: Make prettier & make text actually readable
+        System.out.println(errorMessage);
         Pane errorPane = new Pane();
         errorPane.setId("errorPane");
         errorPane.setLayoutX(542);
@@ -370,9 +373,25 @@ public class MainSceneController implements Initializable {
         children.add(label);
 
         if (eparam instanceof PointData) {
-            // TODO: Add ChoiceBox for Event-Instrument
+            String[] evInsts = EvInstrEnum.displayVals;
+            ChoiceBox<String> evInstCB = new ChoiceBox<>();
+            evInstCB.getItems().add("");
+            evInstCB.getItems().addAll(evInsts);
+            evInstCB.setLayoutX(cb1X);
+            evInstCB.setLayoutY(cb1Y);
+            evInstCB.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
+                try {
+                    if (oldValue != null) mapping.rmEvInstr(sonifiable.getId(), (PointData) eparam);
+                    if (newValue != null) mapping.addEvInstr(EvInstrEnum.fromString(newValue), sonifiable, (PointData) eparam);
+                } catch (AppError e) {
+                    displayError(e.getMessage(), "Interner Fehler");
+                }
+            });
+            children.add(evInstCB);
+
         } else {
-            InstrParam[] iparams = (eparam instanceof LineData) ? InstrParam.LineDataParams
+            boolean isLineParam = (eparam instanceof LineData);
+            InstrParam[] iparams = isLineParam ? InstrParam.LineDataParams
                     : InstrParam.RangeDataParams;
 
             ChoiceBox<InstrumentEnum> instCB = new ChoiceBox<>();
@@ -399,19 +418,22 @@ public class MainSceneController implements Initializable {
                     paramCB.setDisable(newValue == null);
                     paramCBSelect.select(null);
                     paramCB.getItems().clear();
+                    InstrParam[] newOpts;
+                    Function<InstrParam, InstrParam[]> getOpts = (pv) -> isLineParam ? mapping.getEmptyLineParams(newValue, pv) : mapping.getEmptyRangeParams(newValue, pv);
                     if (newValue != null && paramVal != null) {
                         mapping.rmParam(oldValue, sonifiable.getId(), paramVal);
 
                         if (!mapping.isMapped(newValue, paramVal)) {
-                            paramCB.getItems().addAll(mapping.getEmptyInstrumentParams(newValue, paramVal));
+                            newOpts = getOpts.apply(paramVal);
                             paramCBSelect.select(paramVal);
                             mapping.setParam(newValue, sonifiable, paramVal, eparam);
                         } else {
-                            paramCB.getItems().addAll(mapping.getEmptyInstrumentParams(newValue, null));
+                            newOpts = getOpts.apply(null);
                         }
                     } else {
-                        paramCB.getItems().addAll(mapping.getEmptyInstrumentParams(newValue, null));
+                        newOpts = getOpts.apply(null);
                     }
+                    paramCB.getItems().addAll(newOpts);
                     enableBtnIfValid();
                     currentlyUpdatingCB = false;
                 } catch (AppError e) {
@@ -459,32 +481,16 @@ public class MainSceneController implements Initializable {
         addLine("pinkline", 306, 168, -100, -60, -100, 263, stockPane.getChildren());
         addLine("pinkline", 512, 177, -100, -60, -100, 263, stockPane.getChildren());
 
-        addStockParamToPane("Price", "paneShareLabel", 14, 80, 14, 115, 14, 160, sonifiable, LineData.PRICE,
-                stockPane.getChildren());
-        addStockParamToPane("Trend Line Break", "paneShareLabel", 14, 215, 14, 250, 14, 295, sonifiable,
-                LineData.PRICE, stockPane.getChildren());
-        addStockParamToPane("Derivate", "paneShareLabel", 14, 350, 14, 385, 14, 430, sonifiable, LineData.PRICE,
-                stockPane.getChildren());
-        addStockParamToPane("Flag", "paneShareLabel", 226, 80, 226, 115, 226, 160, sonifiable, LineData.PRICE,
-                stockPane.getChildren());
-        addStockParamToPane("Triangle", "paneShareLabel", 226, 215, 226, 250, 226, 295, sonifiable,
-                LineData.PRICE,
-                stockPane.getChildren());
-        addStockParamToPane("Vform", "paneShareLabel", 226, 350, 226, 385, 226, 430, sonifiable, LineData.PRICE,
-                stockPane.getChildren());
-        addStockParamToPane("Trend-", "paneShareLabel", 422, 80, 500, 70, 500, 115, sonifiable, LineData.PRICE,
-                stockPane.getChildren());
-        Label label = new Label("Break");
-        label.getStyleClass().add("paneShareLabel");
-        label.setLayoutX(422);
-        label.setLayoutY(100);
-        stockPane.getChildren().add(label);
-        addStockParamToPane("Movin", "paneShareLabel", 422, 203, 500, 175, 500, 220, sonifiable, LineData.PRICE,
-                stockPane.getChildren());
-        addStockParamToPane("Support", "paneShareLabel", 422, 305, 500, 280, 500, 325, sonifiable,
-                LineData.PRICE, stockPane.getChildren());
-        addStockParamToPane("Resist", "paneShareLabel", 422, 410, 500, 385, 500, 430, sonifiable,
-                LineData.PRICE, stockPane.getChildren());
+        addStockParamToPane("Preis", "paneShareLabel", 14, 80, 14, 115, 14, 160, sonifiable, LineData.PRICE, stockPane.getChildren());
+        addStockParamToPane("Gleitender Durchschnitt", "paneShareLabel", 14, 215, 14, 250, 14, 295, sonifiable, LineData.MOVINGAVG, stockPane.getChildren());
+        addStockParamToPane("Steigungsgrad", "paneShareLabel", 14, 350, 14, 385, 14, 430, sonifiable, LineData.RELCHANGE, stockPane.getChildren());
+        addStockParamToPane("Flagge", "paneShareLabel", 226, 80, 226, 115, 226, 160, sonifiable, RangeData.FLAG, stockPane.getChildren());
+        addStockParamToPane("Dreieck", "paneShareLabel", 226, 215, 226, 250, 226, 295, sonifiable, RangeData.TRIANGLE, stockPane.getChildren());
+        addStockParamToPane("V-Form", "paneShareLabel", 226, 350, 226, 385, 226, 430, sonifiable, RangeData.VFORM, stockPane.getChildren());
+        addStockParamToPane("Trendbrüche", "paneShareLabel", 422, 80, 422, 115, 0, 0, sonifiable, PointData.TRENDBREAK, stockPane.getChildren());
+        addStockParamToPane("EQMOVINGAVG", "paneShareLabel", 422, 180, 422, 215, 0, 0, sonifiable, PointData.EQMOVINGAVG, stockPane.getChildren());
+        addStockParamToPane("EQSUPPORT", "paneShareLabel", 422, 280, 422, 315, 0, 0, sonifiable, PointData.EQSUPPORT, stockPane.getChildren());
+        addStockParamToPane("EQRESIST", "paneShareLabel", 422, 380, 422, 415, 0, 0, sonifiable, PointData.EQRESIST, stockPane.getChildren());
 
         return stockPane;
     }

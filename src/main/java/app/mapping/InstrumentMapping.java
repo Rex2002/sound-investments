@@ -40,19 +40,25 @@ public class InstrumentMapping {
 		this.instrument = instrument;
 	}
 
-	public InstrParam[] getEmptyParams(InstrParam oldVal) {
+	public InstrParam[] getEmptyLineParams(InstrParam oldVal) {
 		List<InstrParam> params = new ArrayList<>();
 		if          (pitch == null || oldVal == InstrParam.PITCH)            params.add(InstrParam.PITCH);
 		if      (relVolume == null || oldVal == InstrParam.RELVOLUME)        params.add(InstrParam.RELVOLUME);
-		if      (absVolume == null || oldVal == InstrParam.ABSVOLUME)        params.add(InstrParam.ABSVOLUME);
 		if      (delayEcho == null || oldVal == InstrParam.DELAY_ECHO)       params.add(InstrParam.DELAY_ECHO);
 		if   (feedbackEcho == null || oldVal == InstrParam.FEEDBACK_ECHO)    params.add(InstrParam.FEEDBACK_ECHO);
-		if      (onOffEcho == null || oldVal == InstrParam.ON_OFF_ECHO)      params.add(InstrParam.ON_OFF_ECHO);
 		if    (delayReverb == null || oldVal == InstrParam.DELAY_REVERB)     params.add(InstrParam.DELAY_REVERB);
 		if (feedbackReverb == null || oldVal == InstrParam.FEEDBACK_REVERB)  params.add(InstrParam.FEEDBACK_REVERB);
-		if    (onOffReverb == null || oldVal == InstrParam.ON_OFF_REVERB)    params.add(InstrParam.ON_OFF_REVERB);
 		if         (cutoff == null || oldVal == InstrParam.CUTOFF)           params.add(InstrParam.CUTOFF);
 		if          (order == null || oldVal == InstrParam.ORDER)            params.add(InstrParam.ORDER);
+		InstrParam[] out = new InstrParam[params.size()];
+		return params.toArray(out);
+	}
+
+	public InstrParam[] getEmptyRangeParams(InstrParam oldVal) {
+		List<InstrParam> params = new ArrayList<>();
+		if      (absVolume == null || oldVal == InstrParam.ABSVOLUME)        params.add(InstrParam.ABSVOLUME);
+		if      (onOffEcho == null || oldVal == InstrParam.ON_OFF_ECHO)      params.add(InstrParam.ON_OFF_ECHO);
+		if    (onOffReverb == null || oldVal == InstrParam.ON_OFF_REVERB)    params.add(InstrParam.ON_OFF_REVERB);
 		if    (onOffFilter == null || oldVal == InstrParam.ON_OFF_FILTER)    params.add(InstrParam.ON_OFF_FILTER);
 		InstrParam[] out = new InstrParam[params.size()];
 		return params.toArray(out);

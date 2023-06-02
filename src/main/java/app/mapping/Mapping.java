@@ -76,9 +76,15 @@ public class Mapping {
 			return "Es muss min. 1 Instrument gemappt werden.";
 		return null;
 	}
-	public InstrParam[] getEmptyInstrumentParams(InstrumentEnum instr, InstrParam oldVal) {
+
+	public InstrParam[] getEmptyLineParams(InstrumentEnum instr, InstrParam oldVal) {
 		InstrumentMapping instrMap = Util.find(mappedInstruments, x -> x != null && x.getInstrument() == instr);
-		return instrMap.getEmptyParams(oldVal);
+		return instrMap.getEmptyLineParams(oldVal);
+	}
+
+	public InstrParam[] getEmptyRangeParams(InstrumentEnum instr, InstrParam oldVal) {
+		InstrumentMapping instrMap = Util.find(mappedInstruments, x -> x != null && x.getInstrument() == instr);
+		return instrMap.getEmptyRangeParams(oldVal);
 	}
 
 	public Sonifiable[] getMappedSonifiables() {
@@ -165,7 +171,7 @@ public class Mapping {
 		try {
 			return new ExchangeData<T>(sonifiable, (T) eparam);
 		} catch (ClassCastException e) {
-			throw new AppError(eparam.toString() + " kann nicht auf " + iparam.toString() + "gemappt werden.");
+			throw new AppError(eparam.toString() + " kann nicht auf " + iparam.toString() + " gemappt werden.");
 		}
 	}
 
@@ -181,13 +187,14 @@ public class Mapping {
 			case ABSVOLUME -> instrMap.setAbsVolume(setParamHelper(id, eparam, iparam));
 			case DELAY_ECHO -> instrMap.setDelayEcho(setParamHelper(id, eparam, iparam));
 			case FEEDBACK_ECHO -> instrMap.setFeedbackEcho(setParamHelper(id, eparam, iparam));
+			case ON_OFF_ECHO -> instrMap.setOnOffEcho(setParamHelper(id, eparam, iparam));
 			case ON_OFF_REVERB -> instrMap.setOnOffReverb(setParamHelper(id, eparam, iparam));
 			case CUTOFF -> instrMap.setCutoff(setParamHelper(id, eparam, iparam));
 			case ORDER -> instrMap.setOrder(setParamHelper(id, eparam, iparam));
 			case ON_OFF_FILTER -> instrMap.setOnOffFilter(setParamHelper(id, eparam, iparam));
 			case PAN -> instrMap.setPan(setParamHelper(id, eparam, iparam));
 			default ->
-				throw new AppError(eparam.toString() + " kann nicht auf " + iparam.toString() + "gemappt werden.");
+				throw new AppError(eparam.toString() + " kann nicht auf " + iparam.toString() + " gemappt werden.");
 		}
 		sonifiables.add(sonifiable);
 	}
@@ -200,13 +207,14 @@ public class Mapping {
 			case ABSVOLUME -> instrMap.getAbsVolume() != null;
 			case DELAY_ECHO -> instrMap.getDelayEcho() != null;
 			case FEEDBACK_ECHO -> instrMap.getFeedbackEcho() != null;
+			case ON_OFF_ECHO ->instrMap.getOnOffEcho() != null;
 			case ON_OFF_REVERB -> instrMap.getOnOffReverb() != null;
 			case CUTOFF -> instrMap.getCutoff() != null;
 			case ORDER -> instrMap.getOrder() != null;
 			case ON_OFF_FILTER -> instrMap.getOnOffFilter() != null;
 			case PAN -> instrMap.getPan() != null;
 			default ->
-				throw new AppError(iparam.toString() + " kann nicht gelöscht werden.");
+				throw new AppError(iparam.toString() + " kann nicht gemappt sein");
 		};
 	}
 
@@ -218,6 +226,7 @@ public class Mapping {
 			case ABSVOLUME -> instrMap.setAbsVolume(null);
 			case DELAY_ECHO -> instrMap.setDelayEcho(null);
 			case FEEDBACK_ECHO -> instrMap.setFeedbackEcho(null);
+			case ON_OFF_ECHO -> instrMap.setOnOffEcho(null);
 			case ON_OFF_REVERB -> instrMap.setOnOffReverb(null);
 			case CUTOFF -> instrMap.setCutoff(null);
 			case ORDER -> instrMap.setOrder(null);
