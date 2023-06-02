@@ -43,6 +43,7 @@ public class DateUtil {
 	}
 
 	public static LocalDate calendarToLocalDate(Calendar c) {
+		if (c == null) return null;
 		return LocalDate.ofInstant(c.toInstant(), ZoneId.systemDefault());
 	}
 }

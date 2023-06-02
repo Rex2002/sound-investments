@@ -23,15 +23,14 @@ import java.util.function.Consumer;
 // however, it makes conceptually more sense to me, as the app's logic should be done in the main thread
 
 public class StateManager {
-	private static boolean isAlreadySonifying = false;
+	public static boolean isAlreadySonifying = false;
+	public static SonifiableFilter sonifiableFilter = new SonifiableFilter("", FilterFlag.ALL);
 
 	public static void main(String[] args) {
 		testUI(args);
 		// testSound(args);
 
 	}
-
-	public static SonifiableFilter sonifiableFilter = new SonifiableFilter("", FilterFlag.ALL);
 
 	public static void testUI(String[] args) {
 		Thread th = new Thread(() -> Application.launch(App.class, args));
@@ -64,11 +63,9 @@ public class StateManager {
 						Msg<MsgToSMType> msg = EventQueues.toSM.take();
 						switch (msg.type) {
 							case FILTERED_SONIFIABLES -> {
-								SonifiableFilter filter = (SonifiableFilter) msg.data;
-								List<Sonifiable> list = StateManager
-										.call(() -> DataRepo.findByPrefix(filter.prefix, filter.categoryFilter),
-												List.of());
-								EventQueues.toUI.add(new Msg<>(MsgToUIType.FILTERED_SONIFIABLES, list));
+								sonifiableFilter = (SonifiableFilter) msg.data;
+								DataRepo.updatedData.compareAndSet(true, false);
+								sendFilteredSonifiables();
 							}
 							case SAVE_MAPPING -> EventQueues.toUI.add(new Msg<>(MsgToUIType.ERROR, "SAVE_MAPPING is not yet implemented"));
 							case LOAD_MAPPING -> EventQueues.toUI.add(new Msg<>(MsgToUIType.ERROR, "LOAD_MAPPING is not yet implemented"));
@@ -97,10 +94,7 @@ public class StateManager {
 	}
 
 	private static void sendFilteredSonifiables() throws InterruptedException {
-		List<Sonifiable> list = StateManager
-				.call(() -> DataRepo.findByPrefix(sonifiableFilter.prefix,
-						sonifiableFilter.categoryFilter),
-						List.of());
+		List<Sonifiable> list = StateManager.call(() -> DataRepo.findByPrefix(sonifiableFilter.prefix, sonifiableFilter.categoryFilter), List.of());
 		EventQueues.toUI.add(new Msg<>(MsgToUIType.FILTERED_SONIFIABLES, list));
 	}
 
