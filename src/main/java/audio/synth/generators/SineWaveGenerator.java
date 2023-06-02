@@ -53,6 +53,7 @@ public class SineWaveGenerator {
                     sectionLen++;
                 }
                 env.setSectionLen(sin.length / freq.length * sectionLen);
+                modEnv.setSectionLen(sin.length / freq.length * sectionLen);
             }
 
             ampIdx = Util.getRelPosition(i, sin.length, amplitude.length);
