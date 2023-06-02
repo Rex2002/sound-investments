@@ -365,6 +365,7 @@ public class MainSceneController implements Initializable {
                 SelectionModel<InstrParam> paramCBSelect = paramCB.getSelectionModel();
                 // Mapping isn't effected if the parameter ChoiceBox isn't selected yet
                 paramCB.setDisable(false);
+                paramCB.getItems().clear();
                 paramCB.getItems().addAll(mapping.getEmptyInstrumentParams(newValue));
                 if (!paramCBSelect.isEmpty()) {
                     try {
@@ -381,6 +382,7 @@ public class MainSceneController implements Initializable {
             paramCB.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
                 @Override
                 public void handle(MouseEvent event) {
+                    paramCB.getItems().clear();
                     paramCB.getItems().addAll(mapping.getEmptyInstrumentParams(instCB.getValue()));
                 }
             });
