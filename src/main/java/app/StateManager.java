@@ -14,6 +14,7 @@ import dataRepo.*;
 import dataRepo.DataRepo.IntervalLength;
 import javafx.application.Application;
 
+import java.io.File;
 import java.util.*;
 import java.util.function.Consumer;
 
@@ -254,7 +255,7 @@ public class StateManager {
 					running = false;
 				}
 				case "rs" -> pbc.reset();
-				case "sv" -> pbc.save("out.wav");
+				case "sv" -> pbc.save(new File("out.wav"));
 			}
 		}
 		in.close();
