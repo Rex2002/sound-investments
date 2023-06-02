@@ -1,5 +1,6 @@
 package app.ui;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ResourceBundle;
@@ -12,6 +13,7 @@ import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.Slider;
 import javafx.scene.control.TextField;
@@ -22,6 +24,7 @@ import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Paint;
 import javafx.scene.shape.Circle;
+import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -29,6 +32,7 @@ import javafx.scene.chart.LineChart;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
 import javafx.scene.Node;
+import app.AppError;
 import app.communication.EventQueues;
 import app.communication.Msg;
 import app.communication.MsgToSMType;
@@ -62,6 +66,8 @@ public class MusicSceneController implements Initializable {
 	@FXML
 	private Scene scene;
 	@FXML
+	private Button exportBtn;
+	@FXML
 	private Slider musicSlider;
 	@FXML
 	private Parent root;
@@ -86,10 +92,25 @@ public class MusicSceneController implements Initializable {
 
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
+		exportBtn.setOnMouseClicked(ev -> {
+			FileChooser fileChooser = new FileChooser();
+			fileChooser.setTitle("Exportiere Audio-stream");
+			fileChooser.setInitialFileName("Börsen-Sonifizierung.wav");
+			fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Wave-Dateien", "*.wav"));
+			File selectedFile = fileChooser.showSaveDialog(exportBtn.getScene().getWindow());
+			if (selectedFile != null) {
+				try {
+					pbc.save(selectedFile);
+				} catch (AppError e) {
+					e.printStackTrace();
+					// TODO: Display Error message
+				}
+			}
+		});
+
 		playImage = new Image(getClass().getResource("/play_btn.png").toString());
 		pauseImage = new Image(getClass().getResource("/pause_btn.png").toString());
 		playBtn.setImage(pauseImage);
-
 		playBtn.setOnMouseClicked(ev -> this.pausePlaySound());
 		forBtn.setOnMouseClicked(ev -> pbc.skipForward());
 		backBtn.setOnMouseClicked(ev -> pbc.skipBackward());

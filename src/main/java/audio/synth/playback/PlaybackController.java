@@ -104,14 +104,13 @@ public class PlaybackController {
         }
     }
 
-    public void save(String filename) throws AppError {
+    public void save(File outFile) throws AppError {
         byte[] byteData = Util.convertShortToByte(data);
         AudioInputStream stream = new AudioInputStream(new ByteArrayInputStream(byteData), s.getFormat(), byteData.length);
-        File outFile = new File(filename);
         try {
             AudioSystem.write(stream, AudioFileFormat.Type.WAVE, outFile);
         } catch (IOException e) {
-            throw new AppError("Cannot create file " +  filename + " to save audioStream");
+            throw new AppError("Cannot create file " +  outFile.getPath() + " to save audioStream");
         }
     }
 
