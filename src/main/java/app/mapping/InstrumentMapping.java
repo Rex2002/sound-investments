@@ -57,7 +57,8 @@ public class InstrumentMapping {
 		if (cutoff.isEmpty()) params.add(InstrParam.CUTOFF);
 		if (order.isEmpty()) params.add(InstrParam.ORDER);
 		if (onOffFilter.isEmpty()) params.add(InstrParam.ON_OFF_FILTER);
-		return (InstrParam[]) params.toArray();
+		InstrParam[] out = new InstrParam[params.size()];
+		return params.toArray(out);
 	}
 
 	public boolean isEmpty() {
