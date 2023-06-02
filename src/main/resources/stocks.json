@@ -1,60 +1,866 @@
 [
-	{ "name": "Microsoft Corporation", "id": { "symbol": "MSFT", "exchange": "NASDAQ" }, "earliest": "1986-00-13", "latest": "2023-00-26" },
-	{ "name": "Apple Inc", "id": { "symbol": "AAPL", "exchange": "NASDAQ" }, "earliest": "1980-00-12", "latest": "2023-00-26" },
-	{ "name": "Amazon.com Inc", "id": { "symbol": "AMZN", "exchange": "NASDAQ" }, "earliest": "1997-00-15", "latest": "2023-00-26" },
-	{ "name": "Alphabet Inc - Class C", "id": { "symbol": "GOOG", "exchange": "NASDAQ" }, "earliest": "2014-00-30", "latest": "2023-00-26" },
-	{ "name": "Alphabet Inc - Class A", "id": { "symbol": "GOOGL", "exchange": "NASDAQ" }, "earliest": "2004-00-19", "latest": "2023-00-26" },
-	{ "name": "Alibaba Group Holding Ltd", "id": { "symbol": "BABA", "exchange": "NYSE" }, "earliest": "2014-00-19", "latest": "2023-00-26" },
-	{ "name": "Meta Platforms Inc - Class A", "id": { "symbol": "FB", "exchange": "NASDAQ" }, "earliest": "2012-00-18", "latest": "2022-00-27" },
-	{ "name": "Diageo plc", "id": { "symbol": "DEO", "exchange": "NYSE" }, "earliest": "1991-00-14", "latest": "2023-00-26" },
-	{ "name": "Lowe`s Cos. Inc", "id": { "symbol": "LOW", "exchange": "NYSE" }, "earliest": "1984-00-50", "latest": "2023-00-26" },
-	{ "name": "Vodafone Group plc", "id": { "symbol": "VOD", "exchange": "NASDAQ" }, "earliest": "1988-00-10", "latest": "2023-00-26" },
-	{ "name": "Visa Inc - Class A", "id": { "symbol": "V", "exchange": "NYSE" }, "earliest": "2008-00-19", "latest": "2023-00-26" },
-	{ "name": "JPMorgan Chase u0026 Company", "id": { "symbol": "JPM", "exchange": "NYSE" }, "earliest": "1984-00-50", "latest": "2023-00-26" },
-	{ "name": "Johnson u0026 Johnson", "id": { "symbol": "JNJ", "exchange": "NYSE" }, "earliest": "1962-00-20", "latest": "2023-00-26" },
-	{ "name": "Walmart Inc", "id": { "symbol": "WMT", "exchange": "NYSE" }, "earliest": "1972-00-25", "latest": "2023-00-26" },
-	{ "name": "Mastercard Incorporated - Class A", "id": { "symbol": "MA", "exchange": "NYSE" }, "earliest": "2006-00-25", "latest": "2023-00-26" },
-	{ "name": "Procter u0026 Gamble Company", "id": { "symbol": "PG", "exchange": "NYSE" }, "earliest": "1962-00-20", "latest": "2023-00-26" },
-	{ "name": "Taiwan Semiconductor Manufacturing", "id": { "symbol": "TSM", "exchange": "NYSE" }, "earliest": "1997-00-80", "latest": "2023-00-26" },
-	{ "name": "Chunghwa Telecom", "id": { "symbol": "CHT", "exchange": "NYSE" }, "earliest": "2003-00-17", "latest": "2023-00-26" },
-	{ "name": "Roche Holding AG", "id": { "symbol": "RHHBF", "exchange": "" }, "earliest": "2001-00-19", "latest": "2023-00-26" },
-	{ "name": "Roche Holding AG", "id": { "symbol": "RHHVF", "exchange": "" }, "earliest": "2001-00-17", "latest": "2023-00-26" },
-	{ "name": "ATu0026T Inc", "id": { "symbol": "T", "exchange": "NYSE" }, "earliest": "1984-00-50", "latest": "2023-00-26" },
-	{ "name": "Unitedhealth Group Inc", "id": { "symbol": "UNH", "exchange": "NYSE" }, "earliest": "1984-00-50", "latest": "2023-00-26" },
-	{ "name": "Bank Of America Corp", "id": { "symbol": "BAC", "exchange": "NYSE" }, "earliest": "1984-00-50", "latest": "2023-00-26" },
-	{ "name": "Home Depot Inc", "id": { "symbol": "HD", "exchange": "NYSE" }, "earliest": "1981-00-22", "latest": "2023-00-26" },
-	{ "name": "Intel Corp", "id": { "symbol": "INTC", "exchange": "NASDAQ" }, "earliest": "1984-00-50", "latest": "2023-00-26" },
-	{ "name": "Coca-Cola Company", "id": { "symbol": "KO", "exchange": "NYSE" }, "earliest": "1962-00-20", "latest": "2023-00-26" },
-	{ "name": "Verizon Communications Inc", "id": { "symbol": "VZ", "exchange": "NYSE" }, "earliest": "1983-00-21", "latest": "2023-00-26" },
-	{ "name": "Roche Holding AG", "id": { "symbol": "RHHBY", "exchange": "" }, "earliest": "2001-00-11", "latest": "2023-00-26" },
-	{ "name": "Exxon Mobil Corp", "id": { "symbol": "XOM", "exchange": "NYSE" }, "earliest": "1984-00-50", "latest": "2023-00-26" },
-	{ "name": "Walt Disney Co (The)", "id": { "symbol": "DIS", "exchange": "NYSE" }, "earliest": "1984-00-50", "latest": "2023-00-26" },
-	{ "name": "Merck u0026 Co Inc", "id": { "symbol": "MRK", "exchange": "NYSE" }, "earliest": "1962-00-20", "latest": "2023-00-26" },
-	{ "name": "Novartis AG", "id": { "symbol": "NVS", "exchange": "NYSE" }, "earliest": "2000-00-11", "latest": "2023-00-26" },
-	{ "name": "Comcast Corp - Class A", "id": { "symbol": "CMCSA", "exchange": "NASDAQ" }, "earliest": "1984-00-50", "latest": "2023-00-26" },
-	{ "name": "Pfizer Inc", "id": { "symbol": "PFE", "exchange": "NYSE" }, "earliest": "1984-00-50", "latest": "2023-00-26" },
-	{ "name": "British American Tobacco Plc", "id": { "symbol": "BTI", "exchange": "NYSE" }, "earliest": "1980-00-14", "latest": "2023-00-26" },
-	{ "name": "Toyota Motor Corporation", "id": { "symbol": "TM", "exchange": "NYSE" }, "earliest": "1984-00-50", "latest": "2023-00-26" },
-	{ "name": "Chevron Corp", "id": { "symbol": "CVX", "exchange": "NYSE" }, "earliest": "1962-00-20", "latest": "2023-00-26" },
-	{ "name": "American Express Company", "id": { "symbol": "AXP", "exchange": "NYSE" }, "earliest": "1972-00-10", "latest": "2023-00-26" },
-	{ "name": "Cisco Systems Inc", "id": { "symbol": "CSCO", "exchange": "NASDAQ" }, "earliest": "1990-00-16", "latest": "2023-00-26" },
-	{ "name": "Toronto Dominion Bank", "id": { "symbol": "TD", "exchange": "NYSE" }, "earliest": "1996-00-30", "latest": "2023-00-26" },
-	{ "name": "NVIDIA Corp", "id": { "symbol": "NVDA", "exchange": "NASDAQ" }, "earliest": "1999-00-22", "latest": "2023-00-26" },
-	{ "name": "Starbucks Corp", "id": { "symbol": "SBUX", "exchange": "NASDAQ" }, "earliest": "1992-00-26", "latest": "2023-00-26" },
-	{ "name": "Oracle Corp", "id": { "symbol": "ORCL", "exchange": "NYSE" }, "earliest": "1986-00-13", "latest": "2023-00-26" },
-	{ "name": "Charter Communications Inc - Class A", "id": { "symbol": "CHTR", "exchange": "NASDAQ" }, "earliest": "2009-00-20", "latest": "2023-00-26" },
-	{ "name": "China Mobile Ltd ADR", "id": { "symbol": "CHL", "exchange": "NYSE" }, "earliest": "1997-00-22", "latest": "2021-00-80" },
-	{ "name": "Linde Plc.", "id": { "symbol": "LIN", "exchange": "NYSE" }, "earliest": "1992-00-17", "latest": "2023-00-26" },
-	{ "name": "Sap SE", "id": { "symbol": "SAP", "exchange": "NYSE" }, "earliest": "1998-00-30", "latest": "2023-00-26" },
-	{ "name": "BP plc", "id": { "symbol": "BP", "exchange": "NYSE" }, "earliest": "1962-00-20", "latest": "2023-00-26" },
-	{ "name": "Nike Inc - Class B", "id": { "symbol": "NKE", "exchange": "NYSE" }, "earliest": "1984-00-50", "latest": "2023-00-26" },
-	{ "name": "Novo Nordisk", "id": { "symbol": "NVO", "exchange": "NYSE" }, "earliest": "1981-00-30", "latest": "2023-00-26" },
-	{ "name": "Citigroup Inc", "id": { "symbol": "C", "exchange": "NYSE" }, "earliest": "1986-00-30", "latest": "2023-00-26" },
-	{ "name": "UNITED TECHNOLOGIES CORP", "id": { "symbol": "UTX", "exchange": "NYSE" }, "earliest": "1980-00-17", "latest": "2020-00-23" },
-	{ "name": "Accenture plc - Class A", "id": { "symbol": "ACN", "exchange": "NYSE" }, "earliest": "2001-00-19", "latest": "2023-00-26" },
-	{ "name": "Tesla Inc", "id": { "symbol": "TSLA", "exchange": "NASDAQ" }, "earliest": "2010-00-29", "latest": "2023-00-26" },
-	{ "name": "Thermo Fisher Scientific Inc", "id": { "symbol": "TMO", "exchange": "NYSE" }, "earliest": "1984-00-50", "latest": "2023-00-26" },
-	{ "name": "Bristol-Myers Squibb Company", "id": { "symbol": "BMY", "exchange": "NYSE" }, "earliest": "1972-00-10", "latest": "2023-00-26" },
-	{ "name": "Lilly(Eli) u0026 Company", "id": { "symbol": "LLY", "exchange": "NYSE" }, "earliest": "1972-00-10", "latest": "2023-00-26" },
-	{ "name": "PayPal Holdings Inc", "id": { "symbol": "PYPL", "exchange": "NASDAQ" }, "earliest": "2015-00-60", "latest": "2023-00-26" }
+	{
+		"name": "Walt Disney Co (The)",
+		"id": {
+			"symbol": "DIS",
+			"exchange": "NYSE"
+		},
+		"earliest": "1984-10-50",
+		"latest": "2023-50-10"
+	},
+	{
+		"name": "Exxon Mobil Corp",
+		"id": {
+			"symbol": "XOM",
+			"exchange": "NYSE"
+		},
+		"earliest": "1984-10-50",
+		"latest": "2023-50-10"
+	},
+	{
+		"name": "Roche Holding AG",
+		"id": {
+			"symbol": "RHHBY",
+			"exchange": ""
+		},
+		"earliest": "2001-60-11",
+		"latest": "2023-50-10"
+	},
+	{
+		"name": "Verizon Communications Inc",
+		"id": {
+			"symbol": "VZ",
+			"exchange": "NYSE"
+		},
+		"earliest": "1983-10-21",
+		"latest": "2023-50-10"
+	},
+	{
+		"name": "Coca-Cola Company",
+		"id": {
+			"symbol": "KO",
+			"exchange": "NYSE"
+		},
+		"earliest": "1962-00-20",
+		"latest": "2023-50-10"
+	},
+	{
+		"name": "Intel Corp",
+		"id": {
+			"symbol": "INTC",
+			"exchange": "NASDAQ"
+		},
+		"earliest": "1984-10-50",
+		"latest": "2023-50-10"
+	},
+	{
+		"name": "Home Depot Inc",
+		"id": {
+			"symbol": "HD",
+			"exchange": "NYSE"
+		},
+		"earliest": "1981-80-22",
+		"latest": "2023-50-10"
+	},
+	{
+		"name": "Bank Of America Corp",
+		"id": {
+			"symbol": "BAC",
+			"exchange": "NYSE"
+		},
+		"earliest": "1984-10-50",
+		"latest": "2023-50-10"
+	},
+	{
+		"name": "Unitedhealth Group Inc",
+		"id": {
+			"symbol": "UNH",
+			"exchange": "NYSE"
+		},
+		"earliest": "1984-10-50",
+		"latest": "2023-50-10"
+	},
+	{
+		"name": "ATu0026T Inc",
+		"id": {
+			"symbol": "T",
+			"exchange": "NYSE"
+		},
+		"earliest": "1984-10-50",
+		"latest": "2023-50-10"
+	},
+	{
+		"name": "Morgan Stanley",
+		"id": {
+			"symbol": "MS",
+			"exchange": "NYSE"
+		},
+		"earliest": "1993-10-23",
+		"latest": "2023-50-10"
+	},
+	{
+		"name": "Cigna Group (The)",
+		"id": {
+			"symbol": "CI",
+			"exchange": "NYSE"
+		},
+		"earliest": "1982-20-31",
+		"latest": "2023-50-10"
+	},
+	{
+		"name": "Goldman Sachs Group Inc",
+		"id": {
+			"symbol": "GS",
+			"exchange": "NYSE"
+		},
+		"earliest": "1999-40-40",
+		"latest": "2023-50-10"
+	},
+	{
+		"name": "Intuit Inc",
+		"id": {
+			"symbol": "INTU",
+			"exchange": "NASDAQ"
+		},
+		"earliest": "1993-20-12",
+		"latest": "2023-50-10"
+	},
+	{
+		"name": "U.S. Bancorp.",
+		"id": {
+			"symbol": "USB",
+			"exchange": "NYSE"
+		},
+		"earliest": "1984-10-60",
+		"latest": "2023-50-10"
+	},
+	{
+		"name": "Stryker Corp",
+		"id": {
+			"symbol": "SYK",
+			"exchange": "NYSE"
+		},
+		"earliest": "1984-10-50",
+		"latest": "2023-50-10"
+	},
+	{
+		"name": "Unilever NV",
+		"id": {
+			"symbol": "UN",
+			"exchange": "NYSE"
+		},
+		"earliest": "1980-20-17",
+		"latest": "2020-10-27"
+	},
+	{
+		"name": "CME Group Inc - Class A",
+		"id": {
+			"symbol": "CME",
+			"exchange": "NASDAQ"
+		},
+		"earliest": "2002-11-60",
+		"latest": "2023-50-10"
+	},
+	{
+		"name": "TJX Companies Inc",
+		"id": {
+			"symbol": "TJX",
+			"exchange": "NYSE"
+		},
+		"earliest": "1988-00-18",
+		"latest": "2023-50-10"
+	},
+	{
+		"name": "Deutsche Telekom AG",
+		"id": {
+			"symbol": "DTEGF",
+			"exchange": ""
+		},
+		"earliest": "2001-50-22",
+		"latest": "2023-50-10"
+	},
+	{
+		"name": "Blackrock Inc",
+		"id": {
+			"symbol": "BLK",
+			"exchange": "NYSE"
+		},
+		"earliest": "1999-90-10",
+		"latest": "2023-50-10"
+	},
+	{
+		"name": "Enbridge Inc",
+		"id": {
+			"symbol": "ENB",
+			"exchange": "NYSE"
+		},
+		"earliest": "1984-20-15",
+		"latest": "2023-50-10"
+	},
+	{
+		"name": "Fiserv Inc",
+		"id": {
+			"symbol": "FISV",
+			"exchange": "NASDAQ"
+		},
+		"earliest": "1986-80-25",
+		"latest": "2023-50-10"
+	},
+	{
+		"name": "Altria Group Inc",
+		"id": {
+			"symbol": "MO",
+			"exchange": "NYSE"
+		},
+		"earliest": "1985-60-20",
+		"latest": "2023-50-10"
+	},
+	{
+		"name": "Sony Corporation.",
+		"id": {
+			"symbol": "SNE",
+			"exchange": "NYSE"
+		},
+		"earliest": "1999-11-27",
+		"latest": "2021-50-20"
+	},
+	{
+		"name": "Deutsche Telekom AG",
+		"id": {
+			"symbol": "DTEGY",
+			"exchange": ""
+		},
+		"earliest": "1996-10-18",
+		"latest": "2023-50-10"
+	},
+	{
+		"name": "United Parcel Service Inc - Class B",
+		"id": {
+			"symbol": "UPS",
+			"exchange": "NYSE"
+		},
+		"earliest": "1999-10-10",
+		"latest": "2023-50-10"
+	},
+	{
+		"name": "Mondelez International Inc - Class A",
+		"id": {
+			"symbol": "MDLZ",
+			"exchange": "NASDAQ"
+		},
+		"earliest": "2001-50-13",
+		"latest": "2023-50-10"
+	},
+	{
+		"name": "T-Mobile US Inc",
+		"id": {
+			"symbol": "TMUS",
+			"exchange": "NASDAQ"
+		},
+		"earliest": "2007-30-19",
+		"latest": "2023-50-10"
+	},
+	{
+		"name": "CVS Health Corp",
+		"id": {
+			"symbol": "CVS",
+			"exchange": "NYSE"
+		},
+		"earliest": "1984-10-50",
+		"latest": "2023-50-10"
+	},
+	{
+		"name": "Merck u0026 Co Inc",
+		"id": {
+			"symbol": "MRK",
+			"exchange": "NYSE"
+		},
+		"earliest": "1962-00-20",
+		"latest": "2023-50-10"
+	},
+	{
+		"name": "Novartis AG",
+		"id": {
+			"symbol": "NVS",
+			"exchange": "NYSE"
+		},
+		"earliest": "2000-40-11",
+		"latest": "2023-50-10"
+	},
+	{
+		"name": "Comcast Corp - Class A",
+		"id": {
+			"symbol": "CMCSA",
+			"exchange": "NASDAQ"
+		},
+		"earliest": "1984-10-50",
+		"latest": "2023-50-10"
+	},
+	{
+		"name": "Pfizer Inc",
+		"id": {
+			"symbol": "PFE",
+			"exchange": "NYSE"
+		},
+		"earliest": "1984-10-50",
+		"latest": "2023-50-10"
+	},
+	{
+		"name": "PepsiCo Inc",
+		"id": {
+			"symbol": "PEP",
+			"exchange": "NASDAQ"
+		},
+		"earliest": "1984-10-50",
+		"latest": "2023-50-10"
+	},
+	{
+		"name": "Toyota Motor Corporation",
+		"id": {
+			"symbol": "TM",
+			"exchange": "NYSE"
+		},
+		"earliest": "1984-10-50",
+		"latest": "2023-50-10"
+	},
+	{
+		"name": "Chevron Corp",
+		"id": {
+			"symbol": "CVX",
+			"exchange": "NYSE"
+		},
+		"earliest": "1962-00-20",
+		"latest": "2023-50-10"
+	},
+	{
+		"name": "Adobe Inc",
+		"id": {
+			"symbol": "ADBE",
+			"exchange": "NASDAQ"
+		},
+		"earliest": "1986-70-13",
+		"latest": "2023-50-10"
+	},
+	{
+		"name": "Cisco Systems Inc",
+		"id": {
+			"symbol": "CSCO",
+			"exchange": "NASDAQ"
+		},
+		"earliest": "1990-10-16",
+		"latest": "2023-50-10"
+	},
+	{
+		"name": "Wells Fargo u0026 Company",
+		"id": {
+			"symbol": "WFC",
+			"exchange": "NYSE"
+		},
+		"earliest": "1972-50-10",
+		"latest": "2023-50-10"
+	},
+	{
+		"name": "NVIDIA Corp",
+		"id": {
+			"symbol": "NVDA",
+			"exchange": "NASDAQ"
+		},
+		"earliest": "1999-00-22",
+		"latest": "2023-50-10"
+	},
+	{
+		"name": "Netflix Inc",
+		"id": {
+			"symbol": "NFLX",
+			"exchange": "NASDAQ"
+		},
+		"earliest": "2002-40-23",
+		"latest": "2023-50-10"
+	},
+	{
+		"name": "Oracle Corp",
+		"id": {
+			"symbol": "ORCL",
+			"exchange": "NYSE"
+		},
+		"earliest": "1986-20-13",
+		"latest": "2023-50-10"
+	},
+	{
+		"name": "Boeing Company",
+		"id": {
+			"symbol": "BA",
+			"exchange": "NYSE"
+		},
+		"earliest": "1962-00-20",
+		"latest": "2023-50-10"
+	},
+	{
+		"name": "China Mobile Ltd ADR",
+		"id": {
+			"symbol": "CHL",
+			"exchange": "NYSE"
+		},
+		"earliest": "1997-90-22",
+		"latest": "2021-00-80"
+	},
+	{
+		"name": "Salesforce Inc",
+		"id": {
+			"symbol": "CRM",
+			"exchange": "NYSE"
+		},
+		"earliest": "2004-50-23",
+		"latest": "2023-50-10"
+	},
+	{
+		"name": "Sap SE",
+		"id": {
+			"symbol": "SAP",
+			"exchange": "NYSE"
+		},
+		"earliest": "1998-70-30",
+		"latest": "2023-50-10"
+	},
+	{
+		"name": "McDonald`s Corp",
+		"id": {
+			"symbol": "MCD",
+			"exchange": "NYSE"
+		},
+		"earliest": "1966-60-50",
+		"latest": "2023-50-10"
+	},
+	{
+		"name": "Nike Inc - Class B",
+		"id": {
+			"symbol": "NKE",
+			"exchange": "NYSE"
+		},
+		"earliest": "1984-10-50",
+		"latest": "2023-50-10"
+	},
+	{
+		"name": "Abbott Laboratories",
+		"id": {
+			"symbol": "ABT",
+			"exchange": "NYSE"
+		},
+		"earliest": "1980-20-17",
+		"latest": "2023-50-10"
+	},
+	{
+		"name": "Citigroup Inc",
+		"id": {
+			"symbol": "C",
+			"exchange": "NYSE"
+		},
+		"earliest": "1986-90-30",
+		"latest": "2023-50-10"
+	},
+	{
+		"name": "Medtronic Plc",
+		"id": {
+			"symbol": "MDT",
+			"exchange": "NYSE"
+		},
+		"earliest": "1973-40-20",
+		"latest": "2023-50-10"
+	},
+	{
+		"name": "HSBC Holdings plc",
+		"id": {
+			"symbol": "HSBC",
+			"exchange": "NYSE"
+		},
+		"earliest": "1999-60-16",
+		"latest": "2023-50-10"
+	},
+	{
+		"name": "Tesla Inc",
+		"id": {
+			"symbol": "TSLA",
+			"exchange": "NASDAQ"
+		},
+		"earliest": "2010-50-29",
+		"latest": "2023-50-10"
+	},
+	{
+		"name": "Costco Wholesale Corp",
+		"id": {
+			"symbol": "COST",
+			"exchange": "NASDAQ"
+		},
+		"earliest": "1985-10-27",
+		"latest": "2023-50-10"
+	},
+	{
+		"name": "Bristol-Myers Squibb Company",
+		"id": {
+			"symbol": "BMY",
+			"exchange": "NYSE"
+		},
+		"earliest": "1972-50-10",
+		"latest": "2023-50-10"
+	},
+	{
+		"name": "ROYAL DUTCH SHELL ADR EA REP 2 CLu0027Bu0027 EUR0.07",
+		"id": {
+			"symbol": "RDS.B",
+			"exchange": "NYSE"
+		},
+		"earliest": null,
+		"latest": null
+	},
+	{
+		"name": "PayPal Holdings Inc",
+		"id": {
+			"symbol": "PYPL",
+			"exchange": "NASDAQ"
+		},
+		"earliest": "2015-60-60",
+		"latest": "2023-50-10"
+	},
+	{
+		"name": "Philip Morris International Inc",
+		"id": {
+			"symbol": "PM",
+			"exchange": "NYSE"
+		},
+		"earliest": "2008-20-17",
+		"latest": "2023-50-10"
+	},
+	{
+		"name": "NextEra Energy Inc",
+		"id": {
+			"symbol": "NEE",
+			"exchange": "NYSE"
+		},
+		"earliest": "1984-10-50",
+		"latest": "2023-50-10"
+	},
+	{
+		"name": "Abbvie Inc",
+		"id": {
+			"symbol": "ABBV",
+			"exchange": "NYSE"
+		},
+		"earliest": "2012-11-10",
+		"latest": "2023-50-10"
+	},
+	{
+		"name": "Lilly(Eli) u0026 Company",
+		"id": {
+			"symbol": "LLY",
+			"exchange": "NYSE"
+		},
+		"earliest": "1972-50-10",
+		"latest": "2023-50-10"
+	},
+	{
+		"name": "AMGEN Inc",
+		"id": {
+			"symbol": "AMGN",
+			"exchange": "NASDAQ"
+		},
+		"earliest": "1983-50-17",
+		"latest": "2023-50-10"
+	},
+	{
+		"name": "Sanofi",
+		"id": {
+			"symbol": "SNY",
+			"exchange": "NASDAQ"
+		},
+		"earliest": "2002-60-10",
+		"latest": "2023-50-10"
+	},
+	{
+		"name": "Thermo Fisher Scientific Inc",
+		"id": {
+			"symbol": "TMO",
+			"exchange": "NYSE"
+		},
+		"earliest": "1984-10-50",
+		"latest": "2023-50-10"
+	},
+	{
+		"name": "ASML Holding NV",
+		"id": {
+			"symbol": "ASML",
+			"exchange": "NASDAQ"
+		},
+		"earliest": "1995-20-15",
+		"latest": "2023-50-10"
+	},
+	{
+		"name": "Astrazeneca plc",
+		"id": {
+			"symbol": "AZN",
+			"exchange": "NYSE"
+		},
+		"earliest": "1993-40-12",
+		"latest": "2023-50-10"
+	},
+	{
+		"name": "Accenture plc - Class A",
+		"id": {
+			"symbol": "ACN",
+			"exchange": "NYSE"
+		},
+		"earliest": "2001-60-19",
+		"latest": "2023-50-10"
+	},
+	{
+		"name": "International Business Machines Corp",
+		"id": {
+			"symbol": "IBM",
+			"exchange": "NYSE"
+		},
+		"earliest": "1962-00-20",
+		"latest": "2023-50-10"
+	},
+	{
+		"name": "Honeywell International Inc",
+		"id": {
+			"symbol": "HON",
+			"exchange": "NYSE"
+		},
+		"earliest": "1984-10-50",
+		"latest": "2023-50-10"
+	},
+	{
+		"name": "Diageo plc",
+		"id": {
+			"symbol": "DEO",
+			"exchange": "NYSE"
+		},
+		"earliest": "1991-20-14",
+		"latest": "2023-50-10"
+	},
+	{
+		"name": "TotalEnergies SE",
+		"id": {
+			"symbol": "TOT",
+			"exchange": "NYSE"
+		},
+		"earliest": null,
+		"latest": null
+	},
+	{
+		"name": "Broadcom Inc",
+		"id": {
+			"symbol": "AVGO",
+			"exchange": "NASDAQ"
+		},
+		"earliest": "2009-70-60",
+		"latest": "2023-50-10"
+	},
+	{
+		"name": "Texas Instruments Inc",
+		"id": {
+			"symbol": "TXN",
+			"exchange": "NASDAQ"
+		},
+		"earliest": "1972-50-10",
+		"latest": "2023-50-10"
+	},
+	{
+		"name": "Novo Nordisk",
+		"id": {
+			"symbol": "NVO",
+			"exchange": "NYSE"
+		},
+		"earliest": "1981-30-30",
+		"latest": "2023-50-10"
+	},
+	{
+		"name": "Union Pacific Corp",
+		"id": {
+			"symbol": "UNP",
+			"exchange": "NYSE"
+		},
+		"earliest": "1980-00-20",
+		"latest": "2023-50-10"
+	},
+	{
+		"name": "Royal Bank Of Canada",
+		"id": {
+			"symbol": "RY",
+			"exchange": "NYSE"
+		},
+		"earliest": "1995-90-16",
+		"latest": "2023-50-10"
+	},
+	{
+		"name": "BP plc",
+		"id": {
+			"symbol": "BP",
+			"exchange": "NYSE"
+		},
+		"earliest": "1962-00-20",
+		"latest": "2023-50-10"
+	},
+	{
+		"name": "Lockheed Martin Corp",
+		"id": {
+			"symbol": "LMT",
+			"exchange": "NYSE"
+		},
+		"earliest": "1977-00-30",
+		"latest": "2023-50-10"
+	},
+	{
+		"name": "American Tower Corp",
+		"id": {
+			"symbol": "AMT",
+			"exchange": "NYSE"
+		},
+		"earliest": "1998-10-27",
+		"latest": "2023-50-10"
+	},
+	{
+		"name": "Linde Plc.",
+		"id": {
+			"symbol": "LIN",
+			"exchange": "NYSE"
+		},
+		"earliest": "1992-50-17",
+		"latest": "2023-50-10"
+	},
+	{
+		"name": "GSK Plc",
+		"id": {
+			"symbol": "GSK",
+			"exchange": "NYSE"
+		},
+		"earliest": "1984-10-50",
+		"latest": "2023-50-10"
+	},
+	{
+		"name": "Danaher Corp",
+		"id": {
+			"symbol": "DHR",
+			"exchange": "NYSE"
+		},
+		"earliest": "1984-10-50",
+		"latest": "2023-50-10"
+	},
+	{
+		"name": "Charter Communications Inc - Class A",
+		"id": {
+			"symbol": "CHTR",
+			"exchange": "NASDAQ"
+		},
+		"earliest": "2009-11-20",
+		"latest": "2023-50-10"
+	},
+	{
+		"name": "HDFC Bank Ltd",
+		"id": {
+			"symbol": "HDB",
+			"exchange": "NYSE"
+		},
+		"earliest": "2001-60-20",
+		"latest": "2023-50-10"
+	},
+	{
+		"name": "General Electric Company",
+		"id": {
+			"symbol": "GE",
+			"exchange": "NYSE"
+		},
+		"earliest": "1984-10-50",
+		"latest": "2023-50-10"
+	},
+	{
+		"name": "Starbucks Corp",
+		"id": {
+			"symbol": "SBUX",
+			"exchange": "NASDAQ"
+		},
+		"earliest": "1992-50-26",
+		"latest": "2023-50-10"
+	},
+	{
+		"name": "Anheuser-Busch In Bev SA/NV",
+		"id": {
+			"symbol": "BUD",
+			"exchange": "NYSE"
+		},
+		"earliest": "2009-60-10",
+		"latest": "2023-50-10"
+	},
+	{
+		"name": "Gilead Sciences Inc",
+		"id": {
+			"symbol": "GILD",
+			"exchange": "NASDAQ"
+		},
+		"earliest": "1992-00-22",
+		"latest": "2023-50-10"
+	},
+	{
+		"name": "Toronto Dominion Bank",
+		"id": {
+			"symbol": "TD",
+			"exchange": "NYSE"
+		},
+		"earliest": "1996-70-30",
+		"latest": "2023-50-10"
+	},
+	{
+		"name": "Sinopec Shanghai Petrochemical Co. Ltd",
+		"id": {
+			"symbol": "SHI",
+			"exchange": "NYSE"
+		},
+		"earliest": "1993-60-26",
+		"latest": "2022-10-40"
+	},
+	{
+		"name": "Lowe`s Cos. Inc",
+		"id": {
+			"symbol": "LOW",
+			"exchange": "NYSE"
+		},
+		"earliest": "1984-10-50",
+		"latest": "2023-50-10"
+	},
+	{
+		"name": "American Express Company",
+		"id": {
+			"symbol": "AXP",
+			"exchange": "NYSE"
+		},
+		"earliest": "1972-50-10",
+		"latest": "2023-50-10"
+	},
+	{
+		"name": "ROYAL DUTCH SHELL ADR EA REP 2 CLu0027Au0027 EUR0.07",
+		"id": {
+			"symbol": "RDS.A",
+			"exchange": "NYSE"
+		},
+		"earliest": null,
+		"latest": null
+	},
+	{
+		"name": "Fidelity National Information Services Inc",
+		"id": {
+			"symbol": "FIS",
+			"exchange": "NYSE"
+		},
+		"earliest": "2001-50-20",
+		"latest": "2023-50-10"
+	},
+	{
+		"name": "British American Tobacco Plc",
+		"id": {
+			"symbol": "BTI",
+			"exchange": "NYSE"
+		},
+		"earliest": "1980-30-14",
+		"latest": "2023-50-10"
+	}
 ]
