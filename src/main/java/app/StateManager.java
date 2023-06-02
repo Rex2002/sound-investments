@@ -27,8 +27,9 @@ public class StateManager {
 	private static boolean isAlreadySonifying = false;
 
 	public static void main(String[] args) {
-		testUI(args);
-		// testSound(args);
+		// testUI(args);
+		testSound(args);
+
 	}
 
 	public static void testUI(String[] args) {
@@ -238,11 +239,12 @@ public class StateManager {
 		PlaybackController pbc = sonifyMapping(mapping).pbc;
 		pbc.startPlayback();
 		boolean running = true;
+		Scanner in = new Scanner(System.in);
 		while (running) {
 			System.out.println("Please enter your next control action: ");
-			Scanner in = new Scanner(System.in);
-			String controlAction = in.next();
 
+			String controlAction = in.next();
+			System.out.println("ControlAction: " + controlAction);
 			switch (controlAction) {
 				// resume
 				case "r" -> pbc.play();
@@ -257,10 +259,10 @@ public class StateManager {
 					running = false;
 				}
 				case "rs" -> pbc.reset();
+				case "sv" -> pbc.save("out.wav");
 			}
-
-			in.close();
 		}
+		in.close();
 	}
 
 	public static Consumer<InterruptedException> getInterruptedExceptionHandler() {

@@ -88,4 +88,14 @@ public class Util {
 
         return ret;
     }
+
+    public static byte[] convertShortToByte(short[] data) {
+        byte[] outBuffer = new byte[data.length * 2];
+        for (int i = 0; i < data.length; i++) {
+            outBuffer[2 * i] = (byte) ((data[i] >> 8) & 0xFF);
+            outBuffer[2 * i + 1] = (byte) (data[i] & 0xFF);
+        }
+        return outBuffer;
+    }
+
 }
