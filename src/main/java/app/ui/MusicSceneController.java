@@ -24,6 +24,7 @@ import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Paint;
 import javafx.scene.shape.Circle;
+import javafx.scene.text.Font;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.util.StringConverter;
@@ -155,13 +156,15 @@ public class MusicSceneController implements Initializable {
 		// Show legend of sonifiable names
 		legendPane.getChildren().clear();
 		for (int i = 0; i < sonifiableNames.length; i++) {
-			addSonifiableName(sonifiableNames[i], colors[i], 50 + (i % 4) * 240, 646 + ((int) (i / 4)) * 50);
+			addSonifiableName(sonifiableNames[i], colors[i], 60 + (i % 3) * 240, 646 + ((int) (i / 4)) * 50);
 		}
 
 		// Show price data in line chart
 		xAxis.setAutoRanging(false);
 		xAxis.setLowerBound(0);
 		xAxis.setUpperBound(prices.get(0).getData().size());
+		xAxis.setTickLabelFill(Paint.valueOf("white"));
+		xAxis.setTickLabelFont(new Font("System", 10));
 		xAxis.setTickLabelFormatter(new StringConverter<Number>() {
 			public String toString(Number i) {
 				return DateUtil.formatDate(ArrayFunctions.clampedArrAccess(i.intValue(), dates));

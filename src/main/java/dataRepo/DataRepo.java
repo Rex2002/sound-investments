@@ -387,10 +387,10 @@ public class DataRepo {
 							return null;
 						}
 					}, true, "from", DateUtil.formatDate(start), "to", DateUtil.formatDate(end));
-				earliestDay = prices.get(prices.size() - 1).getDay();
+				// earliestDay = prices.get(prices.size() - 1).getDay();
 				// @Cleanup
 				// Consider using LocalDate everywhere instead of Calendar or find out how to go from day x to day x+1 without going from Calendar to LocalDate
-				end = DateUtil.localDateToCalendar(DateUtil.calendarToLocalDate(earliestDay).minusDays(1));
+				// end = DateUtil.localDateToCalendar(DateUtil.calendarToLocalDate(earliestDay).minusDays(1));
 				out.addAll(prices);
 			// } while (start.before(earliestDay));
 			return out;
