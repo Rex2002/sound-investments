@@ -17,6 +17,7 @@ import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
+import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
@@ -97,6 +98,7 @@ public class MainSceneController implements Initializable {
     private LocalDate maxDateEnd = LocalDate.now();
 
     private ImageView loading;
+    private Image closeImg;
     private CheckEQService checkEQService;
     private Mapping mapping = new Mapping();
     private boolean currentlyUpdatingCB = false;
@@ -135,6 +137,8 @@ public class MainSceneController implements Initializable {
         categoriesCB.getItems().addAll(MainSceneController.categoryKeys);
         locationCB.getItems().addAll(locations);
         enableBtnIfValid();
+
+        closeImg = new Image(getClass().getResource("/close_icon.png").toExternalForm());
 
         checkEQService = new CheckEQService();
         checkEQService.setPeriod(Duration.millis(100));
@@ -348,7 +352,7 @@ public class MainSceneController implements Initializable {
                     cBox.setSelected(false);
                 }
             } else {
-                rmSonifiable(((Sonifiable) cBox.getUserData()).getId(), stockPane[0]);
+                rmSonifiable(((Sonifiable) cBox.getUserData()).getId(), stockPane[0], false);
 
 
             }
@@ -357,7 +361,7 @@ public class MainSceneController implements Initializable {
         checkVBox.getChildren().add(cBox);
     }
 
-    private void rmSonifiable(SonifiableID id, Pane stockPane) {
+    private void rmSonifiable(SonifiableID id, Pane stockPane, boolean updateSearchResult) {
         mapping.rmSonifiable(id);
         ObservableList<Node> children = paneBoxSonifiables.getChildren();
         int idx = 0;
@@ -366,6 +370,19 @@ public class MainSceneController implements Initializable {
         assert idx != children.size() : "rmSonifiable was called on " + id + " which couldn't be found in SceneTree.";
         paneBoxSonifiables.getChildren().remove(stockPane);
         paneBoxSonifiables.prefHeight(children.size() * 511.0);
+
+        if (updateSearchResult) {
+            ObservableList<Node> checkBoxes = checkVBox.getChildren();
+            for (int i = 0; i < checkBoxes.size(); i++) {
+                try {
+                    CheckBox c = (CheckBox) checkBoxes.get(i);
+                    if (((Sonifiable) c.getUserData()).getId() == id){
+                        c.setSelected(false);
+                        break;
+                    }
+                } catch (ClassCastException e) {}
+            }
+        }
     }
 
     @FXML
@@ -448,7 +465,7 @@ public class MainSceneController implements Initializable {
                     InstrParam[] newOpts;
                     Function<InstrParam, InstrParam[]> getOpts = (pv) -> isLineParam ? mapping.getEmptyLineParams(newValue, pv) : mapping.getEmptyRangeParams(newValue, pv);
                     if (newValue != null && paramVal != null) {
-                        mapping.rmParam(oldValue, sonifiable.getId(), paramVal);
+                        mapping.rmParam(oldValue, paramVal);
 
                         if (!mapping.isMapped(newValue, paramVal)) {
                             newOpts = getOpts.apply(paramVal);
@@ -479,8 +496,8 @@ public class MainSceneController implements Initializable {
 
                     if (!instCBSelect.isEmpty()) {
                         if (oldVal !=  null) {
-                            if (inst != null) mapping.rmParam(inst, sonifiable.getId(), oldVal);
-                            else              mapping.rmParam(sonifiable.getId(), oldVal);
+                            if (inst != null) mapping.rmParam(inst, oldVal);
+                            else              mapping.rmParam(oldVal);
                         }
                         if (newVal != null) {
                             if (inst != null) mapping.setParam(inst, sonifiable, newVal, eparam);
@@ -506,12 +523,24 @@ public class MainSceneController implements Initializable {
 
         Pane stockPane = new Pane();
         stockPane.getStyleClass().add("stockPane");
-        TextField tField = new TextField();
+        Label tField = new Label();
         tField.setText(sonifiable.getName());
         tField.getStyleClass().add("txtField");
         tField.setLayoutX(168);
         tField.setLayoutY(8);
         stockPane.getChildren().add(tField);
+
+        ImageView closeIcon = new ImageView(closeImg);
+        double paneWidth = 738; // see css for width value
+        double iconSideLen = 30;
+        double iconMargin = 15;
+        closeIcon.setFitHeight(iconSideLen);
+        closeIcon.setFitWidth(iconSideLen);
+        closeIcon.setLayoutX(paneWidth - iconSideLen - iconMargin);
+        closeIcon.setLayoutY(iconMargin);
+        closeIcon.setCursor(Cursor.HAND);
+        closeIcon.setOnMouseClicked(ev -> rmSonifiable(sonifiable.getId(), stockPane, true));
+        stockPane.getChildren().add(closeIcon);
 
         addLine(null, 174, 53, 0, 0, 391, 0, stockPane.getChildren());
         addLine("pinkline", 306, 168, -100, -60, -100, 263, stockPane.getChildren());
