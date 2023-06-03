@@ -150,25 +150,6 @@ public class InstrumentMapping {
 		};
 	}
 
-	public ExchangeData<? extends ExchangeParam> get(InstrParam param) {
-		return switch (param) {
-			case PITCH -> getPitch();
-			case RELVOLUME -> getRelVolume();
-			case ABSVOLUME -> getAbsVolume();
-			case DELAY_ECHO -> getDelayEcho();
-			case FEEDBACK_ECHO -> getFeedbackEcho();
-			case ON_OFF_ECHO -> getOnOffEcho();
-			case DELAY_REVERB -> getDelayEcho();
-			case FEEDBACK_REVERB -> getFeedbackEcho();
-			case ON_OFF_REVERB -> getOnOffReverb();
-			case CUTOFF -> getCutoff();
-			case ORDER -> getOrder();
-			case ON_OFF_FILTER -> getOnOffFilter();
-			case PAN -> getPan();
-			default -> null;
-		};
-	}
-
 	public InstrumentEnum getInstrument() {
 		return this.instrument;
 	}

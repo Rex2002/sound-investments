@@ -363,6 +363,8 @@ public class MainSceneController implements Initializable {
 
     private void rmSonifiable(SonifiableID id, Pane stockPane, boolean updateSearchResult) {
         mapping.rmSonifiable(id);
+        enableBtnIfValid();
+
         ObservableList<Node> children = paneBoxSonifiables.getChildren();
         int idx = 0;
         while (idx < children.size() && !id.equals(children.get(idx).getUserData()))
