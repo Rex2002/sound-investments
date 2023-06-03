@@ -319,18 +319,8 @@ public class MainSceneController implements Initializable {
                 rmSonifiable(((Sonifiable) cBox.getUserData()).getId());
             }
         });
-        checkVBox.setPrefHeight((checkVBox.getChildren().size()) * 74.0);
+        checkVBox.setPrefHeight((checkVBox.getChildren().size()) * 42.0);
         checkVBox.getChildren().add(cBox);
-        // TODO: Do we really want that "Nächste Laden" Button after 10 elements?
-        if (checkVBox.getChildren().size() == 10) {
-            Button loadBtn = new Button("Nächste laden");
-            loadBtn.setOnAction(event -> {
-                loadNew();
-            });
-            loadBtn.setId("loadBtn");
-            checkVBox.setPrefHeight((checkVBox.getChildren().size()) * 74.0);
-            checkVBox.getChildren().add(loadBtn);
-        }
     }
 
     private void rmSonifiable(SonifiableID id) {
@@ -342,10 +332,6 @@ public class MainSceneController implements Initializable {
         assert idx != children.size() : "rmSonifiable was called on " + id + " which couldn't be found in SceneTree.";
         children.remove(idx);
         paneBoxSonifiables.prefHeight(children.size() * 477.0);
-    }
-
-    private void loadNew() {
-        // Reload sonifiables
     }
 
     @FXML
