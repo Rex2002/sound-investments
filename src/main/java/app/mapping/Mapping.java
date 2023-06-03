@@ -3,8 +3,7 @@ package app.mapping;
 import java.util.*;
 import java.util.function.Consumer;
 
-import app.Util;
-
+import util.ArrayFunctions;
 import app.AppError;
 import audio.synth.EvInstrEnum;
 import audio.synth.InstrumentEnum;
@@ -84,12 +83,12 @@ public class Mapping {
 	}
 
 	public InstrParam[] getEmptyLineParams(InstrumentEnum instr, InstrParam oldVal) {
-		InstrumentMapping instrMap = Util.find(mappedInstruments, x -> x != null && x.getInstrument() == instr);
+		InstrumentMapping instrMap = ArrayFunctions.find(mappedInstruments, x -> x != null && x.getInstrument() == instr);
 		return instrMap.getEmptyLineParams(oldVal);
 	}
 
 	public InstrParam[] getEmptyRangeParams(InstrumentEnum instr, InstrParam oldVal) {
-		InstrumentMapping instrMap = Util.find(mappedInstruments, x -> x != null && x.getInstrument() == instr);
+		InstrumentMapping instrMap = ArrayFunctions.find(mappedInstruments, x -> x != null && x.getInstrument() == instr);
 		return instrMap.getEmptyRangeParams(oldVal);
 	}
 
@@ -188,7 +187,7 @@ public class Mapping {
 	// setParam does not check if the change is even allowed
 	public void setParam(InstrumentEnum instr, Sonifiable sonifiable, InstrParam iparam, ExchangeParam eparam)
 			throws AppError {
-		InstrumentMapping instrMap = Util.find(mappedInstruments, x -> x != null && x.getInstrument() == instr);
+		InstrumentMapping instrMap = ArrayFunctions.find(mappedInstruments, x -> x != null && x.getInstrument() == instr);
 		if (onInstrAdded != null && instrMap.isEmpty()) onInstrAdded.accept(instrMap.getInstrument());
 		SonifiableID id = sonifiable.getId();
 		switch (iparam) {
@@ -211,7 +210,7 @@ public class Mapping {
 	}
 
 	public boolean isMapped(InstrumentEnum instr, InstrParam iparam) throws AppError {
-		InstrumentMapping instrMap = Util.find(mappedInstruments, x -> x.getInstrument() == instr);
+		InstrumentMapping instrMap = ArrayFunctions.find(mappedInstruments, x -> x.getInstrument() == instr);
 		return switch (iparam) {
 			case PITCH           -> instrMap.getPitch() != null;
 			case RELVOLUME       -> instrMap.getRelVolume() != null;
@@ -231,7 +230,7 @@ public class Mapping {
 	}
 
 	public void rmParam(InstrumentEnum instr, SonifiableID sonifiable, InstrParam iparam) throws AppError {
-		InstrumentMapping instrMap = Util.find(mappedInstruments, x -> x.getInstrument() == instr);
+		InstrumentMapping instrMap = ArrayFunctions.find(mappedInstruments, x -> x.getInstrument() == instr);
 		switch (iparam) {
 			case PITCH           -> instrMap.setPitch(null);
 			case RELVOLUME       -> instrMap.setRelVolume(null);
@@ -316,7 +315,7 @@ public class Mapping {
 
 
 	public void setHighPass(InstrumentEnum instr, boolean highpass) {
-		InstrumentMapping instrMap = Util.find(mappedInstruments, x -> x.getInstrument() == instr);
+		InstrumentMapping instrMap = ArrayFunctions.find(mappedInstruments, x -> x.getInstrument() == instr);
 		instrMap.setHighPass(highpass);
 	}
 
@@ -388,8 +387,8 @@ public class Mapping {
 	public String toString() {
 		return "{" +
 				" sonifiables='" + this.sonifiables + "'" +
-				", mappedInstruments='" + Util.toStringArr(this.mappedInstruments) + "'" +
-				", eventInstruments='" + Util.toStringArr(this.eventInstruments) + "'" +
+				", mappedInstruments='" + ArrayFunctions.toStringArr(this.mappedInstruments) + "'" +
+				", eventInstruments='" + ArrayFunctions.toStringArr(this.eventInstruments) + "'" +
 				", evInstrAmount='" + this.evInstrAmount + "'" +
 				", soundLength='" + this.soundLength + "'" +
 				", startDate='" + this.startDate + "'" +

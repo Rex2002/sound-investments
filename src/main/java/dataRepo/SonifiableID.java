@@ -42,4 +42,8 @@ public class SonifiableID {
 	public String toString() {
 		return this.symbol + "." + this.exchange;
 	}
+
+	public String toJSON() {
+		return "{ \"symbol\": \"" + symbol + "\", " + "\"exchange\": \"" + exchange + "\" " + "}";
+	}
 }

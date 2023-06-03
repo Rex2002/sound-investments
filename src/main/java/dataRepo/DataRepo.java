@@ -1,5 +1,6 @@
 package dataRepo;
 
+import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
@@ -7,36 +8,77 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.Future;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
 
 import app.AppError;
+import dataRepo.api.APIErr;
 import dataRepo.api.APIReq;
 import dataRepo.api.AuthPolicy;
-import dataRepo.api.HandledPagination;
+import dataRepo.api.PaginationHandler;
 import dataRepo.json.JsonPrimitive;
 import dataRepo.json.Parser;
+import util.ArrayFunctions;
+import util.FutureList;
+import util.UnorderedList;
 
 public class DataRepo {
-	private static List<Stock> testStocks() {
-		try {
-			return List
-					.of(
-							new Stock("SAP SE", new SonifiableID("SAP", "XETRA"), DateUtil.calFromDateStr("1994-02-01"),
-									DateUtil.calFromDateStr("2023-06-30")),
-							new Stock("Siemens Energy AG", new SonifiableID("ENR", "XETRA"),
-									DateUtil.calFromDateStr("2020-09-28"),
-									DateUtil.calFromDateStr("2023-06-30")),
-							new Stock("Dropbox Inc", new SonifiableID("1Q5", "XETRA"),
-									DateUtil.calFromDateStr("2021-01-07"),
-									DateUtil.calFromDateStr("2023-06-30")),
-							new Stock("1&1 AG", new SonifiableID("1U1", "XETRA"), DateUtil.calFromDateStr("1998-12-04"),
-									DateUtil.calFromDateStr("2023-06-30")),
-							new Stock("123fahrschule SE", new SonifiableID("123F", "XETRA"),
-									DateUtil.calFromDateStr("2021-11-02"),
-									DateUtil.calFromDateStr("2023-06-30")));
-		} catch (Exception e) {
-			return List.of();
-		}
-	}
+	private static final boolean GET_PRICES_DYNAMICALLY = true;
+
+	private static final String[] apiToksLeeway = { "pgz64a5qiuvw4qhkoullnx", "9pe3xyaplenvfvbnyxtomm",
+			"r7splaijduabfpcu2z2l14", "o5npdx6elm2pcpp395uaun", "2ja5gszii8g63hzjd41x78" };
+	private static final String[] apiToksMarketstack = { "4b6a78c092537f07bbdedff8f134372d",
+			"0c2e8a9c96f2a74c0049f4b662f47b40",
+			"621fc5e0add038cc7d9697bcb7f15caa", "4312dfd8788579ec14ee9e9c9bec4557",
+			"0a99047c49080d975013978d3609ca9e" };
+	private static final String[] apiToksTwelvedata = { "04ed9e666cbb4873ac6d29651e2b4d7e",
+			"7e51ed4d1d5f4cbfa6e6bcc8569c1e54",
+			"98888ec975884e98a9555233c3dd59da", "af38d2454c2c4a579768b8262d3e039e",
+			"facbd6808e6d436e95c4935ab8cc082e" };
+
+	// TODO: Add specific error handling for the different APIs
+	private static APIReq apiTwelvedata = new APIReq("https://api.twelvedata.com/", apiToksTwelvedata, AuthPolicy.QUERY, "apikey");
+	private static APIReq apiLeeway = new APIReq("https://api.leeway.tech/api/v1/public/", apiToksLeeway, AuthPolicy.QUERY, "apitoken");
+	private static APIReq apiMarketstack = new APIReq("http://api.marketstack.com/v1/", apiToksMarketstack, AuthPolicy.QUERY, "access_key",
+			new PaginationHandler(json -> {
+				// @Cleanup Remove hardcoded limit
+				return 30;
+			}, json -> json.asMap().get("data")),
+			(page) -> {
+				// @Cleanup Remove hardcoded offset
+				// The function signature might have to change too, bc we need the current limit
+				// for calculating the offset and I don't know how to get the limit without
+				// having access to the APIReq object
+				String[] res = { "offset", Integer.toString(10 * page) };
+				return res;
+			}, APIReq.defaultErrHandler());
+
+	// @Scalability If more than one component would need to react to updated data,
+	// a single boolean flag would not be sufficient of course. Since we know,
+	// however, that only the StateManager reacts to this information, having a
+	// single boolean flag is completely sufficient
+	public static AtomicBoolean updatedData = new AtomicBoolean(false);
+	private static BlockingQueue<Runnable> tpQueue = new LinkedBlockingQueue<>();
+	private static ThreadPoolExecutor threadPool = new ThreadPoolExecutor(16, 64, 60, TimeUnit.SECONDS,
+			tpQueue);
+
+	private static UnorderedList<Stock> stocks = new UnorderedList<>(128);
+	private static UnorderedList<ETF> etfs = new UnorderedList<>(128);
+	private static UnorderedList<Index> indices = new UnorderedList<>(128);
+
+	// When updatedStocksTradingPeriods == stocks.size(), all stocks are updated set by setTradingPeriods()
+	private static AtomicInteger updatedStocksTradingPeriods = new AtomicInteger(stocks.size());
+	private static AtomicInteger updatedETFsTradingPeriods = new AtomicInteger(etfs.size());
+	private static AtomicInteger updatedIndicesTradingPeriods = new AtomicInteger(indices.size());
+	private static int updatedTradingPeriodsCounter = 0; // Amount of sonifiables lists, whose trading periods have updated
 
 	private static List<Price> testPrices() {
 		try {
@@ -62,164 +104,205 @@ public class DataRepo {
 		}
 	}
 
-	public static enum API {
-		LEEWAY,
-		MARKETSTACK,
-		TWELVEDATA;
-	}
+	// Note: You shouldn't call this function twice
+	public static void init() throws AppError {
+		try {
+			// Read cached stocks
+			Parser parser = new Parser();
+			String stocksRes = Files.readString(Path.of("./src/main/resources/stocks.json"));
+			JsonPrimitive<?> json = parser.parse(stocksRes);
+			stocks = json
+					.applyList(x -> {
+						Calendar earliest = null, latest = null;
+						try {
+							earliest = DateUtil.calFromDateStr(x.asMap().get("earliest").asStr());
+							latest = DateUtil.calFromDateStr(x.asMap().get("latest").asStr());
+						} catch (Exception e) {
+						}
+						return new Stock(x.asMap().get("name").asStr(),
+								new SonifiableID(x.asMap().get("id").asMap().get("symbol").asStr(),
+										x.asMap().get("id").asMap().get("exchange").asStr()),
+								earliest,
+								latest);
+					}, new UnorderedList<>(json.asList().size()), true);
 
-	public static enum IntervalLength {
-		MIN,
-		// MIN5,
-		// MIN30,
-		HOUR,
-		DAY;
+			// TODO: Read cached ETFs/Indices
 
-		public Instant addToInstant(Instant x) {
-			long millis = 1000;
-			millis *= switch (this) {
-				case MIN -> 60;
-				case HOUR -> 60 * 60;
-				case DAY -> 12 * 60 * 60;
-			};
-			long res = x.toEpochMilli() + millis;
-			return Instant.ofEpochMilli(res);
-		}
-
-		public String toString(API api) {
-			return switch (this) {
-				case MIN -> switch (api) {
-					case LEEWAY -> "1m";
-					default -> "1min";
-				};
-				case HOUR -> switch (api) {
-					case MARKETSTACK -> "1hour";
-					default -> "1h";
-				};
-				case DAY -> switch (api) {
-					case LEEWAY -> null; // Leeway doesn't support 24hour intraday -> use /eod endpoint instead
-					case MARKETSTACK -> "24hour";
-					case TWELVEDATA -> "1day";
-				};
-			};
+			// @Cleanup uncomment for production
+			// Start updating stocks in background
+			// updateSonifiablesList();
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new AppError(e.getMessage());
 		}
 	}
 
-	public static enum FilterFlag {
-		STOCK(1 << 0),
-		ETF(1 << 1),
-		INDEX(1 << 2),
-		ALL((1 << 0) | (1 << 1) | (1 << 2));
+	public static void updateSonifiablesList() throws AppError {
+		try {
+			// @Cleanup increase limit to the maximum (1000) for production
+			// @Cleanup As of now this limit value has to be synced with the offset when creating the Marketstack APIReq bc of hardcoded values
+			apiMarketstack.setQueries("limit", "10");
+			FutureList<UnorderedList<Stock>> fl = apiMarketstack.getPaginatedJSONList("tickers", threadPool, 8,
+					(Function<Integer, UnorderedList<Stock>>) (size -> {
+						UnorderedList<Stock> l = new UnorderedList<>(size);
+						for (int i = 0; i < size; i++)
+							l.add(i, null);
+						return l;
+					}),
+					x -> x, (Function<JsonPrimitive<?>, Stock>) (x -> {
+						try {
+							return new Stock(x.asMap().get("name").asStr(),
+									new SonifiableID(x.asMap().get("symbol").asStr(),
+											x.asMap().get("stock_exchange").asMap().get("acronym").asStr()));
+						} catch (Exception e) {
+							return null;
+						}
+					}));
+			Timer checkFLTimer = new Timer();
+			checkFLTimer.scheduleAtFixedRate(new TimerTask() {
+				public void run() {
+					try {
+						if (fl.isDone()) {
+							stocks = fl.get();
+							for (int i = 0; i < stocks.size(); i++) {
+								if (stocks.get(i) == null)
+									stocks.remove(i);
+							}
 
-		private final int x;
+							setTradingPeriods(stocks, updatedStocksTradingPeriods);
 
-		FilterFlag(int x) {
-			this.x = x;
-		}
+							// TODO: Update ETFs and Stocks too
 
-		public int getVal() {
-			return x;
+							Timer timer = new Timer();
+							timer.scheduleAtFixedRate(new TimerTask() {
+								public void run() {
+									// TODO: Refactor to reduce code duplication
+									boolean updatedTradingPeriods = false;
+									if (updatedStocksTradingPeriods.compareAndSet(stocks.size(), 0)) {
+										updatedTradingPeriods = true;
+										updatedTradingPeriodsCounter++;
+										stocks.applyRemoves();
+									}
+									// @Cleanup uncomment once we actually get data for etfs/indices
+									// needs to be commented out for now, bc the code doesn't work when list.size()
+									// == 0
+									// if (updatedETFsTradingPeriods.compareAndSet(etfs.size(), 0)) {
+									// updatedTradingPeriods = true;
+									// updatedTradingPeriodsCounter++;
+									// etfs.applyRemoves();
+									// }
+									// if (updatedIndicesTradingPeriods.compareAndSet(indices.size(), 0)) {
+									// updatedTradingPeriods = true;
+									// updatedTradingPeriodsCounter++;
+									// indices.applyRemoves();
+									// }
+
+									System.out.println(
+											"Timer check: ThreadPool = " + threadPool.toString());
+
+									if (updatedTradingPeriods)
+										updatedData.set(true);
+									// @Cleanup exchange 1 with 3, once we get data for etfs/indices too
+									if (updatedTradingPeriodsCounter >= 1) {
+										updatedTradingPeriodsCounter = 0;
+										System.out.println("Setting Trading Periods done");
+										timer.cancel();
+										try {
+											writeToJSON("stocks.json", ArrayFunctions.toStringArr(stocks.getArray(), x -> ((Sonifiable) x).toJSON(), true));
+										} catch (AppError e) {
+											e.printStackTrace();
+										}
+									}
+								}
+							}, 500, 200);
+
+							checkFLTimer.cancel();
+						}
+					} catch (Throwable e) {
+						e.printStackTrace();
+						checkFLTimer.cancel();
+					}
+				}
+			}, 1000, 200);
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new AppError(e.getMessage());
 		}
 	}
 
-	public static int getFilterVal(FilterFlag... flags) {
-		int val = 0;
-		for (FilterFlag flag : flags) {
-			val |= flag.getVal();
+	private static <T> void writeToJSON(String filename, String data) throws AppError {
+		try {
+			PrintWriter out = new PrintWriter("./src/main/resources/" + filename);
+			out.write(data);
+			out.close();
+		} catch (Exception e) {
+			throw new AppError(e.getMessage());
 		}
-		return val;
 	}
 
-	private static final String[] apiToksLeeway = { "pgz64a5qiuvw4qhkoullnx", "9pe3xyaplenvfvbnyxtomm",
-			"r7splaijduabfpcu2z2l14", "o5npdx6elm2pcpp395uaun", "2ja5gszii8g63hzjd41x78" };
-	private static final String[] apiToksMarketstack = { "4b6a78c092537f07bbdedff8f134372d",
-			"0c2e8a9c96f2a74c0049f4b662f47b40",
-			"621fc5e0add038cc7d9697bcb7f15caa", "4312dfd8788579ec14ee9e9c9bec4557",
-			"0a99047c49080d975013978d3609ca9e" };
-	private static final String[] apiToksTwelvedata = { "04ed9e666cbb4873ac6d29651e2b4d7e",
-			"7e51ed4d1d5f4cbfa6e6bcc8569c1e54",
-			"98888ec975884e98a9555233c3dd59da", "af38d2454c2c4a579768b8262d3e039e",
-			"facbd6808e6d436e95c4935ab8cc082e" };
+	private static <T extends Sonifiable> void setTradingPeriods(UnorderedList<T> list,
+			AtomicInteger updatedTradingPeriods) {
+		updatedTradingPeriods.set(0);
+		for (int i = 0; i < list.size(); i++) {
+			T s = list.get(i);
+			final int idx = i;
+			getTradingPeriod(s, dates -> {
+				if (dates == null) {
+					list.removeLater(idx);
+				} else {
+					s.setEarliest(dates[0]);
+					s.setLatest(dates[1]);
+				}
+				int x = updatedTradingPeriods.incrementAndGet();
+				System.out.println("Set trading periods. idx = " + idx + ", updatedCount = " + x + ", tpQueue.size() = "
+						+ tpQueue.size());
+				return s;
+			});
+		}
+	}
 
-	private static APIReq apiTwelvedata = new APIReq("https://api.twelvedata.com/", apiToksTwelvedata, AuthPolicy.QUERY,
-			"apikey");
-	private static APIReq apiLeeway = new APIReq("https://api.leeway.tech/api/v1/public/", apiToksLeeway,
-			AuthPolicy.QUERY,
-			"apitoken");
-	private static APIReq apiMarketstack = getApiMarketstack();
+	// Returns list of two Calendar objects. The first element is the starting date,
+	// the second the ending date. If an error happened, `null` is returned
+	public static <T> Future<T> getTradingPeriod(Sonifiable s, Function<Calendar[], T> callback) {
+		return threadPool.submit(() -> {
+			Calendar[] res = { null, null };
+			T out = null;
+			try {
+				HashMap<String, JsonPrimitive<?>> json = apiLeeway.getJSON("general/tradingperiod/" + s.getId().toString(), x -> x.asMap());
+				res[0] = DateUtil.calFromDateStr(json.get("start").asStr());
+				res[1] = DateUtil.calFromDateStr(json.get("end").asStr());
+				out = callback.apply(res);
+			} catch (APIErr e) {
+				// Try again using Twelvedata's API instead
+				try {
+					apiTwelvedata.setQueries("symbol", s.getId().getSymbol(), "exchange", s.getId().getExchange(), "outputsize", "10", "interval", IntervalLength.DAY.toString(API.TWELVEDATA));
 
-	private static APIReq getApiMarketstack() {
-		APIReq api = new APIReq("http://api.marketstack.com/v1/", apiToksMarketstack,
-				AuthPolicy.QUERY,
-				"access_key");
-		api.setQueries("limit", "1000");
-		return api.setPaginationHandler(json -> {
-			JsonPrimitive<?> rest = json.asMap().get("data");
-			HashMap<String, JsonPrimitive<?>> pageMap = json.asMap().get("pagination").asMap();
-			Integer x = pageMap.get("offset").asInt() + pageMap.get("count").asInt();
-			boolean done = x >= 5000; // pageMap.get("total").asInt();
-			return new HandledPagination(rest, done);
-		}, counter -> {
-			api.setQuery("offset", Integer.toString(counter * 1000));
+					List<JsonPrimitive<?>> vals = apiTwelvedata.getJSON("time_series", x -> x.asMap().get("values").asList(), "order", "ASC", "start_date", "1990-01-01");
+					res[0] = DateUtil.calFromDateStr(vals.get(0).asMap().get("datetime").asStr());
+
+					vals = apiTwelvedata.getJSON("time_series", x -> x.asMap().get("values").asList(), "order", "DESC", "end_date", DateUtil.formatDate(Calendar.getInstance()));
+					res[1] = DateUtil.calFromDateStr(vals.get(0).asMap().get("datetime").asStr());
+
+					apiTwelvedata.resetQueries();
+					out = callback.apply(res);
+				} catch (Exception e2) {
+					// @Debug
+					// System.out.println("Error in inner getTradingPeriod:");
+					// e2.printStackTrace();
+					out = callback.apply(null);
+				}
+			} catch (Exception e) {
+				// @Debug
+				// System.out.println("Error in outer getTradingPeriod:");
+				// e.printStackTrace();
+				out = callback.apply(null);
+			}
+			return out;
 		});
 	}
 
-	private static List<Stock> stocks = new ArrayList<>(128);
-	private static List<ETF> etfs = new ArrayList<>(128);
-	private static List<Index> indices = new ArrayList<>(128);
-
-	public static void init() throws AppError {
-		// @Cleanup for Development & Testing only
-		stocks = testStocks();
-		return;
-
-		// @Cleanup For debugging only
-		// apiTwelvedata.setQuery("exchange", "XNYS");
-
-		// try {
-		// stocks = apiTwelvedata.getJSON(x -> x.asMap().get("data"), "stocks")
-		// .applyList(x -> new Stock(x.asMap().get("name").asStr(),
-		// x.asMap().get("symbol").asStr(), x.asMap().get("exchange").asStr()));
-		// setTradingPeriods(stocks);
-
-		// etfs = apiTwelvedata.getJSON(x -> x.asMap().get("data"), "etf")
-		// .applyList(x -> new ETF(x.asMap().get("name").asStr(),
-		// x.asMap().get("symbol").asStr(), x.asMap().get("exchange").asStr()));
-		// setTradingPeriods(etfs);
-
-		// indices = apiTwelvedata.getJSON(x -> x.asMap().get("data"), "indices")
-		// .applyList(x -> new Index(x.asMap().get("name").asStr(),
-		// x.asMap().get("symbol").asStr(), x.asMap().get("exchange").asStr()));
-		// setTradingPeriods(indices);
-
-		// System.out.println("Init done");
-		// } catch (Exception e) {
-		// e.printStackTrace();
-		// }
-	}
-
-	private static <T extends Sonifiable> void setTradingPeriods(List<T> list) {
-		// @Cleanup `i < 10` is only for debugging
-		for (int i = 0; i < list.size() && i < 5; i++) {
-			T s = list.get(i);
-			try {
-				HashMap<String, JsonPrimitive<?>> json = apiLeeway.getJSON(x -> x.asMap(),
-						"general/tradingperiod/" + s.getId().toString());
-				s.setEarliest(DateUtil.calFromDateStr(json.get("start").asStr()));
-				s.setLatest(DateUtil.calFromDateStr(json.get("end").asStr()));
-			} catch (Exception e) {
-				// We assume tht if an error occured, that we don't have access to the given
-				// symbol
-				// This might be a wrong assumption
-				System.out.println("Remove element");
-				list.remove(i);
-				i--;
-			}
-		}
-	}
-
 	public static List<Sonifiable> findByPrefix(String prefix, FilterFlag... filters) {
-		int flag = getFilterVal(filters);
+		int flag = FilterFlag.getFilterVal(filters);
 		List<Sonifiable> l = new ArrayList<>(128);
 		if ((flag & FilterFlag.STOCK.getVal()) > 0)
 			findByPrefix(prefix, stocks, l);
@@ -240,7 +323,7 @@ public class DataRepo {
 	}
 
 	public static List<Sonifiable> getAll(FilterFlag... filters) {
-		int flag = getFilterVal(filters);
+		int flag = FilterFlag.getFilterVal(filters);
 		List<Sonifiable> l = new ArrayList<>(128);
 		if ((flag & FilterFlag.STOCK.getVal()) > 0)
 			l.addAll(stocks);
@@ -279,33 +362,41 @@ public class DataRepo {
 		return null;
 	}
 
-	public static List<Price> getPrices(SonifiableID s, Calendar start, Calendar end, IntervalLength interval) {
-		return testPrices();
+	public static List<Price> getPrices(SonifiableID s, Calendar start, Calendar end, IntervalLength interval) throws AppError {
+		if (!GET_PRICES_DYNAMICALLY) return testPrices();
 
-		// try {
-		// String is = interval.toString(API.TWELVEDATA);
-		// return apiTwelvedata.getJSON(x -> x.asMap().get("values"), "time_series",
-		// "interval", is, "start_date",
-		// Util.formatDate(start), "end_date", Util.formatDate(end), "timezone",
-		// "UTC").applyList(x -> {
-		// try {
-		// HashMap<String, JsonPrimitive<?>> m = x.asMap();
-		// Calendar startDay = Util.calFromDateStr(m.get("datetime").asStr());
-		// Instant startTime =
-		// Util.fmtDatetime.parse(m.get("datetime").asStr()).toInstant();
-		// Instant endTime = interval.addToInstant(startTime);
+		// TODO: Add de-facto pagination to price-requests to allow parallelization
+		// Idea for doing this: See how long the date-range in the first response was
+		// then split the rest of the range for start->end into chunks of that range
+		// To achieve this, the signatures for pagination handlers most certainly have to be changed again
 
-		// return new Price(startDay, startTime, endTime, m.get("open").asDouble(),
-		// m.get("close").asDouble(), m.get("low").asDouble(),
-		// m.get("high").asDouble());
-		// } catch (Exception e) {
-		// return null;
-		// }
-		// }, true);
-
-		// } catch (Exception e) {
-		// // @Checkin Make sure we want to indicate errors like this
-		// return null;
-		// }
+		// TODO: Use interval - at the moment we assume that interval == DAY and just make end-of-day API-requests
+		try {
+			List<Price> out = new ArrayList<>(1024);
+			Calendar earliestDay;
+			// TODO Bug: There seems to be an issue with DateUtil parsing the dates of the prices wrong or something
+			// until that bug is fixed, I commented the otherwise potentially endless loop out
+			// do {
+				List<Price> prices = apiLeeway.getJSONList("historicalquotes/" + s,
+					json -> {
+						try {
+							HashMap<String, JsonPrimitive<?>> m = json.asMap();
+							Calendar day = DateUtil.calFromDateStr(m.get("date").asStr());
+							return new Price(day, day.toInstant(), day.toInstant(), m.get("open").asDouble(), m.get("close").asDouble(), m.get("low").asDouble(), m.get("high").asDouble());
+						} catch (Exception e) {
+							return null;
+						}
+					}, true, "from", DateUtil.formatDate(start), "to", DateUtil.formatDate(end));
+				earliestDay = prices.get(prices.size() - 1).getDay();
+				// @Cleanup
+				// Consider using LocalDate everywhere instead of Calendar or find out how to go from day x to day x+1 without going from Calendar to LocalDate
+				end = DateUtil.localDateToCalendar(DateUtil.calendarToLocalDate(earliestDay).minusDays(1));
+				out.addAll(prices);
+			// } while (start.before(earliestDay));
+			return out;
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new AppError("Error in getting Price-Data for " + s + " from " + DateUtil.formatDate(start) + " to " + DateUtil.formatDate(end));
+		}
 	}
 }

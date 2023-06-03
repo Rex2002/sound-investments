@@ -5,7 +5,6 @@ import app.mapping.InstrumentDataRaw;
 import audio.Constants;
 import audio.synth.InstrumentData;
 import audio.synth.fx.FilterData;
-
 import java.util.Arrays;
 import java.util.Random;
 
@@ -33,6 +32,7 @@ public class Harmonizer {
         if (!(dataRaw.getDelayReverb() == null && dataRaw.getFeedbackReverb() == null
                 && dataRaw.getOnOffReverb() == null)) {
             data.setDelayReverb(normalizeDelayReverb(dataRaw.getDelayReverb()));
+
             data.setFeedbackReverb(normalizeFeedbackReverb(dataRaw.getFeedbackReverb(), dataRaw.getOnOffReverb()));
         }
 
@@ -137,6 +137,7 @@ public class Harmonizer {
             double[] delays = new double[] { 4 / 96f, 6 / 96f, 8 / 96f, 12 / 96f, 16 / 96f, 24 / 96f, 32 / 96f,
                     48 / 96f, 1f };
             int[] output = new int[delayEcho.length];
+
             for (int i = 0; i < delayEcho.length; i++) {
                 checkDouble(delayEcho[i], "delayEcho", i);
 

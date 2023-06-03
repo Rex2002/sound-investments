@@ -21,17 +21,18 @@ public class DateUtil {
 	}
 
 	public static String formatDate(Calendar date) {
-		return paddedParse(date.get(Calendar.YEAR), 4, '0') + "-" + paddedParse(date.get(Calendar.MONTH), 2, '0') + "-"
-				+ paddedParse(date.get(Calendar.DAY_OF_MONTH), 2, '0');
+		return paddedParse(date.get(Calendar.YEAR), 4, '0') + "-" + paddedParse(date.get(Calendar.MONTH), 2, '0') + "-" + paddedParse(date.get(Calendar.DAY_OF_MONTH), 2, '0');
 	}
 
 	public static String paddedParse(int x, int length, char pad) {
 		StringBuffer sb = new StringBuffer(length);
 		sb.setLength(length);
 		String xs = String.valueOf(x);
-		sb.insert(length - xs.length(), xs);
+		for (int i = length - xs.length(), j = 0; i < length; i++, j++) {
+			sb.setCharAt(i, xs.charAt(j));
+		}
 		for (int i = 0; i < length - xs.length(); i++) {
-			sb.insert(i, pad);
+			sb.setCharAt(i, pad);
 		}
 		return sb.toString();
 	}
@@ -41,6 +42,7 @@ public class DateUtil {
 	}
 
 	public static LocalDate calendarToLocalDate(Calendar c) {
+		if (c == null) return null;
 		return LocalDate.ofInstant(c.toInstant(), ZoneId.systemDefault());
 	}
 }

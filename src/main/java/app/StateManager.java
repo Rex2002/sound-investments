@@ -11,7 +11,6 @@ import audio.synth.playback.PlayControlEventsEnum;
 import audio.synth.playback.PlaybackController;
 import dataAnalyzer.*;
 import dataRepo.*;
-import dataRepo.DataRepo.IntervalLength;
 import javafx.application.Application;
 
 import java.io.File;
@@ -24,7 +23,8 @@ import java.util.function.Consumer;
 // however, it makes conceptually more sense to me, as the app's logic should be done in the main thread
 
 public class StateManager {
-	private static boolean isAlreadySonifying = false;
+	public static boolean isAlreadySonifying = false;
+	public static SonifiableFilter sonifiableFilter = new SonifiableFilter("", FilterFlag.ALL);
 
 	public static void main(String[] args) {
 		testUI(args);
@@ -41,16 +41,31 @@ public class StateManager {
 		Timer timer = new Timer();
 		timer.scheduleAtFixedRate(new TimerTask() {
 			public void run() {
-				while (!EventQueues.toSM.isEmpty()) {
-					try {
+				try {
+					if (!th.isAlive()) {
+						// Cleanup & close app
+						timer.cancel();
+						// @Cleanup It feels a bit hacky to close the Playback-Thread like this
+						// I can't seem to figure out how to listen to the UI closing from within the MusicSceneController,
+						// where killing the Playback-Thread via PlaybackController would be simple and make sense
+						// instead, I send a KILL message to the Playback thread to make sure it gets closed cleanly
+						// For some reason though, the app still doesn't get closed then, so I exit the application anyways
+						PlayControlEvent p = new PlayControlEvent(PlayControlEventsEnum.KILL);
+						try {
+							EventQueues.toPlayback.put(p);
+							System.exit(0);
+						} catch (InterruptedException ie) {
+							System.exit(1);
+						}
+					}
+
+					while (!EventQueues.toSM.isEmpty()) {
 						Msg<MsgToSMType> msg = EventQueues.toSM.take();
 						switch (msg.type) {
 							case FILTERED_SONIFIABLES -> {
-								SonifiableFilter filter = (SonifiableFilter) msg.data;
-								List<Sonifiable> list = StateManager
-										.call(() -> DataRepo.findByPrefix(filter.prefix, filter.categoryFilter),
-												List.of());
-								EventQueues.toUI.add(new Msg<>(MsgToUIType.FILTERED_SONIFIABLES, list));
+								sonifiableFilter = (SonifiableFilter) msg.data;
+								DataRepo.updatedData.compareAndSet(true, false);
+								sendFilteredSonifiables();
 							}
 							case SAVE_MAPPING -> EventQueues.toUI.add(new Msg<>(MsgToUIType.ERROR, "SAVE_MAPPING is not yet implemented"));
 							case LOAD_MAPPING -> EventQueues.toUI.add(new Msg<>(MsgToUIType.ERROR, "LOAD_MAPPING is not yet implemented"));
@@ -64,29 +79,23 @@ public class StateManager {
 							}
 							case BACK_IN_MAIN_SCENE -> StateManager.isAlreadySonifying = false;
 						}
-					} catch (InterruptedException ie) {
-						getInterruptedExceptionHandler().accept(ie);
 					}
-				}
 
-				if (!th.isAlive()) {
-					// Cleanup & close app
-					timer.cancel();
-					// @Cleanup It feels a bit hacky to close the Playback-Thread like this
-					// I can't seem to figure out how to listen to the UI closing from within the MusicSceneController,
-					// where killing the Playback-Thread via PlaybackController would be simple and make sense
-					// instead, I send a KILL message to the Playback thread to make sure it gets closed cleanly
-					// For some reason though, the app still doesn't get closed then, so I exit the application anyways
-					PlayControlEvent p = new PlayControlEvent(PlayControlEventsEnum.KILL);
-					try {
-						EventQueues.toPlayback.put(p);
-						System.exit(0);
-					} catch (InterruptedException ie) {
-						System.exit(1);
+					// Check if DataRepo has updated data for us
+					if (DataRepo.updatedData.compareAndSet(true, false)) {
+						System.out.println("DataRepo has updated Data");
+						sendFilteredSonifiables();
 					}
+				} catch (InterruptedException ie) {
+					getInterruptedExceptionHandler().accept(ie);
 				}
 			}
 		}, 10, 100);
+	}
+
+	private static void sendFilteredSonifiables() throws InterruptedException {
+		List<Sonifiable> list = StateManager.call(() -> DataRepo.findByPrefix(sonifiableFilter.prefix, sonifiableFilter.categoryFilter), List.of());
+		EventQueues.toUI.add(new Msg<>(MsgToUIType.FILTERED_SONIFIABLES, list));
 	}
 
 	public static double[] getPriceValues(List<Price> prices) {
@@ -174,14 +183,16 @@ public class StateManager {
 
 	public static MusicData sonifyMapping(Mapping mapping) {
 		return call(() -> {
+			// TODO: Normalization of prices is currently only relative to the prices of the same stock - is that the goal?
 			// TODO: Validate that we have enough price data for mapping
 			int pricesLen = 0;
 			HashMap<SonifiableID, List<Price>> priceMap = new HashMap<>();
 			SonifiableID[] sonifiableSet = mapping.getMappedSonifiableIDs().toArray(new SonifiableID[0]);
 			for (SonifiableID sonifiableID : sonifiableSet) {
 				// TODO: Make sure all prices lists have the same length
-				List<Price> prices = DataRepo.getPrices(sonifiableID, mapping.getStartDate(), mapping.getEndDate(), IntervalLength.HOUR);
+				List<Price> prices = DataRepo.getPrices(sonifiableID, mapping.getStartDate(), mapping.getEndDate(), IntervalLength.DAY);
 				pricesLen = prices.size();
+				System.out.println("PricesLen for " + sonifiableID + ": " + pricesLen);
 				priceMap.put(sonifiableID, prices);
 			}
 

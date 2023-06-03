@@ -73,13 +73,25 @@ public abstract class Sonifiable {
 		return Objects.hash(name, id, earliest, latest);
 	}
 
+	public String toJSON() {
+		return "{ " + "\"name\": " + "\"" + name.toString() + "\"" + ", " +
+				"\"id\": " + id.toJSON() + ", " +
+				"\"earliest\": " + (earliest == null ? "null" : "\"" + DateUtil.formatDate(earliest) + "\"")
+				+ ", " +
+				"\"latest\": " + (latest == null ? "null" : "\"" + DateUtil.formatDate(latest) + "\"") + " }";
+	}
+
 	@Override
 	public String toString() {
 		return "{" +
 				" name='" + getName() + "'" +
-				", symbol='" + getId() + "'" +
-				", earliest='" + DateUtil.formatDate(getEarliest()) + "'" +
-				", latest='" + DateUtil.formatDate(getLatest()) + "'" +
+				", id='" + getId() + "'" +
+				", earliest='" + (earliest == null ? "null"
+						: DateUtil.formatDate(earliest))
+				+ "'" +
+				", latest='" + (latest == null ? "null"
+						: DateUtil.formatDate(latest))
+				+ "'" +
 				"}";
 	}
 }
