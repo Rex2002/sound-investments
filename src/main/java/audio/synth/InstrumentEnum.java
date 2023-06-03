@@ -1,8 +1,10 @@
 package audio.synth;
 
 public enum InstrumentEnum {
-    SYNTH_ONE,
-    SYNTH_TWO;
+    RETRO_SYNTH,
+    STRINGS_SYNTH,
+    BANJO_SYNTH,
+    BRASS_SYNTH;
 
     public static final int size;
     public static final String[] displayVals;
@@ -16,8 +18,10 @@ public enum InstrumentEnum {
 
     public String toString() {
         return switch (this) {
-            case SYNTH_ONE -> "Synth 1";
-            case SYNTH_TWO -> "Synth 2";
+            case RETRO_SYNTH -> "Retro Synth";
+            case STRINGS_SYNTH -> "Strings";
+            case BANJO_SYNTH -> "Banjo";
+            case BRASS_SYNTH -> "Brass";
         };
     }
 }

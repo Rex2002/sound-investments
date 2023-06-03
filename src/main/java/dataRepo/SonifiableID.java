@@ -6,9 +6,9 @@ public class SonifiableID {
 	public String exchange;
 	public String symbol;
 
-	public SonifiableID(String exchange, String symbol) {
-		this.exchange = exchange;
+	public SonifiableID(String symbol, String exchange) {
 		this.symbol = symbol;
+		this.exchange = exchange;
 	}
 
 	public String getExchange() {
@@ -41,5 +41,9 @@ public class SonifiableID {
 	@Override
 	public String toString() {
 		return this.symbol + "." + this.exchange;
+	}
+
+	public String toJSON() {
+		return "{ \"symbol\": \"" + symbol + "\", " + "\"exchange\": \"" + exchange + "\" " + "}";
 	}
 }

@@ -134,3 +134,50 @@
 .pinkLine {
 	-fx-stroke: #9c5eeb;
 }
+
+.default-color0.chart-series-line {
+	-fx-stroke: #ff1fec;
+}
+.default-color1.chart-series-line {
+	-fx-stroke: #071d32;
+}
+.default-color2.chart-series-line {
+	-fx-stroke: #3b4854;
+}
+.default-color3.chart-series-line {
+	-fx-stroke: #ff5a1f;
+}
+.default-color4.chart-series-line {
+	-fx-stroke: #e3ff1f;
+}
+.default-color5.chart-series-line {
+	-fx-stroke: #7a4d69;
+}
+.default-color6.chart-series-line {
+	-fx-stroke: #1fff43;
+}
+.default-color7.chart-series-line {
+	-fx-stroke: #ff2121;
+}
+.default-color8.chart-series-line {
+	-fx-stroke: #891fff;
+}
+.default-color9.chart-series-line {
+	-fx-stroke: #07321d;
+}
+.instLabel{
+	-fx-pref-height: 35px;
+	-fx-pref-width: 296px;
+	-fx-font-size: 20;
+}
+.errorPane{
+	-fx-pref-height: 42px;
+	-fx-pref-width: 153px;
+	-fx-background-color: red;
+}
+#insLabel{
+	-fx-font-size: 20;
+	-fx-pref-width: 296px;
+	-fx-pref-height: 35px;
+	-fx-font-weight: bold;
+}
