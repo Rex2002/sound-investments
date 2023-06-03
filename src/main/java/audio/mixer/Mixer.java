@@ -13,18 +13,14 @@ public class Mixer {
      */
     public static double[] mixAudioStreams(ArrayList<double[]> audioStreams, int[] startPositions) throws MixerException {
 
-        // find the longest array
+        // find the longest and shortest arrays' lengths
         int maxLength = 0;
+        int minLength = Integer.MAX_VALUE;
         for (double[] audioStream : audioStreams) {
             maxLength = Math.max(maxLength, audioStream.length);
-        }
-        // find the shortest array
-        int minLength = maxLength;
-        for (double[] audioStream : audioStreams) {
             minLength = Math.min(minLength, audioStream.length);
         }
         double[] result = new double[maxLength];
-
 
         // find the minimum start position (except of startPositions[0] which should always be 0)
         // check if the start positions are valid
@@ -32,7 +28,7 @@ public class Mixer {
         for (int i = 1; i < startPositions.length; i++) {
             minStartPosition = Math.min(minStartPosition, startPositions[i]);
             if (startPositions[i] > maxLength) {
-                throw new MixerException("Illegal start position ("+i+"), must be <= maxLength!");
+                throw new MixerException("Illegal start position (" + i + "), must be <= maxLength!");
             }
         }
 
