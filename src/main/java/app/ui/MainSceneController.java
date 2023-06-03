@@ -304,10 +304,12 @@ public class MainSceneController implements Initializable {
         if (mapping.hasSonifiable(sonifiable.getId())) {
             cBox.setSelected(true);
         }
+        Pane[] stockPane = new Pane[1];
+        stockPane[0] = new Pane();
         cBox.selectedProperty().addListener((observable, oldValue, newValue) -> {
             if (newValue) {
                 if (paneBoxSonifiables.getChildren().size() < Mapping.MAX_SONIFIABLES_AMOUNT) {
-                    addToPaneBox((Sonifiable) cBox.getUserData());
+                    stockPane[0]=  addToPaneBox((Sonifiable) cBox.getUserData());
                 } else {
                     displayError(
                             "Zu viele Börsenkurse gewählt. Es dürfen höchstens "
@@ -316,31 +318,35 @@ public class MainSceneController implements Initializable {
                     cBox.setSelected(false);
                 }
             } else {
-                rmSonifiable(((Sonifiable) cBox.getUserData()).getId());
+                rmSonifiable(((Sonifiable) cBox.getUserData()).getId(), stockPane[0]);
+                
+
             }
         });
         checkVBox.setPrefHeight((checkVBox.getChildren().size()) * 42.0);
         checkVBox.getChildren().add(cBox);
     }
 
-    private void rmSonifiable(SonifiableID id) {
+    private void rmSonifiable(SonifiableID id, Pane stockPane) {
         mapping.rmSonifiable(id);
         ObservableList<Node> children = paneBoxSonifiables.getChildren();
         int idx = 0;
         while (idx < children.size() && !id.equals(children.get(idx).getUserData()))
             idx++;
         assert idx != children.size() : "rmSonifiable was called on " + id + " which couldn't be found in SceneTree.";
-        children.remove(idx);
+        paneBoxSonifiables.getChildren().remove(stockPane);
         paneBoxSonifiables.prefHeight(children.size() * 477.0);
     }
 
     @FXML
-    public void addToPaneBox(Sonifiable sonifiable) {
+    public Pane addToPaneBox(Sonifiable sonifiable) {
         // add a Sharepanel to the Panel Box
         // Checking whether the maximum of sharePanels has already been reached must be
         // done before calling this function
-        paneBoxSonifiables.getChildren().add(createSharePane(sonifiable));
+        Pane test  = createSharePane(sonifiable);
+        paneBoxSonifiables.getChildren().add(test);
         paneBoxSonifiables.setPrefHeight((paneBoxSonifiables.getChildren().size()) * 800.0);
+        return test;
     }
 
     private void addLine(String cssClass, int layoutX, int layoutY, int startX, int startY, int endX, int endY,
