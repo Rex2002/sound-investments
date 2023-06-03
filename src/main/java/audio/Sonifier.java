@@ -9,6 +9,7 @@ import audio.synth.EvInstrData;
 import audio.synth.EvInstrLine;
 import audio.synth.InstrumentData;
 import audio.synth.SynthLine;
+import audio.synth.fx.Effect;
 import audio.synth.playback.PlaybackController;
 
 import javax.sound.sampled.AudioFormat;
@@ -47,6 +48,7 @@ public class Sonifier {
         double[][] outArrays = concatArrays(synthLines, evInstrs);
 
         double[] out = Mixer.mixAudioStreams(outArrays);
+        out = Effect.antiAliasing(out);
         AudioFormat af = new AudioFormat(Constants.SAMPLE_RATE, 16, Constants.CHANNEL_NO, true, true);
         SourceDataLine sdl;
         try {

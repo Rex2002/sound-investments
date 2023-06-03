@@ -75,6 +75,14 @@ public class Effect {
         return preOut;
     }
 
+    public static double[] antiAliasing(double[] in){
+        FilterData antiAliasingFilterData = new FilterData();
+        antiAliasingFilterData.setCutoff(new double[]{20000});
+        antiAliasingFilterData.setBandwidth(new double[]{0.5});
+        antiAliasingFilterData.setHighPass(false);
+        return IIR(in, antiAliasingFilterData);
+    }
+
 
     public static double[] IIR(double[] in, FilterData filterData){
         Coefficients c = new Coefficients();
