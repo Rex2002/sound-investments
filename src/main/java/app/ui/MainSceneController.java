@@ -3,6 +3,7 @@ package app.ui;
 import java.io.IOException;
 import java.net.URL;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 import java.util.ResourceBundle;
@@ -36,6 +37,7 @@ import javafx.scene.layout.VBox;
 import javafx.scene.shape.Line;
 import javafx.stage.Stage;
 import javafx.util.Duration;
+import util.ArrayFunctions;
 import app.AppError;
 import app.communication.EventQueues;
 import app.communication.Msg;
@@ -69,17 +71,11 @@ public class MainSceneController implements Initializable {
     @FXML
     private Label headerTitle;
     @FXML
-    private ChoiceBox<String> categoriesChoice;
+    private ChoiceBox<String> categoriesCB;
     @FXML
-    private ChoiceBox<String> locationChoice;
+    private ChoiceBox<String> locationCB;
     @FXML
-    private ChoiceBox<String> delayReverbChoice;
-    @FXML
-    private ChoiceBox<String> feedbackReverbChoice;
-    @FXML
-    private ChoiceBox<String> cutoffChoice;
-    @FXML
-    private ChoiceBox<String> filterChoice;
+    private ChoiceBox<String> filterCB;
     @FXML
     private DatePicker startPicker;
     @FXML
@@ -104,17 +100,40 @@ public class MainSceneController implements Initializable {
     private CheckEQService checkEQService;
     private Mapping mapping = new Mapping();
     private boolean currentlyUpdatingCB = false;
-    private String[] locations = { "Deutschland" };
+
+    private String[] locations = { "Deutschland" }; // TODO: Get available locations from StateManager
+
+    // Choice-Box String->Value Maps
     private static String[] categoryKeys = { "Alle Kategorien", "Aktien", "ETFs", "Indizes" };
     private static FilterFlag[] categoryValues = { FilterFlag.ALL, FilterFlag.STOCK, FilterFlag.ETF, FilterFlag.INDEX };
+    private static String[] filterKeys = { "Low-Pass", "High-Pass" };
+    private static boolean[] filterValues = { false, true };
+    private static String[] instKeys;
+    private static InstrumentEnum[] instVals;
+    private static void setInstMap() {
+        InstrumentEnum[] insts = InstrumentEnum.values();
+        instKeys = new String[insts.length + 2];
+        instVals = new InstrumentEnum[insts.length + 2];
+        instKeys[0] = "";
+        instVals[0] = null;
+        instKeys[1] = "Globale Audio-Parameter";
+        instVals[0] = null;
+        for (int i = 0; i < insts.length; i++) {
+            instKeys[i + 2] = insts[i].toString();
+            instVals[i + 2] = insts[i];
+        }
+    }
     static {
+        setInstMap();
+        assert instKeys.length == instVals.length : "instKeys & instValues are not in sync";
         assert categoryKeys.length == categoryValues.length : "categoryKeys & categoryValues are not in sync";
+        assert filterKeys.length == filterValues.length : "filterKeys & filterValues are not in sync";
     }
 
     @Override
     public void initialize(URL arg0, ResourceBundle arg1) { // Initialisierung mit den Optionen
-        categoriesChoice.getItems().addAll(MainSceneController.categoryKeys);
-        locationChoice.getItems().addAll(locations);
+        categoriesCB.getItems().addAll(MainSceneController.categoryKeys);
+        locationCB.getItems().addAll(locations);
         enableBtnIfValid();
 
         checkEQService = new CheckEQService();
@@ -142,15 +161,15 @@ public class MainSceneController implements Initializable {
         });
         checkEQService.start();
 
-        categoriesChoice.getSelectionModel().selectedIndexProperty().addListener((observable, oldIdx, newIdx) -> {
+        categoriesCB.getSelectionModel().selectedIndexProperty().addListener((observable, oldIdx, newIdx) -> {
             EventQueues.toSM.add(new Msg<>(MsgToSMType.FILTERED_SONIFIABLES,
                     new SonifiableFilter(searchBar.getText(), categoryValues[(int) newIdx])));
         });
-        categoriesChoice.getSelectionModel().selectFirst();
+        categoriesCB.getSelectionModel().selectFirst();
 
         searchBar.textProperty().addListener((observable, oldVal, newVal) -> {
             EventQueues.toSM.add(new Msg<>(MsgToSMType.FILTERED_SONIFIABLES, new SonifiableFilter(newVal,
-                    categoryValues[categoriesChoice.getSelectionModel().getSelectedIndex()])));
+                    categoryValues[categoriesCB.getSelectionModel().getSelectedIndex()])));
         });
 
         startPicker.valueProperty().addListener((observable, oldValue, newValue) -> {
@@ -178,6 +197,17 @@ public class MainSceneController implements Initializable {
         // Set default values
         audioLength.textProperty().setValue("30");
         audioLength1.textProperty().setValue("0");
+
+        filterCB.getItems().addAll(filterKeys);
+        filterCB.getSelectionModel().select(0);
+        filterCB.getSelectionModel().selectedIndexProperty().addListener((observable, o, n) -> {
+            int idx = n.intValue();
+            if (idx < 0) {
+                idx = 0;
+                filterCB.getSelectionModel().select(0);
+            }
+            mapping.setHighPass(filterValues[idx]);
+        });
 
         startBtn.setOnAction(ev -> {
             try {
@@ -319,7 +349,7 @@ public class MainSceneController implements Initializable {
                 }
             } else {
                 rmSonifiable(((Sonifiable) cBox.getUserData()).getId(), stockPane[0]);
-                
+
 
             }
         });
@@ -389,20 +419,17 @@ public class MainSceneController implements Initializable {
 
         } else {
             boolean isLineParam = (eparam instanceof LineData);
-            InstrParam[] iparams = isLineParam ? InstrParam.LineDataParams
-                    : InstrParam.RangeDataParams;
 
-            ChoiceBox<InstrumentEnum> instCB = new ChoiceBox<>();
-            instCB.getItems().addAll(InstrumentEnum.values());
+            ChoiceBox<String> instCB = new ChoiceBox<>();
+            instCB.getItems().addAll(instKeys);
             instCB.setLayoutX(cb1X);
             instCB.setLayoutY(cb1Y);
 
-            ChoiceBox<InstrParam> paramCB = new ChoiceBox<>();
-            paramCB.getItems().addAll(iparams);
+            ChoiceBox<String> paramCB = new ChoiceBox<>();
             paramCB.setLayoutX(cb2X);
             paramCB.setLayoutY(cb2Y);
             paramCB.setDisable(true);
-            instCB.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
+            instCB.getSelectionModel().selectedIndexProperty().addListener((observable, oldIdx, newIdx) -> {
                 try {
                     // If the new instrument already has the selected parameter mapped or if newValue is null
                     // then we need to remove the parameter in the UI
@@ -410,10 +437,12 @@ public class MainSceneController implements Initializable {
                     // in any case, we need to remove the old mapping with the old instrument
                     if (currentlyUpdatingCB) return;
                     currentlyUpdatingCB = true;
-                    SingleSelectionModel<InstrParam> paramCBSelect = paramCB.getSelectionModel();
-                    InstrParam paramVal = paramCBSelect.getSelectedItem();
+                    InstrumentEnum newValue = instVals[Math.max(newIdx.intValue(), 0)];
+                    InstrumentEnum oldValue = instVals[Math.max(oldIdx.intValue(), 0)];
+                    SingleSelectionModel<String> paramCBSelect = paramCB.getSelectionModel();
+                    InstrParam paramVal = paramCBSelect.getSelectedItem() == null ? null : InstrParam.fromString(paramCBSelect.getSelectedItem());
 
-                    paramCB.setDisable(newValue == null);
+                    paramCB.setDisable(newIdx.intValue() <= 0);
                     paramCBSelect.select(null);
                     paramCB.getItems().clear();
                     InstrParam[] newOpts;
@@ -423,7 +452,7 @@ public class MainSceneController implements Initializable {
 
                         if (!mapping.isMapped(newValue, paramVal)) {
                             newOpts = getOpts.apply(paramVal);
-                            paramCBSelect.select(paramVal);
+                            paramCBSelect.select(paramVal.toString());
                             mapping.setParam(newValue, sonifiable, paramVal, eparam);
                         } else {
                             newOpts = getOpts.apply(null);
@@ -431,28 +460,37 @@ public class MainSceneController implements Initializable {
                     } else {
                         newOpts = getOpts.apply(null);
                     }
-                    paramCB.getItems().addAll(newOpts);
+                    paramCB.getItems().add(null);
+                    for (InstrParam opt : newOpts) paramCB.getItems().add(opt.toString());
                     enableBtnIfValid();
                     currentlyUpdatingCB = false;
                 } catch (AppError e) {
                     displayError(e.getMessage(), "Interner Fehler");
                 }
             });
-            paramCB.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
+            paramCB.getSelectionModel().selectedItemProperty().addListener((observable, oldStr, newStr) -> {
                 try {
                     if (currentlyUpdatingCB) return;
                     currentlyUpdatingCB = true;
-                    SelectionModel<InstrumentEnum> instCBSelect = instCB.getSelectionModel();
+                    SelectionModel<String> instCBSelect = instCB.getSelectionModel();
+                    InstrumentEnum inst = instVals[Math.max(0, instCBSelect.getSelectedIndex())];
+                    InstrParam oldVal = InstrParam.fromString(oldStr);
+                    InstrParam newVal = InstrParam.fromString(newStr);
+
                     if (!instCBSelect.isEmpty()) {
-                        if (oldValue != null)
-                            mapping.rmParam(instCBSelect.getSelectedItem(), sonifiable.getId(), oldValue);
-                        if (newValue != null)
-                            mapping.setParam(instCBSelect.getSelectedItem(), sonifiable, newValue, eparam);
+                        if (oldVal !=  null) {
+                            if (inst != null) mapping.rmParam(inst, sonifiable.getId(), oldVal);
+                            else              mapping.rmParam(sonifiable.getId(), oldVal);
+                        }
+                        if (newVal != null) {
+                            if (inst != null) mapping.setParam(inst, sonifiable, newVal, eparam);
+                            else              mapping.setParam(sonifiable, newVal, eparam);
+                        }
                         enableBtnIfValid();
                     }
                     currentlyUpdatingCB = false;
                 } catch (AppError e) {
-                    paramCB.getSelectionModel().select(oldValue);
+                    paramCB.getSelectionModel().select(oldStr);
                     displayError(e.getMessage(), "Interner Fehler");
                 }
             });

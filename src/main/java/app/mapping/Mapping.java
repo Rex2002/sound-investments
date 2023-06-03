@@ -83,13 +83,32 @@ public class Mapping {
 	}
 
 	public InstrParam[] getEmptyLineParams(InstrumentEnum instr, InstrParam oldVal) {
+		if (instr == null) return getEmptyLineParams(oldVal);
 		InstrumentMapping instrMap = ArrayFunctions.find(mappedInstruments, x -> x != null && x.getInstrument() == instr);
 		return instrMap.getEmptyLineParams(oldVal);
 	}
 
 	public InstrParam[] getEmptyRangeParams(InstrumentEnum instr, InstrParam oldVal) {
+		if (instr == null) return getEmptyRangeParams(oldVal);
 		InstrumentMapping instrMap = ArrayFunctions.find(mappedInstruments, x -> x != null && x.getInstrument() == instr);
 		return instrMap.getEmptyRangeParams(oldVal);
+	}
+
+	public InstrParam[] getEmptyLineParams(InstrParam oldVal) {
+		List<InstrParam> params = new ArrayList<>();
+		if    (delayReverb == null || oldVal == InstrParam.DELAY_REVERB)     params.add(InstrParam.DELAY_REVERB);
+		if (feedbackReverb == null || oldVal == InstrParam.FEEDBACK_REVERB)  params.add(InstrParam.FEEDBACK_REVERB);
+		if         (cutoff == null || oldVal == InstrParam.CUTOFF)           params.add(InstrParam.CUTOFF);
+		InstrParam[] out = new InstrParam[params.size()];
+		return params.toArray(out);
+	}
+
+	public InstrParam[] getEmptyRangeParams(InstrParam oldVal) {
+		List<InstrParam> params = new ArrayList<>();
+		if    (onOffReverb == null || oldVal == InstrParam.ON_OFF_REVERB)    params.add(InstrParam.ON_OFF_REVERB);
+		if    (onOffFilter == null || oldVal == InstrParam.ON_OFF_FILTER)    params.add(InstrParam.ON_OFF_FILTER);
+		InstrParam[] out = new InstrParam[params.size()];
+		return params.toArray(out);
 	}
 
 	public Sonifiable[] getMappedSonifiables() {
