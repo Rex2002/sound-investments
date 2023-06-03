@@ -335,7 +335,7 @@ public class MainSceneController implements Initializable {
             idx++;
         assert idx != children.size() : "rmSonifiable was called on " + id + " which couldn't be found in SceneTree.";
         paneBoxSonifiables.getChildren().remove(stockPane);
-        paneBoxSonifiables.prefHeight(children.size() * 477.0);
+        paneBoxSonifiables.prefHeight(children.size() * 511.0);
     }
 
     @FXML
@@ -345,7 +345,7 @@ public class MainSceneController implements Initializable {
         // done before calling this function
         Pane test  = createSharePane(sonifiable);
         paneBoxSonifiables.getChildren().add(test);
-        paneBoxSonifiables.setPrefHeight((paneBoxSonifiables.getChildren().size()) * 800.0);
+        paneBoxSonifiables.setPrefHeight((paneBoxSonifiables.getChildren().size()) * 511.0);
         return test;
     }
 
