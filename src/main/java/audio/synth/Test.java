@@ -19,8 +19,6 @@ import java.io.IOException;
 import java.util.Arrays;
 import java.util.Scanner;
 
-import static audio.mixer.Mixer.mixAudioStreams;
-import static audio.synth.Util.findMax;
 import static audio.Constants.CHANNEL_NO;
 import static audio.Constants.SAMPLE_RATE;
 import static audio.Util.findMax;

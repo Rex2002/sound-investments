@@ -48,4 +48,10 @@ public class ArrayFunctions {
 			src[i + offset] = valsToSet[i];
 		}
 	}
+
+	public static<T> T clampedArrAccess(int idx, T[] arr) {
+		if (idx <= 0) return arr[0];
+		if (idx >= arr.length) return arr[arr.length - 1];
+		return arr[idx];
+	}
 }
