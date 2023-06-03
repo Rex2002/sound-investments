@@ -12,15 +12,19 @@ import audio.synth.generators.SineWaveGenerator;
 import audio.synth.playback.PlaybackController;
 
 import javax.sound.sampled.*;
+import java.awt.*;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Scanner;
 
+import static audio.mixer.Mixer.mixAudioStreams;
+import static audio.synth.Util.findMax;
 import static audio.Constants.CHANNEL_NO;
 import static audio.Constants.SAMPLE_RATE;
 import static audio.Util.findMax;
+
 
 public class Test {
     static String waveFileName = "Casio-MT-45-Beguine.wav";
@@ -80,29 +84,26 @@ public class Test {
             // TODO add calculation to actually play given freq when modulation and not just
             // gcd of carrier and modulation frequency
             double[] mSine = generator.generate(new double[]{440, 880}, 4 * SAMPLE_RATE * CHANNEL_NO, new double[]{15000}, 2 / 3f);
-            double[] silence = new double[8 * 44100 * 2];
-            mSine = addArrays(mSine, silence);
-            mSine = Effect.echo(mSine, new double[]{0.5}, new int[]{44100, 11050, 20});
             FilterData d = new FilterData();
-            d.setBandwidth(new double[]{0.01});
+            d.setBandwidth(new double[]{0.9});
             d.setHighPass(false);
             d.setCutoff(new double[]{20000});
-            //mSine = Effect.IIR(mSine, d);
+            double[] antiAliasingSine = Effect.antiAliasing(mSine);
+            Complex[] fftOfmSine = Util.fft(Arrays.copyOfRange(Util.scaleToShort(mSine), 0, 2048));
+            Complex[] fftOfAntiAliasSine = Util.fft(Arrays.copyOfRange(Util.scaleToShort(antiAliasingSine), 0, 2048));
             //double[] mSine = generator.generate(new double[] {110.0, 130.8127826502993, 110.0, 97.99885899543733, 103.82617439498628, 97.99885899543733, 123.47082531403103, 116.54094037952248, 123.47082531403103, 146.8323839587038, 146.8323839587038, 138.59131548843604, 116.54094037952248, 92.49860567790861, 87.30705785825097, 92.49860567790861, 97.99885899543733, 82.40688922821748, 73.41619197935188, 77.78174593052022, 97.99885899543733, 97.99885899543733, 97.99885899543733, 123.47082531403103, 164.81377845643496, 195.99771799087463, 184.99721135581723, 246.94165062806206, 329.6275569128699, 329.6275569128699, 329.6275569128699, 329.6275569128699, 277.1826309768721, 261.6255653005986, 220.0, 195.99771799087463, 184.99721135581723, 220.0, 293.6647679174076, 369.99442271163446, 369.99442271163446, 311.12698372208087, 369.99442271163446, 466.1637615180899, 440.0, 440.0, 391.99543598174927, 391.99543598174927, 391.99543598174927, 440.0, 391.99543598174927, 523.2511306011972, 554.3652619537442, 587.3295358348151, 659.2551138257398, 622.2539674441618, 622.2539674441618, 830.6093951598903, 987.7666025122483, 932.3275230361799}, 60, new double[] { 15000 }, 2 / 3f);
-            // short[] combined = multiplyArrays(sine, lfo);
-            //EventQueue.invokeLater(() -> {
-            //    FrequencyChart c = new FrequencyChart(Arrays.copyOfRange(fftOfSine, 0, fftOfSine.length), 1,
-            //            "Unfiltered");
-            //    FrequencyChart c0 = new FrequencyChart(
-            //            Arrays.copyOfRange(fftOfFilteredSine, 0, fftOfFilteredSine.length), 1, "Filtered");
-            //    FrequencyChart c1 = new FrequencyChart(Arrays.copyOfRange(addedSine, 0, 44100), 1, "Added");
-            // FrequencyChart c2 = new FrequencyChart(Arrays.copyOfRange(sw,0, 44100),1,
-            // "Sawtooth");
-            // c.setVisible(true);
-            // c0.setVisible(true);
-            // c1.setVisible(true);
-            // c2.setVisible(true);
-            //});
+            EventQueue.invokeLater(() -> {
+                FrequencyChart c = new FrequencyChart(Arrays.copyOfRange(fftOfmSine, 0, fftOfmSine.length), 1,
+                        "Unfiltered");
+                FrequencyChart c0 = new FrequencyChart(
+                        Arrays.copyOfRange(fftOfAntiAliasSine, 0, fftOfAntiAliasSine.length), 1, "Filtered");
+                FrequencyChart c1 = new FrequencyChart(Arrays.copyOfRange(addedSine, 0, 44100), 1, "Added");
+             //FrequencyChart c2 = new FrequencyChart(Arrays.copyOfRange(sw,0, 44100),1, "Sawtooth");
+             c.setVisible(true);
+             c0.setVisible(true);
+             //c1.setVisible(true);
+             //c2.setVisible(true);
+            });
             writeToFile(Util.scaleToShort(mSine), sdl.getFormat(), "out.wav");
             //playWithControls(sdl, mSine);
             //playWithControls(sdl, sine1);
