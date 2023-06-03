@@ -163,6 +163,7 @@ public class MusicSceneController implements Initializable {
 		xAxis.setAutoRanging(false);
 		xAxis.setLowerBound(0);
 		xAxis.setUpperBound(prices.get(0).getData().size());
+		xAxis.setTickUnit(2);
 		xAxis.setTickLabelFill(Paint.valueOf("white"));
 		xAxis.setTickLabelFont(new Font("System", 10));
 		xAxis.setTickLabelFormatter(new StringConverter<Number>() {
