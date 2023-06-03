@@ -2,9 +2,15 @@ package audio.synth.playback;
 
 import app.communication.EventQueues;
 
+import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.SourceDataLine;
 
 public class Playback implements Runnable {
+    // This value is written to by this class and read by the PlaybackController
+    // Race-Conditions are ignored, because it is ok if we are a couple percentage points behind as that wouldn't be visible in the UI anyways
+    // Thus, we simply use a thread-unsafe global variable to reduce performance overheads of thread-safe alternatives
+    public static double playedPercentage = 0;
+
     private static final int PLAYBACK_SAMPLE_SIZE = 4410;
     private final SourceDataLine s;
     private final short[] data;
@@ -29,7 +35,16 @@ public class Playback implements Runnable {
         paused = false;
         running = true;
         System.out.println("started thread for playback controller.");
-        System.out.println("playBackSampleSize/data.length: " + data.length / PLAYBACK_SAMPLE_SIZE);
+        System.out.println("data.length/playBackSampleSize: " + data.length / PLAYBACK_SAMPLE_SIZE);
+
+        try {
+            s.open();
+            s.start();
+        } catch (LineUnavailableException e) {
+            // TODO
+            throw new RuntimeException(e);
+        }
+
         byte[] outBuffer = new byte[PLAYBACK_SAMPLE_SIZE * 2];
         while (running) {
             if (!paused && positionPointer < data.length / PLAYBACK_SAMPLE_SIZE) {
@@ -54,6 +69,7 @@ public class Playback implements Runnable {
                     case PLAY -> paused = false;
                     case SKIP_FORWARD -> positionPointer += nextEvent.getDuration();
                     case SKIP_BACKWARD -> positionPointer = Math.max(positionPointer - nextEvent.getDuration(), 0);
+                    case GOTO -> positionPointer = (int) (nextEvent.getGoToRelative() * data.length / PLAYBACK_SAMPLE_SIZE);
                     case RESET -> positionPointer = 0;
                     case STOP -> {
                         positionPointer = 0;
@@ -62,7 +78,11 @@ public class Playback implements Runnable {
                     case KILL -> running = false;
                 }
             }
+
+            playedPercentage = ((double) positionPointer) * PLAYBACK_SAMPLE_SIZE / data.length;
         }
+        s.drain();
+        s.close();
         System.out.println("finished loop");
     }
 }

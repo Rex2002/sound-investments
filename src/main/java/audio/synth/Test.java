@@ -2,9 +2,8 @@ package audio.synth;
 
 // freq: 440,  493.88,  523.25,  587.33,  659.25,  698.46,  783.99,  880.00
 
-import app.AppError;
 import audio.Constants;
-import audio.mixer.Backing;
+import audio.Util;
 import audio.mixer.SampleLoader;
 import audio.synth.envelopes.ADSR;
 import audio.synth.fx.Effect;
@@ -12,15 +11,20 @@ import audio.synth.fx.FilterData;
 import audio.synth.generators.SineWaveGenerator;
 import audio.synth.playback.PlaybackController;
 
-import javax.sound.sampled.AudioFormat;
-import javax.sound.sampled.AudioSystem;
-import javax.sound.sampled.LineUnavailableException;
-import javax.sound.sampled.SourceDataLine;
+import javax.sound.sampled.*;
+import java.awt.*;
+import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Scanner;
 
 import static audio.mixer.Mixer.mixAudioStreams;
 import static audio.synth.Util.findMax;
+import static audio.Constants.CHANNEL_NO;
+import static audio.Constants.SAMPLE_RATE;
+import static audio.Util.findMax;
+
 
 public class Test {
     static String waveFileName = "Casio-MT-45-Beguine.wav";
@@ -33,7 +37,7 @@ public class Test {
     }
 
     public Test() {
-        AudioFormat af = new AudioFormat(Constants.SAMPLE_RATE, 16, Constants.CHANNEL_NO, true, true);
+        AudioFormat af = new AudioFormat(SAMPLE_RATE, 16, Constants.CHANNEL_NO, true, true);
 
         try {
             SourceDataLine sdl = AudioSystem.getSourceDataLine(af);
@@ -43,12 +47,12 @@ public class Test {
             SineWaveGenerator generator = new SineWaveGenerator();
 
             double[] sineEcho = Effect.echo(
-                    generator.generate(new double[]{440, 493.88, 523.25, 587.33}, 8, new double[]{16383}, adsr),
+                    generator.generate(new double[]{440, 493.88, 523.25, 587.33, 440}, 4 * SAMPLE_RATE * CHANNEL_NO, new double[]{16383}, adsr),
                     new double[]{0.9}, new int[]{15000});
             double[] sine1 = generator.generate(
-                    new double[]{440, 440, 493.88, 493.88, 440, 440, 523.25, 587.33, 440, 440}, 4,
+                    new double[]{440, 440, 493.88, 493.88, 440, 440, 523.25, 587.33, 440}, 4 * SAMPLE_RATE * CHANNEL_NO,
                     new double[]{16383}, adsr);
-            double[] sine2 = generator.generate(new double[]{523.25, 587.33, 659.25, 698.46,}, 8,
+            double[] sine2 = generator.generate(new double[]{523.25, 587.33, 659.25, 698.46,}, 8 * SAMPLE_RATE * CHANNEL_NO,
                     new double[]{12000}, adsr);
             double[] addedSine = addArrays(sine1, sine2);
 
@@ -58,7 +62,7 @@ public class Test {
             filterData.setCutoff(new double[]{1200, 6000});
             filterData.setBandwidth(new double[]{0.5});
             filterData.setHighPass(false);
-            double[] sin = generator.generate(440.0, 1, (short) 16500);
+            double[] sin = generator.generate(440.0, 1 * SAMPLE_RATE * CHANNEL_NO, (short) 16500);
             short[] addedFilteredSine = Util.scaleToShort(Effect.IIR(sin, filterData));
             Complex[] fftOfSine = Util.fft(Arrays.copyOfRange(Util.scaleToShort((fft)), 0, 2048));
             Complex[] fftOfFilteredSine = Util.fft(Arrays.copyOfRange(addedFilteredSine, 0, 2048));
@@ -67,46 +71,47 @@ public class Test {
             // short[] drumSample = SampleLoader.loadSample(waveFileName);
 
             InstrumentData instrData = new InstrumentData();
-            instrData.setInstrument(InstrumentEnum.SYNTH_ONE);
-            instrData.setVolume(new double[] { 15000, 7000 });
-            instrData.setPitch(new int[] { 69, 70, 80 });
-            instrData.setPan(new double[] { 0 });
+            instrData.setInstrument(InstrumentEnum.RETRO_SYNTH);
+            instrData.setVolume(new double[]{15000, 7000});
+            instrData.setPitch(new int[]{69, 70, 80});
+            instrData.setPan(new double[]{0});
             instrData.setFilterData(filterData);
 
             double[] synthLine = new SynthLine(instrData, 6).synthesize();
-
-            // backing track test
-            Backing backing = new Backing(32);
-            double[] b = backing.getBacking();
 
             // mod freq factor of 1.5 seems to resemble a clarinet - though rather rough,
             // could not yet figure out how to add more harmonics
             // TODO add calculation to actually play given freq when modulation and not just
             // gcd of carrier and modulation frequency
-            double[] mSine = generator.generate(new double[] { 900 }, 4, new double[] { 15000 }, 2 / 3f);
-            // short[] combined = multiplyArrays(sine, lfo);
-            //EventQueue.invokeLater(() -> {
-            //    FrequencyChart c = new FrequencyChart(Arrays.copyOfRange(fftOfSine, 0, fftOfSine.length), 1,
-            //            "Unfiltered");
-            //    FrequencyChart c0 = new FrequencyChart(
-            //            Arrays.copyOfRange(fftOfFilteredSine, 0, fftOfFilteredSine.length), 1, "Filtered");
-            //    FrequencyChart c1 = new FrequencyChart(Arrays.copyOfRange(addedSine, 0, 44100), 1, "Added");
-                // FrequencyChart c2 = new FrequencyChart(Arrays.copyOfRange(sw,0, 44100),1,
-                // "Sawtooth");
-                // c.setVisible(true);
-                // c0.setVisible(true);
-                // c1.setVisible(true);
-                // c2.setVisible(true);
-            //});
-            playWithControls(sdl, b);
-            playWithControls(sdl, sine1);
+            double[] mSine = generator.generate(new double[]{440, 880}, 4 * SAMPLE_RATE * CHANNEL_NO, new double[]{15000}, 2 / 3f);
+            FilterData d = new FilterData();
+            d.setBandwidth(new double[]{0.9});
+            d.setHighPass(false);
+            d.setCutoff(new double[]{20000});
+            double[] antiAliasingSine = Effect.antiAliasing(mSine);
+            Complex[] fftOfmSine = Util.fft(Arrays.copyOfRange(Util.scaleToShort(mSine), 0, 2048));
+            Complex[] fftOfAntiAliasSine = Util.fft(Arrays.copyOfRange(Util.scaleToShort(antiAliasingSine), 0, 2048));
+            //double[] mSine = generator.generate(new double[] {110.0, 130.8127826502993, 110.0, 97.99885899543733, 103.82617439498628, 97.99885899543733, 123.47082531403103, 116.54094037952248, 123.47082531403103, 146.8323839587038, 146.8323839587038, 138.59131548843604, 116.54094037952248, 92.49860567790861, 87.30705785825097, 92.49860567790861, 97.99885899543733, 82.40688922821748, 73.41619197935188, 77.78174593052022, 97.99885899543733, 97.99885899543733, 97.99885899543733, 123.47082531403103, 164.81377845643496, 195.99771799087463, 184.99721135581723, 246.94165062806206, 329.6275569128699, 329.6275569128699, 329.6275569128699, 329.6275569128699, 277.1826309768721, 261.6255653005986, 220.0, 195.99771799087463, 184.99721135581723, 220.0, 293.6647679174076, 369.99442271163446, 369.99442271163446, 311.12698372208087, 369.99442271163446, 466.1637615180899, 440.0, 440.0, 391.99543598174927, 391.99543598174927, 391.99543598174927, 440.0, 391.99543598174927, 523.2511306011972, 554.3652619537442, 587.3295358348151, 659.2551138257398, 622.2539674441618, 622.2539674441618, 830.6093951598903, 987.7666025122483, 932.3275230361799}, 60, new double[] { 15000 }, 2 / 3f);
+            EventQueue.invokeLater(() -> {
+                FrequencyChart c = new FrequencyChart(Arrays.copyOfRange(fftOfmSine, 0, fftOfmSine.length), 1,
+                        "Unfiltered");
+                FrequencyChart c0 = new FrequencyChart(
+                        Arrays.copyOfRange(fftOfAntiAliasSine, 0, fftOfAntiAliasSine.length), 1, "Filtered");
+                FrequencyChart c1 = new FrequencyChart(Arrays.copyOfRange(addedSine, 0, 44100), 1, "Added");
+             //FrequencyChart c2 = new FrequencyChart(Arrays.copyOfRange(sw,0, 44100),1, "Sawtooth");
+             c.setVisible(true);
+             c0.setVisible(true);
+             //c1.setVisible(true);
+             //c2.setVisible(true);
+            });
+            writeToFile(Util.scaleToShort(mSine), sdl.getFormat(), "out.wav");
+            //playWithControls(sdl, mSine);
+            //playWithControls(sdl, sine1);
             System.out.println("we have reached the point");
             sdl.drain();
             sdl.close();
             System.out.println("ended main method");
         } catch (LineUnavailableException e) {
-            throw new RuntimeException(e);
-        } catch (AppError e) {
             throw new RuntimeException(e);
         }
     }
@@ -117,11 +122,11 @@ public class Test {
     // amplitude
     @Deprecated
     private double[] createDoubleSine(int freq, int duration, int amplitude) {
-        double[] sin = new double[duration * Constants.SAMPLE_RATE * Constants.CHANNEL_NO];
-        double samplingInterval = (double) Constants.SAMPLE_RATE / freq;
+        double[] sin = new double[duration * SAMPLE_RATE * Constants.CHANNEL_NO];
+        double samplingInterval = (double) SAMPLE_RATE / freq;
         for (int i = 0; i < sin.length; i += 2) {
             double angle = ((2 * Math.PI) / (samplingInterval)) * i; // full circle: 2*Math.PI -> one step: divide by
-                                                                     // sampling interval
+            // sampling interval
             // double lfo = ((2*Math.PI)/lfoSamplingInterval) * i;
 
             sin[i] = ((Math.sin(angle)) * (amplitude));
@@ -139,6 +144,25 @@ public class Test {
         s.write(out, 0, out.length);
     }
 
+    public void writeToFile(short[] data, AudioFormat af, String filename) {
+        byte[] byteData = convertShortToByte(data);
+        AudioInputStream stream = new AudioInputStream(new ByteArrayInputStream(byteData), af, byteData.length);
+        File outFile = new File(filename);
+        try {
+            AudioSystem.write(stream, AudioFileFormat.Type.WAVE, outFile);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public byte[] convertShortToByte(short[] data) {
+        byte[] outBuffer = new byte[data.length * 2];
+        for (int i = 0; i < data.length; i++) {
+            outBuffer[2 * i] = (byte) ((data[i] >> 8) & 0xFF);
+            outBuffer[2 * i + 1] = (byte) (data[i] & 0xFF);
+        }
+        return outBuffer;
+    }
 
     private void play(SourceDataLine s, byte[] data) {
         s.write(data, 0, data.length);

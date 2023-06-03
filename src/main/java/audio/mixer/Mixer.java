@@ -20,7 +20,6 @@ public class Mixer {
                 out[j] += audioStream[j];
             }
         }
-
         return out;
     }
 }
