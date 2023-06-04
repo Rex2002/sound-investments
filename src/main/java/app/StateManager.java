@@ -229,13 +229,11 @@ public class StateManager {
 
 			PlaybackController pbc = Sonifier.sonify(passedInstrRawDatas, evInstrDatas, mapping.getSoundLength());
 
-			double[][] pricesForMusicData = new double[sonifiableSet.length][pricesLen];
 			String[] sonifiableNames = new String[sonifiableSet.length];
 			for (int i = 0; i < sonifiableNames.length; i++) {
-				pricesForMusicData[i] = getPriceValues(priceMap.get(sonifiableSet[i]));
 				sonifiableNames[i] = DataRepo.getSonifiableName(sonifiableSet[i]);
 			}
-			return new MusicData(pbc, sonifiableNames, pricesForMusicData);
+			return new MusicData(pbc, sonifiableNames, priceMap.values());
 		}, null);
 	}
 
