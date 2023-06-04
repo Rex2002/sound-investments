@@ -80,7 +80,6 @@ public class InstrumentMapping {
 		return true;
 	}
 
-	@SuppressWarnings("unchecked")
 	public boolean hasSonifiableMapped(SonifiableID sonifiable) {
 		for (Field f : getClass().getFields()) {
 			if (ExchangeData.class.equals(f.getType())) {
@@ -97,7 +96,6 @@ public class InstrumentMapping {
 		return false;
 	}
 
-	@SuppressWarnings("unchecked")
 	public Set<SonifiableID> getMappedSonifiables() {
 		Set<SonifiableID> set = new HashSet<>(10);
 		for (Field f : getClass().getFields()) {
@@ -114,9 +112,24 @@ public class InstrumentMapping {
 		return set;
 	}
 
-	/////////
-	// Getters & Setters:
-	/////////
+	public void rm(InstrParam param) {
+		switch (param) {
+			case PITCH -> pitch = null;
+			case RELVOLUME -> relVolume = null;
+			case ABSVOLUME -> absVolume = null;
+			case DELAY_ECHO -> delayEcho = null;
+			case FEEDBACK_ECHO -> feedbackEcho = null;
+			case ON_OFF_ECHO -> onOffEcho = null;
+			case DELAY_REVERB -> delayEcho = null;
+			case FEEDBACK_REVERB -> feedbackEcho = null;
+			case ON_OFF_REVERB -> onOffReverb = null;
+			case CUTOFF -> cutoff = null;
+			case ORDER -> order = null;
+			case ON_OFF_FILTER -> onOffFilter = null;
+			case PAN -> pan = null;
+			default -> {}
+		}
+	}
 
 	public ExchangeData<? extends ExchangeParam> get(InstrParam param) {
 		return switch (param) {
