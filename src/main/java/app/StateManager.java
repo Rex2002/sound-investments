@@ -14,6 +14,7 @@ import dataRepo.*;
 import javafx.application.Application;
 
 import java.io.File;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.function.Consumer;
 
@@ -181,6 +182,32 @@ public class StateManager {
 		return mapping;
 	}
 
+	public static void padPrices(Map<SonifiableID, List<Price>> priceMap, Calendar startDate, Calendar endDate, IntervalLength interval, int maxLength){
+		for(SonifiableID id : priceMap.keySet()){
+			List<Price> prices = priceMap.get(id);
+			int lengthDiff = maxLength - prices.size();
+			if(lengthDiff == 0){
+				continue;
+			}
+
+			double dayDifferenceStart = ChronoUnit.DAYS.between( startDate.toInstant(), prices.get(0).getDay().toInstant());
+			double dayDifferenceEnd = ChronoUnit.DAYS.between(prices.get(prices.size()-1).getDay().toInstant(), endDate.toInstant());
+
+			// find the fraction of days that should be padded before the start
+			int paddingsBefore = (int) ((maxLength - prices.size()) * (dayDifferenceStart / (dayDifferenceEnd + dayDifferenceStart)));
+			for(int i = 0; i < paddingsBefore && prices.size() < maxLength; i++){
+				prices.add(0, new Price(startDate, prices.get(0).start, prices.get(0).end, 0.0,0.0,0.0,0.0));
+			}
+			// fill the rest (which is the equivalent to paddingsAfter) until size is maxLength
+			while(prices.size() < maxLength){
+				prices.add(new Price(startDate, prices.get(0).start, prices.get(0).end, 0.0,0.0,0.0,0.0));
+			}
+			// not quite sure if this is necessary, but not taking any risks for weird bugs...
+			priceMap.put(id, prices);
+		}
+
+	}
+
 	public static MusicData sonifyMapping(Mapping mapping) {
 		return call(() -> {
 			// TODO: Normalization of prices is currently only relative to the prices of the same stock - is that the goal?
@@ -188,14 +215,16 @@ public class StateManager {
 			int pricesLen = 0;
 			HashMap<SonifiableID, List<Price>> priceMap = new HashMap<>();
 			SonifiableID[] sonifiableSet = mapping.getMappedSonifiableIDs().toArray(new SonifiableID[0]);
+			int maxPriceLen = 0;
 			for (SonifiableID sonifiableID : sonifiableSet) {
 				// TODO: Make sure all prices lists have the same length
 				List<Price> prices = DataRepo.getPrices(sonifiableID, mapping.getStartDate(), mapping.getEndDate(), IntervalLength.DAY);
 				pricesLen = prices.size();
+				maxPriceLen = Math.max(maxPriceLen, pricesLen);
 				System.out.println("PricesLen for " + sonifiableID + ": " + pricesLen);
 				priceMap.put(sonifiableID, prices);
 			}
-
+			padPrices(priceMap, mapping.getStartDate(), mapping.getEndDate(), IntervalLength.DAY, maxPriceLen);
 			// Create InstrumentDataRaw objects for Harmonizer
 			InstrumentMapping[] instrMappings = mapping.getMappedInstruments();
 			List<InstrumentDataRaw> instrRawDatas = new ArrayList<>(instrMappings.length);
