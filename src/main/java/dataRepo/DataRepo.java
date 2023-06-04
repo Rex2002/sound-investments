@@ -3,6 +3,7 @@ package dataRepo;
 import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -375,25 +376,42 @@ public class DataRepo {
 		try {
 			List<Price> out = new ArrayList<>(1024);
 			Calendar earliestDay;
+			// Because leeway's range is exclusive, we need to decrease the startdate that we put in the request and keep the same for comparison of the loop
+			Calendar startCmp = (Calendar) start.clone();
+			start.roll(Calendar.DATE, false);
+			// TODO: Leeway throws error if range is more than 600 days
+
 			// TODO Bug: There seems to be an issue with DateUtil parsing the dates of the prices wrong or something
 			// until that bug is fixed, I commented the otherwise potentially endless loop out
-			// do {
-				List<Price> prices = apiLeeway.getJSONList("historicalquotes/" + s,
+			boolean isEoD = interval == IntervalLength.DAY;
+			String endpoint = (isEoD ? "historicalquotes/" : "intraday/") + s;
+			String[] intervalQueries = {"interval", interval.toString(API.LEEWAY)};
+			do {
+				// We increase end by 1, because Leeway's range is exclusive
+				// and after each iteration end = earliestDay and it might be that we missed some data from that day
+				end.roll(Calendar.DATE, true);
+				String[] queries = {"from", DateUtil.formatDate(start), "to", DateUtil.formatDate(end)};
+				if (!isEoD) queries = ArrayFunctions.add(queries, intervalQueries);
+
+				List<Price> prices = apiLeeway.getJSONList(endpoint,
 					json -> {
 						try {
 							HashMap<String, JsonPrimitive<?>> m = json.asMap();
-							Calendar day = DateUtil.calFromDateStr(m.get("date").asStr());
-							return new Price(day, day.toInstant(), day.toInstant(), m.get("open").asDouble(), m.get("close").asDouble(), m.get("low").asDouble(), m.get("high").asDouble());
+							Calendar day = isEoD ? DateUtil.calFromDateStr(m.get("date").asStr()) : DateUtil.calFromDateTimeStr(m.get("datetime").asStr());
+							Instant startTime = new Timestamp(m.get("timestamp").asLong()).toInstant();
+							return new Price(day, startTime, interval.addToInstant(startTime), m.get("open").asDouble(), m.get("close").asDouble(), m.get("low").asDouble(), m.get("high").asDouble());
 						} catch (Exception e) {
+							e.printStackTrace();
 							return null;
 						}
-					}, true, "from", DateUtil.formatDate(start), "to", DateUtil.formatDate(end));
-				// earliestDay = prices.get(prices.size() - 1).getDay();
-				// @Cleanup
-				// Consider using LocalDate everywhere instead of Calendar or find out how to go from day x to day x+1 without going from Calendar to LocalDate
-				// end = DateUtil.localDateToCalendar(DateUtil.calendarToLocalDate(earliestDay).minusDays(1));
+					}, true, queries);
+
+				if (prices.isEmpty()) return out;
+				earliestDay = prices.get(0).getDay();
+				end = earliestDay;
 				out.addAll(prices);
-			// } while (start.before(earliestDay));
+			} while (startCmp.before(earliestDay));
+			ArrayFunctions.rmDuplicates(out, 300, (x, y) -> x.getStart().equals(y.getStart()));
 			return out;
 		} catch (Exception e) {
 			e.printStackTrace();
