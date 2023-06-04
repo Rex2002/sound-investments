@@ -423,7 +423,7 @@ public class DataRepo {
 					break;
 				earliestDay = nextEarliestDay;
 				end = (Calendar) earliestDay.clone();
-				out.addAll(prices);
+				out.addAll(0, prices);
 			} while (startCmp.before(earliestDay));
 
 			ArrayFunctions.rmDuplicates(out, 300, (x, y) -> x.getStart().equals(y.getStart()));
