@@ -12,6 +12,7 @@ import audio.synth.playback.PlaybackController;
 import dataAnalyzer.*;
 import dataRepo.*;
 import javafx.application.Application;
+import util.DateUtil;
 
 import java.io.File;
 import java.util.*;
@@ -188,9 +189,10 @@ public class StateManager {
 			int pricesLen = 0;
 			HashMap<SonifiableID, List<Price>> priceMap = new HashMap<>();
 			SonifiableID[] sonifiableSet = mapping.getMappedSonifiableIDs().toArray(new SonifiableID[0]);
+			IntervalLength intervalLength = determineIntervalLength(mapping.getStartDate(), mapping.getEndDate());
 			for (SonifiableID sonifiableID : sonifiableSet) {
 				// TODO: Make sure all prices lists have the same length
-				List<Price> prices = DataRepo.getPrices(sonifiableID, mapping.getStartDate(), mapping.getEndDate(), IntervalLength.DAY);
+				List<Price> prices = DataRepo.getPrices(sonifiableID, mapping.getStartDate(), mapping.getEndDate(), intervalLength);
 				pricesLen = prices.size();
 				System.out.println("PricesLen for " + sonifiableID + ": " + pricesLen);
 				priceMap.put(sonifiableID, prices);
