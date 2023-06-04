@@ -7,8 +7,8 @@ import java.util.ResourceBundle;
 import java.util.Timer;
 import java.util.TimerTask;
 import audio.synth.playback.PlaybackController;
+import dataRepo.DateUtil;
 import javafx.application.Platform;
-import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -24,14 +24,20 @@ import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.paint.Paint;
 import javafx.scene.shape.Circle;
+import javafx.scene.text.Font;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import javafx.util.StringConverter;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.chart.LineChart;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
 import javafx.scene.Node;
+import java.util.Calendar;
+import java.util.List;
+
+import util.ArrayFunctions;
 import app.AppError;
 import app.communication.EventQueues;
 import app.communication.Msg;
@@ -82,7 +88,8 @@ public class MusicSceneController implements Initializable {
 
 	private PlaybackController pbc;
 	private String[] sonifiableNames;
-	private double[][] prices;
+	private List<XYChart.Series<Integer, Double>> prices;
+	private Calendar[] dates;
 	private Timer myTimer = new Timer();
 	private boolean paused = false;
 	private Image playImage;
@@ -136,6 +143,7 @@ public class MusicSceneController implements Initializable {
 		this.pbc = musicData.pbc;
 		this.sonifiableNames = musicData.sonifiableNames;
 		this.prices = musicData.prices;
+		this.dates = musicData.dates;
 
 		assert sonifiableNames.length <= colors.length;
 		Platform.runLater(() -> {
@@ -148,26 +156,32 @@ public class MusicSceneController implements Initializable {
 		// Show legend of sonifiable names
 		legendPane.getChildren().clear();
 		for (int i = 0; i < sonifiableNames.length; i++) {
-			addSonifiableName(sonifiableNames[i], colors[i], 50 + (i % 4) * 240, 646 + ((int) (i / 4)) * 50);
+			addSonifiableName(sonifiableNames[i], colors[i], 60 + (i % 3) * 240, 646 + ((int) (i / 4)) * 50);
 		}
 
 		// Show price data in line chart
+		int priceListLen = prices.get(0).getData().size();
 		xAxis.setAutoRanging(false);
 		xAxis.setLowerBound(0);
-		xAxis.setUpperBound(prices[0].length);
-		xAxis.setOpacity(0);
+		xAxis.setUpperBound(priceListLen);
+		xAxis.setTickUnit(priceListLen / 7);
+		xAxis.setTickLabelFill(Paint.valueOf("white"));
+		xAxis.setTickLabelFont(new Font("System", 10));
+		xAxis.setTickLabelFormatter(new StringConverter<Number>() {
+			public String toString(Number i) {
+				return DateUtil.formatDate(ArrayFunctions.clampedArrAccess(i.intValue(), dates));
+			}
+			public Number fromString(String string) {
+				return 0;
+			}
+		});
+
 		lineChart.setLegendVisible(false);
 		lineChart.setAnimated(false);
 		lineChart.setVerticalGridLinesVisible(false);
 		lineChart.setHorizontalGridLinesVisible(true);
  		lineChart.setCreateSymbols(false);
-		for (int i = 0; i < prices.length; i++) {
-			XYChart.Series<Integer, Double> series = new XYChart.Series<>();
-			for (int j = 0; j < prices[i].length; j++) {
-				series.getData().add(new XYChart.Data<>(j, prices[i][j]));
-			}
-			lineChart.getData().add(series);
-		}
+		lineChart.getData().addAll(prices);
 	}
 
 	private Label addSonifiableName(String name, Paint color, double x, double y) {
