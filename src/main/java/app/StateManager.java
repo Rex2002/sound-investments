@@ -182,6 +182,16 @@ public class StateManager {
 		return mapping;
 	}
 
+	// TODO: Method is closely related to #80 - should potentially be updated,
+	// depending on result of that issue
+	public static IntervalLength determineIntervalLength(Calendar start, Calendar end) {
+		int yearDiff = end.get(Calendar.YEAR) - start.get(Calendar.YEAR);
+		assert yearDiff >= 0;
+		if (yearDiff >= 5) return IntervalLength.DAY;
+		if (yearDiff >= 1) return IntervalLength.HOUR;
+		return IntervalLength.MIN;
+	}
+
 	public static MusicData sonifyMapping(Mapping mapping) {
 		return call(() -> {
 			// TODO: Normalization of prices is currently only relative to the prices of the same stock - is that the goal?
