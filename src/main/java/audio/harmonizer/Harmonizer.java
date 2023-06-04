@@ -3,6 +3,7 @@ package audio.harmonizer;
 import app.AppError;
 import app.mapping.InstrumentDataRaw;
 import audio.Constants;
+import audio.Util;
 import audio.synth.InstrumentData;
 import audio.synth.fx.FilterData;
 import java.util.Arrays;
@@ -100,10 +101,17 @@ public class Harmonizer {
     private double[] quantizePitch(double[] pitch) {
         double[] notes = new double[numberBeats];
         int bufferLength = pitch.length / numberBeats;
-        for (int i = 0, bufferStart = 0; i < notes.length; i++, bufferStart += bufferLength) {
-            notes[i] = 0;
-            for (int j = bufferStart; j < bufferStart + bufferLength; j++) {
-                notes[i] += pitch[j] / bufferLength;
+        if (bufferLength > 0) {
+            for (int i = 0, bufferStart = 0; i < notes.length; i++, bufferStart += bufferLength) {
+                notes[i] = 0;
+                for (int j = bufferStart; j < bufferStart + bufferLength; j++) {
+                    notes[i] += pitch[j] / bufferLength;
+                }
+            }
+        }
+        else{
+            for(int i = 0; i < notes.length; i++){
+                notes[i] = pitch[Util.getRelPosition(i, notes.length, pitch.length)];
             }
         }
 
