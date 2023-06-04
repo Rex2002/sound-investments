@@ -375,7 +375,7 @@ public class DataRepo {
 		// TODO: Use interval - at the moment we assume that interval == DAY and just make end-of-day API-requests
 		try {
 			List<Price> out = new ArrayList<>(1024);
-			Calendar earliestDay;
+			Calendar earliestDay = end;
 			// Because leeway's range is exclusive, we need to decrease the startdate that we put in the request and keep the same for comparison of the loop
 			Calendar startCmp = (Calendar) start.clone();
 			start.roll(Calendar.DATE, false);
@@ -397,20 +397,35 @@ public class DataRepo {
 					json -> {
 						try {
 							HashMap<String, JsonPrimitive<?>> m = json.asMap();
-							Calendar day = isEoD ? DateUtil.calFromDateStr(m.get("date").asStr()) : DateUtil.calFromDateTimeStr(m.get("datetime").asStr());
-							Instant startTime = new Timestamp(m.get("timestamp").asLong()).toInstant();
-							return new Price(day, startTime, interval.addToInstant(startTime), m.get("open").asDouble(), m.get("close").asDouble(), m.get("low").asDouble(), m.get("high").asDouble());
+							Calendar day;
+							Instant startTime;
+							Instant endTime;
+							if (isEoD) {
+								day = DateUtil.calFromDateStr(m.get("date").asStr());
+								day.set(Calendar.HOUR_OF_DAY, 0);
+								startTime = day.toInstant();
+								day.set(Calendar.HOUR_OF_DAY, 23);
+								endTime = day.toInstant();
+							} else {
+								day = DateUtil.calFromDateTimeStr(m.get("datetime").asStr());
+								startTime = new Timestamp(m.get("timestamp").asLong()).toInstant();
+								endTime = interval.addToInstant(startTime);
+							}
+							return new Price(day, startTime, endTime, m.get("open").asDouble(), m.get("close").asDouble(), m.get("low").asDouble(), m.get("high").asDouble());
 						} catch (Exception e) {
-							e.printStackTrace();
 							return null;
 						}
 					}, true, queries);
 
-				if (prices.isEmpty()) return out;
-				earliestDay = prices.get(0).getDay();
-				end = earliestDay;
+				if (prices.isEmpty()) break;
+				Calendar nextEarliestDay = prices.get(0).getDay();
+				if (nextEarliestDay.equals(earliestDay)) // we would get trapped in an infinite loop now
+					break;
+				earliestDay = nextEarliestDay;
+				end = (Calendar) earliestDay.clone();
 				out.addAll(prices);
 			} while (startCmp.before(earliestDay));
+
 			ArrayFunctions.rmDuplicates(out, 300, (x, y) -> x.getStart().equals(y.getStart()));
 			return out;
 		} catch (Exception e) {
