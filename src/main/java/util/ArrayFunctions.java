@@ -1,6 +1,7 @@
 package util;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
@@ -53,5 +54,28 @@ public class ArrayFunctions {
 		if (idx <= 0) return arr[0];
 		if (idx >= arr.length) return arr[arr.length - 1];
 		return arr[idx];
+	}
+
+	public static<T> T[] rmSome(T[] arr, Predicate<T> toRem) {
+		int rmAmount = 0;
+		for (int i = 0; i < arr.length; i++) {
+			if (toRem.test(arr[i])) rmAmount++;
+			else arr[i - rmAmount] = arr[i];
+		}
+		if (rmAmount == 0) return arr;
+		return Arrays.copyOf(arr, arr.length - rmAmount);
+	}
+
+	public static<T> void rmDuplicates(List<T> list, int searchRadius, TwoValPredicate<T, T> areEqual) {
+		for (int i = 0; i < list.size() - 1; i++) {
+			T el = list.get(i);
+			for (int j = i + 1, max = i + searchRadius; j < list.size() && j < max; j++) {
+				if (areEqual.test(el, list.get(j))) {
+					list.remove(j);
+					j--;
+					max--;
+				}
+			}
+		}
 	}
 }
