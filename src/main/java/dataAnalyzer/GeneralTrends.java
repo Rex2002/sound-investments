@@ -1,9 +1,9 @@
 package dataAnalyzer;
 
+import dataRepo.Price;
+
 import java.util.ArrayList;
 import java.util.List;
-
-import dataRepo.Price;
 
 public class GeneralTrends {
 	public static double[] calculateMovingAverage(List<Price> priceList) {
@@ -37,7 +37,7 @@ public class GeneralTrends {
 		// Zeitpunkt gleich dem Stockpreis ist
 		// Gibt die Ergebnise als Liste von Booleans zurück
 
-		for (int i = 0; i <= intersections.length; i++) {
+		for (int i = 0; i < intersections.length; i++) {
 			intersections[i] = prices.get(i).getLow() <= priceAverages[i]
 					&& priceAverages[i] <= prices.get(i).getHigh();
 		}
