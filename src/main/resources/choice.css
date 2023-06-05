@@ -89,8 +89,8 @@
 }
 #errorMessage {
 	-fx-font-size: 27;
-	-fx-pref-height: 200px;
-	-fx-pref-width: 200px;
+	-fx-pref-height: 400px;
+	-fx-pref-width: 400px;
 	-fx-text-fill: rgb(255, 255, 255);
 	-fx-alignment: center;
 }
