@@ -11,6 +11,8 @@ import java.util.Timer;
 import java.util.TimerTask;
 import java.util.function.Function;
 
+import com.groupdocs.metadata.internal.c.a.pd.internal.html.dom.events.MouseEvent;
+
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -307,17 +309,18 @@ public class MainSceneController implements Initializable {
         Label errorMes = new Label(errorMessage);
         errorMes.setId("errorMessage");
         errorMes.setLayoutY(50);
-        errorMes.setLayoutX(125);
+        errorMes.setWrapText(true);
+        
+        errorMes.setLayoutX(20);
         Label errorTit = new Label(errorTitle);
         errorTit.setId("errorTitle");
         errorTit.setLayoutY(20);
         errorTit.setLayoutX(20);
+        
+        errorTit.setWrapText(true);
         Button close = new Button("Schließen");
-        close.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent e) {
+        close.setOnMouseClicked(event ->{
                 anchor.getChildren().remove(errorPane);
-            }
         });
         close.setLayoutX(330);
         close.setLayoutY(20);
