@@ -1,7 +1,7 @@
 package audio.synth;
 
 public enum EvInstrEnum {
-    GONG,
+    BOOM,
     GING,
     GANG;
 
@@ -17,7 +17,7 @@ public enum EvInstrEnum {
 
     public static EvInstrEnum fromString(String s) {
         return switch (s) {
-            case "Gong" -> GONG;
+            case "Gong" -> BOOM;
             case "Ging" -> GING;
             case "Gang" -> GANG;
             default     -> null;
@@ -26,7 +26,7 @@ public enum EvInstrEnum {
 
     public String toString() {
         return switch (this) {
-            case GONG -> "Gong";
+            case BOOM -> "Boom";
             case GING -> "Ging";
             case GANG -> "Gang";
         };
@@ -34,8 +34,8 @@ public enum EvInstrEnum {
 
     public String toFileName() {
         switch (this){
-            case GONG -> {
-                return "CPA_Free_Impact_30.wav";
+            case BOOM -> {
+                return "Impact_Bass_0.wav";
             }
             case GANG -> {
                 // TODO
