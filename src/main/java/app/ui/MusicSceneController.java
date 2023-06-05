@@ -224,7 +224,8 @@ public class MusicSceneController implements Initializable {
 		} catch (InterruptedException ie) {
 			// TODO: Error Handling
 		}
-
+		FXMLLoader loader = new FXMLLoader(getClass().getResource("/MusicScene.fxml"));
+        Parent root = loader.load();
 		root = FXMLLoader.load(getClass().getResource("/MainScene.fxml"));
 		stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
 		scene = new Scene(root);
