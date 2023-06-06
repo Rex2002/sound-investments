@@ -8,6 +8,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 import audio.synth.playback.PlaybackController;
 import javafx.application.Platform;
+import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -216,14 +217,15 @@ public class MusicSceneController implements Initializable {
 		pbc.goToRelative(perc);
 	}
 
-	public void switchToMainScene(MouseEvent event) throws IOException {
+	public void switchToMainScene(ActionEvent event) throws IOException {
 		// Tell StateManager, that we are back in the main scene again
 		try {
 		EventQueues.toSM.put(new Msg<>(MsgToSMType.BACK_IN_MAIN_SCENE));
 		} catch (InterruptedException ie) {
 			// TODO: Error Handling
 		}
-
+		FXMLLoader loader = new FXMLLoader(getClass().getResource("/MusicScene.fxml"));
+        Parent root = loader.load();
 		root = FXMLLoader.load(getClass().getResource("/MainScene.fxml"));
 		stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
 		scene = new Scene(root);
@@ -254,8 +256,9 @@ public class MusicSceneController implements Initializable {
 	}
 
 	public void stopSound(MouseEvent event) throws IOException {
-		onClose();
-		switchToMainScene(event);
+		pbc.pause();
+		paused = true;
+		pbc.goToRelative(0);
 	}
 
 	public void beginTimer() {
@@ -267,5 +270,8 @@ public class MusicSceneController implements Initializable {
 		}, 0, 50);
 
 	}
-
+	public void closeWindow(ActionEvent event) throws IOException {
+		onClose();
+		switchToMainScene(event);
+	}
 }
