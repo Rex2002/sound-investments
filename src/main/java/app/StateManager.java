@@ -70,8 +70,10 @@ public class StateManager {
 								StateManager.isCurrentlySonifying = true;
 								currentMapping = (Mapping) msg.data;
 								MusicData musicData = sonifyMapping(currentMapping);
-								if (musicData != null) EventQueues.toUI.add(new Msg<>(MsgToUIType.FINISHED, musicData));
-								else EventQueues.toUI.add(new Msg<>(MsgToUIType.ERROR, "Sonifizierung ist fehlgeschlagen"));
+								if (musicData != null)
+									EventQueues.toUI.add(new Msg<>(MsgToUIType.FINISHED, musicData));
+								// sonifyMapping already sends error messages to the UI in case of an error,
+								// so no else case is needed
 								isCurrentlySonifying = false;
 							}
 							case ENTERED_MAIN_SCENE -> {
@@ -218,7 +220,7 @@ public class StateManager {
 	}
 
 	public static MusicData sonifyMapping(Mapping mapping) {
-		return call(() -> {
+		try {
 			SonifiableID[] sonifiables = mapping.getMappedSonifiableIDs().toArray(new SonifiableID[0]);
 			HashMap<SonifiableID, List<Price>> priceMap = new HashMap<>(sonifiables.length);
 			FutureList<List<Price>> getPricesFutures = new FutureList<>(sonifiables.length);
@@ -292,10 +294,14 @@ public class StateManager {
 			}
 			isCurrentlySonifying = false;
 			return new MusicData(pbc, sonifiableNames, priceMap.values());
-		}, null, ie -> {
-			isCurrentlySonifying = false;
-			getInterruptedExceptionHandler().accept(ie);
-		});
+		} catch (AppError e) {
+			EventQueues.toUI.add(new Msg<>(MsgToUIType.ERROR, "Fehler beim Sonifizieren: " + e.getMessage()));
+			return null;
+		} catch (Exception e) {
+			e.printStackTrace();
+			EventQueues.toUI.add(new Msg<>(MsgToUIType.ERROR, "Fehler beim Sonifizieren."));
+			return null;
+		}
 	}
 
 	public static Consumer<InterruptedException> getInterruptedExceptionHandler() {
