@@ -52,7 +52,6 @@ public class Util {
                 max = (short) Math.abs(k);
             }
         }
-        //System.out.println("Found max value: " + max);
         return max;
     }
 
