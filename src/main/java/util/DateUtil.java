@@ -1,4 +1,4 @@
-package dataRepo;
+package util;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -14,6 +14,12 @@ public class DateUtil {
 	public static SimpleDateFormat fmtDatetime = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss", Locale.US);
 	public static DateTimeFormatter dateTimeFmt = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
+	public static Calendar calFromDateTimeStr(String dateTimeStr) throws ParseException {
+		Calendar cal = new GregorianCalendar();
+		cal.setTime(fmtDatetime.parse(dateTimeStr));
+		return cal;
+	}
+
 	public static Calendar calFromDateStr(String dateStr) throws ParseException {
 		Calendar cal = new GregorianCalendar();
 		cal.setTime(fmtDate.parse(dateStr));
@@ -21,7 +27,7 @@ public class DateUtil {
 	}
 
 	public static String formatDate(Calendar date) {
-		return paddedParse(date.get(Calendar.YEAR), 4, '0') + "-" + paddedParse(date.get(Calendar.MONTH), 2, '0') + "-" + paddedParse(date.get(Calendar.DAY_OF_MONTH), 2, '0');
+		return paddedParse(date.get(Calendar.YEAR), 4, '0') + "-" + paddedParse(date.get(Calendar.MONTH) + 1, 2, '0') + "-" + paddedParse(date.get(Calendar.DAY_OF_MONTH), 2, '0');
 	}
 
 	public static String paddedParse(int x, int length, char pad) {

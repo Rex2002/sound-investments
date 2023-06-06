@@ -6,6 +6,7 @@ import java.net.URISyntaxException;
 import java.net.http.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
@@ -21,6 +22,7 @@ public class APIReq {
 	// See: https://stackoverflow.com/a/1813873/13764271
 	private static final boolean debug = true;
 	private static int reqCounter = 0;
+	private static Random rand = new Random();
 
 	private static final List<StrTuple> defaultHeaders = new ArrayList<>(
 			List.of(new StrTuple("Content-Type", "application/json")));
@@ -52,7 +54,7 @@ public class APIReq {
 		this.authPolicy = authPolicy;
 		this.apiTokQueryKey = apiTokQueryKey;
 		this.apiToks = apiToks;
-		this.curTokIdx = 0;
+		this.curTokIdx = rand.nextInt(apiToks.length);
 		this.paginationHandler = handler;
 		this.getQueryForPage = getQueryForPage;
 		this.errorHandler = errorHandler;

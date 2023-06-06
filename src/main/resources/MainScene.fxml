@@ -26,7 +26,7 @@
 	</Label>
 
 	<!-- "Choosing Sonifiables"-Box -->
-	<Pane layoutX="29.0" layoutY="110.0" prefHeight="557.0" prefWidth="332.0" style="-fx-background-color: #D9D9D9; -fx-background-radius: 30;">
+	<Pane layoutX="29.0" layoutY="110.0" prefHeight="655.0" prefWidth="332.0" style="-fx-background-color: #D9D9D9; -fx-background-radius: 30;">
 		<children>
 			<Label layoutX="24.0" layoutY="21.0" prefHeight="53.0" prefWidth="131.0" style="-fx-font-style: &quot;Roboto&quot;;" text="Aktien">
 				<font>
@@ -38,21 +38,21 @@
 					<Font size="20.0" />
 				</font>
 			</TextField>
-			<Label layoutX="17.0" layoutY="245.6" prefHeight="53.0" prefWidth="165.0" style="-fx-font-style: &quot;Roboto&quot;;" text="Kategorie">
+			<Label layoutX="17.0" layoutY="273.0" prefHeight="53.0" prefWidth="165.0" style="-fx-font-style: &quot;Roboto&quot;;" text="Kategorie">
 				<font>
 					<Font size="24.0" />
 				</font>
 			</Label>
-			<ChoiceBox id="categoriesCB" fx:id="categoriesCB" layoutX="151.0" layoutY="248.0" prefHeight="49.0" prefWidth="165.0" style="-fx-background-radius: 10; -fx-background-color: #4D505B;" />
-			<Label layoutX="17.0" layoutY="177.0" prefHeight="53.0" prefWidth="165.0" style="-fx-font-style: &quot;Roboto&quot;;" text="Standort">
+			<ChoiceBox id="categoriesCB" fx:id="categoriesCB" layoutX="151.0" layoutY="275.0" prefHeight="49.0" prefWidth="165.0" style="-fx-background-radius: 10; -fx-background-color: #4D505B;" />
+			<Label layoutX="17.0" layoutY="195.0" prefHeight="53.0" prefWidth="165.0" style="-fx-font-style: &quot;Roboto&quot;;" text="Standort">
 				<font>
 					<Font size="24.0" />
 				</font>
 			</Label>
-			<ChoiceBox fx:id="locationCB" layoutX="151.0" layoutY="179.0" prefHeight="49.0" prefWidth="165.0" style="-fx-background-radius: 10; -fx-background-color: #4D505B;" />
-			<ScrollPane hbarPolicy="NEVER" layoutX="17.0" layoutY="315.0" maxWidth="1.7976931348623157E308" prefHeight="211.0" prefWidth="299.0" style="-fx-background-color: #4D505B; -fx-border-color: #4D505B;">
+			<ChoiceBox fx:id="locationCB" layoutX="151.0" layoutY="197.0" prefHeight="49.0" prefWidth="165.0" style="-fx-background-radius: 10; -fx-background-color: #4D505B;" />
+			<ScrollPane hbarPolicy="NEVER" layoutX="17.0" layoutY="359.0" maxWidth="1.7976931348623157E308" prefHeight="282.0" prefWidth="299.0" style="-fx-background-color: #4D505B; -fx-border-color: #4D505B;">
 				<content>
-					<VBox fx:id="checkVBox" prefHeight="217.0" prefWidth="296.0" />
+					<VBox fx:id="checkVBox" prefHeight="275.0" prefWidth="296.0" />
 				</content>
 			</ScrollPane>
 			<Line endX="290.0" layoutX="25.0" layoutY="70.0" strokeWidth="2.0" />
@@ -78,7 +78,7 @@
 	</Pane>
 
 	<!-- "Global Settings" Box -->
-	<Pane layoutX="1210.0" layoutY="114.0" prefHeight="655.0" prefWidth="332.0" style="-fx-background-color: #D9D9D9; -fx-background-radius: 30;">
+	<Pane layoutX="1210.0" layoutY="114.0" prefHeight="549.0" prefWidth="332.0" style="-fx-background-color: #D9D9D9; -fx-background-radius: 30;">
 		<children>
 			<!-- Title -->
 			<Label layoutX="18.0" layoutY="20.0" prefHeight="53.0" prefWidth="305.0" style="-fx-font-style: &quot;Roboto&quot;;" text="Einstellungen">
@@ -88,50 +88,50 @@
 			</Label>
 			<Line endX="290.0" layoutX="14.0" layoutY="74.0" strokeWidth="2.0" />
 
-			<Label layoutX="12.0" layoutY="80.0" prefHeight="53.0" prefWidth="153.0" style="-fx-font-style: &quot;Roboto&quot;;" text="Startdatum">
+			<Label layoutX="13.0" layoutY="87.0" prefHeight="53.0" prefWidth="153.0" style="-fx-font-style: &quot;Roboto&quot;;" text="Startdatum">
 				<font>
 					<Font size="20.0" />
 				</font>
 			</Label>
-			<DatePicker fx:id="startPicker" layoutX="182.0" layoutY="93.0" prefHeight="27.0" prefWidth="131.0" />
+			<DatePicker fx:id="startPicker" layoutX="182.0" layoutY="100.0" prefHeight="27.0" prefWidth="131.0" />
 
-			<Label layoutX="12.0" layoutY="126.0" prefHeight="53.0" prefWidth="138.0" style="-fx-font-style: &quot;Roboto&quot;;" text="Enddatum">
+			<Label layoutX="12.0" layoutY="140.0" prefHeight="53.0" prefWidth="138.0" style="-fx-font-style: &quot;Roboto&quot;;" text="Enddatum">
 				<font>
 					<Font size="20.0" />
 				</font>
 			</Label>
-			<DatePicker fx:id="endPicker" layoutX="182.0" layoutY="139.0" prefHeight="27.0" prefWidth="131.0" />
+			<DatePicker fx:id="endPicker" layoutX="182.0" layoutY="153.0" prefHeight="27.0" prefWidth="131.0" />
 
-			<Label layoutX="12.0" layoutY="173.0" prefHeight="53.0" prefWidth="138.0" style="-fx-font-style: &quot;Roboto&quot;;" text="Dauer">
+			<Label layoutX="12.0" layoutY="191.0" prefHeight="53.0" prefWidth="138.0" style="-fx-font-style: &quot;Roboto&quot;;" text="Dauer">
 				<font>
 					<Font size="20.0" />
 				</font>
 			</Label>
-			<TextField id="audioLength" fx:id="audioLength" layoutX="255.0" layoutY="186.0" prefHeight="27.0" prefWidth="57.0" />
+			<TextField id="audioLength" fx:id="audioLength" layoutX="256.0" layoutY="204.0" prefHeight="27.0" prefWidth="57.0" />
 
-            <ScrollPane hbarPolicy="NEVER" layoutX="14.0" layoutY="517.0" maxWidth="1.7976931348623157E308" prefHeight="125.0" prefWidth="305.0" style="-fx-background-color: #4D505B; -fx-border-color: #4D505B;">
+            <ScrollPane hbarPolicy="NEVER" layoutX="14.0" layoutY="326.0" maxWidth="1.7976931348623157E308" prefHeight="201.0" prefWidth="305.0" style="-fx-background-color: #4D505B; -fx-border-color: #4D505B;">
                <content>
-                  <VBox fx:id="instBox" prefHeight="121.0" prefWidth="296.0" />
+                  <VBox fx:id="instBox" prefHeight="166.0" prefWidth="296.0" />
                </content>
             </ScrollPane>
-            <TextField id="audioLength1" fx:id="audioLength1" layoutX="182.0" layoutY="186.0" prefHeight="27.0" prefWidth="57.0" />
-            <Label layoutX="245.0" layoutY="182.0" text=":">
+            <TextField id="audioLength1" fx:id="audioLength1" layoutX="182.0" layoutY="204.0" prefHeight="27.0" prefWidth="57.0" />
+            <Label layoutX="245.0" layoutY="200.0" text=":">
                <font>
                   <Font size="24.0" />
                </font>
             </Label>
 
-			<Label layoutX="12.0" layoutY="464.0" prefHeight="53.0" prefWidth="98.0" style="-fx-font-style: &quot;Roboto&quot;;" text="Filter">
+			<Label layoutX="13.0" layoutY="252.0" prefHeight="53.0" prefWidth="98.0" style="-fx-font-style: &quot;Roboto&quot;;" text="Filter">
 				<font>
 					<Font size="20.0" />
 				</font>
 			</Label>
-			<ChoiceBox fx:id="filterCB" layoutX="165.0" layoutY="470.0" prefHeight="42.0" prefWidth="153.0" style="-fx-background-radius: 10; -fx-background-color: #4D505B;" />
+			<ChoiceBox fx:id="filterCB" layoutX="163.0" layoutY="258.0" prefHeight="42.0" prefWidth="153.0" style="-fx-background-radius: 10; -fx-background-color: #4D505B;" />
 		</children>
 	</Pane>
 
       	<!-- Start Button -->
-	<Button fx:id="startBtn" layoutX="29.0" layoutY="679.0" mnemonicParsing="false" prefHeight="86.0" prefWidth="332.0" style="-fx-background-color: #9C5EEB; -fx-background-radius: 30;" text="Start" textFill="WHITE">
+	<Button fx:id="startBtn" layoutX="1210.0" layoutY="679.0" mnemonicParsing="false" prefHeight="86.0" prefWidth="332.0" style="-fx-background-color: #9C5EEB; -fx-background-radius: 30;" text="Start" textFill="WHITE">
 		<font>
 			<Font size="40.0" />
 		</font>
