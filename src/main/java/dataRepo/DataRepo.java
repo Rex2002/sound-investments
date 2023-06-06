@@ -1,17 +1,5 @@
 package dataRepo;
 
-import app.AppError;
-import dataRepo.api.APIErr;
-import dataRepo.api.APIReq;
-import dataRepo.api.AuthPolicy;
-import dataRepo.api.PaginationHandler;
-import dataRepo.json.JsonPrimitive;
-import dataRepo.json.Parser;
-import util.ArrayFunctions;
-import util.DateUtil;
-import util.FutureList;
-import util.UnorderedList;
-
 import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -22,6 +10,12 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
+
+import app.AppError;
+import dataRepo.api.*;
+import dataRepo.json.JsonPrimitive;
+import dataRepo.json.Parser;
+import util.*;
 
 public class DataRepo {
 	private static final boolean GET_PRICES_DYNAMICALLY = true;
@@ -38,10 +32,21 @@ public class DataRepo {
 			"98888ec975884e98a9555233c3dd59da", "af38d2454c2c4a579768b8262d3e039e",
 			"facbd6808e6d436e95c4935ab8cc082e" };
 
-	// TODO: Add specific error handling for the different APIs
-	private static APIReq apiTwelvedata = new APIReq("https://api.twelvedata.com/", apiToksTwelvedata, AuthPolicy.QUERY, "apikey");
-	private static APIReq apiLeeway = new APIReq("https://api.leeway.tech/api/v1/public/", apiToksLeeway, AuthPolicy.QUERY, "apitoken");
-	private static APIReq apiMarketstack = new APIReq("http://api.marketstack.com/v1/", apiToksMarketstack, AuthPolicy.QUERY, "access_key",
+	// to prevent race conditions when making requests via the same APIReq object in different threads,
+	// we create a new APIReq object for each sequential task
+	private static APIReq getApiTwelvedata() {
+		return new APIReq("https://api.twelvedata.com/", apiToksTwelvedata, AuthPolicy.QUERY, "apikey");
+	}
+	private static APIReq getApiLeeway() {
+		return new APIReq("https://api.leeway.tech/api/v1/public/", apiToksLeeway, AuthPolicy.QUERY, "apitoken",
+			null, null, APIReq.rateLimitErrHandler(res -> {
+				if (res.statusCode() == 429) return true;
+				if (res.body().startsWith("Your limit of")) return true;
+				return false;
+			}));
+	}
+	private static APIReq getApiMarketstack() {
+		return new APIReq("http://api.marketstack.com/v1/", apiToksMarketstack, AuthPolicy.QUERY, "access_key",
 			new PaginationHandler(json -> {
 				// @Cleanup Remove hardcoded limit
 				return 30;
@@ -54,6 +59,7 @@ public class DataRepo {
 				String[] res = { "offset", Integer.toString(10 * page) };
 				return res;
 			}, APIReq.defaultErrHandler());
+	}
 
 	// @Scalability If more than one component would need to react to updated data,
 	// a single boolean flag would not be sufficient of course. Since we know,
@@ -135,6 +141,7 @@ public class DataRepo {
 		try {
 			// @Cleanup increase limit to the maximum (1000) for production
 			// @Cleanup As of now this limit value has to be synced with the offset when creating the Marketstack APIReq bc of hardcoded values
+			APIReq apiMarketstack = getApiMarketstack();
 			apiMarketstack.setQueries("limit", "10");
 			FutureList<UnorderedList<Stock>> fl = apiMarketstack.getPaginatedJSONList("tickers", threadPool, 8,
 					(Function<Integer, UnorderedList<Stock>>) (size -> {
@@ -271,6 +278,8 @@ public class DataRepo {
 	// the second the ending date. If an error happened, `null` is returned
 	public static <T> Future<T> getTradingPeriod(Sonifiable s, Function<Calendar[], T> callback) {
 		return threadPool.submit(() -> {
+			APIReq apiLeeway = getApiLeeway();
+			APIReq apiTwelvedata = getApiTwelvedata();
 			Calendar[] res = { null, null };
 			T out = null;
 			try {
@@ -372,6 +381,7 @@ public class DataRepo {
 		return threadPool.submit(() -> {
 			if (!GET_PRICES_DYNAMICALLY) return testPrices();
 
+			APIReq apiLeeway = getApiLeeway();
 			Calendar[] startEnd = {start, end};
 
 			// TODO: Add de-facto pagination to price-requests to allow parallelization

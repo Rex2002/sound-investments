@@ -106,7 +106,7 @@ public class MainSceneController implements Initializable {
     private CheckEQService checkEQService;
     private Mapping mapping = new Mapping();
     private boolean currentlyUpdatingCB = false;
-    private boolean startedSonification = true;
+    private boolean startedSonification = false;
 
     private String[] locations = { "Deutschland" }; // TODO: Get available locations from StateManager
 
@@ -255,6 +255,7 @@ public class MainSceneController implements Initializable {
                 loadingAnimTimer = new Timer();
                 int nextFrameInMs = 60;
                 loadingAnimTimer.cancel(); // In case the animation was already playing
+                loadingAnimTimer = new Timer();
                 loadingAnimTimer.scheduleAtFixedRate(new TimerTask() {
                     private int counter = 1;
                     public void run() {
