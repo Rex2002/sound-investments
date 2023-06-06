@@ -70,8 +70,8 @@ public class StateManager {
 								StateManager.isCurrentlySonifying = true;
 								currentMapping = (Mapping) msg.data;
 								MusicData musicData = sonifyMapping(currentMapping);
-								if (musicData != null)
-									EventQueues.toUI.add(new Msg<>(MsgToUIType.FINISHED, musicData));
+								if (musicData != null) EventQueues.toUI.add(new Msg<>(MsgToUIType.FINISHED, musicData));
+								else EventQueues.toUI.add(new Msg<>(MsgToUIType.ERROR, "Sonifizierung ist fehlgeschlagen"));
 								isCurrentlySonifying = false;
 							}
 							case ENTERED_MAIN_SCENE -> {
