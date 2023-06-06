@@ -139,6 +139,162 @@ public class DataRepo {
 		}
 	}
 
+	public static List<Sonifiable> findByPrefix(String prefix, FilterFlag... filters) {
+		int flag = FilterFlag.getFilterVal(filters);
+		List<Sonifiable> l = new ArrayList<>(128);
+		if ((flag & FilterFlag.STOCK.getVal()) > 0)
+			findByPrefix(prefix, stocks, l);
+		if ((flag & FilterFlag.ETF.getVal()) > 0)
+			findByPrefix(prefix, etfs, l);
+		if ((flag & FilterFlag.INDEX.getVal()) > 0)
+			findByPrefix(prefix, indices, l);
+		return l;
+	}
+
+	private static void findByPrefix(String prefix, List<? extends Sonifiable> src, List<Sonifiable> dst) {
+		for (Sonifiable s : src) {
+			if (s != null && (s.name.toLowerCase().startsWith(prefix.toLowerCase())
+					|| s.getId().symbol.toLowerCase().startsWith(prefix.toLowerCase()))) {
+				dst.add(s);
+			}
+		}
+	}
+
+	public static List<Sonifiable> getAll(FilterFlag... filters) {
+		int flag = FilterFlag.getFilterVal(filters);
+		List<Sonifiable> l = new ArrayList<>(128);
+		if ((flag & FilterFlag.STOCK.getVal()) > 0)
+			l.addAll(stocks);
+		if ((flag & FilterFlag.ETF.getVal()) > 0)
+			l.addAll(etfs);
+		if ((flag & FilterFlag.INDEX.getVal()) > 0)
+			l.addAll(indices);
+		return l;
+	}
+
+	public static String getSonifiableName(SonifiableID id) {
+		Sonifiable s = getSonifable(id, stocks);
+		if (s == null) s = getSonifable(id, etfs);
+		if (s == null) s = getSonifable(id, indices);
+		if (s == null) return null;
+		else return s.getName();
+	}
+
+	public static Stock getStock(SonifiableID id) {
+		return getSonifable(id, stocks);
+	}
+
+	public static ETF getETF(SonifiableID id) {
+		return getSonifable(id, etfs);
+	}
+
+	public static Index getIndex(SonifiableID id) {
+		return getSonifable(id, indices);
+	}
+
+	private static <T extends Sonifiable> T getSonifable(SonifiableID id, List<T> list) {
+		for (T x : list) {
+			if (x.getId() == id)
+				return x;
+		}
+		return null;
+	}
+
+	public static Future<List<Price>> getPrices(SonifiableID s, Calendar start, Calendar end, IntervalLength interval) {
+		return threadPool.submit(() -> {
+			if (!GET_PRICES_DYNAMICALLY) return testPrices();
+
+			// Note: Here we effectively create an environment that is given from the outer scope to this one
+			// The order of the variables in the environment is hardcoded and should not be changed without changing the code below
+			Object[] environment = {start, end, interval};
+
+			// TODO: Add de-facto pagination to price-requests to allow parallelization
+			// Idea for doing this: See how long the date-range in the first response was
+			// then split the rest of the range for start->end into chunks of that range
+			// To achieve this, the signatures for pagination handlers most certainly have to be changed again
+			try {
+				List<Price> out = new ArrayList<>(1024);
+				Calendar earliestDay = (Calendar) environment[1];
+				// Because leeway's range is exclusive, we need to decrease the startdate that we put in the request and keep the same for comparison of the loop
+				Calendar startCmp = (Calendar) ((Calendar) environment[0]).clone();
+				((Calendar) environment[0]).roll(Calendar.DATE, false);
+				// TODO: Leeway throws error if range is more than 600 days for 5min intervals
+				// or more than 7200 days for 1h intervals
+
+				do {
+					// Has to be recomputed every iteration, bc we might have to increase interval length
+					boolean isEoD = ((IntervalLength) environment[2]) == IntervalLength.DAY;
+					String endpoint = (isEoD ? "historicalquotes/" : "intraday/") + s;
+					String[] intervalQueries = {"interval", ((IntervalLength) environment[2]).toString(API.LEEWAY)};
+
+					// We increase end by 1, because Leeway's range is exclusive
+					// and after each iteration end = earliestDay and it might be that we missed some data from that day
+					((Calendar) environment[1]).roll(Calendar.DATE, true);
+					String[] queries = {"from", DateUtil.formatDate(((Calendar) environment[0])), "to", DateUtil.formatDate(((Calendar) environment[1]))};
+					if (!isEoD) queries = ArrayFunctions.add(queries, intervalQueries);
+
+					List<Price> prices = apiLeeway.getJSONList(endpoint,
+						json -> {
+							try {
+								HashMap<String, JsonPrimitive<?>> m = json.asMap();
+								Calendar day;
+								Instant startTime;
+								Instant endTime;
+								if (isEoD) {
+									day = DateUtil.calFromDateStr(m.get("date").asStr());
+									day.set(Calendar.HOUR_OF_DAY, 0);
+									startTime = day.toInstant();
+									day.set(Calendar.HOUR_OF_DAY, 23);
+									endTime = day.toInstant();
+								} else {
+									day = DateUtil.calFromDateTimeStr(m.get("datetime").asStr());
+									startTime = new Timestamp(m.get("timestamp").asLong()).toInstant();
+									endTime = ((IntervalLength) environment[2]).addToInstant(startTime);
+								}
+								return new Price(day, startTime, endTime, m.get("open").asDouble(), m.get("close").asDouble(), m.get("low").asDouble(), m.get("high").asDouble());
+							} catch (Exception e) {
+								return null;
+							}
+						}, true, queries);
+
+					if (prices.isEmpty()){
+						if (((IntervalLength) environment[2]) == IntervalLength.DAY) break;
+						else {
+							environment[2] = IntervalLength.inc((IntervalLength) environment[2]);
+							continue;
+						}
+					}
+					Calendar nextEarliestDay = prices.get(0).getDay();
+					if (nextEarliestDay.equals(earliestDay)) {
+						// The API doesn't have any more data for us in this interval-length
+						// so we increase the interval-length and try again
+						if (((IntervalLength) environment[2]) == IntervalLength.DAY) break;
+						else {
+							environment[2] = IntervalLength.inc((IntervalLength) environment[2]);
+							continue;
+						}
+					}
+					earliestDay = nextEarliestDay;
+					environment[1] = (Calendar) earliestDay.clone();
+					out.addAll(0, prices);
+				} while (startCmp.before(earliestDay));
+
+				ArrayFunctions.rmDuplicates(out, 300, (x, y) -> x.getStart().equals(y.getStart()));
+				return out;
+			} catch (Exception e) {
+				e.printStackTrace();
+				System.out.println("Error in getting Price-Data for " + s + " from " + DateUtil.formatDate(start) + " to " + DateUtil.formatDate(end));
+				return null;
+			}
+		});
+	}
+
+
+
+	//////////////////////////
+	// Potentially obsolete???
+	//////////////////////////
+
 	public static void updateSonifiablesList() throws AppError {
 		try {
 			// @Cleanup increase limit to the maximum (1000) for production
@@ -312,142 +468,6 @@ public class DataRepo {
 				out = callback.apply(null);
 			}
 			return out;
-		});
-	}
-
-	public static List<Sonifiable> findByPrefix(String prefix, FilterFlag... filters) {
-		int flag = FilterFlag.getFilterVal(filters);
-		List<Sonifiable> l = new ArrayList<>(128);
-		if ((flag & FilterFlag.STOCK.getVal()) > 0)
-			findByPrefix(prefix, stocks, l);
-		if ((flag & FilterFlag.ETF.getVal()) > 0)
-			findByPrefix(prefix, etfs, l);
-		if ((flag & FilterFlag.INDEX.getVal()) > 0)
-			findByPrefix(prefix, indices, l);
-		return l;
-	}
-
-	private static void findByPrefix(String prefix, List<? extends Sonifiable> src, List<Sonifiable> dst) {
-		for (Sonifiable s : src) {
-			if (s != null && (s.name.toLowerCase().startsWith(prefix.toLowerCase())
-					|| s.getId().symbol.toLowerCase().startsWith(prefix.toLowerCase()))) {
-				dst.add(s);
-			}
-		}
-	}
-
-	public static List<Sonifiable> getAll(FilterFlag... filters) {
-		int flag = FilterFlag.getFilterVal(filters);
-		List<Sonifiable> l = new ArrayList<>(128);
-		if ((flag & FilterFlag.STOCK.getVal()) > 0)
-			l.addAll(stocks);
-		if ((flag & FilterFlag.ETF.getVal()) > 0)
-			l.addAll(etfs);
-		if ((flag & FilterFlag.INDEX.getVal()) > 0)
-			l.addAll(indices);
-		return l;
-	}
-
-	public static String getSonifiableName(SonifiableID id) {
-		Sonifiable s = getSonifable(id, stocks);
-		if (s == null) s = getSonifable(id, etfs);
-		if (s == null) s = getSonifable(id, indices);
-		if (s == null) return null;
-		else return s.getName();
-	}
-
-	public static Stock getStock(SonifiableID id) {
-		return getSonifable(id, stocks);
-	}
-
-	public static ETF getETF(SonifiableID id) {
-		return getSonifable(id, etfs);
-	}
-
-	public static Index getIndex(SonifiableID id) {
-		return getSonifable(id, indices);
-	}
-
-	private static <T extends Sonifiable> T getSonifable(SonifiableID id, List<T> list) {
-		for (T x : list) {
-			if (x.getId() == id)
-				return x;
-		}
-		return null;
-	}
-
-	public static Future<List<Price>> getPrices(SonifiableID s, Calendar start, Calendar end, IntervalLength interval) {
-		return threadPool.submit(() -> {
-			if (!GET_PRICES_DYNAMICALLY) return testPrices();
-
-			Calendar[] startEnd = {start, end};
-
-			// TODO: Add de-facto pagination to price-requests to allow parallelization
-			// Idea for doing this: See how long the date-range in the first response was
-			// then split the rest of the range for start->end into chunks of that range
-			// To achieve this, the signatures for pagination handlers most certainly have to be changed again
-
-			// TODO: Use interval - at the moment we assume that interval == DAY and just make end-of-day API-requests
-			try {
-				List<Price> out = new ArrayList<>(1024);
-				Calendar earliestDay = startEnd[1];
-				// Because leeway's range is exclusive, we need to decrease the startdate that we put in the request and keep the same for comparison of the loop
-				Calendar startCmp = (Calendar) startEnd[0].clone();
-				startEnd[0].roll(Calendar.DATE, false);
-				// TODO: Leeway throws error if range is more than 600 days
-
-				// TODO Bug: There seems to be an issue with DateUtil parsing the dates of the prices wrong or something
-				// until that bug is fixed, I commented the otherwise potentially endless loop out
-				boolean isEoD = interval == IntervalLength.DAY;
-				String endpoint = (isEoD ? "historicalquotes/" : "intraday/") + s;
-				String[] intervalQueries = {"interval", interval.toString(API.LEEWAY)};
-				do {
-					// We increase end by 1, because Leeway's range is exclusive
-					// and after each iteration end = earliestDay and it might be that we missed some data from that day
-					startEnd[1].roll(Calendar.DATE, true);
-					String[] queries = {"from", DateUtil.formatDate(startEnd[0]), "to", DateUtil.formatDate(startEnd[1])};
-					if (!isEoD) queries = ArrayFunctions.add(queries, intervalQueries);
-
-					List<Price> prices = apiLeeway.getJSONList(endpoint,
-						json -> {
-							try {
-								HashMap<String, JsonPrimitive<?>> m = json.asMap();
-								Calendar day;
-								Instant startTime;
-								Instant endTime;
-								if (isEoD) {
-									day = DateUtil.calFromDateStr(m.get("date").asStr());
-									day.set(Calendar.HOUR_OF_DAY, 0);
-									startTime = day.toInstant();
-									day.set(Calendar.HOUR_OF_DAY, 23);
-									endTime = day.toInstant();
-								} else {
-									day = DateUtil.calFromDateTimeStr(m.get("datetime").asStr());
-									startTime = new Timestamp(m.get("timestamp").asLong()).toInstant();
-									endTime = interval.addToInstant(startTime);
-								}
-								return new Price(day, startTime, endTime, m.get("open").asDouble(), m.get("close").asDouble(), m.get("low").asDouble(), m.get("high").asDouble());
-							} catch (Exception e) {
-								return null;
-							}
-						}, true, queries);
-
-					if (prices.isEmpty()) break;
-					Calendar nextEarliestDay = prices.get(0).getDay();
-					if (nextEarliestDay.equals(earliestDay)) // we would get trapped in an infinite loop now
-						break;
-					earliestDay = nextEarliestDay;
-					startEnd[1] = (Calendar) earliestDay.clone();
-					out.addAll(0, prices);
-				} while (startCmp.before(earliestDay));
-
-				ArrayFunctions.rmDuplicates(out, 300, (x, y) -> x.getStart().equals(y.getStart()));
-				return out;
-			} catch (Exception e) {
-				e.printStackTrace();
-				System.out.println("Error in getting Price-Data for " + s + " from " + DateUtil.formatDate(start) + " to " + DateUtil.formatDate(end));
-				return null;
-			}
 		});
 	}
 }
