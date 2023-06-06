@@ -210,6 +210,7 @@ public class StateManager {
 			// not quite sure if this is necessary, but not taking any risks for weird bugs...
 			priceMap.put(id, prices);
 		}
+	}
   
 	public static IntervalLength determineIntervalLength(Calendar start, Calendar end) {
 		if (start.get(Calendar.YEAR) < 2020) return IntervalLength.DAY;
