@@ -6,6 +6,13 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 
 public class ArrayFunctions {
+	public static <T> int findIndex(T[] xs, Predicate<T> f) {
+		for (int i = 0; i < xs.length; i++) {
+			if (f.test(xs[i])) return i;
+		}
+		return -1;
+	}
+
 	public static <T> T find(T[] xs, Predicate<T> f) {
 		for (T x : xs) {
 			if (f.test(x))

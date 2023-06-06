@@ -327,6 +327,28 @@ public class Mapping {
 		}
 	}
 
+	public MappedInstr get(ExchangeData<? extends ExchangeParam> ed) {
+		for (InstrumentMapping instrMap : mappedInstruments) {
+			InstrParam param = instrMap.get(ed);
+			if (param != null)
+				return new MappedInstr(instrMap.getInstrument(), param);
+		}
+		return null;
+	}
+
+	public String[] getMappedInstrNames() {
+		String[] out = new String[mappedInstruments.length + evInstrAmount];
+		int len = 0;
+		for (int i = 0; i < mappedInstruments.length; i++) {
+			if (!mappedInstruments[i].isEmpty())
+				out[len++] = mappedInstruments[i].getInstrument().toString();
+		}
+		for (int i = 0; i < evInstrAmount; i++) {
+			out[len++] = eventInstruments[i].getInstrument().toString();
+		}
+		return out;
+	}
+
 	// Returns list with first element being the earliest & second element being the last allowed date
 	public Calendar[] getDateRange() {
 		Calendar[] out = {null, null};
@@ -386,7 +408,9 @@ public class Mapping {
 	}
 
 	public EvInstrMapping[] getEventInstruments() {
-		return this.eventInstruments;
+		EvInstrMapping[] out = new EvInstrMapping[evInstrAmount];
+		System.arraycopy(eventInstruments, 0, out, 0, evInstrAmount);
+		return out;
 	}
 
 	public Integer getSoundLength() {

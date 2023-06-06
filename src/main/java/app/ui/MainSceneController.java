@@ -48,9 +48,12 @@ import app.communication.MsgToSMType;
 import app.communication.MsgToUIType;
 import app.communication.MusicData;
 import app.communication.SonifiableFilter;
+import app.mapping.EvInstrMapping;
+import app.mapping.ExchangeData;
 import app.mapping.ExchangeParam;
 import app.mapping.InstrParam;
 import app.mapping.LineData;
+import app.mapping.MappedInstr;
 import app.mapping.Mapping;
 import app.mapping.PointData;
 import app.mapping.RangeData;
@@ -157,7 +160,6 @@ public class MainSceneController implements Initializable {
                             addToCheckList(s);
                         }
                     }
-                    case LOADABLE_MAPPINGS -> System.out.println("ERROR: Msg-Type LOADABLE_MAPPINGS is not yet implemented");
                     case ERROR -> {
                         displayError((String) msg.data, "Interner Fehler");
                         if (loadingAnimTimer != null) loadingAnimTimer.cancel();
@@ -166,8 +168,10 @@ public class MainSceneController implements Initializable {
                             loading = null;
                         }
                     }
-                    case VALIDATION_DONE -> System.out.println("ERROR: Msg-Type VALIDATION_DONE is not yet implemented");
-                    case VALIDATION_ERROR -> displayError((String) msg.data, "Ungültiges Mapping");
+                    case MAPPING -> {
+                        mapping = (Mapping) msg.data;
+                        showMapping();
+                    }
                     case FINISHED -> switchToMusicScene((MusicData) msg.data);
                 }
             }
@@ -398,10 +402,14 @@ public class MainSceneController implements Initializable {
 
     @FXML
     public Pane addToPaneBox(Sonifiable sonifiable) {
+        return addToPaneBox(sonifiable, false);
+    }
+
+    public Pane addToPaneBox(Sonifiable sonifiable, boolean showMapping) {
         // add a Sharepanel to the Panel Box
         // Checking whether the maximum of sharePanels has already been reached must be
         // done before calling this function
-        Pane test  = createSharePane(sonifiable);
+        Pane test  = createSharePane(sonifiable, showMapping);
         paneBoxSonifiables.getChildren().add(test);
         paneBoxSonifiables.setPrefHeight((paneBoxSonifiables.getChildren().size()) * 511.0);
         return test;
@@ -421,7 +429,7 @@ public class MainSceneController implements Initializable {
         children.add(line);
     }
 
-    private void addStockParamToPane(String text, String cssClass, int labelX, int labelY, int cb1X, int cb1Y, int cb2X, int cb2Y, Sonifiable sonifiable, ExchangeParam eparam, ObservableList<Node> children) {
+    private void addStockParamToPane(String text, String cssClass, int labelX, int labelY, int cb1X, int cb1Y, int cb2X, int cb2Y, Sonifiable sonifiable, ExchangeParam eparam, ObservableList<Node> children, boolean showMapping) {
         Label label = new Label(text);
         label.getStyleClass().add(cssClass);
         label.setLayoutX(labelX);
@@ -435,6 +443,14 @@ public class MainSceneController implements Initializable {
             evInstCB.getItems().addAll(evInsts);
             evInstCB.setLayoutX(cb1X);
             evInstCB.setLayoutY(cb1Y);
+            if (showMapping) {
+                for (EvInstrMapping evInstMap : mapping.getEventInstruments()) {
+                    if (evInstMap.getData().getData().equals(eparam) && evInstMap.getData().getId().equals(sonifiable.getId())) {
+                        evInstCB.getSelectionModel().select(evInstMap.getInstrument().toString());
+                        break;
+                    }
+                }
+            }
             evInstCB.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
                 try {
                     if (oldValue != null) mapping.rmEvInstr(sonifiable.getId(), (PointData) eparam);
@@ -457,6 +473,14 @@ public class MainSceneController implements Initializable {
             paramCB.setLayoutX(cb2X);
             paramCB.setLayoutY(cb2Y);
             paramCB.setDisable(true);
+            if (showMapping) {
+                MappedInstr mi = mapping.get(new ExchangeData<>(sonifiable.getId(), eparam));
+                if (mi != null) {
+                    instCB.getSelectionModel().select(mi.instr.toString());
+                    paramCB.getSelectionModel().select(mi.param.toString());
+                    paramCB.setDisable(false);
+                }
+            }
             instCB.getSelectionModel().selectedIndexProperty().addListener((observable, oldIdx, newIdx) -> {
                 try {
                     // If the new instrument already has the selected parameter mapped or if newValue is null
@@ -528,12 +552,13 @@ public class MainSceneController implements Initializable {
         }
     }
 
-    private Pane createSharePane(Sonifiable sonifiable) { // initialize and dek the Share Pane
+    private Pane createSharePane(Sonifiable sonifiable, boolean showMapping) { // initialize and dek the Share Pane
         mapping.addSonifiable(sonifiable);
         updateDateRange();
 
         Pane stockPane = new Pane();
         stockPane.getStyleClass().add("stockPane");
+        stockPane.setUserData(sonifiable.getId());
         Label tField = new Label();
         tField.setText(sonifiable.getName());
         tField.getStyleClass().add("txtField");
@@ -556,19 +581,27 @@ public class MainSceneController implements Initializable {
         addLine(null, 174, 53, 0, 0, 391, 0, stockPane.getChildren());
         addLine("pinkline", 306, 168, -100, -60, -100, 263, stockPane.getChildren());
         addLine("pinkline", 512, 177, -100, -60, -100, 263, stockPane.getChildren());
-
-        addStockParamToPane("Preis", "paneShareLabel", 14, 80, 14, 115, 14, 160, sonifiable, LineData.PRICE, stockPane.getChildren());
-        addStockParamToPane("Gleitender Durchschnitt", "paneShareLabel", 14, 215, 14, 250, 14, 295, sonifiable, LineData.MOVINGAVG, stockPane.getChildren());
-        addStockParamToPane("Steigungsgrad", "paneShareLabel", 14, 350, 14, 385, 14, 430, sonifiable, LineData.RELCHANGE, stockPane.getChildren());
-        addStockParamToPane("Flagge", "paneShareLabel", 226, 80, 226, 115, 226, 160, sonifiable, RangeData.FLAG, stockPane.getChildren());
-        addStockParamToPane("Dreieck", "paneShareLabel", 226, 215, 226, 250, 226, 295, sonifiable, RangeData.TRIANGLE, stockPane.getChildren());
-        addStockParamToPane("V-Form", "paneShareLabel", 226, 350, 226, 385, 226, 430, sonifiable, RangeData.VFORM, stockPane.getChildren());
-        addStockParamToPane("Trendbrüche", "paneShareLabel", 422, 80, 422, 115, 0, 0, sonifiable, PointData.TRENDBREAK, stockPane.getChildren());
-        addStockParamToPane("EQMOVINGAVG", "paneShareLabel", 422, 180, 422, 215, 0, 0, sonifiable, PointData.EQMOVINGAVG, stockPane.getChildren());
-        addStockParamToPane("EQSUPPORT", "paneShareLabel", 422, 280, 422, 315, 0, 0, sonifiable, PointData.EQSUPPORT, stockPane.getChildren());
-        addStockParamToPane("EQRESIST", "paneShareLabel", 422, 380, 422, 415, 0, 0, sonifiable, PointData.EQRESIST, stockPane.getChildren());
+        addStockParamToPane("Preis", "paneShareLabel", 14, 80, 14, 115, 14, 160, sonifiable, LineData.PRICE, stockPane.getChildren(), showMapping);
+        addStockParamToPane("Gleitender Durchschnitt", "paneShareLabel", 14, 215, 14, 250, 14, 295, sonifiable, LineData.MOVINGAVG, stockPane.getChildren(), showMapping);
+        addStockParamToPane("Steigungsgrad", "paneShareLabel", 14, 350, 14, 385, 14, 430, sonifiable, LineData.RELCHANGE, stockPane.getChildren(), showMapping);
+        addStockParamToPane("Flagge", "paneShareLabel", 226, 80, 226, 115, 226, 160, sonifiable, RangeData.FLAG, stockPane.getChildren(), showMapping);
+        addStockParamToPane("Dreieck", "paneShareLabel", 226, 215, 226, 250, 226, 295, sonifiable, RangeData.TRIANGLE, stockPane.getChildren(), showMapping);
+        addStockParamToPane("V-Form", "paneShareLabel", 226, 350, 226, 385, 226, 430, sonifiable, RangeData.VFORM, stockPane.getChildren(), showMapping);
+        addStockParamToPane("Trendbrüche", "paneShareLabel", 422, 80, 422, 115, 0, 0, sonifiable, PointData.TRENDBREAK, stockPane.getChildren(), showMapping);
+        addStockParamToPane("EQMOVINGAVG", "paneShareLabel", 422, 180, 422, 215, 0, 0, sonifiable, PointData.EQMOVINGAVG, stockPane.getChildren(), showMapping);
+        addStockParamToPane("EQSUPPORT", "paneShareLabel", 422, 280, 422, 315, 0, 0, sonifiable, PointData.EQSUPPORT, stockPane.getChildren(), showMapping);
+        addStockParamToPane("EQRESIST", "paneShareLabel", 422, 380, 422, 415, 0, 0, sonifiable, PointData.EQRESIST, stockPane.getChildren(), showMapping);
 
         return stockPane;
+    }
+
+    private void showMapping() {
+        for (Sonifiable s : mapping.getSonifiables()) {
+            addToPaneBox(s, true);
+        }
+        for (String name : mapping.getMappedInstrNames()) {
+            instAdded(name);
+        }
     }
 
     private void updateDateRange() {

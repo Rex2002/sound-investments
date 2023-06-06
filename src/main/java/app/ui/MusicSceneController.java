@@ -219,7 +219,7 @@ public class MusicSceneController implements Initializable {
 	public void switchToMainScene(MouseEvent event) throws IOException {
 		// Tell StateManager, that we are back in the main scene again
 		try {
-		EventQueues.toSM.put(new Msg<>(MsgToSMType.BACK_IN_MAIN_SCENE));
+		EventQueues.toSM.put(new Msg<>(MsgToSMType.ENTERED_MAIN_SCENE));
 		} catch (InterruptedException ie) {
 			// TODO: Error Handling
 		}

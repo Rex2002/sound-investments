@@ -42,24 +42,24 @@ public class InstrumentMapping {
 
 	public InstrParam[] getEmptyLineParams(InstrParam oldVal) {
 		List<InstrParam> params = new ArrayList<>();
-		if          (pitch == null || oldVal == InstrParam.PITCH)            params.add(InstrParam.PITCH);
-		if      (relVolume == null || oldVal == InstrParam.RELVOLUME)        params.add(InstrParam.RELVOLUME);
-		if      (delayEcho == null || oldVal == InstrParam.DELAY_ECHO)       params.add(InstrParam.DELAY_ECHO);
-		if   (feedbackEcho == null || oldVal == InstrParam.FEEDBACK_ECHO)    params.add(InstrParam.FEEDBACK_ECHO);
-		if    (delayReverb == null || oldVal == InstrParam.DELAY_REVERB)     params.add(InstrParam.DELAY_REVERB);
+		if (pitch          == null || oldVal == InstrParam.PITCH)            params.add(InstrParam.PITCH);
+		if (relVolume      == null || oldVal == InstrParam.RELVOLUME)        params.add(InstrParam.RELVOLUME);
+		if (delayEcho      == null || oldVal == InstrParam.DELAY_ECHO)       params.add(InstrParam.DELAY_ECHO);
+		if (feedbackEcho   == null || oldVal == InstrParam.FEEDBACK_ECHO)    params.add(InstrParam.FEEDBACK_ECHO);
+		if (delayReverb    == null || oldVal == InstrParam.DELAY_REVERB)     params.add(InstrParam.DELAY_REVERB);
 		if (feedbackReverb == null || oldVal == InstrParam.FEEDBACK_REVERB)  params.add(InstrParam.FEEDBACK_REVERB);
-		if         (cutoff == null || oldVal == InstrParam.CUTOFF)           params.add(InstrParam.CUTOFF);
-		if          (order == null || oldVal == InstrParam.ORDER)            params.add(InstrParam.ORDER);
+		if (cutoff         == null || oldVal == InstrParam.CUTOFF)           params.add(InstrParam.CUTOFF);
+		if (order          == null || oldVal == InstrParam.ORDER)            params.add(InstrParam.ORDER);
 		InstrParam[] out = new InstrParam[params.size()];
 		return params.toArray(out);
 	}
 
 	public InstrParam[] getEmptyRangeParams(InstrParam oldVal) {
 		List<InstrParam> params = new ArrayList<>();
-		if      (absVolume == null || oldVal == InstrParam.ABSVOLUME)        params.add(InstrParam.ABSVOLUME);
-		if      (onOffEcho == null || oldVal == InstrParam.ON_OFF_ECHO)      params.add(InstrParam.ON_OFF_ECHO);
-		if    (onOffReverb == null || oldVal == InstrParam.ON_OFF_REVERB)    params.add(InstrParam.ON_OFF_REVERB);
-		if    (onOffFilter == null || oldVal == InstrParam.ON_OFF_FILTER)    params.add(InstrParam.ON_OFF_FILTER);
+		if (absVolume      == null || oldVal == InstrParam.ABSVOLUME)        params.add(InstrParam.ABSVOLUME);
+		if (onOffEcho      == null || oldVal == InstrParam.ON_OFF_ECHO)      params.add(InstrParam.ON_OFF_ECHO);
+		if (onOffReverb    == null || oldVal == InstrParam.ON_OFF_REVERB)    params.add(InstrParam.ON_OFF_REVERB);
+		if (onOffFilter    == null || oldVal == InstrParam.ON_OFF_FILTER)    params.add(InstrParam.ON_OFF_FILTER);
 		InstrParam[] out = new InstrParam[params.size()];
 		return params.toArray(out);
 	}
@@ -114,40 +114,56 @@ public class InstrumentMapping {
 
 	public void rm(InstrParam param) {
 		switch (param) {
-			case PITCH -> pitch = null;
-			case RELVOLUME -> relVolume = null;
-			case ABSVOLUME -> absVolume = null;
-			case DELAY_ECHO -> delayEcho = null;
-			case FEEDBACK_ECHO -> feedbackEcho = null;
-			case ON_OFF_ECHO -> onOffEcho = null;
-			case DELAY_REVERB -> delayEcho = null;
+			case PITCH           -> pitch = null;
+			case RELVOLUME       -> relVolume = null;
+			case ABSVOLUME       -> absVolume = null;
+			case DELAY_ECHO      -> delayEcho = null;
+			case FEEDBACK_ECHO   -> feedbackEcho = null;
+			case ON_OFF_ECHO     -> onOffEcho = null;
+			case DELAY_REVERB    -> delayEcho = null;
 			case FEEDBACK_REVERB -> feedbackEcho = null;
-			case ON_OFF_REVERB -> onOffReverb = null;
-			case CUTOFF -> cutoff = null;
-			case ORDER -> order = null;
-			case ON_OFF_FILTER -> onOffFilter = null;
-			case PAN -> pan = null;
-			default -> {}
+			case ON_OFF_REVERB   -> onOffReverb = null;
+			case CUTOFF          -> cutoff = null;
+			case ORDER           -> order = null;
+			case ON_OFF_FILTER   -> onOffFilter = null;
+			case PAN             -> pan = null;
+			default              -> {}
 		}
 	}
 
 	public ExchangeData<? extends ExchangeParam> get(InstrParam param) {
 		return switch (param) {
-			case PITCH -> getPitch();
-			case RELVOLUME -> getRelVolume();
-			case ABSVOLUME -> getAbsVolume();
-			case DELAY_ECHO -> getDelayEcho();
-			case FEEDBACK_ECHO -> getFeedbackEcho();
-			case ON_OFF_ECHO -> getOnOffEcho();
-			case DELAY_REVERB -> getDelayEcho();
+			case PITCH           -> getPitch();
+			case RELVOLUME       -> getRelVolume();
+			case ABSVOLUME       -> getAbsVolume();
+			case DELAY_ECHO      -> getDelayEcho();
+			case FEEDBACK_ECHO   -> getFeedbackEcho();
+			case ON_OFF_ECHO     -> getOnOffEcho();
+			case DELAY_REVERB    -> getDelayEcho();
 			case FEEDBACK_REVERB -> getFeedbackEcho();
-			case ON_OFF_REVERB -> getOnOffReverb();
-			case CUTOFF -> getCutoff();
-			case ORDER -> getOrder();
-			case ON_OFF_FILTER -> getOnOffFilter();
-			case PAN -> getPan();
-			default -> null;
+			case ON_OFF_REVERB   -> getOnOffReverb();
+			case CUTOFF          -> getCutoff();
+			case ORDER           -> getOrder();
+			case ON_OFF_FILTER   -> getOnOffFilter();
+			case PAN             -> getPan();
+			default              -> null;
 		};
+	}
+
+	public InstrParam get(ExchangeData<? extends ExchangeParam> ed) {
+		if (ed.equals(pitch))          return InstrParam.PITCH;
+		if (ed.equals(relVolume))      return InstrParam.RELVOLUME;
+		if (ed.equals(delayEcho))      return InstrParam.DELAY_ECHO;
+		if (ed.equals(feedbackEcho))   return InstrParam.FEEDBACK_ECHO;
+		if (ed.equals(delayReverb))    return InstrParam.DELAY_REVERB;
+		if (ed.equals(feedbackReverb)) return InstrParam.FEEDBACK_REVERB;
+		if (ed.equals(cutoff))         return InstrParam.CUTOFF;
+		if (ed.equals(order))          return InstrParam.ORDER;
+		if (ed.equals(absVolume))      return InstrParam.ABSVOLUME;
+		if (ed.equals(onOffEcho))      return InstrParam.ON_OFF_ECHO;
+		if (ed.equals(onOffReverb))    return InstrParam.ON_OFF_REVERB;
+		if (ed.equals(onOffFilter))    return InstrParam.ON_OFF_FILTER;
+		return null;
 	}
 
 	public InstrumentEnum getInstrument() {

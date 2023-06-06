@@ -12,10 +12,7 @@ import audio.synth.playback.PlaybackController;
 import dataAnalyzer.*;
 import dataRepo.*;
 import javafx.application.Application;
-import util.DateUtil;
 import util.FutureList;
-
-import java.io.File;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
@@ -26,8 +23,9 @@ import java.util.function.Consumer;
 // however, it makes conceptually more sense to me, as the app's logic should be done in the main thread
 
 public class StateManager {
-	public static boolean isAlreadySonifying = false;
+	public static boolean isCurrentlySonifying = false;
 	public static SonifiableFilter sonifiableFilter = new SonifiableFilter("", FilterFlag.ALL);
+	public static Mapping currentMapping;
 
 	public static void main(String[] args) {
 		Thread th = new Thread(() -> Application.launch(App.class, args));
@@ -64,18 +62,19 @@ public class StateManager {
 								DataRepo.updatedData.compareAndSet(true, false);
 								sendFilteredSonifiables();
 							}
-							case SAVE_MAPPING -> EventQueues.toUI.add(new Msg<>(MsgToUIType.ERROR, "SAVE_MAPPING is not yet implemented"));
-							case LOAD_MAPPING -> EventQueues.toUI.add(new Msg<>(MsgToUIType.ERROR, "LOAD_MAPPING is not yet implemented"));
 							case START -> {
-								if (StateManager.isAlreadySonifying) return;
-								StateManager.isAlreadySonifying = true;
-								Mapping mapping = (Mapping) msg.data;
-								System.out.println(mapping);
-								MusicData musicData = sonifyMapping(mapping);
+								if (StateManager.isCurrentlySonifying) return;
+								StateManager.isCurrentlySonifying = true;
+								currentMapping = (Mapping) msg.data;
+								MusicData musicData = sonifyMapping(currentMapping);
 								if (musicData != null)
 									EventQueues.toUI.add(new Msg<>(MsgToUIType.FINISHED, musicData));
+								isCurrentlySonifying = false;
 							}
-							case BACK_IN_MAIN_SCENE -> StateManager.isAlreadySonifying = false;
+							case ENTERED_MAIN_SCENE -> {
+								StateManager.isCurrentlySonifying = false;
+								if (currentMapping != null) EventQueues.toUI.add(new Msg<>(MsgToUIType.MAPPING, currentMapping));
+							}
 						}
 					}
 
@@ -231,8 +230,12 @@ public class StateManager {
 			for (int i = 0; i < sonifiableNames.length; i++) {
 				sonifiableNames[i] = DataRepo.getSonifiableName(sonifiables[i]);
 			}
+			isCurrentlySonifying = false;
 			return new MusicData(pbc, sonifiableNames, priceMap.values());
-		}, null);
+		}, null, ie -> {
+			isCurrentlySonifying = false;
+			getInterruptedExceptionHandler().accept(ie);
+		});
 	}
 
 	public static Consumer<InterruptedException> getInterruptedExceptionHandler() {
