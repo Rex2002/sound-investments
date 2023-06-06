@@ -175,8 +175,13 @@ public class UnorderedList<E> implements List<E>, RandomAccess {
 	}
 
 	public void removeLater(int index) {
-		// Assumes that `index` isn't already in the `toRemove` array
 		assert toRemove.length != 0 : "toRemove cannot be an empty array";
+		// Check that index isn't already in removeLater
+		for (int i = 0; i < toRemoveAmount; i++) {
+			if (toRemove[i] == index)
+				return;
+		}
+
 		if (toRemove.length == 0) {
 			toRemove = new int[DEFAULT_CAPACITY];
 		} else if (toRemove.length == toRemoveAmount) {
@@ -187,10 +192,11 @@ public class UnorderedList<E> implements List<E>, RandomAccess {
 	}
 
 	public void applyRemoves() {
-		for (int i = 0; i < toRemoveAmount; i++) {
+		int l = toRemoveAmount;
+		for (int i = 0; i < l; i++) {
 			// Find smallest index in sublist
 			int min = i;
-			for (int j = i + 1; j < toRemoveAmount; j++) {
+			for (int j = 0; j < toRemoveAmount; j++) {
 				if (toRemove[j] < toRemove[min])
 					min = j;
 			}
@@ -198,10 +204,13 @@ public class UnorderedList<E> implements List<E>, RandomAccess {
 			int idxToRemove = toRemove[min] - i; // offset by i, because we already removed i elements before
 			if (idxToRemove >= 0 && idxToRemove < len)
 				quickRemove(idxToRemove);
+			// Remove min element from toRemove
+			toRemove[min] = toRemove[toRemoveAmount - 1];
+			toRemoveAmount--;
 		}
 		// Shrink toRemove array if it's more than double toRemoveAmount
 		if (toRemoveAmount < toRemove.length >> 1) {
-			toRemove = new int[toRemoveAmount];
+			toRemove = new int[toRemove.length >> 1];
 		}
 		toRemoveAmount = 0;
 	}
@@ -209,9 +218,15 @@ public class UnorderedList<E> implements List<E>, RandomAccess {
 	@SuppressWarnings("unchecked")
 	public E remove(int index) {
 		for (int i = 0; i < toRemoveAmount; i++)
-			if (index < toRemove[i])
+			if (index == toRemove[i]) {
+				toRemove[i] = toRemove[toRemoveAmount - 1];
+				toRemoveAmount--;
+			}
+			else if (index > toRemove[i]) {
 				index--;
-		applyRemoves();
+			}
+		if (toRemoveAmount > 0)
+			applyRemoves();
 		Objects.checkIndex(index, len);
 		E res = (E) arr[index];
 		quickRemove(index);
