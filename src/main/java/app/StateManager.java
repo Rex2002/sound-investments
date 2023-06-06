@@ -78,7 +78,8 @@ public class StateManager {
 								Mapping mapping = (Mapping) msg.data;
 								System.out.println(mapping);
 								MusicData musicData = sonifyMapping(mapping);
-								EventQueues.toUI.add(new Msg<>(MsgToUIType.FINISHED, musicData));
+								if (musicData != null)
+									EventQueues.toUI.add(new Msg<>(MsgToUIType.FINISHED, musicData));
 							}
 							case BACK_IN_MAIN_SCENE -> StateManager.isAlreadySonifying = false;
 						}
@@ -184,12 +185,11 @@ public class StateManager {
 		return mapping;
 	}
 
-	// TODO: Method is closely related to #80 - should potentially be updated,
-	// depending on result of that issue
 	public static IntervalLength determineIntervalLength(Calendar start, Calendar end) {
+		if (start.get(Calendar.YEAR) < 2020) return IntervalLength.DAY;
 		int yearDiff = end.get(Calendar.YEAR) - start.get(Calendar.YEAR);
 		assert yearDiff >= 0;
-		if (yearDiff >= 5) return IntervalLength.DAY;
+		if (yearDiff >= 3) return IntervalLength.DAY;
 		if (yearDiff >= 1) return IntervalLength.HOUR;
 		return IntervalLength.MIN;
 	}
