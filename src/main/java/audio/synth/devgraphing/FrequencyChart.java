@@ -1,4 +1,4 @@
-package audio.synth;
+package audio.synth.devgraphing;
 
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
