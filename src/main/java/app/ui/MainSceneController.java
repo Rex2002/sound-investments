@@ -106,6 +106,7 @@ public class MainSceneController implements Initializable {
     private CheckEQService checkEQService;
     private Mapping mapping = new Mapping();
     private boolean currentlyUpdatingCB = false;
+    private boolean startedSonification = true;
 
     private String[] locations = { "Deutschland" }; // TODO: Get available locations from StateManager
 
@@ -166,6 +167,7 @@ public class MainSceneController implements Initializable {
                         categoriesCB.getSelectionModel().select(categoryIdx);
                     }
                     case ERROR -> {
+                        startedSonification = false;
                         displayError((String) msg.data, "Interner Fehler");
                         if (loadingAnimTimer != null) loadingAnimTimer.cancel();
                         if (loading != null) {
@@ -178,7 +180,10 @@ public class MainSceneController implements Initializable {
                         showMapping();
                         enableBtnIfValid();
                     }
-                    case FINISHED -> switchToMusicScene((MusicData) msg.data);
+                    case FINISHED -> {
+                        startedSonification = false;
+                        switchToMusicScene((MusicData) msg.data);
+                    }
                 }
             }
         });
@@ -234,8 +239,9 @@ public class MainSceneController implements Initializable {
 
         startBtn.setOnAction(ev -> {
             try {
+                startBtn.setDisable(true);
+                startedSonification = true;
                 EventQueues.toSM.add(new Msg<>(MsgToSMType.START, mapping));
-                // startBtn.setDisable(true);
                 // Show loading image
                 loading = new ImageView(new Image(getClass().getResource("/loading.png").toExternalForm()));
                 double loadingWidth = 150;
@@ -248,6 +254,7 @@ public class MainSceneController implements Initializable {
                 // Animate loading image
                 loadingAnimTimer = new Timer();
                 int nextFrameInMs = 60;
+                loadingAnimTimer.cancel(); // In case the animation was already playing
                 loadingAnimTimer.scheduleAtFixedRate(new TimerTask() {
                     private int counter = 1;
                     public void run() {
@@ -642,7 +649,7 @@ public class MainSceneController implements Initializable {
     }
 
     private void enableBtnIfValid() {
-        if (mapping.isValid())
+        if (!startedSonification && mapping.isValid())
             startBtn.setDisable(false);
         else
             startBtn.setDisable(true);
