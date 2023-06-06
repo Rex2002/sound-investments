@@ -170,6 +170,7 @@ public class MainSceneController implements Initializable {
                     case MAPPING -> {
                         mapping = (Mapping) msg.data;
                         showMapping();
+                        enableBtnIfValid();
                     }
                     case FINISHED -> switchToMusicScene((MusicData) msg.data);
                 }
