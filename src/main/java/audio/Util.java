@@ -1,7 +1,7 @@
 package audio;
 
 
-import audio.synth.Complex;
+ import audio.synth.devgraphing.Complex;
 
 import java.util.Arrays;
 public class Util {
