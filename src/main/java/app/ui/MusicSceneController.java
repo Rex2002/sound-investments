@@ -220,10 +220,11 @@ public class MusicSceneController implements Initializable {
 	public void switchToMainScene(ActionEvent event) throws IOException {
 		// Tell StateManager, that we are back in the main scene again
 		try {
-		EventQueues.toSM.put(new Msg<>(MsgToSMType.ENTERED_MAIN_SCENE));
+			EventQueues.toSM.put(new Msg<>(MsgToSMType.ENTERED_MAIN_SCENE));
 		} catch (InterruptedException ie) {
 			// TODO: Error Handling
 		}
+		myTimer.cancel();
 		FXMLLoader loader = new FXMLLoader(getClass().getResource("/MusicScene.fxml"));
         Parent root = loader.load();
 		root = FXMLLoader.load(getClass().getResource("/MainScene.fxml"));
