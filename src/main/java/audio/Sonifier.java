@@ -45,7 +45,7 @@ public class Sonifier {
         double[] backingLine = backing.getBacking(lengthInBeats / 4);
         synthLines[synthLines.length - 1] = backingLine;
 
-        double[][] outArrays = concatArrays(synthLines, evInstrs);
+        double[][] outArrays = concatArrays(evInstrs, synthLines);
 
         double[] out = Mixer.mixAudioStreams(outArrays);
         out = Effect.antiAliasing(out);

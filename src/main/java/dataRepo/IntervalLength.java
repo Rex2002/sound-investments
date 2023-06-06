@@ -23,8 +23,8 @@ public enum IntervalLength {
 	public String toString(API api) {
 		return switch (this) {
 			case MIN -> switch (api) {
-				case LEEWAY -> "1m";
-				default -> "1min";
+				case LEEWAY -> "5m";
+				default -> "5min";
 			};
 			case HOUR -> switch (api) {
 				case MARKETSTACK -> "1hour";

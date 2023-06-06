@@ -7,7 +7,6 @@ import java.util.ResourceBundle;
 import java.util.Timer;
 import java.util.TimerTask;
 import audio.synth.playback.PlaybackController;
-import dataRepo.DateUtil;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -39,6 +38,7 @@ import java.util.Calendar;
 import java.util.List;
 
 import util.ArrayFunctions;
+import util.DateUtil;
 import app.AppError;
 import app.communication.EventQueues;
 import app.communication.Msg;

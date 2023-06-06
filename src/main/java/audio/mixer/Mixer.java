@@ -15,9 +15,17 @@ public class Mixer {
 
         double[] out = new double[maxLength];
 
-        for (double[] audioStream : audioStreams) {
+        for (int i = 0; i < audioStreams.length; i++) {
+            double[] audioStream = audioStreams[i];
+
+            double mixFactor = 1;
+            // reduce amount of backing to 90% of original volume
+            if (i == audioStream.length -1) {
+                mixFactor = 0.9;
+            }
+
             for (int j = 0; j < audioStream.length; j++) {
-                out[j] += audioStream[j];
+                out[j] += mixFactor * audioStream[j];
             }
         }
         return out;

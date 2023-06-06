@@ -10,9 +10,7 @@ import java.util.ResourceBundle;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.function.Function;
-
-import com.groupdocs.metadata.internal.c.a.pd.internal.html.dom.events.MouseEvent;
-
+import javafx.application.Platform;
 import javafx.collections.ObservableList;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -41,6 +39,7 @@ import javafx.scene.shape.Line;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 import util.ArrayFunctions;
+import util.DateUtil;
 import app.AppError;
 import app.communication.EventQueues;
 import app.communication.Msg;
@@ -56,7 +55,6 @@ import app.mapping.PointData;
 import app.mapping.RangeData;
 import audio.synth.EvInstrEnum;
 import audio.synth.InstrumentEnum;
-import dataRepo.DateUtil;
 import dataRepo.Sonifiable;
 import dataRepo.SonifiableID;
 import dataRepo.FilterFlag;
