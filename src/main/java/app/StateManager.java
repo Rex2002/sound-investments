@@ -30,12 +30,6 @@ public class StateManager {
 	public static SonifiableFilter sonifiableFilter = new SonifiableFilter("", FilterFlag.ALL);
 
 	public static void main(String[] args) {
-		testUI(args);
-		// testSound(args);
-
-	}
-
-	public static void testUI(String[] args) {
 		Thread th = new Thread(() -> Application.launch(App.class, args));
 		th.start();
 		call(DataRepo::init);
@@ -167,24 +161,6 @@ public class StateManager {
 		};
 	}
 
-	// Change the mapping to test different functionalities
-	public static Mapping getTestMapping() {
-		Mapping mapping = new Mapping();
-		try {
-			mapping.setStartDate(DateUtil.calFromDateStr("2022-06-16"));
-			mapping.setEndDate(DateUtil.calFromDateStr("2023-05-16"));
-			mapping.setSoundLength(60);
-
-			Sonifiable s = new Stock("SAP", new SonifiableID("SAP", "XETRA"));
-			mapping.setParam(InstrumentEnum.RETRO_SYNTH, s, InstrParam.PITCH, LineData.PRICE);
-			mapping.setParam(InstrumentEnum.RETRO_SYNTH, s, InstrParam.RELVOLUME, LineData.MOVINGAVG);
-			mapping.setHighPass(true);
-		} catch (Throwable e) {
-			e.printStackTrace();
-		}
-		return mapping;
-	}
-
 	public static IntervalLength determineIntervalLength(Calendar start, Calendar end) {
 		if (start.get(Calendar.YEAR) < 2020) return IntervalLength.DAY;
 		int yearDiff = end.get(Calendar.YEAR) - start.get(Calendar.YEAR);
@@ -257,39 +233,6 @@ public class StateManager {
 			}
 			return new MusicData(pbc, sonifiableNames, priceMap.values());
 		}, null);
-	}
-
-	public static void testSound(String[] args) throws AppError {
-		// Get Mapping & Price Data
-		call(DataRepo::init);
-		Mapping mapping = getTestMapping();
-		PlaybackController pbc = sonifyMapping(mapping).pbc;
-		pbc.startPlayback();
-		boolean running = true;
-		Scanner in = new Scanner(System.in);
-		while (running) {
-			System.out.println("Please enter your next control action: ");
-
-			String controlAction = in.next();
-			System.out.println("ControlAction: " + controlAction);
-			switch (controlAction) {
-				// resume
-				case "r" -> pbc.play();
-				// pause
-				case "p" -> pbc.pause();
-				// jump forward 1s
-				case "jf" -> pbc.skipForward();
-				// jump backward 1s
-				case "jb" -> pbc.skipBackward();
-				case "s" -> {
-					pbc.kill();
-					running = false;
-				}
-				case "rs" -> pbc.reset();
-				case "sv" -> pbc.save(new File("out.wav"));
-			}
-		}
-		in.close();
 	}
 
 	public static Consumer<InterruptedException> getInterruptedExceptionHandler() {
