@@ -14,10 +14,6 @@ import static audio.Constants.SAMPLE_RATE;
 
 
 public class Test {
-    static String waveFileName = "Casio-MT-45-Beguine.wav";
-    static String waveFileFunk = "Yamaha-PSS-280-Funk.wav";
-    static String waveFileLoFi = "lofi_research.wav";
-
     public static void main(String[] args) {
         System.out.println("Hello Sound");
         new Test();

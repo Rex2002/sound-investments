@@ -35,12 +35,8 @@ public class VFormationAnalyzer {
                     }
                 }
 
-                if (downwardImpulse && endClose > startClose) {
-                    // V-Formation gefunden
-                    Vformations[i] = true;
-                } else {
-                    Vformations[i] = false;
-                }
+                // V-Formation gefunden
+                Vformations[i] = downwardImpulse && endClose > startClose;
             }
         }
 

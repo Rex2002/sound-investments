@@ -27,9 +27,9 @@ public class SynthLine {
         private Envelope modEnv;
     }
 
-    InstrumentData data;
+    final InstrumentData data;
     double[] out;
-    int sampleNumber;
+    final int sampleNumber;
 
     public SynthLine(InstrumentData data, double length) {
         this.data = data;

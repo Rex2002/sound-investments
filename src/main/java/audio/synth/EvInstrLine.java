@@ -6,8 +6,8 @@ import audio.mixer.SampleLoader;
 import static audio.Constants.*;
 
 public class EvInstrLine {
-    EvInstrData data;
-    int sampleNumber;
+    final EvInstrData data;
+    final int sampleNumber;
 
     public EvInstrLine(EvInstrData data, double length){
         this.data = data;

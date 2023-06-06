@@ -19,8 +19,8 @@ public class FrequencyChart extends JFrame {
 
     double[] data;
     Complex[] complexData;
-    int graphDefinition;
-    String title;
+    final int graphDefinition;
+    final String title;
 
     boolean useFFT = false;
 
