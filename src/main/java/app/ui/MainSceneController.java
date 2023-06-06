@@ -3,17 +3,13 @@ package app.ui;
 import java.io.IOException;
 import java.net.URL;
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 import java.util.ResourceBundle;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.function.Function;
-import javafx.application.Platform;
 import javafx.collections.ObservableList;
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
@@ -269,6 +265,10 @@ public class MainSceneController implements Initializable {
             }
         });
 
+        filterCB.setCursor(Cursor.HAND);
+        locationCB.setCursor(Cursor.HAND);
+        categoriesCB.setCursor(Cursor.HAND);
+
         mapping.setOnInstrAdded(inst -> instAdded(inst.toString()));
         mapping.setOnEvInstrAdded(inst -> instAdded(inst.toString()));
         mapping.setOnInstrRemoved(inst -> instRemoved(inst.toString()));
@@ -361,6 +361,7 @@ public class MainSceneController implements Initializable {
 
     public void addToCheckList(Sonifiable sonifiable) {
         CheckBox cBox = new CheckBox(sonifiable.getName());
+        cBox.setCursor(Cursor.HAND);
         cBox.setUserData(sonifiable);
 
         if (mapping.hasSonifiable(sonifiable.getId())) {
@@ -458,6 +459,7 @@ public class MainSceneController implements Initializable {
             evInstCB.getItems().addAll(evInsts);
             evInstCB.setLayoutX(cb1X);
             evInstCB.setLayoutY(cb1Y);
+            evInstCB.setCursor(Cursor.HAND);
             if (showMapping) {
                 for (EvInstrMapping evInstMap : mapping.getEventInstruments()) {
                     if (evInstMap.getData().getData().equals(eparam) && evInstMap.getData().getId().equals(sonifiable.getId())) {
@@ -483,10 +485,12 @@ public class MainSceneController implements Initializable {
             instCB.getItems().addAll(instKeys);
             instCB.setLayoutX(cb1X);
             instCB.setLayoutY(cb1Y);
+            instCB.setCursor(Cursor.HAND);
 
             ChoiceBox<String> paramCB = new ChoiceBox<>();
             paramCB.setLayoutX(cb2X);
             paramCB.setLayoutY(cb2Y);
+            paramCB.setCursor(Cursor.HAND);
             paramCB.setDisable(true);
             if (showMapping) {
                 MappedInstr mi = mapping.get(new ExchangeData<>(sonifiable.getId(), eparam));

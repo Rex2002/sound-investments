@@ -33,6 +33,7 @@ import javafx.scene.Scene;
 import javafx.scene.chart.LineChart;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
+import javafx.scene.Cursor;
 import javafx.scene.Node;
 import java.util.Calendar;
 import java.util.List;
@@ -74,6 +75,8 @@ public class MusicSceneController implements Initializable {
 	private Scene scene;
 	@FXML
 	private Button exportBtn;
+	@FXML
+	private Button closeBtn;
 	@FXML
 	private Slider musicSlider;
 	@FXML
@@ -127,12 +130,19 @@ public class MusicSceneController implements Initializable {
 				public void handle(MouseEvent event) {
 					try {
 						stopSound(event);
+						playBtn.setImage(playImage);
 					} catch (IOException e) {
-						// TODO Auto-generated catch block
+						// TODO: Error Handling
 						e.printStackTrace();
 					}
 				}
 		});
+		playBtn.setCursor(Cursor.HAND);
+		forBtn.setCursor(Cursor.HAND);
+		backBtn.setCursor(Cursor.HAND);
+		stopBtn.setCursor(Cursor.HAND);
+		exportBtn.setCursor(Cursor.HAND);
+		closeBtn.setCursor(Cursor.HAND);
 
 		Platform.runLater(() -> {
 			setupSlider();

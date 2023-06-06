@@ -186,6 +186,7 @@ public class Mapping {
 	}
 
 	public void addEvInstr(EvInstrEnum instr, Sonifiable sonifiable, PointData eparam) throws AppError {
+		if (instr == null) return;
 		if (evInstrAmount == MAX_EV_INSTR_SIZE)
 			throw new AppError("Zu viele Event-Instrumente. Ein Mapping darf höchstens "
 					+ Integer.toString(MAX_EV_INSTR_SIZE) + " Event-Instrumente haben");
