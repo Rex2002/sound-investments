@@ -98,6 +98,7 @@ public class MainSceneController implements Initializable {
     private LocalDate minDateEnd = LocalDate.now().minusMonths(3).plusDays(3);
     private LocalDate maxDateEnd = LocalDate.now();
 
+    private Timer loadingAnimTimer;
     private ImageView loading;
     private Image closeImg;
     private CheckEQService checkEQService;
@@ -157,7 +158,14 @@ public class MainSceneController implements Initializable {
                         }
                     }
                     case LOADABLE_MAPPINGS -> System.out.println("ERROR: Msg-Type LOADABLE_MAPPINGS is not yet implemented");
-                    case ERROR -> displayError((String) msg.data, "Interner Fehler");
+                    case ERROR -> {
+                        displayError((String) msg.data, "Interner Fehler");
+                        if (loadingAnimTimer != null) loadingAnimTimer.cancel();
+                        if (loading != null) {
+                            anchor.getChildren().remove(loading);
+                            loading = null;
+                        }
+                    }
                     case VALIDATION_DONE -> System.out.println("ERROR: Msg-Type VALIDATION_DONE is not yet implemented");
                     case VALIDATION_ERROR -> displayError((String) msg.data, "Ungültiges Mapping");
                     case FINISHED -> switchToMusicScene((MusicData) msg.data);
@@ -228,7 +236,7 @@ public class MainSceneController implements Initializable {
                 loading.setLayoutY(anchor.getScene().getHeight() / 2 - loadingHeight / 2);
                 anchor.getChildren().add(loading);
                 // Animate loading image
-                Timer loadingAnimTimer = new Timer();
+                loadingAnimTimer = new Timer();
                 int nextFrameInMs = 60;
                 loadingAnimTimer.scheduleAtFixedRate(new TimerTask() {
                     private int counter = 1;
