@@ -17,6 +17,7 @@ import util.DateUtil;
 import util.FutureList;
 
 import java.io.File;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
@@ -186,6 +187,31 @@ public class StateManager {
 		return mapping;
 	}
 
+	public static void padPrices(Map<SonifiableID, List<Price>> priceMap, Calendar startDate, Calendar endDate, IntervalLength interval, int maxLength){
+		for(SonifiableID id : priceMap.keySet()){
+			List<Price> prices = priceMap.get(id);
+			int lengthDiff = maxLength - prices.size();
+			if(lengthDiff == 0){
+				continue;
+			}
+
+			double dayDifferenceStart = ChronoUnit.DAYS.between( startDate.toInstant(), prices.get(0).getDay().toInstant());
+			double dayDifferenceEnd = ChronoUnit.DAYS.between(prices.get(prices.size()-1).getDay().toInstant(), endDate.toInstant());
+
+			// find the fraction of days that should be padded before the start
+			int paddingsBefore = (int) ((maxLength - prices.size()) * (dayDifferenceStart / (dayDifferenceEnd + dayDifferenceStart)));
+			for(int i = 0; i < paddingsBefore && prices.size() < maxLength; i++){
+				prices.add(0, new Price(startDate, prices.get(0).start, prices.get(0).end, 0.0,0.0,0.0,0.0));
+			}
+			// fill the rest (which is the equivalent to paddingsAfter) until size is maxLength
+			while(prices.size() < maxLength){
+				prices.add(new Price(startDate, prices.get(0).start, prices.get(0).end, 0.0,0.0,0.0,0.0));
+			}
+			// not quite sure if this is necessary, but not taking any risks for weird bugs...
+			priceMap.put(id, prices);
+		}
+	}
+  
 	public static IntervalLength determineIntervalLength(Calendar start, Calendar end) {
 		if (start.get(Calendar.YEAR) < 2020) return IntervalLength.DAY;
 		int yearDiff = end.get(Calendar.YEAR) - start.get(Calendar.YEAR);
@@ -207,17 +233,19 @@ public class StateManager {
 			try {
 				List<List<Price>> prices = getPricesFutures.getAll(new ArrayList<>(sonifiables.length));
 				assert prices.size() == sonifiables.length;
+        int maxPriceLen = 0;
 				for (int i = 0; i < prices.size(); i++) {
 					if (prices.get(i) == null || prices.get(i).size() == 0)
 						throw new AppError("Fehler beim Einholen von Preis-Daten von " + sonifiables[i].getSymbol());
+          maxPriceLen = Math.max(maxPriceLen, prices.get(i).size());
 					priceMap.put(sonifiables[i], prices.get(i));
 				}
+        padPrices(priceMap, mapping.getStartDate(), mapping.getEndDate(), intervalLength, maxPriceLen);
 			} catch (ExecutionException e) {
 				throw new AppError(e.getMessage());
 			} catch (InterruptedException e) {
 				throw new AppError("Fehler beim Einholen von Preisdaten.");
 			}
-
 
 			// Create InstrumentDataRaw objects for Harmonizer
 			InstrumentMapping[] instrMappings = mapping.getMappedInstruments();
