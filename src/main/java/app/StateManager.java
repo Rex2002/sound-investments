@@ -5,6 +5,7 @@ import app.mapping.*;
 import app.ui.App;
 import audio.Sonifier;
 import audio.synth.EvInstrData;
+import audio.synth.EvInstrEnum;
 import audio.synth.InstrumentEnum;
 import audio.synth.playback.PlayControlEvent;
 import audio.synth.playback.PlayControlEventsEnum;
@@ -219,10 +220,20 @@ public class StateManager {
 						feedbackEcho,
 						onOffEcho, delayReverb, feedbackReverb, onOffReverb, frequency, highPass, onOffFilter, pan));
 			}
-
-			EvInstrData[] evInstrDatas = new EvInstrData[] {};
 			InstrumentDataRaw[] passedInstrRawDatas = new InstrumentDataRaw[instrRawDatas.size()];
 			passedInstrRawDatas = instrRawDatas.toArray(passedInstrRawDatas);
+
+			List<EvInstrData> evInstrRawDatas = new ArrayList<>();
+			for(EvInstrMapping evInstrMap : mapping.getEventInstruments()){
+				if(evInstrMap == null || evInstrMap.getData() == null){
+					continue;
+				}
+				EvInstrEnum instrType = evInstrMap.getInstrument();
+				boolean[] triggers = calcPointData(evInstrMap.getData(), priceMap);
+				evInstrRawDatas.add(new EvInstrData(instrType, triggers));
+			}
+			EvInstrData[] evInstrDatas = new EvInstrData[evInstrRawDatas.size()];
+			evInstrDatas = evInstrRawDatas.toArray(evInstrDatas);
 
 			PlaybackController pbc = Sonifier.sonify(passedInstrRawDatas, evInstrDatas, mapping.getSoundLength());
 

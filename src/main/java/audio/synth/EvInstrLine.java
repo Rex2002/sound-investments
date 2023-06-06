@@ -19,13 +19,14 @@ public class EvInstrLine {
         double[] sample = SampleLoader.loadEventSample(data.type.toFileName());
 
 
-        int samplesPer16th = 60 / (TEMPO * 4) * SAMPLE_RATE * CHANNEL_NO;
-        int lastCopy = -samplesPer16th;
+        int samplesPer16th = (int) (60 / ((double)TEMPO * 4) * SAMPLE_RATE * CHANNEL_NO);
+        int lastCopy = - 2* samplesPer16th;
 
-        for(int i = 0; i < out.length; i++){
-            if(data.values[Util.getRelPosition(i,out.length,data.values.length)] && lastCopy + samplesPer16th < i) {
+        for(int i = 0; i < out.length; i+=samplesPer16th){
+            if(data.values[Util.getRelPosition(i,out.length,data.values.length)] && lastCopy + 2 * samplesPer16th < i) {
                 lastCopy = i;
-                System.arraycopy(sample, 0, out, i, sample.length);
+                if(i + sample.length < out.length) System.arraycopy(sample, 0, out, i, sample.length);
+                //else System.arraycopy(sample, 0, out, i, sample.length - ());
             }
         }
 

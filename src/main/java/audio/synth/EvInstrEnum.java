@@ -17,7 +17,7 @@ public enum EvInstrEnum {
 
     public static EvInstrEnum fromString(String s) {
         return switch (s) {
-            case "Gong" -> BOOM;
+            case "Boom" -> BOOM;
             case "Ging" -> GING;
             case "Gang" -> GANG;
             default     -> null;
