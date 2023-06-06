@@ -77,6 +77,8 @@ public class StateManager {
 							case ENTERED_MAIN_SCENE -> {
 								StateManager.isCurrentlySonifying = false;
 								if (currentMapping != null) EventQueues.toUI.add(new Msg<>(MsgToUIType.MAPPING, currentMapping));
+								EventQueues.toUI.add(new Msg<>(MsgToUIType.SONIFIABLE_FILTER, sonifiableFilter));
+								sendFilteredSonifiables();
 							}
 						}
 					}

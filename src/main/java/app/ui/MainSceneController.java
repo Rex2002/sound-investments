@@ -159,6 +159,12 @@ public class MainSceneController implements Initializable {
                             addToCheckList(s);
                         }
                     }
+                    case SONIFIABLE_FILTER -> {
+                        SonifiableFilter filter = (SonifiableFilter) msg.data;
+                        searchBar.setText(filter.prefix);
+                        int categoryIdx = ArrayFunctions.findIndex(categoryValues, c -> c.equals(filter.categoryFilter));
+                        categoriesCB.getSelectionModel().select(categoryIdx);
+                    }
                     case ERROR -> {
                         displayError((String) msg.data, "Interner Fehler");
                         if (loadingAnimTimer != null) loadingAnimTimer.cancel();
@@ -321,13 +327,13 @@ public class MainSceneController implements Initializable {
         errorMes.setId("errorMessage");
         errorMes.setLayoutY(50);
         errorMes.setWrapText(true);
-        
+
         errorMes.setLayoutX(20);
         Label errorTit = new Label(errorTitle);
         errorTit.setId("errorTitle");
         errorTit.setLayoutY(20);
         errorTit.setLayoutX(20);
-        
+
         errorTit.setWrapText(true);
         Button close = new Button("Schließen");
         close.setOnMouseClicked(event ->{
