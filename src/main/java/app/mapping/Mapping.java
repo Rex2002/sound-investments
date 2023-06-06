@@ -150,8 +150,28 @@ public class Mapping {
 	}
 
 	public void rmSonifiable(Sonifiable sonifiable) {
-		// TODO: Add logic to remove sonifiable from mapping
 		sonifiables.remove(sonifiable);
+		for (InstrumentMapping instrMap : mappedInstruments) {
+			for (InstrParam iparam : InstrParam.values()) {
+				ExchangeData<? extends ExchangeParam> ed = instrMap.get(iparam);
+				if (ed != null && ed.getId() == sonifiable.getId())
+					instrMap.rm(iparam);
+			}
+			if (onInstrRemoved != null && instrMap.isEmpty())
+				onInstrRemoved.accept(instrMap.getInstrument());
+		}
+		for (int i = 0; i < evInstrAmount; i++) {
+			ExchangeData<PointData> ed = eventInstruments[i].getData();
+			if (ed != null && ed.getId() == sonifiable.getId()){
+				rmEvInstr(i);
+				i--;
+			}
+		}
+		if (delayReverb    != null && delayReverb.getId()    == sonifiable.getId()) delayReverb    = null;
+		if (feedbackReverb != null && feedbackReverb.getId() == sonifiable.getId()) feedbackReverb = null;
+		if (cutoff         != null && cutoff.getId()         == sonifiable.getId()) cutoff         = null;
+		if (onOffReverb    != null && onOffReverb.getId()    == sonifiable.getId()) onOffReverb    = null;
+		if (onOffFilter    != null && onOffFilter.getId()    == sonifiable.getId()) onOffFilter    = null;
 	}
 
 	public boolean hasSonifiable(SonifiableID id) {
@@ -185,7 +205,10 @@ public class Mapping {
 				throw new AppError("Can't remove non-existent Event-Instrument.");
 			e = eventInstruments[idx].getData();
 		}
+		rmEvInstr(idx);
+	}
 
+	private void rmEvInstr(int idx) {
 		if (onEvInstrRemoved != null) onEvInstrRemoved.accept(eventInstruments[idx].getInstrument());
 		eventInstruments[idx] = eventInstruments[evInstrAmount - 1];
 		eventInstruments[evInstrAmount - 1] = null;
@@ -248,7 +271,7 @@ public class Mapping {
 		};
 	}
 
-	public void rmParam(InstrumentEnum instr, SonifiableID sonifiable, InstrParam iparam) throws AppError {
+	public void rmParam(InstrumentEnum instr, InstrParam iparam) throws AppError {
 		InstrumentMapping instrMap = ArrayFunctions.find(mappedInstruments, x -> x.getInstrument() == instr);
 		switch (iparam) {
 			case PITCH           -> instrMap.setPitch(null);
@@ -293,7 +316,7 @@ public class Mapping {
 		};
 	}
 
-	public void rmParam(SonifiableID sonifiable, InstrParam iparam) throws AppError {
+	public void rmParam(InstrParam iparam) throws AppError {
 		switch (iparam) {
 			case DELAY_REVERB    -> this.delayReverb = null;
 			case FEEDBACK_REVERB -> this.feedbackReverb = null;

@@ -22,7 +22,7 @@
          </font>
       </Label>
       <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#121315" height="200.0" layoutY="624.0" stroke="#121315" strokeType="INSIDE" width="1586.0" />
-      <LineChart fx:id="lineChart" layoutX="-4.0" layoutY="106.0" prefHeight="516.0" prefWidth="1584.0">
+      <LineChart fx:id="lineChart" layoutX="0.0" layoutY="106.0" prefHeight="516.0" prefWidth="1570.0">
         <xAxis>
           <NumberAxis side="BOTTOM" fx:id="xAxis" />
         </xAxis>
@@ -45,7 +45,7 @@
             <Image url="/back_btn.png" />
          </image>
       </ImageView>
-      <Slider fx:id="musicSlider" layoutX="35.0" layoutY="601.0" prefHeight="14.0" prefWidth="1534.0" />
+      <Slider fx:id="musicSlider" layoutX="35.0" layoutY="620.0" prefHeight="14.0" prefWidth="1526.0" />
       <ImageView fx:id="playBtn" fitHeight="80.0" fitWidth="80.0" layoutX="1163.0" layoutY="684.0" pickOnBounds="true" preserveRatio="true">
       </ImageView>
       <ImageView fx:id="stopBtn" fitHeight="80.0" fitWidth="80.0" layoutX="1306.0" layoutY="684.0" onMouseDragExited="#stopSound" pickOnBounds="true" preserveRatio="true">

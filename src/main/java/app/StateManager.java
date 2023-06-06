@@ -12,10 +12,13 @@ import audio.synth.playback.PlaybackController;
 import dataAnalyzer.*;
 import dataRepo.*;
 import javafx.application.Application;
+import util.DateUtil;
+import util.FutureList;
 
 import java.io.File;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
 
 // This class runs in the main thread and coordinates all tasks and the creation of the UI thread
@@ -76,7 +79,8 @@ public class StateManager {
 								Mapping mapping = (Mapping) msg.data;
 								System.out.println(mapping);
 								MusicData musicData = sonifyMapping(mapping);
-								EventQueues.toUI.add(new Msg<>(MsgToUIType.FINISHED, musicData));
+								if (musicData != null)
+									EventQueues.toUI.add(new Msg<>(MsgToUIType.FINISHED, musicData));
 							}
 							case BACK_IN_MAIN_SCENE -> StateManager.isAlreadySonifying = false;
 						}
@@ -182,7 +186,7 @@ public class StateManager {
 		return mapping;
 	}
 
-	public static void padPrices(Map<SonifiableID, List<Price>> priceMap, Calendar startDate, Calendar endDate, IntervalLength interval, int maxLength){
+	public static void padPrices(Map<SonifiableID, List<Price>> priceMap, Calendar startDate, Calendar endDate, IntervalLength interval, int maxLength) {
 		for(SonifiableID id : priceMap.keySet()){
 			List<Price> prices = priceMap.get(id);
 			int lengthDiff = maxLength - prices.size();
@@ -204,27 +208,48 @@ public class StateManager {
 			}
 			// not quite sure if this is necessary, but not taking any risks for weird bugs...
 			priceMap.put(id, prices);
+			System.out.println("Updated length: " + prices.size());
 		}
+	}
 
+	public static IntervalLength determineIntervalLength(Calendar start, Calendar end) {
+		if (start.get(Calendar.YEAR) < 2020) return IntervalLength.DAY;
+		int yearDiff = end.get(Calendar.YEAR) - start.get(Calendar.YEAR);
+		assert yearDiff >= 0;
+		if (yearDiff >= 3) return IntervalLength.DAY;
+		if (yearDiff >= 1) return IntervalLength.HOUR;
+		return IntervalLength.MIN;
 	}
 
 	public static MusicData sonifyMapping(Mapping mapping) {
 		return call(() -> {
-			// TODO: Normalization of prices is currently only relative to the prices of the same stock - is that the goal?
-			// TODO: Validate that we have enough price data for mapping
-			int pricesLen = 0;
 			HashMap<SonifiableID, List<Price>> priceMap = new HashMap<>();
-			SonifiableID[] sonifiableSet = mapping.getMappedSonifiableIDs().toArray(new SonifiableID[0]);
-			int maxPriceLen = 0;
-			for (SonifiableID sonifiableID : sonifiableSet) {
-				// TODO: Make sure all prices lists have the same length
-				List<Price> prices = DataRepo.getPrices(sonifiableID, mapping.getStartDate(), mapping.getEndDate(), IntervalLength.DAY);
-				pricesLen = prices.size();
-				maxPriceLen = Math.max(maxPriceLen, pricesLen);
-				System.out.println("PricesLen for " + sonifiableID + ": " + pricesLen);
-				priceMap.put(sonifiableID, prices);
+			SonifiableID[] sonifiables = mapping.getMappedSonifiableIDs().toArray(new SonifiableID[0]);
+			FutureList<List<Price>> getPricesFutures = new FutureList<>(sonifiables.length);
+			IntervalLength intervalLength = determineIntervalLength(mapping.getStartDate(), mapping.getEndDate());
+			for (SonifiableID sonifiableID : sonifiables) {
+				getPricesFutures.add(DataRepo.getPrices(sonifiableID, mapping.getStartDate(), mapping.getEndDate(), intervalLength));
 			}
+
+			int maxPriceLen = 0;
+			try {
+				List<List<Price>> prices = getPricesFutures.getAll(new ArrayList<>(sonifiables.length));
+				assert prices.size() == sonifiables.length;
+				for (int i = 0; i < prices.size(); i++) {
+					if (prices.get(i) == null || prices.get(i).size() == 0)
+						throw new AppError("Fehler beim Einholen von Preis-Daten von " + sonifiables[i].getSymbol());
+					priceMap.put(sonifiables[i], prices.get(i));
+					System.out.println("Length: " + prices.get(i).size());
+					maxPriceLen = Math.max(maxPriceLen, prices.get(i).size());
+				}
+			} catch (ExecutionException e) {
+				throw new AppError(e.getMessage());
+			} catch (InterruptedException e) {
+				throw new AppError("Fehler beim Einholen von Preisdaten.");
+			}
+
 			padPrices(priceMap, mapping.getStartDate(), mapping.getEndDate(), IntervalLength.DAY, maxPriceLen);
+
 			// Create InstrumentDataRaw objects for Harmonizer
 			InstrumentMapping[] instrMappings = mapping.getMappedInstruments();
 			List<InstrumentDataRaw> instrRawDatas = new ArrayList<>(instrMappings.length);
@@ -258,13 +283,11 @@ public class StateManager {
 
 			PlaybackController pbc = Sonifier.sonify(passedInstrRawDatas, evInstrDatas, mapping.getSoundLength());
 
-			double[][] pricesForMusicData = new double[sonifiableSet.length][pricesLen];
-			String[] sonifiableNames = new String[sonifiableSet.length];
+			String[] sonifiableNames = new String[sonifiables.length];
 			for (int i = 0; i < sonifiableNames.length; i++) {
-				pricesForMusicData[i] = getPriceValues(priceMap.get(sonifiableSet[i]));
-				sonifiableNames[i] = DataRepo.getSonifiableName(sonifiableSet[i]);
+				sonifiableNames[i] = DataRepo.getSonifiableName(sonifiables[i]);
 			}
-			return new MusicData(pbc, sonifiableNames, pricesForMusicData);
+			return new MusicData(pbc, sonifiableNames, priceMap.values());
 		}, null);
 	}
 

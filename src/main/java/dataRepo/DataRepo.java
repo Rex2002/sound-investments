@@ -3,6 +3,7 @@ package dataRepo;
 import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Calendar;
@@ -27,6 +28,7 @@ import dataRepo.api.PaginationHandler;
 import dataRepo.json.JsonPrimitive;
 import dataRepo.json.Parser;
 import util.ArrayFunctions;
+import util.DateUtil;
 import util.FutureList;
 import util.UnorderedList;
 
@@ -151,9 +153,12 @@ public class DataRepo {
 					}),
 					x -> x, (Function<JsonPrimitive<?>, Stock>) (x -> {
 						try {
+							String symbol = x.asMap().get("symbol").asStr();
+							String exchange = x.asMap().get("stock_exchange").asMap().get("acronym").asStr();
+							if (symbol.contains(".") || exchange.contains("."))
+								return null;
 							return new Stock(x.asMap().get("name").asStr(),
-									new SonifiableID(x.asMap().get("symbol").asStr(),
-											x.asMap().get("stock_exchange").asMap().get("acronym").asStr()));
+									new SonifiableID(symbol, exchange));
 						} catch (Exception e) {
 							return null;
 						}
@@ -163,10 +168,14 @@ public class DataRepo {
 				public void run() {
 					try {
 						if (fl.isDone()) {
+							// Remove nulls from stocks-list
 							stocks = fl.get();
+							stocks.applyRemoves();
 							for (int i = 0; i < stocks.size(); i++) {
-								if (stocks.get(i) == null)
+								if (stocks.get(i) == null) {
 									stocks.remove(i);
+									i--;
+								}
 							}
 
 							setTradingPeriods(stocks, updatedStocksTradingPeriods);
@@ -181,7 +190,12 @@ public class DataRepo {
 									if (updatedStocksTradingPeriods.compareAndSet(stocks.size(), 0)) {
 										updatedTradingPeriods = true;
 										updatedTradingPeriodsCounter++;
-										stocks.applyRemoves();
+										for (int i = 0; i < stocks.size(); i++) {
+											if (stocks.get(i) == null || stocks.get(i).getEarliest() == null) {
+												stocks.remove(i);
+												i--;
+											}
+										}
 									}
 									// @Cleanup uncomment once we actually get data for etfs/indices
 									// needs to be commented out for now, bc the code doesn't work when list.size()
@@ -247,7 +261,7 @@ public class DataRepo {
 			T s = list.get(i);
 			final int idx = i;
 			getTradingPeriod(s, dates -> {
-				if (dates == null) {
+				if (dates == null || dates[0] == null || dates[1] == null) {
 					list.removeLater(idx);
 				} else {
 					s.setEarliest(dates[0]);
@@ -315,8 +329,8 @@ public class DataRepo {
 
 	private static void findByPrefix(String prefix, List<? extends Sonifiable> src, List<Sonifiable> dst) {
 		for (Sonifiable s : src) {
-			if (s.name.toLowerCase().startsWith(prefix.toLowerCase())
-					|| s.getId().symbol.toLowerCase().startsWith(prefix.toLowerCase())) {
+			if (s != null && (s.name.toLowerCase().startsWith(prefix.toLowerCase())
+					|| s.getId().symbol.toLowerCase().startsWith(prefix.toLowerCase()))) {
 				dst.add(s);
 			}
 		}
@@ -362,41 +376,78 @@ public class DataRepo {
 		return null;
 	}
 
-	public static List<Price> getPrices(SonifiableID s, Calendar start, Calendar end, IntervalLength interval) throws AppError {
-		if (!GET_PRICES_DYNAMICALLY) return testPrices();
+	public static Future<List<Price>> getPrices(SonifiableID s, Calendar start, Calendar end, IntervalLength interval) {
+		return threadPool.submit(() -> {
+			if (!GET_PRICES_DYNAMICALLY) return testPrices();
 
-		// TODO: Add de-facto pagination to price-requests to allow parallelization
-		// Idea for doing this: See how long the date-range in the first response was
-		// then split the rest of the range for start->end into chunks of that range
-		// To achieve this, the signatures for pagination handlers most certainly have to be changed again
+			Calendar[] startEnd = {start, end};
 
-		// TODO: Use interval - at the moment we assume that interval == DAY and just make end-of-day API-requests
-		try {
-			List<Price> out = new ArrayList<>(1024);
-			Calendar earliestDay;
-			// TODO Bug: There seems to be an issue with DateUtil parsing the dates of the prices wrong or something
-			// until that bug is fixed, I commented the otherwise potentially endless loop out
-			// do {
-				List<Price> prices = apiLeeway.getJSONList("historicalquotes/" + s,
-					json -> {
-						try {
-							HashMap<String, JsonPrimitive<?>> m = json.asMap();
-							Calendar day = DateUtil.calFromDateStr(m.get("date").asStr());
-							return new Price(day, day.toInstant(), day.toInstant(), m.get("open").asDouble(), m.get("close").asDouble(), m.get("low").asDouble(), m.get("high").asDouble());
-						} catch (Exception e) {
-							return null;
-						}
-					}, true, "from", DateUtil.formatDate(start), "to", DateUtil.formatDate(end));
-				earliestDay = prices.get(prices.size() - 1).getDay();
-				// @Cleanup
-				// Consider using LocalDate everywhere instead of Calendar or find out how to go from day x to day x+1 without going from Calendar to LocalDate
-				end = DateUtil.localDateToCalendar(DateUtil.calendarToLocalDate(earliestDay).minusDays(1));
-				out.addAll(prices);
-			// } while (start.before(earliestDay));
-			return out;
-		} catch (Exception e) {
-			e.printStackTrace();
-			throw new AppError("Error in getting Price-Data for " + s + " from " + DateUtil.formatDate(start) + " to " + DateUtil.formatDate(end));
-		}
+			// TODO: Add de-facto pagination to price-requests to allow parallelization
+			// Idea for doing this: See how long the date-range in the first response was
+			// then split the rest of the range for start->end into chunks of that range
+			// To achieve this, the signatures for pagination handlers most certainly have to be changed again
+
+			// TODO: Use interval - at the moment we assume that interval == DAY and just make end-of-day API-requests
+			try {
+				List<Price> out = new ArrayList<>(1024);
+				Calendar earliestDay = startEnd[1];
+				// Because leeway's range is exclusive, we need to decrease the startdate that we put in the request and keep the same for comparison of the loop
+				Calendar startCmp = (Calendar) startEnd[0].clone();
+				startEnd[0].roll(Calendar.DATE, false);
+				// TODO: Leeway throws error if range is more than 600 days
+
+				// TODO Bug: There seems to be an issue with DateUtil parsing the dates of the prices wrong or something
+				// until that bug is fixed, I commented the otherwise potentially endless loop out
+				boolean isEoD = interval == IntervalLength.DAY;
+				String endpoint = (isEoD ? "historicalquotes/" : "intraday/") + s;
+				String[] intervalQueries = {"interval", interval.toString(API.LEEWAY)};
+				do {
+					// We increase end by 1, because Leeway's range is exclusive
+					// and after each iteration end = earliestDay and it might be that we missed some data from that day
+					startEnd[1].roll(Calendar.DATE, true);
+					String[] queries = {"from", DateUtil.formatDate(startEnd[0]), "to", DateUtil.formatDate(startEnd[1])};
+					if (!isEoD) queries = ArrayFunctions.add(queries, intervalQueries);
+
+					List<Price> prices = apiLeeway.getJSONList(endpoint,
+						json -> {
+							try {
+								HashMap<String, JsonPrimitive<?>> m = json.asMap();
+								Calendar day;
+								Instant startTime;
+								Instant endTime;
+								if (isEoD) {
+									day = DateUtil.calFromDateStr(m.get("date").asStr());
+									day.set(Calendar.HOUR_OF_DAY, 0);
+									startTime = day.toInstant();
+									day.set(Calendar.HOUR_OF_DAY, 23);
+									endTime = day.toInstant();
+								} else {
+									day = DateUtil.calFromDateTimeStr(m.get("datetime").asStr());
+									startTime = new Timestamp(m.get("timestamp").asLong()).toInstant();
+									endTime = interval.addToInstant(startTime);
+								}
+								return new Price(day, startTime, endTime, m.get("open").asDouble(), m.get("close").asDouble(), m.get("low").asDouble(), m.get("high").asDouble());
+							} catch (Exception e) {
+								return null;
+							}
+						}, true, queries);
+
+					if (prices.isEmpty()) break;
+					Calendar nextEarliestDay = prices.get(0).getDay();
+					if (nextEarliestDay.equals(earliestDay)) // we would get trapped in an infinite loop now
+						break;
+					earliestDay = nextEarliestDay;
+					startEnd[1] = (Calendar) earliestDay.clone();
+					out.addAll(0, prices);
+				} while (startCmp.before(earliestDay));
+
+				ArrayFunctions.rmDuplicates(out, 300, (x, y) -> x.getStart().equals(y.getStart()));
+				return out;
+			} catch (Exception e) {
+				e.printStackTrace();
+				System.out.println("Error in getting Price-Data for " + s + " from " + DateUtil.formatDate(start) + " to " + DateUtil.formatDate(end));
+				return null;
+			}
+		});
 	}
 }
