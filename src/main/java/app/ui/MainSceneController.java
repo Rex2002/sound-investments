@@ -587,6 +587,16 @@ public class MainSceneController implements Initializable {
         for (String name : mapping.getMappedInstrNames()) {
             instAdded(name);
         }
+        startPicker.setValue(DateUtil.calendarToLocalDate(mapping.getStartDate()));
+        endPicker.setValue(DateUtil.calendarToLocalDate(mapping.getEndDate()));
+        System.out.println("SoundLength: " + mapping.getSoundLength());
+
+        String min = Integer.toString((int) (mapping.getSoundLength() / 60));
+        String sec = Integer.toString(mapping.getSoundLength() % 60);
+        audioLength1.setText(min);
+        audioLength.setText(sec);
+        assert filterValues[0] == false;
+        filterCB.getSelectionModel().select(mapping.getHighPass() ? 1 : 0);
     }
 
     private void updateDateRange() {
