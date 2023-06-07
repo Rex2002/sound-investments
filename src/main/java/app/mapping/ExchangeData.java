@@ -1,5 +1,7 @@
 package app.mapping;
 
+import java.util.Objects;
+
 import dataRepo.SonifiableID;
 
 public class ExchangeData<T extends ExchangeParam> {
@@ -27,4 +29,13 @@ public class ExchangeData<T extends ExchangeParam> {
 		this.data = data;
 	}
 
+	@Override
+	@SuppressWarnings("unchecked")
+	public boolean equals(Object obj) {
+		if (this == obj) return true;
+		if (obj == null) return false;
+		if (getClass() != obj.getClass()) return false;
+		ExchangeData<T> ed = (ExchangeData<T>) obj;
+		return Objects.equals(id, ed.id) && Objects.equals(data, ed.data);
+	}
 }

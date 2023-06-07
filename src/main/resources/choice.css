@@ -82,7 +82,7 @@
 }
 #errorTitle {
 	-fx-font-size: 27;
-	-fx-alignment: left;
+	/* -fx-alignment: left; */
 	-fx-pref-height: 50px;
 	-fx-text-fill: rgb(255, 255, 255);
 	-fx-pref-width: 310px;
@@ -122,7 +122,7 @@
 	-fx-pref-width: 150px;
 	-fx-alignment: center;
 	-fx-font-size: 20px;
-	-fx-background-color:128, 45, 45;
+	-fx-background-color: rgb(128, 45, 45);
 	-fx-text-fill: rgb(255, 255, 255);
 	-fx-font-weight: bold;
 	-fx-background-radius: 30;
