@@ -1,13 +1,13 @@
 package audio;
 
-
 import java.util.Arrays;
 public class Util {
 
-    public static int getRelPosition(int pos, int sourceLength, int destinationLength){
-        return (int) (((double) pos / sourceLength) * destinationLength);
+    public static int getRelPosition(int pos, int sourceLength, int destinationLength) {
+        return (int) Math.floor(((double) pos / sourceLength) * destinationLength);
     }
 
+    @Deprecated
     public static short findMax(short[] array){
         short max = 0;
         for(short k : array){
