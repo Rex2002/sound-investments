@@ -5,6 +5,8 @@ package audio.mixer;
 //import com.groupdocs.metadata.internal.c.a.s.internal.nb.Au;
 
 import javax.sound.sampled.*;
+
+import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.util.Objects;
 
@@ -26,7 +28,7 @@ public class SampleLoader {
     private static double[] loadSample(String filename) {
 
         try {
-            AudioInputStream audioStream = AudioSystem.getAudioInputStream(Objects.requireNonNull(SampleLoader.class.getResourceAsStream(filename)));
+            AudioInputStream audioStream = AudioSystem.getAudioInputStream(new BufferedInputStream(Objects.requireNonNull(SampleLoader.class.getResourceAsStream(filename))));
             AudioFormat af = audioStream.getFormat();
             if(af.getFrameSize() != 4 || af.getSampleRate() != 44100 || af.isBigEndian()) {
                 throw new RuntimeException("Illegal audio format in sample" + filename);
