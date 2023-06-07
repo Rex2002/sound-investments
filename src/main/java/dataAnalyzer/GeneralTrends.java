@@ -16,18 +16,18 @@ public class GeneralTrends {
 		for (int i = 0; i < priceList.size(); i++) {
 			Price price = priceList.get(i);
 			previousPrices[i % previousPrices.length] = (price.getLow() + price.getHigh() + price.getOpen() + price.getClose()) / 4;
-			priceAverages[i] = calculateAverage(previousPrices);
+			priceAverages[i] = calculateAverage(previousPrices, i > previousPrices.length ? previousPrices.length : i);
 		}
 
 		return priceAverages;
 	}
 
-	private static double calculateAverage(double[] prices) {
+	private static double calculateAverage(double[] prices, int len) {
 		double sum = 0.0;
-		for (double price : prices) {
-			sum += price;
+		for (int i = 0; i < len; i++) {
+			sum += prices[i];
 		}
-		return sum / prices.length;
+		return sum / len;
 	}
 
 	public static boolean[] AverageIntersectsStock(double[] priceAverages, List<Price> prices) {
