@@ -149,7 +149,7 @@ public class Harmonizer {
             for (int i = 0; i < delayEcho.length; i++) {
                 checkDouble(delayEcho[i], "delayEcho", i);
 
-                output[i] = (int) delays[(int) (delayEcho[i] * delays.length)]
+                output[i] = (int) delays[(int) (delayEcho[i] * (delays.length - 1))]
                         * (Constants.SAMPLE_RATE * 60 / (Constants.TEMPO * 4));
             }
             return output;
