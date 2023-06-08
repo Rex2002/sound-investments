@@ -6,6 +6,8 @@ import audio.Constants;
 import audio.Util;
 import audio.synth.InstrumentData;
 import audio.synth.fx.FilterData;
+import com.groupdocs.metadata.internal.c.a.w.internal.DE;
+
 import java.util.Arrays;
 import java.util.Random;
 
@@ -47,7 +49,10 @@ public class Harmonizer {
     }
 
     private int[] normalizePitch(double[] pitch) throws AppError {
-        double[] scale = getRandomScale();
+        int NUMBER_OCTAVES = 4;
+        int FIRST_NOTE = 36;
+
+        int[] scale = getRandomScale();
 
         pitch = quantizePitch(pitch);
 
@@ -56,10 +61,10 @@ public class Harmonizer {
             checkDouble(pitch[i], "pitch", i);
 
             double sum = 0.0;
-            for (int offsetIndex = 0; offsetIndex < scale.length; offsetIndex++) {
-                sum += scale[offsetIndex];
-                if (pitch[i] <= sum) {
-                    output[i] = 36 + offsetIndex;
+            for (int offsetIndex = 0; offsetIndex < scale.length * NUMBER_OCTAVES; offsetIndex++) {
+                sum += scale[offsetIndex % scale.length];
+                if (pitch[i] <= sum / (scale.length * NUMBER_OCTAVES) ) {
+                    output[i] = FIRST_NOTE + offsetIndex;
                     break;
                 }
             }
@@ -67,21 +72,14 @@ public class Harmonizer {
         return output;
     }
 
-    private double[] getRandomScale() {
-        double[] scale = new double[] {
-                2 / 76f, 1 / 76f, 2 / 76f, 1 / 76f, 2 / 76f, 2 / 76f, 1 / 76f, 2 / 76f, 1 / 76f, 2 / 76f, 1 / 76f,
-                2 / 76f,
-                2 / 76f, 1 / 76f, 2 / 76f, 1 / 76f, 2 / 76f, 2 / 76f, 1 / 76f, 2 / 76f, 1 / 76f, 2 / 76f, 1 / 76f,
-                2 / 76f,
-                2 / 76f, 1 / 76f, 2 / 76f, 1 / 76f, 2 / 76f, 2 / 76f, 1 / 76f, 2 / 76f, 1 / 76f, 2 / 76f, 1 / 76f,
-                2 / 76f,
-                2 / 76f, 1 / 76f, 2 / 76f, 1 / 76f, 2 / 76f, 2 / 76f, 1 / 76f, 2 / 76f, 1 / 76f, 2 / 76f, 1 / 76f,
-                2 / 76f
+    private int[] getRandomScale() {
+        int[] scale = new int[] {
+                2, 1, 2, 1, 2, 2, 1, 2, 1, 2, 1, 2
         };
 
-        int shift = new Random().nextInt(12);
+        int shift = new Random().nextInt(scale.length);
         if (shift > 0) {
-            double[] buffer = Arrays.copyOfRange(scale, 0, shift);
+            int[] buffer = Arrays.copyOfRange(scale, 0, shift);
             for (int i = 0; i < scale.length; i++) {
                 scale[i] = i < scale.length - shift ? scale[i + shift] : buffer[shift - (scale.length - i)];
             }
@@ -123,19 +121,21 @@ public class Harmonizer {
     }
 
     private double[] normalizeVolume() throws AppError {
+        double MAX_VOLUME = 1.0;
+        double MUTE_VOLUME = 0.0;
         double[] relVolume = dataRaw.getRelVolume();
         boolean[] absVolume = dataRaw.getAbsVolume();
         double[] pitch = dataRaw.getPitch();
         if (relVolume == null && absVolume == null) {
             double[] volume = new double[pitch.length];
             for(int i = 0; i < volume.length; i ++){
-                volume[i] = pitch[i] == -1 ? 0.0 : 1.0;
+                volume[i] = pitch[i] == -1 ? MUTE_VOLUME : MAX_VOLUME;
             }
             return volume;
         } else if (relVolume == null) {
             double[] volume = new double[absVolume.length];
             for (int i = 0; i < absVolume.length; i++) {
-                volume[i] = absVolume[i] && pitch[i] != -1 ? 1.0 : 0.0;
+                volume[i] = absVolume[i] && pitch[i] != -1 ? MAX_VOLUME : MUTE_VOLUME;
             }
             return volume;
         } else {
@@ -143,7 +143,7 @@ public class Harmonizer {
                 checkDouble(relVolume[i], "relVolume", i);
 
                 if (absVolume != null && absVolume.length > i) {
-                    relVolume[i] = absVolume[i] && pitch[i] != -1 && relVolume[i] != -1? relVolume[i] : 0.0;
+                    relVolume[i] = absVolume[i] && pitch[i] != -1 && relVolume[i] != -1? relVolume[i] : MUTE_VOLUME;
                 }
             }
             return relVolume;
@@ -151,26 +151,29 @@ public class Harmonizer {
     }
 
     private int[] normalizeDelayEcho() throws AppError {
+        int SAMPLES_PER_BAR = Constants.SAMPLE_RATE * 60 / (Constants.TEMPO / 4);
         double[] delayEcho = dataRaw.getDelayEcho();
+
         // TODO: test delay times
         if (delayEcho != null) {
-            double[] delays = new double[] { 4 / 96f, 6 / 96f, 8 / 96f, 12 / 96f, 16 / 96f, 24 / 96f, 32 / 96f,
-                    48 / 96f, 1f };
+            double[] delays = new double[] { 1/24f, 1/16f, 1/12f, 1/8f, 1/6f, 1/4f, 1/3f, 1/2f, 1 };
             int[] output = new int[delayEcho.length];
 
             for (int i = 0; i < delayEcho.length; i++) {
                 checkDouble(delayEcho[i], "delayEcho", i);
 
-                output[i] = (int) delays[(int) (delayEcho[i] * delays.length)]
-                        * (Constants.SAMPLE_RATE * 60 / (Constants.TEMPO * 4));
+                output[i] = (int) ( delays[(int) (delayEcho[i] * (delays.length - 1) )] * SAMPLES_PER_BAR );
             }
             return output;
         } else {
-            return new int[] { (int) (12 / 96f * (Constants.SAMPLE_RATE * 60 / (Constants.TEMPO * 4))) };
+            return new int[] { (int) (1/8f * SAMPLES_PER_BAR) };
         }
     }
 
     private double[] normalizeFeedbackEcho() throws AppError {
+        double MAX_FEEDBACK_ECHO = 0.9;
+        double DEFAULT_FEEDBACK_ECHO = 0.7;
+        double MUTE_ECHO = 0;
         double[] feedbackEcho = dataRaw.getFeedbackEcho();
         double[] delayEcho = dataRaw.getDelayEcho();
         boolean[] onOffEcho = dataRaw.getOnOffEcho();
@@ -181,45 +184,50 @@ public class Harmonizer {
                 checkDouble(feedbackEcho[i], "feedbackEcho", i);
 
                 if ((onOffEcho != null && !onOffEcho[i]) || (delayEcho != null && delayEcho[i] == -1)) {
-                    feedbackEcho[i] = 0.0;
+                    feedbackEcho[i] = MUTE_ECHO;
                 } else {
-                    feedbackEcho[i] *= 0.9;
+                    feedbackEcho[i] *= MAX_FEEDBACK_ECHO;
                 }
             }
         } else if (onOffEcho != null) {
             feedbackEcho = new double[onOffEcho.length];
             for (int i = 0; i < onOffEcho.length; i++) {
-                feedbackEcho[i] = onOffEcho[i] && delayEcho[i] != -1 ? 0.7 : 0.0;
+                feedbackEcho[i] = onOffEcho[i] && delayEcho[i] != -1 ? DEFAULT_FEEDBACK_ECHO : MUTE_ECHO;
             }
         } else if (delayEcho != null){
             feedbackEcho = new double[delayEcho.length];
             for(int i = 0; i < delayEcho.length; i++){
-                feedbackEcho[i] = delayEcho[i] == -1 ? 0.0 : 0.7;
+                feedbackEcho[i] = delayEcho[i] == -1 ? MUTE_ECHO : DEFAULT_FEEDBACK_ECHO;
             }
         }
         else{
-            feedbackEcho = new double[]{0.7};
+            feedbackEcho = new double[]{DEFAULT_FEEDBACK_ECHO};
         }
         return feedbackEcho;
     }
 
     private int[] normalizeDelayReverb() throws AppError {
+        int MAX_DELAY_REVERB = Constants.SAMPLE_RATE / 20;    // number of samples corresponding to 50ms
+        int DEFAULT_DELAY_REVERB = Constants.SAMPLE_RATE / 25; // number of samples corresponding to 40ms
         double[] delayReverb = dataRaw.getDelayReverb();
         if (delayReverb != null) {
             int[] output = new int[delayReverb.length];
             for (int i = 0; i < delayReverb.length; i++) {
                 checkDouble(delayReverb[i], "delayReverb", i);
 
-                output[i] = (int) (delayReverb[i] * 2205);
+                output[i] = (int) (delayReverb[i] * MAX_DELAY_REVERB);
             }
             return output;
         } else {
             // TODO: test value
-            return new int[] { 1600 };
+            return new int[] { DEFAULT_DELAY_REVERB };
         }
     }
 
     private double[] normalizeFeedbackReverb() throws AppError {
+        double MAX_FEEDBACK_REVERB = 0.8;
+        double DEFAULT_FEEDBACK_REVERB = 0.6;
+        double MUTE_REVERB = 0;
         double[] feedbackReverb = dataRaw.getFeedbackReverb();
         double[] delayReverb = dataRaw.getDelayReverb();
         boolean[] onOffReverb = dataRaw.getOnOffReverb();
@@ -229,29 +237,36 @@ public class Harmonizer {
                 checkDouble(feedbackReverb[i], "feedbackReverb", i);
 
                 if ((onOffReverb != null && !onOffReverb[i]) || (delayReverb != null && delayReverb[i] == -1)) {
-                    feedbackReverb[i] = 0.0;
+                    feedbackReverb[i] = MUTE_REVERB;
                 } else {
-                    feedbackReverb[i] *= 0.8;
+                    feedbackReverb[i] *= MAX_FEEDBACK_REVERB;
                 }
             }
         } else if (onOffReverb != null) {
             feedbackReverb = new double[onOffReverb.length];
             for (int i = 0; i < onOffReverb.length; i++) {
-                feedbackReverb[i] = onOffReverb[i] && delayReverb[i] != -1 ? 0.6 : 0.0;
+                feedbackReverb[i] = onOffReverb[i] && delayReverb[i] != -1 ? DEFAULT_FEEDBACK_REVERB : MUTE_REVERB;
             }
         } else if (delayReverb != null) {
             feedbackReverb = new double[delayReverb.length];
             for(int i = 0; i < delayReverb.length; i++){
-                feedbackReverb[i] = delayReverb[i] == -1 ? 0.0 : 0.6;
+                feedbackReverb[i] = delayReverb[i] == -1 ? MUTE_REVERB : DEFAULT_FEEDBACK_REVERB;
             }
         }
         else{
-            feedbackReverb = new double[]{0.6};
+            feedbackReverb = new double[]{DEFAULT_FEEDBACK_REVERB};
         }
         return feedbackReverb;
     }
 
     private FilterData normalizeFilter() throws AppError {
+        double BANDWIDTH = 0.5;
+        int MIN_FREQ = 40;
+        int MAX_FREQ = 20000;
+        int HIGH_PASS_OFF = 1;
+        int HIGH_PASS_DEFAULT_FREQ = 1000;
+        int LOW_PASS_OFF = 50000;
+        int LOW_PASS_DEFAULT_FREQ = 500;
         double[] cutoff = dataRaw.getFrequency();
         boolean[] onOff = dataRaw.getOnOffFilter();
         boolean highPass = dataRaw.isHighPass();
@@ -262,21 +277,20 @@ public class Harmonizer {
                 checkDouble(cutoff[i], "cutoff", i);
 
                 if ((onOff != null && !onOff[i]) || cutoff[i] == -1) {
-                    cutoff[i] = highPass ? 50000 : 0;
+                    cutoff[i] = highPass ? HIGH_PASS_OFF : LOW_PASS_OFF;
                 } else {
-                    cutoff[i] = 40 + cutoff[i] * (20000 - 40);
+                    cutoff[i] = MIN_FREQ + cutoff[i] * (MAX_FREQ - MIN_FREQ);
                 }
             }
-
-            filter.setCutoff(cutoff);
         } else {
             cutoff = new double[onOff.length];
             for (int i = 0; i < onOff.length; i++) {
-                cutoff[i] = highPass ? 1000 : 500;
+                cutoff[i] = highPass ? HIGH_PASS_DEFAULT_FREQ : LOW_PASS_DEFAULT_FREQ;
             }
         }
 
-        filter.setBandwidth(new double[] { 0.5 });
+        filter.setCutoff(cutoff);
+        filter.setBandwidth(new double[] { BANDWIDTH });
         filter.setHighPass(highPass);
         return filter;
     }

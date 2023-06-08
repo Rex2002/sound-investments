@@ -5,6 +5,7 @@ import app.mapping.*;
 import app.ui.App;
 import audio.Sonifier;
 import audio.synth.EvInstrData;
+import audio.synth.EvInstrEnum;
 import audio.synth.InstrumentEnum;
 import audio.synth.playback.PlayControlEvent;
 import audio.synth.playback.PlayControlEventsEnum;
@@ -15,7 +16,6 @@ import javafx.application.Application;
 import util.DateUtil;
 import util.FutureList;
 
-import java.io.File;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
@@ -27,16 +27,11 @@ import java.util.function.Consumer;
 // however, it makes conceptually more sense to me, as the app's logic should be done in the main thread
 
 public class StateManager {
-	public static boolean isAlreadySonifying = false;
+	public static boolean isCurrentlySonifying = false;
 	public static SonifiableFilter sonifiableFilter = new SonifiableFilter("", FilterFlag.ALL);
+	public static Mapping currentMapping;
 
 	public static void main(String[] args) {
-		testUI(args);
-		// testSound(args);
-
-	}
-
-	public static void testUI(String[] args) {
 		Thread th = new Thread(() -> Application.launch(App.class, args));
 		th.start();
 		call(DataRepo::init);
@@ -71,18 +66,23 @@ public class StateManager {
 								DataRepo.updatedData.compareAndSet(true, false);
 								sendFilteredSonifiables();
 							}
-							case SAVE_MAPPING -> EventQueues.toUI.add(new Msg<>(MsgToUIType.ERROR, "SAVE_MAPPING is not yet implemented"));
-							case LOAD_MAPPING -> EventQueues.toUI.add(new Msg<>(MsgToUIType.ERROR, "LOAD_MAPPING is not yet implemented"));
 							case START -> {
-								if (StateManager.isAlreadySonifying) return;
-								StateManager.isAlreadySonifying = true;
-								Mapping mapping = (Mapping) msg.data;
-								System.out.println(mapping);
-								MusicData musicData = sonifyMapping(mapping);
+								if (StateManager.isCurrentlySonifying) return;
+								StateManager.isCurrentlySonifying = true;
+								currentMapping = (Mapping) msg.data;
+								MusicData musicData = sonifyMapping(currentMapping);
 								if (musicData != null)
 									EventQueues.toUI.add(new Msg<>(MsgToUIType.FINISHED, musicData));
+								// sonifyMapping already sends error messages to the UI in case of an error,
+								// so no else case is needed
+								isCurrentlySonifying = false;
 							}
-							case BACK_IN_MAIN_SCENE -> StateManager.isAlreadySonifying = false;
+							case ENTERED_MAIN_SCENE -> {
+								StateManager.isCurrentlySonifying = false;
+								if (currentMapping != null) EventQueues.toUI.add(new Msg<>(MsgToUIType.MAPPING, currentMapping));
+								EventQueues.toUI.add(new Msg<>(MsgToUIType.SONIFIABLE_FILTER, sonifiableFilter));
+								sendFilteredSonifiables();
+							}
 						}
 					}
 
@@ -210,6 +210,7 @@ public class StateManager {
 		return mapping;
 	}
 
+
 	public static void padPrices(Map<SonifiableID, List<Price>> priceMap, Calendar startDate, Calendar endDate, IntervalLength interval, int maxLength) {
 		for(SonifiableID id : priceMap.keySet()){
 			List<Price> prices = priceMap.get(id);
@@ -247,8 +248,8 @@ public class StateManager {
 
 	public static MusicData sonifyMapping(Mapping mapping) {
 		return call(() -> {
-			HashMap<SonifiableID, List<Price>> priceMap = new HashMap<>();
 			SonifiableID[] sonifiables = mapping.getMappedSonifiableIDs().toArray(new SonifiableID[0]);
+			HashMap<SonifiableID, List<Price>> priceMap = new HashMap<>(sonifiables.length);
 			FutureList<List<Price>> getPricesFutures = new FutureList<>(sonifiables.length);
 			IntervalLength intervalLength = determineIntervalLength(mapping.getStartDate(), mapping.getEndDate());
 			for (SonifiableID sonifiableID : sonifiables) {
@@ -266,13 +267,13 @@ public class StateManager {
 					System.out.println("Length: " + prices.get(i).size());
 					maxPriceLen = Math.max(maxPriceLen, prices.get(i).size());
 				}
+        		padPrices(priceMap, mapping.getStartDate(), mapping.getEndDate(), intervalLength, maxPriceLen);
 			} catch (ExecutionException e) {
 				throw new AppError(e.getMessage());
 			} catch (InterruptedException e) {
 				throw new AppError("Fehler beim Einholen von Preisdaten.");
 			}
 
-			padPrices(priceMap, mapping.getStartDate(), mapping.getEndDate(), IntervalLength.DAY, maxPriceLen);
 
 			// Create InstrumentDataRaw objects for Harmonizer
 			InstrumentMapping[] instrMappings = mapping.getMappedInstruments();
@@ -300,10 +301,20 @@ public class StateManager {
 						feedbackEcho,
 						onOffEcho, delayReverb, feedbackReverb, onOffReverb, frequency, highPass, onOffFilter, pan));
 			}
-
-			EvInstrData[] evInstrDatas = new EvInstrData[] {};
 			InstrumentDataRaw[] passedInstrRawDatas = new InstrumentDataRaw[instrRawDatas.size()];
 			passedInstrRawDatas = instrRawDatas.toArray(passedInstrRawDatas);
+
+			List<EvInstrData> evInstrRawDatas = new ArrayList<>();
+			for(EvInstrMapping evInstrMap : mapping.getEventInstruments()){
+				if(evInstrMap == null || evInstrMap.getData() == null){
+					continue;
+				}
+				EvInstrEnum instrType = evInstrMap.getInstrument();
+				boolean[] triggers = calcPointData(evInstrMap.getData(), priceMap);
+				evInstrRawDatas.add(new EvInstrData(instrType, triggers));
+			}
+			EvInstrData[] evInstrDatas = new EvInstrData[evInstrRawDatas.size()];
+			evInstrDatas = evInstrRawDatas.toArray(evInstrDatas);
 
 			PlaybackController pbc = Sonifier.sonify(passedInstrRawDatas, evInstrDatas, mapping.getSoundLength());
 
@@ -311,41 +322,10 @@ public class StateManager {
 			for (int i = 0; i < sonifiableNames.length; i++) {
 				sonifiableNames[i] = DataRepo.getSonifiableName(sonifiables[i]);
 			}
+			isCurrentlySonifying = false;
 			return new MusicData(pbc, sonifiableNames, priceMap.values());
 		}, null);
-	}
 
-	public static void testSound(String[] args) throws AppError {
-		// Get Mapping & Price Data
-		call(DataRepo::init);
-		Mapping mapping = getTestMapping();
-		PlaybackController pbc = sonifyMapping(mapping).pbc;
-		pbc.startPlayback();
-		boolean running = true;
-		Scanner in = new Scanner(System.in);
-		while (running) {
-			System.out.println("Please enter your next control action: ");
-
-			String controlAction = in.next();
-			System.out.println("ControlAction: " + controlAction);
-			switch (controlAction) {
-				// resume
-				case "r" -> pbc.play();
-				// pause
-				case "p" -> pbc.pause();
-				// jump forward 1s
-				case "jf" -> pbc.skipForward();
-				// jump backward 1s
-				case "jb" -> pbc.skipBackward();
-				case "s" -> {
-					pbc.kill();
-					running = false;
-				}
-				case "rs" -> pbc.reset();
-				case "sv" -> pbc.save(new File("out.wav"));
-			}
-		}
-		in.close();
 	}
 
 	public static Consumer<InterruptedException> getInterruptedExceptionHandler() {

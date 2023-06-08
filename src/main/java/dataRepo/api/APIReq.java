@@ -1,9 +1,16 @@
 package dataRepo.api;
 
+import dataRepo.json.JsonPrimitive;
+import dataRepo.json.Parser;
+import util.ArrayFunctions;
+import util.FutureList;
+
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.http.*;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -11,11 +18,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.function.Function;
-
-import dataRepo.json.JsonPrimitive;
-import dataRepo.json.Parser;
-import util.ArrayFunctions;
-import util.FutureList;
+import java.util.function.Predicate;
 
 public class APIReq {
 	// Conditions based on the debug-variable will be evaluated at compile time
@@ -28,10 +31,31 @@ public class APIReq {
 			List.of(new StrTuple("Content-Type", "application/json")));
 	private static final HttpClient client = HttpClient.newHttpClient();
 
+	public static ErrHandler rateLimitErrHandler(Predicate<HttpResponse<String>> isRateLimited) {
+		// The Rate-Limit is handled by making switching the API-key and making a new request
+		// Switching the API-key is done implicitly via the getApiTok() method
+		return new ErrHandler() {
+			@Override
+			public HttpResponse<String> handle(HttpResponse<String> res, APIReq api) throws APIErr {
+				int apiToksAmount = api.getAllApiToks().length;
+				int i = 0;
+				while (isRateLimited.test(res)) {
+					try {
+						res = api.makeReq(null, false);
+					} catch (Exception e) {
+					}
+					i++;
+					if (i == apiToksAmount) throw new APIErr(res.statusCode(), res.body());
+				}
+				return res;
+			};
+		};
+	}
+
 	public static ErrHandler defaultErrHandler() {
 		return new ErrHandler() {
 			@Override
-			public HttpResponse<String> handle(HttpResponse<String> res) throws APIErr {
+			public HttpResponse<String> handle(HttpResponse<String> res, APIReq api) throws APIErr {
 				throw new APIErr(res.statusCode(), res.body());
 			}
 		};
@@ -47,6 +71,8 @@ public class APIReq {
 	private final PaginationHandler paginationHandler;
 	private final Function<Integer, String[]> getQueryForPage;
 	private final ErrHandler errorHandler;
+	private String lastReqEndpoint;
+	private StrTuple[] lastReqQueries;
 
 	public APIReq(String base, String[] apiToks, AuthPolicy authPolicy, String apiTokQueryKey,
 			PaginationHandler handler, Function<Integer, String[]> getQueryForPage, ErrHandler errorHandler) {
@@ -62,8 +88,7 @@ public class APIReq {
 	}
 
 	public APIReq(String base, String[] apiToks, AuthPolicy authPolicy, String apiTokQueryKey,
-			PaginationHandler handler,
-			Function<Integer, String[]> getQueryForPage) {
+			PaginationHandler handler, Function<Integer, String[]> getQueryForPage) {
 		this(base, apiToks, authPolicy, apiTokQueryKey, handler, getQueryForPage, defaultErrHandler());
 	}
 
@@ -154,10 +179,22 @@ public class APIReq {
 
 	public String getApiTok() {
 		String res = apiToks[curTokIdx];
-		curTokIdx++;
-		if (curTokIdx == apiToks.length)
-			curTokIdx = 0;
+		curTokIdx = (curTokIdx + 1) % apiToks.length;
 		return res;
+	}
+
+	public String[] getAllApiToks() {
+		return apiToks;
+	}
+
+	public HttpRequest prepReq(String endPoint, StrTuple... queries)
+			throws URISyntaxException, IOException, InterruptedException {
+		String[] queryStrs = new String[2 * queries.length];
+		for (int i = 0; i < queries.length; i++) {
+			queryStrs[2*i+0] = queries[i].getFirst();
+			queryStrs[2*i+1] = queries[i].getSecond();
+		}
+		return prepReq(endPoint, queryStrs);
 	}
 
 	public HttpRequest prepReq(String endPoint, String... queries)
@@ -180,19 +217,28 @@ public class APIReq {
 
 		StringBuilder sb = new StringBuilder(base);
 		sb.append(endPoint);
+		int internalQueriesAmount = this.queries.size();
+		int queriesNoApiTokAmount = internalQueriesAmount - ((authPolicy == AuthPolicy.QUERY) ? 1 : 0);
+		lastReqEndpoint = endPoint;
+		lastReqQueries = new StrTuple[queriesNoApiTokAmount + queries.length / 2];
 
-		if (queries.length > 0 || this.queries.size() > 0) {
+		if (queries.length > 0 || internalQueriesAmount > 0) {
 			if (endPoint.endsWith("/")) {
 				sb.deleteCharAt(sb.length() - 1);
 			}
 			sb.append('?');
 
-			for (int i = 0; i < this.queries.size(); i++) {
+			int k = 0;
+			for (int i = 0; i < internalQueriesAmount; i++, k++) {
 				StrTuple q = this.queries.get(i);
 				sb.append(q.getFirst());
 				sb.append('=');
 				sb.append(q.getSecond());
 				sb.append('&');
+				if (authPolicy == AuthPolicy.QUERY && q.getFirst().equals(apiTokQueryKey))
+					k--;
+				else
+					lastReqQueries[k] = q;
 			}
 
 			for (int i = 0; i < queries.length; i += 2) {
@@ -200,9 +246,10 @@ public class APIReq {
 				sb.append('=');
 				sb.append(queries[i + 1]);
 				sb.append('&');
+				lastReqQueries[k++] = new StrTuple(queries[i + 0], queries[i + 1]);
 			}
 
-			// Last '&' is unnecessary & can be removed
+			// Last '&' is unnecessary and can be removed
 			sb.deleteCharAt(sb.length() - 1);
 		}
 
@@ -218,13 +265,22 @@ public class APIReq {
 		return rb.build();
 	}
 
+	// To repeat the last request again, call this function with req == null
+	public HttpResponse<String> makeReq(HttpRequest req, boolean handleErr)
+			throws URISyntaxException, IOException, InterruptedException, APIErr {
+		if (req == null) req = prepReq(lastReqEndpoint, lastReqQueries);
+		HttpResponse<String> res = client.send(req, HttpResponse.BodyHandlers.ofString());
+		if (handleErr && (res.statusCode() >= 300 || res.statusCode() < 200)) {
+			return errorHandler.handle(res, this);
+		} else {
+			return res;
+		}
+	}
+
 	public HttpResponse<String> makeReq(String endPoint, String... queries)
 			throws URISyntaxException, IOException, InterruptedException, APIErr {
-		HttpResponse<String> res = client.send(prepReq(endPoint, queries), HttpResponse.BodyHandlers.ofString());
-		if (res.statusCode() >= 300 || res.statusCode() < 200) {
-			errorHandler.handle(res);
-		}
-		return res;
+		HttpRequest req = prepReq(endPoint, queries);
+		return makeReq(req, true);
 	}
 
 	public <T> T getJSON(String endPoint, Function<JsonPrimitive<?>, T> func, String... queries)

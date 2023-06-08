@@ -7,8 +7,7 @@ import static audio.Constants.SAMPLE_RATE;
 
 public class Effect {
 
-    static double maxGain = 1;
-
+    @Deprecated
     public static double[] onOffFilter(double[] input, boolean[] onOff){
         double decayScalingFactor = 1; // controls how fast the sound decreases on change on -> off
         // TODO: implement attack-scaling on change off -> on
@@ -25,6 +24,7 @@ public class Effect {
         return input;
     }
 
+    @Deprecated
     public static double[] echoWithOverdrive(double[] input, double feedback, int delay){
         double[] out = new double[input.length];
         double[] bufferL = new double[input.length / 2];
@@ -114,7 +114,6 @@ public class Effect {
 
     @SuppressWarnings("DuplicateExpressions")
     private static void calculateCoefficients(double kadov, double bandwidth, Coefficients c, FilterTypesEnum filterType){
-        double t = Math.pow(10, Math.abs(maxGain) /20);
         double x = Math.tan(Math.PI * kadov/SAMPLE_RATE);
         double norm, a0, a1, a2, b1, b2;
 

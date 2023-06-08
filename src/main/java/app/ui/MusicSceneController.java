@@ -8,6 +8,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 import audio.synth.playback.PlaybackController;
 import javafx.application.Platform;
+import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -26,12 +27,14 @@ import javafx.scene.shape.Circle;
 import javafx.scene.text.Font;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 import javafx.util.StringConverter;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.chart.LineChart;
 import javafx.scene.chart.NumberAxis;
 import javafx.scene.chart.XYChart;
+import javafx.scene.Cursor;
 import javafx.scene.Node;
 import java.util.Calendar;
 import java.util.List;
@@ -42,6 +45,7 @@ import app.AppError;
 import app.communication.EventQueues;
 import app.communication.Msg;
 import app.communication.MsgToSMType;
+import app.communication.MsgToUIType;
 import app.communication.MusicData;
 
 public class MusicSceneController implements Initializable {
@@ -74,6 +78,8 @@ public class MusicSceneController implements Initializable {
 	@FXML
 	private Button exportBtn;
 	@FXML
+	private Button closeBtn;
+	@FXML
 	private Slider musicSlider;
 	@FXML
 	private Parent root;
@@ -86,6 +92,7 @@ public class MusicSceneController implements Initializable {
 	@FXML
 	private ImageView forBtn;
 
+	private CheckEQService checkEQService;
 	private PlaybackController pbc;
 	private String[] sonifiableNames;
 	private List<XYChart.Series<Integer, Double>> prices;
@@ -94,8 +101,6 @@ public class MusicSceneController implements Initializable {
 	private boolean paused = false;
 	private Image playImage;
 	private Image pauseImage;
-
-	// TODO: Make line-chart colors the same as in the legend
 
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
@@ -126,12 +131,41 @@ public class MusicSceneController implements Initializable {
 				public void handle(MouseEvent event) {
 					try {
 						stopSound(event);
+						playBtn.setImage(playImage);
 					} catch (IOException e) {
-						// TODO Auto-generated catch block
+						// TODO: Error Handling
 						e.printStackTrace();
 					}
 				}
 		});
+		playBtn.setCursor(Cursor.HAND);
+		forBtn.setCursor(Cursor.HAND);
+		backBtn.setCursor(Cursor.HAND);
+		stopBtn.setCursor(Cursor.HAND);
+		exportBtn.setCursor(Cursor.HAND);
+		closeBtn.setCursor(Cursor.HAND);
+
+		checkEQService = new CheckEQService();
+        checkEQService.setPeriod(Duration.millis(100));
+        checkEQService.setOnSucceeded((event) -> {
+            List<Msg<MsgToUIType>> messages = checkEQService.getValue();
+            for (Msg<MsgToUIType> msg : messages) {
+                switch (msg.type) {
+                    case ERROR -> {
+                        CommonController.displayError(anchor, (String) msg.data, "Interner Fehler");
+                        paused = false;
+						this.pausePlaySound();
+                    }
+					default -> {
+						System.out.println("MusicScene received a message of type " + msg.type);
+						// Put the message back
+						// The assumption here is, that we only get other messages when we are switching back to the main scene, so when we put the messages back into the queue again, we assume to not see them again
+						EventQueues.toUI.add(msg);
+					}
+                }
+            }
+        });
+        checkEQService.start();
 
 		Platform.runLater(() -> {
 			setupSlider();
@@ -216,14 +250,17 @@ public class MusicSceneController implements Initializable {
 		pbc.goToRelative(perc);
 	}
 
-	public void switchToMainScene(MouseEvent event) throws IOException {
+	public void switchToMainScene(ActionEvent event) throws IOException {
 		// Tell StateManager, that we are back in the main scene again
+		checkEQService.cancel();
 		try {
-		EventQueues.toSM.put(new Msg<>(MsgToSMType.BACK_IN_MAIN_SCENE));
+			EventQueues.toSM.put(new Msg<>(MsgToSMType.ENTERED_MAIN_SCENE));
 		} catch (InterruptedException ie) {
 			// TODO: Error Handling
 		}
-
+		myTimer.cancel();
+		FXMLLoader loader = new FXMLLoader(getClass().getResource("/MusicScene.fxml"));
+        Parent root = loader.load();
 		root = FXMLLoader.load(getClass().getResource("/MainScene.fxml"));
 		stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
 		scene = new Scene(root);
@@ -254,8 +291,9 @@ public class MusicSceneController implements Initializable {
 	}
 
 	public void stopSound(MouseEvent event) throws IOException {
-		onClose();
-		switchToMainScene(event);
+		pbc.pause();
+		paused = true;
+		pbc.goToRelative(0);
 	}
 
 	public void beginTimer() {
@@ -267,5 +305,8 @@ public class MusicSceneController implements Initializable {
 		}, 0, 50);
 
 	}
-
+	public void closeWindow(ActionEvent event) throws IOException {
+		onClose();
+		switchToMainScene(event);
+	}
 }

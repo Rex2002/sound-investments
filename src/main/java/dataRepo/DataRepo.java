@@ -1,25 +1,5 @@
 package dataRepo;
 
-import java.io.PrintWriter;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.sql.Timestamp;
-import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Timer;
-import java.util.TimerTask;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.Future;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Function;
-
 import app.AppError;
 import dataRepo.api.APIErr;
 import dataRepo.api.APIReq;
@@ -32,11 +12,23 @@ import util.DateUtil;
 import util.FutureList;
 import util.UnorderedList;
 
+import java.io.PrintWriter;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.sql.Timestamp;
+import java.time.Instant;
+import java.util.*;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
+
 public class DataRepo {
 	private static final boolean GET_PRICES_DYNAMICALLY = true;
 
 	private static final String[] apiToksLeeway = { "pgz64a5qiuvw4qhkoullnx", "9pe3xyaplenvfvbnyxtomm",
-			"r7splaijduabfpcu2z2l14", "o5npdx6elm2pcpp395uaun", "2ja5gszii8g63hzjd41x78" };
+			"r7splaijduabfpcu2z2l14", "o5npdx6elm2pcpp395uaun", "2ja5gszii8g63hzjd41x78", "ftd5l4hscm9biueu5ptptr",
+			"42dreongzzo5yqkyg2r3cr" };
 	private static final String[] apiToksMarketstack = { "4b6a78c092537f07bbdedff8f134372d",
 			"0c2e8a9c96f2a74c0049f4b662f47b40",
 			"621fc5e0add038cc7d9697bcb7f15caa", "4312dfd8788579ec14ee9e9c9bec4557",
@@ -46,10 +38,21 @@ public class DataRepo {
 			"98888ec975884e98a9555233c3dd59da", "af38d2454c2c4a579768b8262d3e039e",
 			"facbd6808e6d436e95c4935ab8cc082e" };
 
-	// TODO: Add specific error handling for the different APIs
-	private static APIReq apiTwelvedata = new APIReq("https://api.twelvedata.com/", apiToksTwelvedata, AuthPolicy.QUERY, "apikey");
-	private static APIReq apiLeeway = new APIReq("https://api.leeway.tech/api/v1/public/", apiToksLeeway, AuthPolicy.QUERY, "apitoken");
-	private static APIReq apiMarketstack = new APIReq("http://api.marketstack.com/v1/", apiToksMarketstack, AuthPolicy.QUERY, "access_key",
+	// to prevent race conditions when making requests via the same APIReq object in different threads,
+	// we create a new APIReq object for each sequential task
+	private static APIReq getApiTwelvedata() {
+		return new APIReq("https://api.twelvedata.com/", apiToksTwelvedata, AuthPolicy.QUERY, "apikey");
+	}
+	private static APIReq getApiLeeway() {
+		return new APIReq("https://api.leeway.tech/api/v1/public/", apiToksLeeway, AuthPolicy.QUERY, "apitoken",
+			null, null, APIReq.rateLimitErrHandler(res -> {
+				if (res.statusCode() == 429) return true;
+				if (res.body().startsWith("Your limit of")) return true;
+				return false;
+			}));
+	}
+	private static APIReq getApiMarketstack() {
+		return new APIReq("http://api.marketstack.com/v1/", apiToksMarketstack, AuthPolicy.QUERY, "access_key",
 			new PaginationHandler(json -> {
 				// @Cleanup Remove hardcoded limit
 				return 30;
@@ -62,6 +65,7 @@ public class DataRepo {
 				String[] res = { "offset", Integer.toString(10 * page) };
 				return res;
 			}, APIReq.defaultErrHandler());
+	}
 
 	// @Scalability If more than one component would need to react to updated data,
 	// a single boolean flag would not be sufficient of course. Since we know,
@@ -204,78 +208,65 @@ public class DataRepo {
 		return threadPool.submit(() -> {
 			if (!GET_PRICES_DYNAMICALLY) return testPrices();
 
-			// Note: Here we effectively create an environment that is given from the outer scope to this one
-			// The order of the variables in the environment is hardcoded and should not be changed without changing the code below
-			Object[] environment = {start, end, interval};
+			APIReq apiLeeway = getApiLeeway();
+			Calendar[] startEnd = {start, end};
 
 			// TODO: Add de-facto pagination to price-requests to allow parallelization
 			// Idea for doing this: See how long the date-range in the first response was
 			// then split the rest of the range for start->end into chunks of that range
 			// To achieve this, the signatures for pagination handlers most certainly have to be changed again
+
+			// TODO: Use interval - at the moment we assume that interval == DAY and just make end-of-day API-requests
 			try {
 				List<Price> out = new ArrayList<>(1024);
-				Calendar earliestDay = (Calendar) environment[1];
+				Calendar earliestDay = startEnd[1];
 				// Because leeway's range is exclusive, we need to decrease the startdate that we put in the request and keep the same for comparison of the loop
-				Calendar startCmp = (Calendar) ((Calendar) environment[0]).clone();
-				((Calendar) environment[0]).roll(Calendar.DATE, false);
-				// TODO: Leeway throws error if range is more than 600 days for 5min intervals
-				// or more than 7200 days for 1h intervals
+				Calendar startCmp = (Calendar) startEnd[0].clone();
+				startEnd[0].roll(Calendar.DATE, false);
+				// TODO: Leeway throws error if range is more than 600 days
 
+				// TODO Bug: There seems to be an issue with DateUtil parsing the dates of the prices wrong or something
+				// until that bug is fixed, I commented the otherwise potentially endless loop out
+				boolean isEoD = interval == IntervalLength.DAY;
+				String endpoint = (isEoD ? "historicalquotes/" : "intraday/") + s;
+				String[] intervalQueries = {"interval", interval.toString(API.LEEWAY)};
 				do {
-					// Has to be recomputed every iteration, bc we might have to increase interval length
-					boolean isEoD = ((IntervalLength) environment[2]) == IntervalLength.DAY;
-					String endpoint = (isEoD ? "historicalquotes/" : "intraday/") + s;
-					String[] intervalQueries = {"interval", ((IntervalLength) environment[2]).toString(API.LEEWAY)};
-
 					// We increase end by 1, because Leeway's range is exclusive
 					// and after each iteration end = earliestDay and it might be that we missed some data from that day
-					((Calendar) environment[1]).roll(Calendar.DATE, true);
-					String[] queries = {"from", DateUtil.formatDate(((Calendar) environment[0])), "to", DateUtil.formatDate(((Calendar) environment[1]))};
+					startEnd[1].roll(Calendar.DATE, true);
+					String[] queries = {"from", DateUtil.formatDate(startEnd[0]), "to", DateUtil.formatDate(startEnd[1])};
 					if (!isEoD) queries = ArrayFunctions.add(queries, intervalQueries);
 
 					List<Price> prices = apiLeeway.getJSONList(endpoint,
-						json -> {
-							try {
-								HashMap<String, JsonPrimitive<?>> m = json.asMap();
-								Calendar day;
-								Instant startTime;
-								Instant endTime;
-								if (isEoD) {
-									day = DateUtil.calFromDateStr(m.get("date").asStr());
-									day.set(Calendar.HOUR_OF_DAY, 0);
-									startTime = day.toInstant();
-									day.set(Calendar.HOUR_OF_DAY, 23);
-									endTime = day.toInstant();
-								} else {
-									day = DateUtil.calFromDateTimeStr(m.get("datetime").asStr());
-									startTime = new Timestamp(m.get("timestamp").asLong()).toInstant();
-									endTime = ((IntervalLength) environment[2]).addToInstant(startTime);
+							json -> {
+								try {
+									HashMap<String, JsonPrimitive<?>> m = json.asMap();
+									Calendar day;
+									Instant startTime;
+									Instant endTime;
+									if (isEoD) {
+										day = DateUtil.calFromDateStr(m.get("date").asStr());
+										day.set(Calendar.HOUR_OF_DAY, 0);
+										startTime = day.toInstant();
+										day.set(Calendar.HOUR_OF_DAY, 23);
+										endTime = day.toInstant();
+									} else {
+										day = DateUtil.calFromDateTimeStr(m.get("datetime").asStr());
+										startTime = new Timestamp(m.get("timestamp").asLong()).toInstant();
+										endTime = interval.addToInstant(startTime);
+									}
+									return new Price(day, startTime, endTime, m.get("open").asDouble(), m.get("close").asDouble(), m.get("low").asDouble(), m.get("high").asDouble());
+								} catch (Exception e) {
+									return null;
 								}
-								return new Price(day, startTime, endTime, m.get("open").asDouble(), m.get("close").asDouble(), m.get("low").asDouble(), m.get("high").asDouble());
-							} catch (Exception e) {
-								return null;
-							}
-						}, true, queries);
+							}, true, queries);
 
-					if (prices.isEmpty()){
-						if (((IntervalLength) environment[2]) == IntervalLength.DAY) break;
-						else {
-							environment[2] = IntervalLength.inc((IntervalLength) environment[2]);
-							continue;
-						}
-					}
+					if (prices.isEmpty()) break;
 					Calendar nextEarliestDay = prices.get(0).getDay();
-					if (nextEarliestDay.equals(earliestDay)) {
-						// The API doesn't have any more data for us in this interval-length
-						// so we increase the interval-length and try again
-						if (((IntervalLength) environment[2]) == IntervalLength.DAY) break;
-						else {
-							environment[2] = IntervalLength.inc((IntervalLength) environment[2]);
-							continue;
-						}
-					}
+					if (nextEarliestDay.equals(earliestDay)) // we would get trapped in an infinite loop now
+						break;
 					earliestDay = nextEarliestDay;
-					environment[1] = (Calendar) earliestDay.clone();
+					startEnd[1] = (Calendar) earliestDay.clone();
 					out.addAll(0, prices);
 				} while (startCmp.before(earliestDay));
 
@@ -290,7 +281,6 @@ public class DataRepo {
 	}
 
 
-
 	//////////////////////////
 	// Potentially obsolete???
 	//////////////////////////
@@ -299,6 +289,7 @@ public class DataRepo {
 		try {
 			// @Cleanup increase limit to the maximum (1000) for production
 			// @Cleanup As of now this limit value has to be synced with the offset when creating the Marketstack APIReq bc of hardcoded values
+			APIReq apiMarketstack = getApiMarketstack();
 			apiMarketstack.setQueries("limit", "10");
 			FutureList<UnorderedList<Stock>> fl = apiMarketstack.getPaginatedJSONList("tickers", threadPool, 8,
 					(Function<Integer, UnorderedList<Stock>>) (size -> {
@@ -435,6 +426,8 @@ public class DataRepo {
 	// the second the ending date. If an error happened, `null` is returned
 	public static <T> Future<T> getTradingPeriod(Sonifiable s, Function<Calendar[], T> callback) {
 		return threadPool.submit(() -> {
+			APIReq apiLeeway = getApiLeeway();
+			APIReq apiTwelvedata = getApiTwelvedata();
 			Calendar[] res = { null, null };
 			T out = null;
 			try {

@@ -1,20 +1,14 @@
 package app.ui;
 
-import java.io.IOException;
-import java.net.URL;
-import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.List;
-import java.util.ResourceBundle;
-import java.util.Timer;
-import java.util.TimerTask;
-import java.util.function.Function;
-
-import javafx.application.Platform;
+import app.AppError;
+import app.communication.*;
+import app.mapping.*;
+import audio.synth.EvInstrEnum;
+import audio.synth.InstrumentEnum;
+import dataRepo.FilterFlag;
+import dataRepo.Sonifiable;
+import dataRepo.SonifiableID;
 import javafx.collections.ObservableList;
-import javafx.event.ActionEvent;
-import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
@@ -22,15 +16,7 @@ import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.CheckBox;
-import javafx.scene.control.ChoiceBox;
-import javafx.scene.control.DateCell;
-import javafx.scene.control.DatePicker;
-import javafx.scene.control.Label;
-import javafx.scene.control.SelectionModel;
-import javafx.scene.control.SingleSelectionModel;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.AnchorPane;
@@ -41,24 +27,12 @@ import javafx.stage.Stage;
 import javafx.util.Duration;
 import util.ArrayFunctions;
 import util.DateUtil;
-import app.AppError;
-import app.communication.EventQueues;
-import app.communication.Msg;
-import app.communication.MsgToSMType;
-import app.communication.MsgToUIType;
-import app.communication.MusicData;
-import app.communication.SonifiableFilter;
-import app.mapping.ExchangeParam;
-import app.mapping.InstrParam;
-import app.mapping.LineData;
-import app.mapping.Mapping;
-import app.mapping.PointData;
-import app.mapping.RangeData;
-import audio.synth.EvInstrEnum;
-import audio.synth.InstrumentEnum;
-import dataRepo.Sonifiable;
-import dataRepo.SonifiableID;
-import dataRepo.FilterFlag;
+
+import java.io.IOException;
+import java.net.URL;
+import java.time.LocalDate;
+import java.util.*;
+import java.util.function.Function;
 
 public class MainSceneController implements Initializable {
     // WARNING: Kommentare werden noch normalisiert
@@ -98,11 +72,13 @@ public class MainSceneController implements Initializable {
     private LocalDate minDateEnd = LocalDate.now().minusMonths(3).plusDays(3);
     private LocalDate maxDateEnd = LocalDate.now();
 
+    private Timer loadingAnimTimer;
     private ImageView loading;
     private Image closeImg;
     private CheckEQService checkEQService;
     private Mapping mapping = new Mapping();
     private boolean currentlyUpdatingCB = false;
+    private boolean startedSonification = false;
 
     private String[] locations = { "Deutschland" }; // TODO: Get available locations from StateManager
 
@@ -141,7 +117,7 @@ public class MainSceneController implements Initializable {
 
         closeImg = new Image(getClass().getResource("/close_icon.png").toExternalForm());
 
-        checkEQService = new CheckEQService();
+            checkEQService = new CheckEQService();
         checkEQService.setPeriod(Duration.millis(100));
         checkEQService.setOnSucceeded((event) -> {
             List<Msg<MsgToUIType>> messages = checkEQService.getValue();
@@ -156,11 +132,30 @@ public class MainSceneController implements Initializable {
                             addToCheckList(s);
                         }
                     }
-                    case LOADABLE_MAPPINGS -> System.out.println("ERROR: Msg-Type LOADABLE_MAPPINGS is not yet implemented");
-                    case ERROR -> displayError((String) msg.data, "Interner Fehler");
-                    case VALIDATION_DONE -> System.out.println("ERROR: Msg-Type VALIDATION_DONE is not yet implemented");
-                    case VALIDATION_ERROR -> displayError((String) msg.data, "Ungültiges Mapping");
-                    case FINISHED -> switchToMusicScene((MusicData) msg.data);
+                    case SONIFIABLE_FILTER -> {
+                        SonifiableFilter filter = (SonifiableFilter) msg.data;
+                        searchBar.setText(filter.prefix);
+                        int categoryIdx = ArrayFunctions.findIndex(categoryValues, c -> c.equals(filter.categoryFilter));
+                        categoriesCB.getSelectionModel().select(categoryIdx);
+                    }
+                    case ERROR -> {
+                        startedSonification = false;
+                        CommonController.displayError(anchor, (String) msg.data, "Interner Fehler");
+                        if (loadingAnimTimer != null) loadingAnimTimer.cancel();
+                        if (loading != null) {
+                            anchor.getChildren().remove(loading);
+                            loading = null;
+                        }
+                    }
+                    case MAPPING -> {
+                        mapping = (Mapping) msg.data;
+                        showMapping();
+                        enableBtnIfValid();
+                    }
+                    case FINISHED -> {
+                        startedSonification = false;
+                        switchToMusicScene((MusicData) msg.data);
+                    }
                 }
             }
         });
@@ -216,8 +211,9 @@ public class MainSceneController implements Initializable {
 
         startBtn.setOnAction(ev -> {
             try {
+                startBtn.setDisable(true);
+                startedSonification = true;
                 EventQueues.toSM.add(new Msg<>(MsgToSMType.START, mapping));
-                // startBtn.setDisable(true);
                 // Show loading image
                 loading = new ImageView(new Image(getClass().getResource("/loading.png").toExternalForm()));
                 double loadingWidth = 150;
@@ -228,8 +224,10 @@ public class MainSceneController implements Initializable {
                 loading.setLayoutY(anchor.getScene().getHeight() / 2 - loadingHeight / 2);
                 anchor.getChildren().add(loading);
                 // Animate loading image
-                Timer loadingAnimTimer = new Timer();
+                loadingAnimTimer = new Timer();
                 int nextFrameInMs = 60;
+                loadingAnimTimer.cancel(); // In case the animation was already playing
+                loadingAnimTimer = new Timer();
                 loadingAnimTimer.scheduleAtFixedRate(new TimerTask() {
                     private int counter = 1;
                     public void run() {
@@ -242,6 +240,10 @@ public class MainSceneController implements Initializable {
                 // TODO: Error handling
             }
         });
+
+        filterCB.setCursor(Cursor.HAND);
+        locationCB.setCursor(Cursor.HAND);
+        categoriesCB.setCursor(Cursor.HAND);
 
         mapping.setOnInstrAdded(inst -> instAdded(inst.toString()));
         mapping.setOnEvInstrAdded(inst -> instAdded(inst.toString()));
@@ -277,6 +279,7 @@ public class MainSceneController implements Initializable {
 
     public void switchToMusicScene(MusicData musicData) {
         try {
+            checkEQService.cancel();
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/MusicScene.fxml"));
             Parent root = loader.load();
             MusicSceneController controller = loader.getController();
@@ -290,42 +293,8 @@ public class MainSceneController implements Initializable {
             stage.show();
         } catch (IOException e) {
             e.printStackTrace();
-            displayError("Fehler beim Laden de nächsten UI-Szene", "Interner Fehler");
+            CommonController.displayError(anchor, "Fehler beim Laden de nächsten UI-Szene", "Interner Fehler");
         }
-    }
-
-    @FXML
-    private void displayError(String errorMessage, String errorTitle) {
-        // TODO: Make prettier & make text actually readable
-        System.out.println(errorMessage);
-        Pane errorPane = new Pane();
-        errorPane.setId("errorPane");
-        errorPane.setLayoutX(542);
-        errorPane.setLayoutY(200);
-        errorPane.setPrefHeight(500);
-        errorPane.toFront();
-        errorPane.setPrefWidth(500);
-        Label errorMes = new Label(errorMessage);
-        errorMes.setId("errorMessage");
-        errorMes.setLayoutY(50);
-        errorMes.setLayoutX(125);
-        Label errorTit = new Label(errorTitle);
-        errorTit.setId("errorTitle");
-        errorTit.setLayoutY(20);
-        errorTit.setLayoutX(20);
-        Button close = new Button("Schließen");
-        close.setOnAction(new EventHandler<ActionEvent>() {
-            @Override
-            public void handle(ActionEvent e) {
-                anchor.getChildren().remove(errorPane);
-            }
-        });
-        close.setLayoutX(330);
-        close.setLayoutY(20);
-        close.setId("closeBtn");
-        errorPane.getChildren().addAll(errorMes, close, errorTit);
-        anchor.getChildren().add(errorPane);
-
     }
 
     void clearCheckList() {
@@ -334,6 +303,7 @@ public class MainSceneController implements Initializable {
 
     public void addToCheckList(Sonifiable sonifiable) {
         CheckBox cBox = new CheckBox(sonifiable.getName());
+        cBox.setCursor(Cursor.HAND);
         cBox.setUserData(sonifiable);
 
         if (mapping.hasSonifiable(sonifiable.getId())) {
@@ -346,9 +316,9 @@ public class MainSceneController implements Initializable {
                 if (paneBoxSonifiables.getChildren().size() < Mapping.MAX_SONIFIABLES_AMOUNT) {
                     stockPane[0]=  addToPaneBox((Sonifiable) cBox.getUserData());
                 } else {
-                    displayError(
+                    CommonController.displayError(anchor,
                             "Zu viele Börsenkurse gewählt. Es dürfen höchstens "
-                                    + Integer.toString(Mapping.MAX_SONIFIABLES_AMOUNT) + " Börsenkurse gewählt werden.",
+                                    + Mapping.MAX_SONIFIABLES_AMOUNT + " Börsenkurse gewählt werden.",
                             "Zu viele Börsenkurse");
                     cBox.setSelected(false);
                 }
@@ -390,10 +360,14 @@ public class MainSceneController implements Initializable {
 
     @FXML
     public Pane addToPaneBox(Sonifiable sonifiable) {
+        return addToPaneBox(sonifiable, false);
+    }
+
+    public Pane addToPaneBox(Sonifiable sonifiable, boolean showMapping) {
         // add a Sharepanel to the Panel Box
         // Checking whether the maximum of sharePanels has already been reached must be
         // done before calling this function
-        Pane test  = createSharePane(sonifiable);
+        Pane test  = createSharePane(sonifiable, showMapping);
         paneBoxSonifiables.getChildren().add(test);
         paneBoxSonifiables.setPrefHeight((paneBoxSonifiables.getChildren().size()) * 511.0);
         return test;
@@ -413,7 +387,7 @@ public class MainSceneController implements Initializable {
         children.add(line);
     }
 
-    private void addStockParamToPane(String text, String cssClass, int labelX, int labelY, int cb1X, int cb1Y, int cb2X, int cb2Y, Sonifiable sonifiable, ExchangeParam eparam, ObservableList<Node> children) {
+    private void addStockParamToPane(String text, String cssClass, int labelX, int labelY, int cb1X, int cb1Y, int cb2X, int cb2Y, Sonifiable sonifiable, ExchangeParam eparam, ObservableList<Node> children, boolean showMapping) {
         Label label = new Label(text);
         label.getStyleClass().add(cssClass);
         label.setLayoutX(labelX);
@@ -427,12 +401,21 @@ public class MainSceneController implements Initializable {
             evInstCB.getItems().addAll(evInsts);
             evInstCB.setLayoutX(cb1X);
             evInstCB.setLayoutY(cb1Y);
+            evInstCB.setCursor(Cursor.HAND);
+            if (showMapping) {
+                for (EvInstrMapping evInstMap : mapping.getEventInstruments()) {
+                    if (evInstMap.getData().getData().equals(eparam) && evInstMap.getData().getId().equals(sonifiable.getId())) {
+                        evInstCB.getSelectionModel().select(evInstMap.getInstrument().toString());
+                        break;
+                    }
+                }
+            }
             evInstCB.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
                 try {
                     if (oldValue != null) mapping.rmEvInstr(sonifiable.getId(), (PointData) eparam);
                     if (newValue != null) mapping.addEvInstr(EvInstrEnum.fromString(newValue), sonifiable, (PointData) eparam);
                 } catch (AppError e) {
-                    displayError(e.getMessage(), "Interner Fehler");
+                    CommonController.displayError(anchor, e.getMessage(), "Interner Fehler");
                 }
             });
             children.add(evInstCB);
@@ -444,11 +427,21 @@ public class MainSceneController implements Initializable {
             instCB.getItems().addAll(instKeys);
             instCB.setLayoutX(cb1X);
             instCB.setLayoutY(cb1Y);
+            instCB.setCursor(Cursor.HAND);
 
             ChoiceBox<String> paramCB = new ChoiceBox<>();
             paramCB.setLayoutX(cb2X);
             paramCB.setLayoutY(cb2Y);
+            paramCB.setCursor(Cursor.HAND);
             paramCB.setDisable(true);
+            if (showMapping) {
+                MappedInstr mi = mapping.get(new ExchangeData<>(sonifiable.getId(), eparam));
+                if (mi != null) {
+                    instCB.getSelectionModel().select(mi.instr.toString());
+                    paramCB.getSelectionModel().select(mi.param.toString());
+                    paramCB.setDisable(false);
+                }
+            }
             instCB.getSelectionModel().selectedIndexProperty().addListener((observable, oldIdx, newIdx) -> {
                 try {
                     // If the new instrument already has the selected parameter mapped or if newValue is null
@@ -485,7 +478,7 @@ public class MainSceneController implements Initializable {
                     enableBtnIfValid();
                     currentlyUpdatingCB = false;
                 } catch (AppError e) {
-                    displayError(e.getMessage(), "Interner Fehler");
+                    CommonController.displayError(anchor, e.getMessage(), "Interner Fehler");
                 }
             });
             paramCB.getSelectionModel().selectedItemProperty().addListener((observable, oldStr, newStr) -> {
@@ -511,7 +504,7 @@ public class MainSceneController implements Initializable {
                     currentlyUpdatingCB = false;
                 } catch (AppError e) {
                     paramCB.getSelectionModel().select(oldStr);
-                    displayError(e.getMessage(), "Interner Fehler");
+                    CommonController.displayError(anchor, e.getMessage(), "Interner Fehler");
                 }
             });
 
@@ -520,12 +513,13 @@ public class MainSceneController implements Initializable {
         }
     }
 
-    private Pane createSharePane(Sonifiable sonifiable) { // initialize and dek the Share Pane
+    private Pane createSharePane(Sonifiable sonifiable, boolean showMapping) { // initialize and dek the Share Pane
         mapping.addSonifiable(sonifiable);
         updateDateRange();
 
         Pane stockPane = new Pane();
         stockPane.getStyleClass().add("stockPane");
+        stockPane.setUserData(sonifiable.getId());
         Label tField = new Label();
         tField.setText(sonifiable.getName());
         tField.getStyleClass().add("txtField");
@@ -548,19 +542,37 @@ public class MainSceneController implements Initializable {
         addLine(null, 174, 53, 0, 0, 391, 0, stockPane.getChildren());
         addLine("pinkline", 306, 168, -100, -60, -100, 263, stockPane.getChildren());
         addLine("pinkline", 512, 177, -100, -60, -100, 263, stockPane.getChildren());
-
-        addStockParamToPane("Preis", "paneShareLabel", 14, 80, 14, 115, 14, 160, sonifiable, LineData.PRICE, stockPane.getChildren());
-        addStockParamToPane("Gleitender Durchschnitt", "paneShareLabel", 14, 215, 14, 250, 14, 295, sonifiable, LineData.MOVINGAVG, stockPane.getChildren());
-        addStockParamToPane("Steigungsgrad", "paneShareLabel", 14, 350, 14, 385, 14, 430, sonifiable, LineData.RELCHANGE, stockPane.getChildren());
-        addStockParamToPane("Flagge", "paneShareLabel", 226, 80, 226, 115, 226, 160, sonifiable, RangeData.FLAG, stockPane.getChildren());
-        addStockParamToPane("Dreieck", "paneShareLabel", 226, 215, 226, 250, 226, 295, sonifiable, RangeData.TRIANGLE, stockPane.getChildren());
-        addStockParamToPane("V-Form", "paneShareLabel", 226, 350, 226, 385, 226, 430, sonifiable, RangeData.VFORM, stockPane.getChildren());
-        addStockParamToPane("Trendbrüche", "paneShareLabel", 422, 80, 422, 115, 0, 0, sonifiable, PointData.TRENDBREAK, stockPane.getChildren());
-        addStockParamToPane("EQMOVINGAVG", "paneShareLabel", 422, 180, 422, 215, 0, 0, sonifiable, PointData.EQMOVINGAVG, stockPane.getChildren());
-        addStockParamToPane("EQSUPPORT", "paneShareLabel", 422, 280, 422, 315, 0, 0, sonifiable, PointData.EQSUPPORT, stockPane.getChildren());
-        addStockParamToPane("EQRESIST", "paneShareLabel", 422, 380, 422, 415, 0, 0, sonifiable, PointData.EQRESIST, stockPane.getChildren());
+        addStockParamToPane("Preis", "paneShareLabel", 14, 80, 14, 115, 14, 160, sonifiable, LineData.PRICE, stockPane.getChildren(), showMapping);
+        addStockParamToPane("Gleitender Durchschnitt", "paneShareLabel", 14, 215, 14, 250, 14, 295, sonifiable, LineData.MOVINGAVG, stockPane.getChildren(), showMapping);
+        addStockParamToPane("Steigungsgrad", "paneShareLabel", 14, 350, 14, 385, 14, 430, sonifiable, LineData.RELCHANGE, stockPane.getChildren(), showMapping);
+        addStockParamToPane("Flagge", "paneShareLabel", 226, 80, 226, 115, 226, 160, sonifiable, RangeData.FLAG, stockPane.getChildren(), showMapping);
+        addStockParamToPane("Dreieck", "paneShareLabel", 226, 215, 226, 250, 226, 295, sonifiable, RangeData.TRIANGLE, stockPane.getChildren(), showMapping);
+        addStockParamToPane("V-Form", "paneShareLabel", 226, 350, 226, 385, 226, 430, sonifiable, RangeData.VFORM, stockPane.getChildren(), showMapping);
+        addStockParamToPane("Trendbrüche", "paneShareLabel", 422, 80, 422, 115, 0, 0, sonifiable, PointData.TRENDBREAK, stockPane.getChildren(), showMapping);
+        addStockParamToPane("EQMOVINGAVG", "paneShareLabel", 422, 180, 422, 215, 0, 0, sonifiable, PointData.EQMOVINGAVG, stockPane.getChildren(), showMapping);
+        addStockParamToPane("EQSUPPORT", "paneShareLabel", 422, 280, 422, 315, 0, 0, sonifiable, PointData.EQSUPPORT, stockPane.getChildren(), showMapping);
+        addStockParamToPane("EQRESIST", "paneShareLabel", 422, 380, 422, 415, 0, 0, sonifiable, PointData.EQRESIST, stockPane.getChildren(), showMapping);
 
         return stockPane;
+    }
+
+    private void showMapping() {
+        for (Sonifiable s : mapping.getSonifiables()) {
+            addToPaneBox(s, true);
+        }
+        for (String name : mapping.getMappedInstrNames()) {
+            instAdded(name);
+        }
+        startPicker.setValue(DateUtil.calendarToLocalDate(mapping.getStartDate()));
+        endPicker.setValue(DateUtil.calendarToLocalDate(mapping.getEndDate()));
+        System.out.println("SoundLength: " + mapping.getSoundLength());
+
+        String min = Integer.toString((int) (mapping.getSoundLength() / 60));
+        String sec = Integer.toString(mapping.getSoundLength() % 60);
+        audioLength1.setText(min);
+        audioLength.setText(sec);
+        assert filterValues[0] == false;
+        filterCB.getSelectionModel().select(mapping.getHighPass() ? 1 : 0);
     }
 
     private void updateDateRange() {
@@ -594,10 +606,8 @@ public class MainSceneController implements Initializable {
     }
 
     private void enableBtnIfValid() {
-        if (mapping.isValid())
-            startBtn.setDisable(false);
-        else
-            startBtn.setDisable(true);
+
+        startBtn.setDisable(startedSonification || !mapping.isValid());
     }
 
     private void instAdded(String name) {

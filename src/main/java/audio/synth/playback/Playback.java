@@ -26,17 +26,9 @@ public class Playback implements Runnable {
     @Override
     public void run() {
         // TODO test / implement edge behaviour
-        System.out.println("Entering playWithControls.");
-        System.out.println(
-                "The audio playback can currently be controlled with the following commands: \n p: pause \n r: resume \n jf: jump forward 2s \n jb: jump backwards 2s \n rs: reset to start \n s: kill  \n ");
-        System.out.println(
-                "Please do not try to test edge-case behaviour. It is untested and may result in outOfBoundsExceptions");
         positionPointer = 0;
         paused = false;
         running = true;
-        System.out.println("started thread for playback controller.");
-        System.out.println("data.length/playBackSampleSize: " + data.length / PLAYBACK_SAMPLE_SIZE);
-
         try {
             s.open();
             s.start();
@@ -57,7 +49,6 @@ public class Playback implements Runnable {
             }
 
             while (!EventQueues.toPlayback.isEmpty()) {
-                System.out.println("getting a value from the event queue:" + EventQueues.toPlayback.peek());
                 PlayControlEvent nextEvent = new PlayControlEvent();
                 try {
                     nextEvent = EventQueues.toPlayback.take();
@@ -83,6 +74,5 @@ public class Playback implements Runnable {
         }
         s.drain();
         s.close();
-        System.out.println("finished loop");
     }
 }

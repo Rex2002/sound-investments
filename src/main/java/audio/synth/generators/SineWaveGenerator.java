@@ -44,7 +44,7 @@ public class SineWaveGenerator {
         //  ampIdx: same as freqIdx, just for amplitude
         //  sectionLen: how long is the current frequency played (i.e. does it occur once in a row, twice, etc. in the freq. array)
         //  sectionOffset: where does the section start in samples. This is needed to always restart the enveloping-counter at zero when a frequency change happens.
-        for(int i = 0; i < sin.length; i += 2){
+        for(int i = 0; i < sin.length - 1; i += 2){
             if(freqIdx == -1 || (freq[freqIdx] != freq[Util.getRelPosition(i, sin.length, freq.length)])){
                 freqIdx = Util.getRelPosition(i, sin.length, freq.length);
                 sectionOffset = i;

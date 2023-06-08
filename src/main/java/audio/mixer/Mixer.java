@@ -21,7 +21,7 @@ public class Mixer {
             double mixFactor = 1;
             // reduce amount of backing to 90% of original volume
             if (i == audioStream.length -1) {
-                mixFactor = 0.9;
+                mixFactor = 0.95;
             }
 
             for (int j = 0; j < audioStream.length; j++) {
