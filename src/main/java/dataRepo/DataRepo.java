@@ -28,7 +28,7 @@ public class DataRepo {
 
 	private static final String[] apiToksLeeway = { "pgz64a5qiuvw4qhkoullnx", "9pe3xyaplenvfvbnyxtomm",
 			"r7splaijduabfpcu2z2l14", "o5npdx6elm2pcpp395uaun", "2ja5gszii8g63hzjd41x78", "ftd5l4hscm9biueu5ptptr",
-			"42dreongzzo5yqkyg2r3cr", "axt2o7xkx1cxd9nsinqfu6", "rumn8riwt3oo18z1cluvz1" };
+			"42dreongzzo5yqkyg2r3cr", "axt2o7xkx1cxd9nsinqfu6", "rumn8riwt3oo18z1cluvz1", "9rjaye34gvir42j113qf7r", "6gqkwy7si5lv1tgicp28le", "6yylrshzzhlsdhf26ysmq9" };
 	private static final String[] apiToksMarketstack = { "4b6a78c092537f07bbdedff8f134372d",
 			"0c2e8a9c96f2a74c0049f4b662f47b40",
 			"621fc5e0add038cc7d9697bcb7f15caa", "4312dfd8788579ec14ee9e9c9bec4557",
