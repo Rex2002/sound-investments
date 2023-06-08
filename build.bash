@@ -1,7 +1,7 @@
 # @author Val Richter
 
-javaPath=C:/Languages/Java/jdk-20.0.1
-javafxPath=C:/Languages/Java/javafx-sdk-20.0.1
+javaPath=/opt/homebrew/Cellar/openjdk/20.0.1
+javafxPath=/Users/malterichert/Dev/javafx-sdk-20.0.1
 jarName=SoundInvestments.jar
 mavenJarPath=./target/sound-investments-1.0-SNAPSHOT-jar-with-dependencies.jar
 
@@ -34,6 +34,9 @@ cp -r "./src/main/resources" "$distResourcesPath" >/dev/null
 # Write executable into the distributable
 echo "Writing Script..."
 echo "java\bin\java.exe --module-path javafx\lib --add-modules javafx.base,javafx.controls,javafx.fxml,javafx.graphics -jar $jarName" >dist/SoundInvestments.bat
-echo "./java/bin/java.exe --module-path javafx\lib --add-modules javafx.base,javafx.controls,javafx.fxml,javafx.graphics -jar $jarName" >dist/SoundInvestments.bash
+echo "#! /usr/bin/env bash
+cd -- \$(dirname \$BASH_SOURCE)
+java --module-path javafx/lib --add-modules javafx.base,javafx.controls,javafx.fxml,javafx.graphics -jar $jarName" >dist/SoundInvestments.command
+chmod a+x dist/SoundInvestments.command
 
 echo "Done"
