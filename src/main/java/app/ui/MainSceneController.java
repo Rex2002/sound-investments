@@ -29,7 +29,10 @@ import javafx.stage.Stage;
 import javafx.util.Duration;
 import java.io.IOException;
 import java.net.URL;
+import java.text.ParseException;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.function.Function;
 
@@ -176,6 +179,12 @@ public class MainSceneController implements Initializable {
                     categoryValues[categoriesCB.getSelectionModel().getSelectedIndex()])));
         });
 
+        startPicker.getEditor().textProperty().addListener((observable, oldValue, newValue) -> {
+            try {
+                LocalDate date = DateUtil.localDateFromGermanDateStr(newValue);
+                startPicker.setValue(date);
+            } catch (ParseException e) {}
+        });
         startPicker.valueProperty().addListener((observable, oldValue, newValue) -> {
             try {
                 mapping.setStartDate(DateUtil.localDateToCalendar(newValue));
@@ -183,6 +192,12 @@ public class MainSceneController implements Initializable {
             } catch (Exception e) {
                 // TODO: Error Handling
             }
+        });
+        endPicker.getEditor().textProperty().addListener((observable, oldValue, newValue) -> {
+            try {
+                LocalDate date = DateUtil.localDateFromGermanDateStr(newValue);
+                endPicker.setValue(date);
+            } catch (ParseException e) {}
         });
         endPicker.valueProperty().addListener((observable, oldValue, newValue) -> {
             try {
