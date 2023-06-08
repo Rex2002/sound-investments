@@ -102,6 +102,53 @@ public class Effect {
         return input;
     }
 
+    public static double[] anotherGoAtReverb(double[] input, double[] feedback, int[] delayArray){
+        int sectionLen = input.length / delayArray.length;
+        int delayPointer = 0;
+        int delay, sectionSize;
+        while(delayPointer < delayArray.length){
+            delay = delayArray[delayPointer];
+            sectionSize = 0;
+            do {
+                sectionSize++;
+            }while(delayPointer + sectionSize < delayArray.length && delayArray[delayPointer] == delayArray[delayPointer + sectionSize]);
+            input = echo(input, feedback, delay, delayPointer * sectionLen, sectionSize * sectionLen);
+            delayPointer += sectionSize;
+        }
+        System.out.println("finished applying reverb");
+        return input;
+    }
+
+    public static double[] echo(double[] input, double[] feedback, int delay, int start, int length){
+        if(delay <= 10){
+            return input;
+        }
+        double[] preOut = new double[input.length];
+        double[] bufferL = new double[input.length / 2];
+        double[] bufferR = new double[input.length / 2];
+        bufferL[0] = input[0];
+        bufferR[0] = input[1];
+        int cursor = 0;
+        for(int pos = 0; pos < input.length/2; pos++){
+            double inL = input[2 * pos];
+            double inR = input[2 * pos + 1];
+            double bL = bufferL[cursor];
+            double bR = bufferR[cursor];
+            bufferL[cursor] = ( inL +  bL * ((pos > start && pos < start + length) ? feedback[((int) (2 * (double) pos/input.length) * feedback.length)] : 0.1));
+            bufferR[cursor] = ( inR +  bR * ((pos > start && pos < start + length) ? feedback[((int) (2 * (double) pos/input.length) * feedback.length)] : 0.1));
+            cursor += 1;
+            if(cursor >= delay){
+                cursor = 0;
+            }
+            preOut[2 * pos] = bL;
+            preOut[2 * pos + 1] = bR;
+        }
+        System.out.println("Max after another go: " + Util.findAverage(preOut)/Util.findMax(preOut));
+//        System.out.println("Average: " + Util.findAverage(preOut));
+        return preOut;
+    }
+
+
     public static double[] echo(double[] input, double[] feedback, int[] delayArray){
         int delay;
         double[] preOut = new double[input.length];

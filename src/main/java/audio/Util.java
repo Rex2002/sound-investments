@@ -58,4 +58,8 @@ public class Util {
         }
         return outBuffer;
     }
+
+    public static double findAverage(double[] preOut) {
+        return Arrays.stream(preOut).summaryStatistics().getAverage();
+    }
 }
