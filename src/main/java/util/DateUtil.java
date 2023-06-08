@@ -10,9 +10,11 @@ import java.util.GregorianCalendar;
 import java.util.Locale;
 
 public class DateUtil {
-	public static SimpleDateFormat fmtDate = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
-	public static SimpleDateFormat fmtDatetime = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss", Locale.US);
-	public static DateTimeFormatter dateTimeFmt = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+	public static SimpleDateFormat fmtDate       = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
+	public static SimpleDateFormat fmtDatetime   = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss", Locale.US);
+	public static SimpleDateFormat germanDateFmt = new SimpleDateFormat("dd.MM.yyyy", Locale.GERMANY);
+	public static int germanDateFmtExpectedLen   = 10;
+	public static DateTimeFormatter dateTimeFmt  = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
 	public static Calendar calFromDateTimeStr(String dateTimeStr) throws ParseException {
 		Calendar cal = new GregorianCalendar();
@@ -50,5 +52,11 @@ public class DateUtil {
 	public static LocalDate calendarToLocalDate(Calendar c) {
 		if (c == null) return null;
 		return LocalDate.ofInstant(c.toInstant(), ZoneId.systemDefault());
+	}
+
+	public static LocalDate localDateFromGermanDateStr(String dateStr) throws ParseException {
+		if (dateStr.length() != germanDateFmtExpectedLen)
+			throw new ParseException("Invalid length", 0);
+		return LocalDate.ofInstant(germanDateFmt.parse(dateStr).toInstant(), ZoneId.systemDefault());
 	}
 }
