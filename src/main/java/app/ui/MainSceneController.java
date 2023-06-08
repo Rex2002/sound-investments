@@ -1,15 +1,6 @@
 package app.ui;
 
-import app.AppError;
-import app.communication.*;
-import app.mapping.*;
-import audio.synth.EvInstrEnum;
-import audio.synth.InstrumentEnum;
-import dataRepo.FilterFlag;
-import dataRepo.Sonifiable;
-import dataRepo.SonifiableID;
-import util.ArrayFunctions;
-import util.DateUtil;
+import javafx.application.Platform;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -23,8 +14,11 @@ import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.scene.shape.Line;
+import javafx.scene.shape.Rectangle;
+import javafx.scene.text.Font;
 import javafx.stage.Stage;
 import javafx.stage.Window;
 import javafx.util.Duration;
@@ -32,70 +26,101 @@ import java.io.IOException;
 import java.net.URL;
 import java.text.ParseException;
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.function.Function;
+import app.AppError;
+import app.communication.*;
+import app.mapping.*;
+import audio.synth.EvInstrEnum;
+import audio.synth.InstrumentEnum;
+import dataRepo.FilterFlag;
+import dataRepo.Sonifiable;
+import dataRepo.SonifiableID;
+import util.ArrayFunctions;
+import util.DateUtil;
+import util.Maths;
+import util.UnorderedList;
 
 public class MainSceneController implements Initializable {
-    // WARNING: Kommentare werden noch normalisiert
-    @FXML
-    private AnchorPane anchor;
-    @FXML
-    private TextField searchBar;
-    @FXML
-    private Button startBtn;
-    @FXML
-    private VBox paneBoxSonifiables;
-    @FXML
-    private Label headerTitle;
-    @FXML
-    private ChoiceBox<String> categoriesCB;
-    @FXML
-    private ChoiceBox<String> locationCB;
-    @FXML
-    private ChoiceBox<String> filterCB;
-    @FXML
-    private DatePicker startPicker;
-    @FXML
-    private DatePicker endPicker;
-    @FXML
-    private TextField audioLength;
-    @FXML
-    private TextField audioLength1;
-    @FXML
-    private VBox checkVBox;
-    @FXML
-    private VBox instBox;
-    @FXML
-    private double duration;
+    @FXML private AnchorPane        anchor;
+    @FXML private Rectangle         headerRect;
+    @FXML private Label             headerTitle;
+    @FXML private Pane              searchPane;
+    @FXML private Label             searchPaneTitle;
+    @FXML private Line              searchPaneTitleLine;
+    @FXML private TextField         searchBar;
+    @FXML private Label             locationLabel;
+    @FXML private ChoiceBox<String> locationCB;
+    @FXML private Label             categoriesLabel;
+    @FXML private ChoiceBox<String> categoriesCB;
+    @FXML private ScrollPane        resultsScrollPane;
+    @FXML private VBox              resultsVBox;
+    @FXML private Pane              sonifiablesPane;
+    @FXML private Label             sonifiablesPaneTitle;
+    @FXML private Line              sonifiablesPaneTitleLine;
+    @FXML private ScrollPane        sonifiablesScrollPane;
+    @FXML private VBox              sonifiablesVBox;
+    @FXML private Pane              settingsPane;
+    @FXML private Label             settingsPaneTitle;
+    @FXML private Line              settingsPaneTitleLine;
+    @FXML private Label             startDateLabel;
+    @FXML private DatePicker        startDatePicker;
+    @FXML private Label             endDateLabel;
+    @FXML private DatePicker        endDatePicker;
+    @FXML private Label             lengthLabel;
+    @FXML private TextField         lengthMinField;
+    @FXML private TextField         lengthSecField;
+    @FXML private Label             lengthSep;
+    @FXML private ScrollPane        instScrollPane;
+    @FXML private VBox              instVBox;
+    @FXML private Label             filterLabel;
+    @FXML private ChoiceBox<String> filterCB;
+    @FXML private double            duration;
+    @FXML private Button            startBtn;
 
     // These variables are initialized externally
     public Window window;
     public Stage stage;
     public Scene scene;
 
+    private List<Label>     titles;
+    private List<Label>     paneTitles;
+    private List<Label>     minorTitles;
+    private List<Label>     defaultValuesLabels;
+    private List<TextField> defaultValuesTFs;
+    private List<TextField> searchBars;
+    private List<Button>    btns;
+
+    // We are using arrays of size 1 to practically have pointers at those values
+    // which means we can effectively pass the values by reference instead of by value
+    private Font[] headerFont       = { new Font("Rage Italic", 70) };
+    private Font[] paneTitleFont    = { new Font("System Bold", 30) };
+    private Font[] minorTitleFont   = { new Font("System", 25)      };
+    private Font[] defaultValueFont = { new Font("System", 20)      };
+    private Font[] searchBarFont    = { new Font("System", 20)      };
+    private Font[] btnFont          = { new Font("System", 40)      };
+
     private LocalDate minDateStart = LocalDate.now().minusMonths(3);
     private LocalDate maxDateStart = LocalDate.now().minusDays(3);
-    private LocalDate minDateEnd = LocalDate.now().minusMonths(3).plusDays(3);
-    private LocalDate maxDateEnd = LocalDate.now();
+    private LocalDate minDateEnd   = LocalDate.now().minusMonths(3).plusDays(3);
+    private LocalDate maxDateEnd   = LocalDate.now();
 
     private Timer loadingAnimTimer;
     private ImageView loading;
     private Image closeImg;
     private CheckEQService checkEQService;
-    private Mapping mapping = new Mapping();
-    private boolean currentlyUpdatingCB = false;
-    private boolean startedSonification = false;
+    private Mapping mapping                = new Mapping();
+    private boolean currentlyUpdatingCB    = false;
+    private boolean startedSonification    = false;
 
     private String[] locations = { "Deutschland" }; // TODO: Get available locations from StateManager
 
     // Choice-Box String->Value Maps
-    private static String[] categoryKeys = { "Alle Kategorien", "Aktien", "ETFs", "Indizes" };
-    private static FilterFlag[] categoryValues = { FilterFlag.ALL, FilterFlag.STOCK, FilterFlag.ETF, FilterFlag.INDEX };
-    private static String[] filterKeys = { "Low-Pass", "High-Pass" };
-    private static boolean[] filterValues = { false, true };
-    private static String[] instKeys;
+    private static String[]         categoryKeys   = { "Alle Kategorien", "Aktien", "ETFs", "Indizes" };
+    private static FilterFlag[]     categoryValues = { FilterFlag.ALL, FilterFlag.STOCK, FilterFlag.ETF, FilterFlag.INDEX };
+    private static String[]         filterKeys     = { "Low-Pass", "High-Pass" };
+    private static boolean[]        filterValues   = { false, true };
+    private static String[]         instKeys;
     private static InstrumentEnum[] instVals;
 
     private static void setInstMap() {
@@ -111,7 +136,6 @@ public class MainSceneController implements Initializable {
             instVals[i + 2] = insts[i];
         }
     }
-
     static {
         setInstMap();
         assert instKeys.length == instVals.length : "instKeys & instValues are not in sync";
@@ -121,7 +145,18 @@ public class MainSceneController implements Initializable {
 
     @Override
     @SuppressWarnings("unchecked")
-    public void initialize(URL arg0, ResourceBundle arg1) { // Initialisierung mit den Optionen
+    public void initialize(URL arg0, ResourceBundle arg1) {
+        Platform.runLater(() -> {
+            // @Performance Buffer resizing listeners
+            initFontList();
+            layout(stage.getWidth(), stage.getHeight());
+            stage.widthProperty().addListener((obs, oldWidth, newWidth) -> layout(newWidth.doubleValue(), stage.getHeight()));
+            stage.heightProperty().addListener((obs, oldHeight, newHeight) -> layout(stage.getWidth(), newHeight.doubleValue()));
+            // @Perfomance Since not all preliminary values needed for proper layouting may have been computed by JavaFX before
+            // we run the layouting twice in the beginning
+            Platform.runLater(() -> layout(stage.getWidth(), stage.getHeight()));
+        });
+
         categoriesCB.getItems().addAll(MainSceneController.categoryKeys);
         locationCB.getItems().addAll(locations);
         enableBtnIfValid();
@@ -185,17 +220,17 @@ public class MainSceneController implements Initializable {
                     categoryValues[categoriesCB.getSelectionModel().getSelectedIndex()])));
         });
 
-        setDatePickerListeners(startPicker, true);
-        setDatePickerListeners(endPicker, false);
+        setDatePickerListeners(startDatePicker, true);
+        setDatePickerListeners(endDatePicker, false);
         // Set default values
-        startPicker.valueProperty().setValue(LocalDate.now().minusMonths(1));
-        endPicker.valueProperty().setValue(LocalDate.now());
+        startDatePicker.valueProperty().setValue(LocalDate.now().minusMonths(1));
+        endDatePicker.valueProperty().setValue(LocalDate.now());
 
-        audioLength.textProperty().addListener((o, oldVal, newVal) -> updateSoundLength());
-        audioLength1.textProperty().addListener((o, oldVal, newVal) -> updateSoundLength());
+        lengthMinField.textProperty().addListener((o, oldVal, newVal) -> updateSoundLength());
+        lengthSecField.textProperty().addListener((o, oldVal, newVal) -> updateSoundLength());
         // Set default values
-        audioLength.textProperty().setValue("30");
-        audioLength1.textProperty().setValue("0");
+        lengthMinField.textProperty().setValue("30");
+        lengthSecField.textProperty().setValue("0");
 
         filterCB.getItems().addAll(filterKeys);
         filterCB.getSelectionModel().select(0);
@@ -251,6 +286,118 @@ public class MainSceneController implements Initializable {
         mapping.setOnEvInstrRemoved(inst -> instRemoved(inst.toString()));
     }
 
+    private void initFontList() {
+        titles              = new UnorderedList<>(headerTitle);
+        paneTitles          = new UnorderedList<>(searchPaneTitle, sonifiablesPaneTitle, settingsPaneTitle);
+        minorTitles         = new UnorderedList<>(locationLabel, categoriesLabel, startDateLabel, endDateLabel, lengthLabel, filterLabel);
+        defaultValuesLabels = new UnorderedList<>(lengthSep);
+        defaultValuesTFs    = new UnorderedList<>(lengthMinField, lengthSecField);
+        searchBars          = new UnorderedList<>(searchBar);
+        btns                = new UnorderedList<>(startBtn);
+    }
+
+    private void setFonts() {
+        for (Label title : titles)
+            title.setFont(headerFont[0]);
+        for (Label paneTitle : paneTitles)
+            paneTitle.setFont(paneTitleFont[0]);
+        for (Label minorTitle : minorTitles)
+            minorTitle.setFont(minorTitleFont[0]);
+        for (Label defaultValue : defaultValuesLabels)
+            defaultValue.setFont(defaultValueFont[0]);
+        for (TextField defaultValue : defaultValuesTFs)
+            defaultValue.setFont(defaultValueFont[0]);
+        for (TextField searchBar : searchBars)
+            searchBar.setFont(searchBarFont[0]);
+        for (Button btn : btns)
+            btn.setFont(btnFont[0]);
+    }
+
+    // font is expected to be an array of size 1, to have it passed by reference
+    // See also https://stackoverflow.com/a/1068786/13764271 on that topic
+    private void setFontSize(Font[] font, double size) {
+        font[0] = new Font(font[0].getName(), size);
+    }
+
+    private void layout(double width, double height) {
+        anchor.setPrefSize(width, height);
+        double headerHeight = Maths.clamp(height/6d, 30, 100);
+        headerRect.setWidth(width);
+        headerRect.setHeight(headerHeight);
+        double headerPad = Maths.clamp(headerHeight/6d, 0, 20);
+        double headerTitleHeight = headerHeight - 2*headerPad;
+        setFontSize(headerFont, headerTitleHeight);
+        headerTitle.setLayoutX(headerPad);
+        headerTitle.setLayoutY(Math.max(0, headerHeight - headerTitle.getHeight()) / 2);
+
+        // searchPane.setPrefSize();
+        // searchPane.relocate();
+        // searchPaneTitle.setPrefSize();
+        // searchPaneTitle.relocate();
+        // searchPaneTitleLine.setPrefSize();
+        // searchPaneTitleLine.relocate();
+        // searchBar.setPrefSize();
+        // searchBar.relocate();
+        // locationLabel.setPrefSize();
+        // locationLabel.relocate();
+        // locationCB.setPrefSize();
+        // locationCB.relocate();
+        // categoriesLabel.setPrefSize();
+        // categoriesLabel.relocate();
+        // categoriesCB.setPrefSize();
+        // categoriesCB.relocate();
+        // resultsScrollPane.setPrefSize();
+        // resultsScrollPane.relocate();
+        // resultsVBox.setPrefSize();
+        // resultsVBox.relocate();
+        // sonifiablesPane.setPrefSize();
+        // sonifiablesPane.relocate();
+        // sonifiablesPaneTitle.setPrefSize();
+        // sonifiablesPaneTitle.relocate();
+        // sonifiablesPaneTitleLine.setPrefSize();
+        // sonifiablesPaneTitleLine.relocate();
+        // sonifiablesScrollPane.setPrefSize();
+        // sonifiablesScrollPane.relocate();
+        // sonifiablesVBox.setPrefSize();
+        // sonifiablesVBox.relocate();
+        // settingsPane.setPrefSize();
+        // settingsPane.relocate();
+        // settingsPaneTitle.setPrefSize();
+        // settingsPaneTitle.relocate();
+        // settingsPaneTitleLine.setPrefSize();
+        // settingsPaneTitleLine.relocate();
+        // startDateLabel.setPrefSize();
+        // startDateLabel.relocate();
+        // startDatePicker.setPrefSize();
+        // startDatePicker.relocate();
+        // endDateLabel.setPrefSize();
+        // endDateLabel.relocate();
+        // endDatePicker.setPrefSize();
+        // endDatePicker.relocate();
+        // lengthLabel.setPrefSize();
+        // lengthLabel.relocate();
+        // lengthMinField.setPrefSize();
+        // lengthMinField.relocate();
+        // lengthSecField.setPrefSize();
+        // lengthSecField.relocate();
+        // lengthSep.setPrefSize();
+        // lengthSep.relocate();
+        // instScrollPane.setPrefSize();
+        // instScrollPane.relocate();
+        // instVBox.setPrefSize();
+        // instVBox.relocate();
+        // filterLabel.setPrefSize();
+        // filterLabel.relocate();
+        // filterCB.setPrefSize();
+        // filterCB.relocate();
+        // duration.setPrefSize();
+        // duration.relocate();
+        // startBtn.setPrefSize();
+        // startBtn.relocate();
+
+        setFonts();
+    }
+
     private void setDatePickerListeners(DatePicker datePicker, boolean isStartDate) {
         datePicker.getEditor().textProperty().addListener((observable, oldValue, newValue) -> {
             try {
@@ -272,17 +419,17 @@ public class MainSceneController implements Initializable {
     }
 
     private void updateSoundLength() {
-        if (Integer.parseInt(audioLength.getText()) <= 59) {
-            if (audioLength1.getText() != null) {
+        if (Integer.parseInt(lengthMinField.getText()) <= 59) {
+            if (lengthSecField.getText() != null) {
                 Integer minValue = 0;
                 try {
-                    minValue = Integer.parseInt(audioLength1.getText());
+                    minValue = Integer.parseInt(lengthSecField.getText());
                 } catch (NumberFormatException e) {
                 }
 
                 Integer passValue = minValue * 60;
                 try {
-                    passValue += Integer.parseInt(audioLength.getText());
+                    passValue += Integer.parseInt(lengthMinField.getText());
                 } catch (NumberFormatException e) {
                 }
 
@@ -291,8 +438,8 @@ public class MainSceneController implements Initializable {
             }
         } else {
             // falsche Eingabe
-            audioLength.setText(null);
-            audioLength.setPromptText("0-59");
+            lengthMinField.setText(null);
+            lengthMinField.setPromptText("0-59");
         }
         enableBtnIfValid();
     }
@@ -315,7 +462,7 @@ public class MainSceneController implements Initializable {
     }
 
     void clearCheckList() {
-        checkVBox.getChildren().clear();
+        resultsVBox.getChildren().clear();
     }
 
     public void addToCheckList(Sonifiable sonifiable) {
@@ -328,7 +475,7 @@ public class MainSceneController implements Initializable {
         }
         cBox.selectedProperty().addListener((observable, oldValue, newValue) -> {
             if (newValue) {
-                if (paneBoxSonifiables.getChildren().size() < Mapping.MAX_SONIFIABLES_AMOUNT) {
+                if (sonifiablesVBox.getChildren().size() < Mapping.MAX_SONIFIABLES_AMOUNT) {
                     addToPaneBox((Sonifiable) cBox.getUserData());
                 } else {
                     CommonController.displayError(anchor,
@@ -341,12 +488,12 @@ public class MainSceneController implements Initializable {
                 rmSonifiable(((Sonifiable) cBox.getUserData()).getId(), false);
             }
         });
-        checkVBox.setPrefHeight((checkVBox.getChildren().size()) * 42.0);
-        checkVBox.getChildren().add(cBox);
+        resultsVBox.setPrefHeight((resultsVBox.getChildren().size()) * 42.0);
+        resultsVBox.getChildren().add(cBox);
     }
 
     private void rmSonifiable(SonifiableID id, boolean updateSearchResult) {
-        ObservableList<Node> children = paneBoxSonifiables.getChildren();
+        ObservableList<Node> children = sonifiablesVBox.getChildren();
         int idx = 0;
         while (idx < children.size() && !id.equals(children.get(idx).getUserData()))
             idx++;
@@ -358,17 +505,17 @@ public class MainSceneController implements Initializable {
     }
 
     private void rmSonifiable(SonifiableID id, Pane stockPane, boolean updateSearchResult) {
-        rmSonifiable(id, paneBoxSonifiables.getChildren().indexOf(stockPane), updateSearchResult);
+        rmSonifiable(id, sonifiablesVBox.getChildren().indexOf(stockPane), updateSearchResult);
     }
 
     private void rmSonifiable(SonifiableID id, int paneIdx, boolean updateSearchResult) {
         mapping.rmSonifiable(id);
         enableBtnIfValid();
 
-        paneBoxSonifiables.prefHeight(paneBoxSonifiables.getChildren().size() * 511.0);
-        paneBoxSonifiables.getChildren().remove(paneIdx);
+        sonifiablesVBox.prefHeight(sonifiablesVBox.getChildren().size() * 511.0);
+        sonifiablesVBox.getChildren().remove(paneIdx);
         if (updateSearchResult) {
-            ObservableList<Node> checkBoxes = checkVBox.getChildren();
+            ObservableList<Node> checkBoxes = resultsVBox.getChildren();
             for (int i = 0; i < checkBoxes.size(); i++) {
                 try {
                     CheckBox c = (CheckBox) checkBoxes.get(i);
@@ -382,7 +529,6 @@ public class MainSceneController implements Initializable {
         }
     }
 
-    @FXML
     public Pane addToPaneBox(Sonifiable sonifiable) {
         return addToPaneBox(sonifiable, false);
     }
@@ -392,8 +538,8 @@ public class MainSceneController implements Initializable {
         // Checking whether the maximum of sharePanels has already been reached must be
         // done before calling this function
         Pane sonifiablePane = createSharePane(sonifiable, showMapping);
-        paneBoxSonifiables.getChildren().add(sonifiablePane);
-        paneBoxSonifiables.setPrefHeight((paneBoxSonifiables.getChildren().size()) * 511.0);
+        sonifiablesVBox.getChildren().add(sonifiablePane);
+        sonifiablesVBox.setPrefHeight((sonifiablesVBox.getChildren().size()) * 511.0);
         return sonifiablePane;
     }
 
@@ -636,14 +782,14 @@ public class MainSceneController implements Initializable {
             instAdded(name);
         }
 
-        startPicker.setValue(DateUtil.calendarToLocalDate(mapping.getStartDate()));
-        endPicker.setValue(DateUtil.calendarToLocalDate(mapping.getEndDate()));
+        startDatePicker.setValue(DateUtil.calendarToLocalDate(mapping.getStartDate()));
+        endDatePicker.setValue(DateUtil.calendarToLocalDate(mapping.getEndDate()));
         System.out.println("SoundLength: " + mapping.getSoundLength());
 
         String min = Integer.toString((int) (mapping.getSoundLength() / 60));
         String sec = Integer.toString(mapping.getSoundLength() % 60);
-        audioLength1.setText(min);
-        audioLength.setText(sec);
+        lengthSecField.setText(min);
+        lengthMinField.setText(sec);
         assert filterValues[0] == false;
         filterCB.getSelectionModel().select(mapping.getHighPass() ? 1 : 0);
     }
@@ -659,7 +805,7 @@ public class MainSceneController implements Initializable {
     }
 
     private void updateStartPicker() {
-        startPicker.setDayCellFactory(d -> new DateCell() {
+        startDatePicker.setDayCellFactory(d -> new DateCell() {
             @Override
             public void updateItem(LocalDate item, boolean empty) {
                 super.updateItem(item, empty);
@@ -669,7 +815,7 @@ public class MainSceneController implements Initializable {
     }
 
     private void updateEndPicker() {
-        endPicker.setDayCellFactory(d -> new DateCell() {
+        endDatePicker.setDayCellFactory(d -> new DateCell() {
             @Override
             public void updateItem(LocalDate item, boolean empty) {
                 super.updateItem(item, empty);
@@ -679,19 +825,18 @@ public class MainSceneController implements Initializable {
     }
 
     private void enableBtnIfValid() {
-
         startBtn.setDisable(startedSonification || !mapping.isValid());
     }
 
     private void instAdded(String name) {
         Label label = new Label(name);
         label.setId("insLabel");
-        instBox.getChildren().add(label);
+        instVBox.getChildren().add(label);
     }
 
     private void instRemoved(String name) {
         int idx = 0;
-        for (Node child : instBox.getChildren()) {
+        for (Node child : instVBox.getChildren()) {
             try {
                 if (((Label) child).getText() == name)
                     break;
@@ -699,7 +844,7 @@ public class MainSceneController implements Initializable {
             }
             idx++;
         }
-        if (idx < instBox.getChildren().size())
-            instBox.getChildren().remove(idx);
+        if (idx < instVBox.getChildren().size())
+            instVBox.getChildren().remove(idx);
     }
 }

@@ -10,29 +10,31 @@ public class UnorderedList<E> implements List<E>, RandomAccess {
 	private static final int DEFAULT_CAPACITY = 16;
 
 	private int cap;
-	private int len;
+	private int len = 0;
 	private Object[] arr;
-	private int toRemoveAmount;
-	private int[] toRemove;
+	private int toRemoveAmount = 0;
+	private int[] toRemove = new int[DEFAULT_CAPACITY];
 
-	private UnorderedList(Object[] arr) {
-		this.arr = arr;
-		this.cap = arr.length;
-		this.len = 0;
-		this.toRemoveAmount = 0;
-		this.toRemove = new int[DEFAULT_CAPACITY];
+	public UnorderedList(Object... elements) {
+		len = elements.length;
+		arr = new Object[len];
+		System.arraycopy(elements, 0, arr, 0, len);
 	}
 
 	public UnorderedList(int capacity) {
-		this(new Object[capacity]);
+		arr = new Object[capacity];
+		cap = capacity;
 	}
 
 	public UnorderedList() {
-		this(new Object[DEFAULT_CAPACITY]);
+		this(DEFAULT_CAPACITY);
 	}
 
 	public UnorderedList(Collection<? extends E> c) {
-		this(c.toArray());
+		Object[] a = c.toArray();
+		len = a.length;
+		arr = new Object[len];
+		System.arraycopy(a, 0, arr, 0, len);
 	}
 
 	public int capacity() {
