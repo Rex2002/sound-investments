@@ -10,7 +10,6 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.Cursor;
-import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.chart.LineChart;
@@ -30,6 +29,7 @@ import javafx.scene.shape.Circle;
 import javafx.scene.text.Font;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import javafx.stage.Window;
 import javafx.util.Duration;
 import javafx.util.StringConverter;
 import util.ArrayFunctions;
@@ -64,10 +64,6 @@ public class MusicSceneController implements Initializable {
 	@FXML
 	private TextField headerTitle;
 	@FXML
-	private Stage stage;
-	@FXML
-	private Scene scene;
-	@FXML
 	private Button exportBtn;
 	@FXML
 	private Button closeBtn;
@@ -83,6 +79,11 @@ public class MusicSceneController implements Initializable {
 	private ImageView backBtn;
 	@FXML
 	private ImageView forBtn;
+
+	// These variables are initialized externally
+    public Window window;
+    public Stage stage;
+    public Scene scene;
 
 	private CheckEQService checkEQService;
 	private PlaybackController pbc;
@@ -248,13 +249,11 @@ public class MusicSceneController implements Initializable {
             checkEQService.cancel();
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/MainScene.fxml"));
             Parent root = loader.load();
-            Stage stage = (Stage) anchor.getScene().getWindow();
-            Scene scene = new Scene(root);
-            String css = this.getClass().getResource("/choice.css").toExternalForm();
-            // Set the stylesheet after the scene creation
-            scene.getStylesheets().add(css);
-            stage.setScene(scene);
-            stage.show();
+			MainSceneController controller = loader.getController();
+            controller.window = window;
+            controller.scene = scene;
+            controller.stage = stage;
+            scene.setRoot(root);
 			// Tell the StateManager, that we are back in the main scene again
 			EventQueues.toSM.put(new Msg<>(MsgToSMType.ENTERED_MAIN_SCENE));
         } catch (IOException e) {

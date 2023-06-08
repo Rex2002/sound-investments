@@ -26,6 +26,7 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.scene.shape.Line;
 import javafx.stage.Stage;
+import javafx.stage.Window;
 import javafx.util.Duration;
 import java.io.IOException;
 import java.net.URL;
@@ -65,6 +66,11 @@ public class MainSceneController implements Initializable {
     private VBox instBox;
     @FXML
     private double duration;
+
+    // These variables are initialized externally
+    public Window window;
+    public Stage stage;
+    public Scene scene;
 
     private LocalDate minDateStart = LocalDate.now().minusMonths(3);
     private LocalDate maxDateStart = LocalDate.now().minusDays(3);
@@ -289,13 +295,10 @@ public class MainSceneController implements Initializable {
             Parent root = loader.load();
             MusicSceneController controller = loader.getController();
             controller.passData(musicData);
-            Stage stage = (Stage) startBtn.getScene().getWindow();
-            Scene scene = new Scene(root);
-            String css = this.getClass().getResource("/choice.css").toExternalForm();
-            // Set the stylesheet after the scene creation
-            scene.getStylesheets().add(css);
-            stage.setScene(scene);
-            stage.show();
+            controller.window = window;
+            controller.scene = scene;
+            controller.stage = stage;
+            scene.setRoot(root);
         } catch (IOException e) {
             e.printStackTrace();
             CommonController.displayError(anchor, "Fehler beim Laden der nächsten UI-Szene", "Interner Fehler");
