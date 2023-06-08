@@ -30,7 +30,10 @@ import javafx.stage.Window;
 import javafx.util.Duration;
 import java.io.IOException;
 import java.net.URL;
+import java.text.ParseException;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.function.Function;
 
@@ -182,22 +185,8 @@ public class MainSceneController implements Initializable {
                     categoryValues[categoriesCB.getSelectionModel().getSelectedIndex()])));
         });
 
-        startPicker.valueProperty().addListener((observable, oldValue, newValue) -> {
-            try {
-                mapping.setStartDate(DateUtil.localDateToCalendar(newValue));
-                enableBtnIfValid();
-            } catch (Exception e) {
-                // TODO: Error Handling
-            }
-        });
-        endPicker.valueProperty().addListener((observable, oldValue, newValue) -> {
-            try {
-                mapping.setEndDate(DateUtil.localDateToCalendar(newValue));
-                enableBtnIfValid();
-            } catch (Exception e) {
-                // TODO: Error Handling
-            }
-        });
+        setDatePickerListeners(startPicker, true);
+        setDatePickerListeners(endPicker, false);
         // Set default values
         startPicker.valueProperty().setValue(LocalDate.now().minusMonths(1));
         endPicker.valueProperty().setValue(LocalDate.now());
@@ -260,6 +249,26 @@ public class MainSceneController implements Initializable {
         mapping.setOnEvInstrAdded(inst -> instAdded(inst.toString()));
         mapping.setOnInstrRemoved(inst -> instRemoved(inst.toString()));
         mapping.setOnEvInstrRemoved(inst -> instRemoved(inst.toString()));
+    }
+
+    private void setDatePickerListeners(DatePicker datePicker, boolean isStartDate) {
+        datePicker.getEditor().textProperty().addListener((observable, oldValue, newValue) -> {
+            try {
+                LocalDate date = DateUtil.localDateFromGermanDateStr(newValue);
+                datePicker.setValue(date);
+            } catch (ParseException e) {}
+        });
+        datePicker.valueProperty().addListener((observable, oldValue, newValue) -> {
+            try {
+                if (isStartDate)
+                    mapping.setStartDate(DateUtil.localDateToCalendar(newValue));
+                else
+                    mapping.setEndDate(DateUtil.localDateToCalendar(newValue));
+                enableBtnIfValid();
+            } catch (Exception e) {
+                // TODO: Error Handling
+            }
+        });
     }
 
     private void updateSoundLength() {
@@ -341,7 +350,7 @@ public class MainSceneController implements Initializable {
         int idx = 0;
         while (idx < children.size() && !id.equals(children.get(idx).getUserData()))
             idx++;
-        if (idx != children.size()) {
+        if (idx == children.size()) {
             System.out.println("rmSonifiable was called on " + id + " which couldn't be found in SceneTree.");
             return;
         }
