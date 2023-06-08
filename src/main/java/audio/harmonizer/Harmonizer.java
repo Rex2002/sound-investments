@@ -62,7 +62,7 @@ public class Harmonizer {
             double sum = 0.0;
             for (int offsetIndex = 0; offsetIndex < scale.length * NUMBER_OCTAVES; offsetIndex++) {
                 sum += scale[offsetIndex % scale.length];
-                if (pitch[i] <= sum / (scale.length * NUMBER_OCTAVES) ) {
+                if (pitch[i] <= sum / (scale.length * NUMBER_OCTAVES)) {
                     output[i] = FIRST_NOTE + offsetIndex;
                     break;
                 }
@@ -100,7 +100,7 @@ public class Harmonizer {
         if (bufferLength > 0) {
             for (int i = 0, bufferStart = 0; i < notes.length; i++, bufferStart += bufferLength) {
                 notes[i] = 0;
-                if(pitch[bufferStart] == -1 || pitch[bufferStart + bufferLength - 1] == -1){
+                if (pitch[bufferStart] == -1 || pitch[bufferStart + bufferLength - 1] == -1) {
                     notes[i] = -1;
                     continue;
                 }
@@ -108,9 +108,8 @@ public class Harmonizer {
                     notes[i] += pitch[j] / bufferLength;
                 }
             }
-        }
-        else{
-            for(int i = 0; i < notes.length; i++){
+        } else {
+            for (int i = 0; i < notes.length; i++) {
                 notes[i] = pitch[Util.getRelPosition(i, notes.length, pitch.length)];
             }
         }
@@ -126,7 +125,7 @@ public class Harmonizer {
         double[] pitch = dataRaw.getPitch();
         if (relVolume == null && absVolume == null) {
             double[] volume = new double[pitch.length];
-            for(int i = 0; i < volume.length; i ++){
+            for (int i = 0; i < volume.length; i++) {
                 volume[i] = pitch[i] == -1 ? MUTE_VOLUME : MAX_VOLUME;
             }
             return volume;
@@ -141,7 +140,7 @@ public class Harmonizer {
                 checkDouble(relVolume[i], "relVolume", i);
 
                 if (absVolume != null && absVolume.length > i) {
-                    relVolume[i] = absVolume[i] && pitch[i] != -1 && relVolume[i] != -1? relVolume[i] : MUTE_VOLUME;
+                    relVolume[i] = absVolume[i] && pitch[i] != -1 && relVolume[i] != -1 ? relVolume[i] : MUTE_VOLUME;
                 }
             }
             return relVolume;
@@ -154,17 +153,17 @@ public class Harmonizer {
 
         // TODO: test delay times
         if (delayEcho != null) {
-            double[] delays = new double[] { 1/24f, 1/16f, 1/12f, 1/8f, 1/6f, 1/4f, 1/3f, 1/2f, 1 };
+            double[] delays = new double[] { 1 / 24f, 1 / 16f, 1 / 12f, 1 / 8f, 1 / 6f, 1 / 4f, 1 / 3f, 1 / 2f, 1 };
             int[] output = new int[delayEcho.length];
 
             for (int i = 0; i < delayEcho.length; i++) {
                 checkDouble(delayEcho[i], "delayEcho", i);
 
-                output[i] = (int) ( delays[(int) (delayEcho[i] * (delays.length - 1) )] * SAMPLES_PER_BAR );
+                output[i] = (int) (delays[(int) (delayEcho[i] * (delays.length - 1))] * SAMPLES_PER_BAR);
             }
             return output;
         } else {
-            return new int[] { (int) (1/8f * SAMPLES_PER_BAR) };
+            return new int[] { (int) (1 / 8f * SAMPLES_PER_BAR) };
         }
     }
 
@@ -192,20 +191,19 @@ public class Harmonizer {
             for (int i = 0; i < onOffEcho.length; i++) {
                 feedbackEcho[i] = onOffEcho[i] && delayEcho[i] != -1 ? DEFAULT_FEEDBACK_ECHO : MUTE_ECHO;
             }
-        } else if (delayEcho != null){
+        } else if (delayEcho != null) {
             feedbackEcho = new double[delayEcho.length];
-            for(int i = 0; i < delayEcho.length; i++){
+            for (int i = 0; i < delayEcho.length; i++) {
                 feedbackEcho[i] = delayEcho[i] == -1 ? MUTE_ECHO : DEFAULT_FEEDBACK_ECHO;
             }
-        }
-        else{
-            feedbackEcho = new double[]{DEFAULT_FEEDBACK_ECHO};
+        } else {
+            feedbackEcho = new double[] { DEFAULT_FEEDBACK_ECHO };
         }
         return feedbackEcho;
     }
 
     private int[] normalizeDelayReverb() throws AppError {
-        int MAX_DELAY_REVERB = Constants.SAMPLE_RATE / 20;    // number of samples corresponding to 50ms
+        int MAX_DELAY_REVERB = Constants.SAMPLE_RATE / 20; // number of samples corresponding to 50ms
         int DEFAULT_DELAY_REVERB = Constants.SAMPLE_RATE / 25; // number of samples corresponding to 40ms
         double[] delayReverb = dataRaw.getDelayReverb();
         if (delayReverb != null) {
@@ -247,12 +245,11 @@ public class Harmonizer {
             }
         } else if (delayReverb != null) {
             feedbackReverb = new double[delayReverb.length];
-            for(int i = 0; i < delayReverb.length; i++){
+            for (int i = 0; i < delayReverb.length; i++) {
                 feedbackReverb[i] = delayReverb[i] == -1 ? MUTE_REVERB : DEFAULT_FEEDBACK_REVERB;
             }
-        }
-        else{
-            feedbackReverb = new double[]{DEFAULT_FEEDBACK_REVERB};
+        } else {
+            feedbackReverb = new double[] { DEFAULT_FEEDBACK_REVERB };
         }
         return feedbackReverb;
     }
@@ -308,7 +305,7 @@ public class Harmonizer {
 
     private void checkDouble(double value, String collection, int index) throws AppError {
         // -1 is needed, because that is the internal "off"/switch
-        if ((value > 1 || value < 0) &&  value != -1) {
+        if ((value > 1 || value < 0) && value != -1) {
             throw new AppError("Mapped Data non-compliant: " + collection + "[" + index +
                     "] not in range(0,1) with value " + value);
         }

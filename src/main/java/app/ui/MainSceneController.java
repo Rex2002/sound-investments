@@ -8,6 +8,8 @@ import audio.synth.InstrumentEnum;
 import dataRepo.FilterFlag;
 import dataRepo.Sonifiable;
 import dataRepo.SonifiableID;
+import util.ArrayFunctions;
+import util.DateUtil;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -25,9 +27,6 @@ import javafx.scene.layout.VBox;
 import javafx.scene.shape.Line;
 import javafx.stage.Stage;
 import javafx.util.Duration;
-import util.ArrayFunctions;
-import util.DateUtil;
-
 import java.io.IOException;
 import java.net.URL;
 import java.time.LocalDate;
@@ -89,6 +88,7 @@ public class MainSceneController implements Initializable {
     private static boolean[] filterValues = { false, true };
     private static String[] instKeys;
     private static InstrumentEnum[] instVals;
+
     private static void setInstMap() {
         InstrumentEnum[] insts = InstrumentEnum.values();
         instKeys = new String[insts.length + 2];
@@ -102,6 +102,7 @@ public class MainSceneController implements Initializable {
             instVals[i + 2] = insts[i];
         }
     }
+
     static {
         setInstMap();
         assert instKeys.length == instVals.length : "instKeys & instValues are not in sync";
@@ -110,6 +111,7 @@ public class MainSceneController implements Initializable {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public void initialize(URL arg0, ResourceBundle arg1) { // Initialisierung mit den Optionen
         categoriesCB.getItems().addAll(MainSceneController.categoryKeys);
         locationCB.getItems().addAll(locations);
@@ -117,7 +119,7 @@ public class MainSceneController implements Initializable {
 
         closeImg = new Image(getClass().getResource("/close_icon.png").toExternalForm());
 
-            checkEQService = new CheckEQService();
+        checkEQService = new CheckEQService();
         checkEQService.setPeriod(Duration.millis(100));
         checkEQService.setOnSucceeded((event) -> {
             List<Msg<MsgToUIType>> messages = checkEQService.getValue();
@@ -135,13 +137,15 @@ public class MainSceneController implements Initializable {
                     case SONIFIABLE_FILTER -> {
                         SonifiableFilter filter = (SonifiableFilter) msg.data;
                         searchBar.setText(filter.prefix);
-                        int categoryIdx = ArrayFunctions.findIndex(categoryValues, c -> c.equals(filter.categoryFilter));
+                        int categoryIdx = ArrayFunctions.findIndex(categoryValues,
+                                c -> c.equals(filter.categoryFilter));
                         categoriesCB.getSelectionModel().select(categoryIdx);
                     }
                     case ERROR -> {
                         startedSonification = false;
                         CommonController.displayError(anchor, (String) msg.data, "Interner Fehler");
-                        if (loadingAnimTimer != null) loadingAnimTimer.cancel();
+                        if (loadingAnimTimer != null)
+                            loadingAnimTimer.cancel();
                         if (loading != null) {
                             anchor.getChildren().remove(loading);
                             loading = null;
@@ -230,6 +234,7 @@ public class MainSceneController implements Initializable {
                 loadingAnimTimer = new Timer();
                 loadingAnimTimer.scheduleAtFixedRate(new TimerTask() {
                     private int counter = 1;
+
                     public void run() {
                         loading.setRotate(360 * counter / 12);
                         counter = (counter + 1) % 12;
@@ -309,12 +314,10 @@ public class MainSceneController implements Initializable {
         if (mapping.hasSonifiable(sonifiable.getId())) {
             cBox.setSelected(true);
         }
-        Pane[] stockPane = new Pane[1];
-        stockPane[0] = new Pane();
         cBox.selectedProperty().addListener((observable, oldValue, newValue) -> {
             if (newValue) {
                 if (paneBoxSonifiables.getChildren().size() < Mapping.MAX_SONIFIABLES_AMOUNT) {
-                    stockPane[0]=  addToPaneBox((Sonifiable) cBox.getUserData());
+                    addToPaneBox((Sonifiable) cBox.getUserData());
                 } else {
                     CommonController.displayError(anchor,
                             "Zu viele Börsenkurse gewählt. Es dürfen höchstens "
@@ -323,37 +326,46 @@ public class MainSceneController implements Initializable {
                     cBox.setSelected(false);
                 }
             } else {
-                rmSonifiable(((Sonifiable) cBox.getUserData()).getId(), stockPane[0], false);
-
-
+                rmSonifiable(((Sonifiable) cBox.getUserData()).getId(), false);
             }
         });
         checkVBox.setPrefHeight((checkVBox.getChildren().size()) * 42.0);
         checkVBox.getChildren().add(cBox);
     }
 
-    private void rmSonifiable(SonifiableID id, Pane stockPane, boolean updateSearchResult) {
-        mapping.rmSonifiable(id);
-        enableBtnIfValid();
-
+    private void rmSonifiable(SonifiableID id, boolean updateSearchResult) {
         ObservableList<Node> children = paneBoxSonifiables.getChildren();
         int idx = 0;
         while (idx < children.size() && !id.equals(children.get(idx).getUserData()))
             idx++;
-        assert idx != children.size() : "rmSonifiable was called on " + id + " which couldn't be found in SceneTree.";
-        paneBoxSonifiables.getChildren().remove(stockPane);
-        paneBoxSonifiables.prefHeight(children.size() * 511.0);
+        if (idx != children.size()) {
+            System.out.println("rmSonifiable was called on " + id + " which couldn't be found in SceneTree.");
+            return;
+        }
+        rmSonifiable(id, idx, updateSearchResult);
+    }
 
+    private void rmSonifiable(SonifiableID id, Pane stockPane, boolean updateSearchResult) {
+        rmSonifiable(id, paneBoxSonifiables.getChildren().indexOf(stockPane), updateSearchResult);
+    }
+
+    private void rmSonifiable(SonifiableID id, int paneIdx, boolean updateSearchResult) {
+        mapping.rmSonifiable(id);
+        enableBtnIfValid();
+
+        paneBoxSonifiables.prefHeight(paneBoxSonifiables.getChildren().size() * 511.0);
+        paneBoxSonifiables.getChildren().remove(paneIdx);
         if (updateSearchResult) {
             ObservableList<Node> checkBoxes = checkVBox.getChildren();
             for (int i = 0; i < checkBoxes.size(); i++) {
                 try {
                     CheckBox c = (CheckBox) checkBoxes.get(i);
-                    if (((Sonifiable) c.getUserData()).getId() == id){
+                    if (((Sonifiable) c.getUserData()).getId() == id) {
                         c.setSelected(false);
                         break;
                     }
-                } catch (ClassCastException e) {}
+                } catch (ClassCastException e) {
+                }
             }
         }
     }
@@ -367,10 +379,10 @@ public class MainSceneController implements Initializable {
         // add a Sharepanel to the Panel Box
         // Checking whether the maximum of sharePanels has already been reached must be
         // done before calling this function
-        Pane test  = createSharePane(sonifiable, showMapping);
-        paneBoxSonifiables.getChildren().add(test);
+        Pane sonifiablePane = createSharePane(sonifiable, showMapping);
+        paneBoxSonifiables.getChildren().add(sonifiablePane);
         paneBoxSonifiables.setPrefHeight((paneBoxSonifiables.getChildren().size()) * 511.0);
-        return test;
+        return sonifiablePane;
     }
 
     private void addLine(String cssClass, int layoutX, int layoutY, int startX, int startY, int endX, int endY,
@@ -387,7 +399,8 @@ public class MainSceneController implements Initializable {
         children.add(line);
     }
 
-    private void addStockParamToPane(String text, String cssClass, int labelX, int labelY, int cb1X, int cb1Y, int cb2X, int cb2Y, Sonifiable sonifiable, ExchangeParam eparam, ObservableList<Node> children, boolean showMapping) {
+    private void addStockParamToPane(String text, String cssClass, int labelX, int labelY, int cb1X, int cb1Y, int cb2X,
+            int cb2Y, Sonifiable sonifiable, ExchangeParam eparam, ObservableList<Node> children, boolean showMapping) {
         Label label = new Label(text);
         label.getStyleClass().add(cssClass);
         label.setLayoutX(labelX);
@@ -404,7 +417,8 @@ public class MainSceneController implements Initializable {
             evInstCB.setCursor(Cursor.HAND);
             if (showMapping) {
                 for (EvInstrMapping evInstMap : mapping.getEventInstruments()) {
-                    if (evInstMap.getData().getData().equals(eparam) && evInstMap.getData().getId().equals(sonifiable.getId())) {
+                    if (evInstMap.getData().getData().equals(eparam)
+                            && evInstMap.getData().getId().equals(sonifiable.getId())) {
                         evInstCB.getSelectionModel().select(evInstMap.getInstrument().toString());
                         break;
                     }
@@ -412,8 +426,10 @@ public class MainSceneController implements Initializable {
             }
             evInstCB.getSelectionModel().selectedItemProperty().addListener((observable, oldValue, newValue) -> {
                 try {
-                    if (oldValue != null) mapping.rmEvInstr(sonifiable.getId(), (PointData) eparam);
-                    if (newValue != null) mapping.addEvInstr(EvInstrEnum.fromString(newValue), sonifiable, (PointData) eparam);
+                    if (oldValue != null)
+                        mapping.rmEvInstr(sonifiable.getId(), (PointData) eparam);
+                    if (newValue != null)
+                        mapping.addEvInstr(EvInstrEnum.fromString(newValue), sonifiable, (PointData) eparam);
                 } catch (AppError e) {
                     CommonController.displayError(anchor, e.getMessage(), "Interner Fehler");
                 }
@@ -444,46 +460,46 @@ public class MainSceneController implements Initializable {
             }
             instCB.getSelectionModel().selectedIndexProperty().addListener((observable, oldIdx, newIdx) -> {
                 try {
-                    // If the new instrument already has the selected parameter mapped or if newValue is null
+                    // If the new instrument already has the selected parameter mapped or if
+                    // newValue is null
                     // then we need to remove the parameter in the UI
                     // otherwise we also need to set the parameter in the mapping
                     // in any case, we need to remove the old mapping with the old instrument
-                    if (currentlyUpdatingCB) return;
+                    if (currentlyUpdatingCB)
+                        return;
                     currentlyUpdatingCB = true;
                     InstrumentEnum newValue = instVals[Math.max(newIdx.intValue(), 0)];
                     InstrumentEnum oldValue = instVals[Math.max(oldIdx.intValue(), 0)];
                     SingleSelectionModel<String> paramCBSelect = paramCB.getSelectionModel();
-                    InstrParam paramVal = paramCBSelect.getSelectedItem() == null ? null : InstrParam.fromString(paramCBSelect.getSelectedItem());
+                    InstrParam paramVal = paramCBSelect.getSelectedItem() == null ? null
+                            : InstrParam.fromString(paramCBSelect.getSelectedItem());
 
                     paramCB.setDisable(newIdx.intValue() <= 0);
-                    paramCBSelect.select(null);
-                    paramCB.getItems().clear();
-                    InstrParam[] newOpts;
-                    Function<InstrParam, InstrParam[]> getOpts = (pv) -> isLineParam ? mapping.getEmptyLineParams(newValue, pv) : mapping.getEmptyRangeParams(newValue, pv);
+                    refreshParamOpts(paramCB, newValue, isLineParam, true);
                     if (newValue != null && paramVal != null) {
                         mapping.rmParam(oldValue, paramVal);
-
-                        if (!mapping.isMapped(newValue, paramVal)) {
-                            newOpts = getOpts.apply(paramVal);
-                            paramCBSelect.select(paramVal.toString());
+                        if (!mapping.isMapped(newValue, paramVal))
                             mapping.setParam(newValue, sonifiable, paramVal, eparam);
-                        } else {
-                            newOpts = getOpts.apply(null);
-                        }
-                    } else {
-                        newOpts = getOpts.apply(null);
                     }
-                    paramCB.getItems().add(null);
-                    for (InstrParam opt : newOpts) paramCB.getItems().add(opt.toString());
                     enableBtnIfValid();
                     currentlyUpdatingCB = false;
                 } catch (AppError e) {
                     CommonController.displayError(anchor, e.getMessage(), "Interner Fehler");
                 }
             });
+            paramCB.setOnMouseClicked(ev -> {
+                if (currentlyUpdatingCB)
+                    return;
+                currentlyUpdatingCB = true;
+                refreshParamOpts(paramCB, instVals[Math.max(instCB.getSelectionModel().getSelectedIndex(), 0)],
+                        isLineParam, false);
+                currentlyUpdatingCB = false;
+                paramCB.show();
+            });
             paramCB.getSelectionModel().selectedItemProperty().addListener((observable, oldStr, newStr) -> {
                 try {
-                    if (currentlyUpdatingCB) return;
+                    if (currentlyUpdatingCB)
+                        return;
                     currentlyUpdatingCB = true;
                     SelectionModel<String> instCBSelect = instCB.getSelectionModel();
                     InstrumentEnum inst = instVals[Math.max(0, instCBSelect.getSelectedIndex())];
@@ -491,13 +507,17 @@ public class MainSceneController implements Initializable {
                     InstrParam newVal = InstrParam.fromString(newStr);
 
                     if (!instCBSelect.isEmpty()) {
-                        if (oldVal !=  null) {
-                            if (inst != null) mapping.rmParam(inst, oldVal);
-                            else              mapping.rmParam(oldVal);
+                        if (oldVal != null) {
+                            if (inst != null)
+                                mapping.rmParam(inst, oldVal);
+                            else
+                                mapping.rmParam(oldVal);
                         }
                         if (newVal != null) {
-                            if (inst != null) mapping.setParam(inst, sonifiable, newVal, eparam);
-                            else              mapping.setParam(sonifiable, newVal, eparam);
+                            if (inst != null)
+                                mapping.setParam(inst, sonifiable, newVal, eparam);
+                            else
+                                mapping.setParam(sonifiable, newVal, eparam);
                         }
                         enableBtnIfValid();
                     }
@@ -510,6 +530,36 @@ public class MainSceneController implements Initializable {
 
             children.add(instCB);
             children.add(paramCB);
+        }
+    }
+
+    private void refreshParamOpts(ChoiceBox<String> paramCB, InstrumentEnum instVal, boolean isLineParam,
+            boolean checkForMapping) {
+        try {
+            SingleSelectionModel<String> paramCBSelect = paramCB.getSelectionModel();
+            InstrParam paramVal = paramCBSelect.getSelectedItem() == null ? null
+                    : InstrParam.fromString(paramCBSelect.getSelectedItem());
+            paramCBSelect.select(null);
+            paramCB.getItems().clear();
+            InstrParam[] newOpts;
+            Function<InstrParam, InstrParam[]> getOpts = (pv) -> isLineParam ? mapping.getEmptyLineParams(instVal, pv)
+                    : mapping.getEmptyRangeParams(instVal, pv);
+            boolean flag = instVal != null && paramVal != null
+                    && (!checkForMapping || !mapping.isMapped(instVal, paramVal));
+            if (flag)
+                newOpts = getOpts.apply(paramVal);
+            else
+                newOpts = getOpts.apply(null);
+
+            paramCB.getItems().add(null);
+            for (InstrParam opt : newOpts)
+                paramCB.getItems().add(opt.toString());
+
+            if (flag)
+                paramCBSelect.select(paramVal.toString());
+            // System.out.println("Selected: " + paramCBSelect.getSelectedItem());
+        } catch (AppError e) {
+            CommonController.displayError(anchor, e.getMessage(), "Interner Fehler");
         }
     }
 
@@ -542,16 +592,26 @@ public class MainSceneController implements Initializable {
         addLine(null, 174, 53, 0, 0, 391, 0, stockPane.getChildren());
         addLine("pinkline", 306, 168, -100, -60, -100, 263, stockPane.getChildren());
         addLine("pinkline", 512, 177, -100, -60, -100, 263, stockPane.getChildren());
-        addStockParamToPane("Preis", "paneShareLabel", 14, 80, 14, 115, 14, 160, sonifiable, LineData.PRICE, stockPane.getChildren(), showMapping);
-        addStockParamToPane("Gleitender Durchschnitt", "paneShareLabel", 14, 215, 14, 250, 14, 295, sonifiable, LineData.MOVINGAVG, stockPane.getChildren(), showMapping);
-        addStockParamToPane("Steigungsgrad", "paneShareLabel", 14, 350, 14, 385, 14, 430, sonifiable, LineData.RELCHANGE, stockPane.getChildren(), showMapping);
-        addStockParamToPane("Flagge", "paneShareLabel", 226, 80, 226, 115, 226, 160, sonifiable, RangeData.FLAG, stockPane.getChildren(), showMapping);
-        addStockParamToPane("Dreieck", "paneShareLabel", 226, 215, 226, 250, 226, 295, sonifiable, RangeData.TRIANGLE, stockPane.getChildren(), showMapping);
-        addStockParamToPane("V-Form", "paneShareLabel", 226, 350, 226, 385, 226, 430, sonifiable, RangeData.VFORM, stockPane.getChildren(), showMapping);
-        addStockParamToPane("Trendbrüche", "paneShareLabel", 422, 80, 422, 115, 0, 0, sonifiable, PointData.TRENDBREAK, stockPane.getChildren(), showMapping);
-        addStockParamToPane("EQMOVINGAVG", "paneShareLabel", 422, 180, 422, 215, 0, 0, sonifiable, PointData.EQMOVINGAVG, stockPane.getChildren(), showMapping);
-        addStockParamToPane("EQSUPPORT", "paneShareLabel", 422, 280, 422, 315, 0, 0, sonifiable, PointData.EQSUPPORT, stockPane.getChildren(), showMapping);
-        addStockParamToPane("EQRESIST", "paneShareLabel", 422, 380, 422, 415, 0, 0, sonifiable, PointData.EQRESIST, stockPane.getChildren(), showMapping);
+        addStockParamToPane("Preis", "paneShareLabel", 14, 80, 14, 115, 14, 160, sonifiable, LineData.PRICE,
+                stockPane.getChildren(), showMapping);
+        addStockParamToPane("Gleitender Durchschnitt", "paneShareLabel", 14, 215, 14, 250, 14, 295, sonifiable,
+                LineData.MOVINGAVG, stockPane.getChildren(), showMapping);
+        addStockParamToPane("Steigungsgrad", "paneShareLabel", 14, 350, 14, 385, 14, 430, sonifiable,
+                LineData.RELCHANGE, stockPane.getChildren(), showMapping);
+        addStockParamToPane("Flagge", "paneShareLabel", 226, 80, 226, 115, 226, 160, sonifiable, RangeData.FLAG,
+                stockPane.getChildren(), showMapping);
+        addStockParamToPane("Dreieck", "paneShareLabel", 226, 215, 226, 250, 226, 295, sonifiable, RangeData.TRIANGLE,
+                stockPane.getChildren(), showMapping);
+        addStockParamToPane("V-Form", "paneShareLabel", 226, 350, 226, 385, 226, 430, sonifiable, RangeData.VFORM,
+                stockPane.getChildren(), showMapping);
+        addStockParamToPane("Trendbrüche", "paneShareLabel", 422, 80, 422, 115, 0, 0, sonifiable, PointData.TRENDBREAK,
+                stockPane.getChildren(), showMapping);
+        addStockParamToPane("EQMOVINGAVG", "paneShareLabel", 422, 180, 422, 215, 0, 0, sonifiable,
+                PointData.EQMOVINGAVG, stockPane.getChildren(), showMapping);
+        addStockParamToPane("EQSUPPORT", "paneShareLabel", 422, 280, 422, 315, 0, 0, sonifiable, PointData.EQSUPPORT,
+                stockPane.getChildren(), showMapping);
+        addStockParamToPane("EQRESIST", "paneShareLabel", 422, 380, 422, 415, 0, 0, sonifiable, PointData.EQRESIST,
+                stockPane.getChildren(), showMapping);
 
         return stockPane;
     }
@@ -563,6 +623,7 @@ public class MainSceneController implements Initializable {
         for (String name : mapping.getMappedInstrNames()) {
             instAdded(name);
         }
+
         startPicker.setValue(DateUtil.calendarToLocalDate(mapping.getStartDate()));
         endPicker.setValue(DateUtil.calendarToLocalDate(mapping.getEndDate()));
         System.out.println("SoundLength: " + mapping.getSoundLength());
@@ -620,7 +681,8 @@ public class MainSceneController implements Initializable {
         int idx = 0;
         for (Node child : instBox.getChildren()) {
             try {
-                if (((Label) child).getText() == name) break;
+                if (((Label) child).getText() == name)
+                    break;
             } catch (Exception e) {
             }
             idx++;

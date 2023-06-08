@@ -13,7 +13,7 @@ import java.io.File;
 import java.io.IOException;
 
 public class PlaybackController {
-    public final int SKIP_LENGTH = 10;
+    public final int SKIP_LENGTH = 100;
     private final SourceDataLine s;
     private final short[] data;
 

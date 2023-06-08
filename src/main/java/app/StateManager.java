@@ -119,7 +119,7 @@ public class StateManager {
 		for (double x : prices) {
 			if (x < min)
 				min = x;
-			else if (x > max)
+			if (x > max)
 				max = x;
 		}
 		// Normalize values
@@ -297,8 +297,7 @@ public class StateManager {
 				boolean[] onOffFilter = calcRangeData(instrMap.getOnOffFilter(), priceMap);
 				double[] pan = calcLineData(instrMap.getPan(), priceMap);
 
-				instrRawDatas.add(new InstrumentDataRaw(relVolume, absVolume, pitch, instrument, delayEcho,
-						feedbackEcho,
+				instrRawDatas.add(new InstrumentDataRaw(relVolume, absVolume, pitch, instrument, delayEcho, feedbackEcho,
 						onOffEcho, delayReverb, feedbackReverb, onOffReverb, frequency, highPass, onOffFilter, pan));
 			}
 			InstrumentDataRaw[] passedInstrRawDatas = new InstrumentDataRaw[instrRawDatas.size()];
