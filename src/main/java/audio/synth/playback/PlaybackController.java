@@ -110,7 +110,7 @@ public class PlaybackController {
         try {
             AudioSystem.write(stream, AudioFileFormat.Type.WAVE, outFile);
         } catch (IOException e) {
-            throw new AppError("Cannot create file " +  outFile.getPath() + " to save audioStream");
+            throw new AppError("Die Datei " +  outFile.getPath() + " zum Speichern des AudioStreams kann nicht erstellt werden.");
         }
     }
 

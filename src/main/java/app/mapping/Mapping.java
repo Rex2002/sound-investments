@@ -203,7 +203,7 @@ public class Mapping {
 		while (e.getId() != sonifiable || e.getData() != eparam) {
 			idx++;
 			if (idx == evInstrAmount)
-				throw new AppError("Can't remove non-existent Event-Instrument.");
+				throw new AppError("Fehler beim Entfernen des EventInstruments. \n Das EventInstrument existiert nicht");
 			e = eventInstruments[idx].getData();
 		}
 		rmEvInstr(idx);

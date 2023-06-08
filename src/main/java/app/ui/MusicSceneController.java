@@ -1,11 +1,7 @@
 package app.ui;
 
-import java.io.File;
-import java.io.IOException;
-import java.net.URL;
-import java.util.ResourceBundle;
-import java.util.Timer;
-import java.util.TimerTask;
+import app.AppError;
+import app.communication.*;
 import audio.synth.playback.PlaybackController;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
@@ -13,6 +9,13 @@ import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
+import javafx.scene.Cursor;
+import javafx.scene.Node;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.scene.chart.LineChart;
+import javafx.scene.chart.NumberAxis;
+import javafx.scene.chart.XYChart;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.Slider;
@@ -29,24 +32,13 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 import javafx.util.StringConverter;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
-import javafx.scene.chart.LineChart;
-import javafx.scene.chart.NumberAxis;
-import javafx.scene.chart.XYChart;
-import javafx.scene.Cursor;
-import javafx.scene.Node;
-import java.util.Calendar;
-import java.util.List;
-
 import util.ArrayFunctions;
 import util.DateUtil;
-import app.AppError;
-import app.communication.EventQueues;
-import app.communication.Msg;
-import app.communication.MsgToSMType;
-import app.communication.MsgToUIType;
-import app.communication.MusicData;
+
+import java.io.File;
+import java.io.IOException;
+import java.net.URL;
+import java.util.*;
 
 public class MusicSceneController implements Initializable {
 	// Colors have to be kept in sync with colors in css file
@@ -115,7 +107,7 @@ public class MusicSceneController implements Initializable {
 					pbc.save(selectedFile);
 				} catch (AppError e) {
 					e.printStackTrace();
-					// TODO: Display Error message
+					CommonController.displayError(anchor, e.getMessage(), "Interner Fehler");
 				}
 			}
 		});
