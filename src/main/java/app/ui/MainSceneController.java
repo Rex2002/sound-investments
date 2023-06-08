@@ -179,34 +179,8 @@ public class MainSceneController implements Initializable {
                     categoryValues[categoriesCB.getSelectionModel().getSelectedIndex()])));
         });
 
-        startPicker.getEditor().textProperty().addListener((observable, oldValue, newValue) -> {
-            try {
-                LocalDate date = DateUtil.localDateFromGermanDateStr(newValue);
-                startPicker.setValue(date);
-            } catch (ParseException e) {}
-        });
-        startPicker.valueProperty().addListener((observable, oldValue, newValue) -> {
-            try {
-                mapping.setStartDate(DateUtil.localDateToCalendar(newValue));
-                enableBtnIfValid();
-            } catch (Exception e) {
-                // TODO: Error Handling
-            }
-        });
-        endPicker.getEditor().textProperty().addListener((observable, oldValue, newValue) -> {
-            try {
-                LocalDate date = DateUtil.localDateFromGermanDateStr(newValue);
-                endPicker.setValue(date);
-            } catch (ParseException e) {}
-        });
-        endPicker.valueProperty().addListener((observable, oldValue, newValue) -> {
-            try {
-                mapping.setEndDate(DateUtil.localDateToCalendar(newValue));
-                enableBtnIfValid();
-            } catch (Exception e) {
-                // TODO: Error Handling
-            }
-        });
+        setDatePickerListeners(startPicker, true);
+        setDatePickerListeners(endPicker, false);
         // Set default values
         startPicker.valueProperty().setValue(LocalDate.now().minusMonths(1));
         endPicker.valueProperty().setValue(LocalDate.now());
@@ -269,6 +243,26 @@ public class MainSceneController implements Initializable {
         mapping.setOnEvInstrAdded(inst -> instAdded(inst.toString()));
         mapping.setOnInstrRemoved(inst -> instRemoved(inst.toString()));
         mapping.setOnEvInstrRemoved(inst -> instRemoved(inst.toString()));
+    }
+
+    private void setDatePickerListeners(DatePicker datePicker, boolean isStartDate) {
+        datePicker.getEditor().textProperty().addListener((observable, oldValue, newValue) -> {
+            try {
+                LocalDate date = DateUtil.localDateFromGermanDateStr(newValue);
+                datePicker.setValue(date);
+            } catch (ParseException e) {}
+        });
+        datePicker.valueProperty().addListener((observable, oldValue, newValue) -> {
+            try {
+                if (isStartDate)
+                    mapping.setStartDate(DateUtil.localDateToCalendar(newValue));
+                else
+                    mapping.setEndDate(DateUtil.localDateToCalendar(newValue));
+                enableBtnIfValid();
+            } catch (Exception e) {
+                // TODO: Error Handling
+            }
+        });
     }
 
     private void updateSoundLength() {
