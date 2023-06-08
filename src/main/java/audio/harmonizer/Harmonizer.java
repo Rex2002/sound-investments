@@ -263,8 +263,7 @@ public class Harmonizer {
 
     private void checkDouble(double value, String collection, int index) throws AppError {
         if (value > 1 || value < 0) {
-            throw new AppError("Mapped Data non-compliant: " + collection + "[" + index +
-                    "] not in range(0,1) with value " + value);
+            throw new AppError("Mapped Data non-compliant: " + collection + "[" + index + "] not in range(0,1) with value " + value);
         }
     }
 }

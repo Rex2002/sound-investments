@@ -34,29 +34,14 @@ import javafx.scene.layout.VBox;
 import javafx.scene.shape.Line;
 import javafx.stage.Stage;
 import javafx.util.Duration;
-import util.ArrayFunctions;
-import util.DateUtil;
+
+import util.*;
 import app.AppError;
-import app.communication.EventQueues;
-import app.communication.Msg;
-import app.communication.MsgToSMType;
-import app.communication.MsgToUIType;
-import app.communication.MusicData;
-import app.communication.SonifiableFilter;
-import app.mapping.EvInstrMapping;
-import app.mapping.ExchangeData;
-import app.mapping.ExchangeParam;
-import app.mapping.InstrParam;
-import app.mapping.LineData;
-import app.mapping.MappedInstr;
-import app.mapping.Mapping;
-import app.mapping.PointData;
-import app.mapping.RangeData;
+import app.communication.*;
+import app.mapping.*;
 import audio.synth.EvInstrEnum;
 import audio.synth.InstrumentEnum;
-import dataRepo.Sonifiable;
-import dataRepo.SonifiableID;
-import dataRepo.FilterFlag;
+import dataRepo.*;
 
 public class MainSceneController implements Initializable {
     // WARNING: Kommentare werden noch normalisiert
@@ -358,7 +343,10 @@ public class MainSceneController implements Initializable {
         int idx = 0;
         while (idx < children.size() && !id.equals(children.get(idx).getUserData()))
             idx++;
-        assert idx != children.size() : "rmSonifiable was called on " + id + " which couldn't be found in SceneTree.";
+        if (idx != children.size()) {
+            System.out.println("rmSonifiable was called on " + id + " which couldn't be found in SceneTree.");
+            return;
+        }
         rmSonifiable(id, idx, updateSearchResult);
     }
 
@@ -484,30 +472,24 @@ public class MainSceneController implements Initializable {
                     InstrParam paramVal = paramCBSelect.getSelectedItem() == null ? null : InstrParam.fromString(paramCBSelect.getSelectedItem());
 
                     paramCB.setDisable(newIdx.intValue() <= 0);
-                    paramCBSelect.select(null);
-                    paramCB.getItems().clear();
-                    InstrParam[] newOpts;
-                    Function<InstrParam, InstrParam[]> getOpts = (pv) -> isLineParam ? mapping.getEmptyLineParams(newValue, pv) : mapping.getEmptyRangeParams(newValue, pv);
+                    refreshParamOpts(paramCB, newValue, isLineParam, true);
                     if (newValue != null && paramVal != null) {
                         mapping.rmParam(oldValue, paramVal);
-
-                        if (!mapping.isMapped(newValue, paramVal)) {
-                            newOpts = getOpts.apply(paramVal);
-                            paramCBSelect.select(paramVal.toString());
+                        if (!mapping.isMapped(newValue, paramVal))
                             mapping.setParam(newValue, sonifiable, paramVal, eparam);
-                        } else {
-                            newOpts = getOpts.apply(null);
-                        }
-                    } else {
-                        newOpts = getOpts.apply(null);
                     }
-                    paramCB.getItems().add(null);
-                    for (InstrParam opt : newOpts) paramCB.getItems().add(opt.toString());
                     enableBtnIfValid();
                     currentlyUpdatingCB = false;
                 } catch (AppError e) {
                     CommonController.displayError(anchor, e.getMessage(), "Interner Fehler");
                 }
+            });
+            paramCB.setOnMouseClicked(ev -> {
+                if (currentlyUpdatingCB) return;
+                currentlyUpdatingCB = true;
+                refreshParamOpts(paramCB, instVals[Math.max(instCB.getSelectionModel().getSelectedIndex(), 0)], isLineParam, false);
+                currentlyUpdatingCB = false;
+                paramCB.show();
             });
             paramCB.getSelectionModel().selectedItemProperty().addListener((observable, oldStr, newStr) -> {
                 try {
@@ -538,6 +520,31 @@ public class MainSceneController implements Initializable {
 
             children.add(instCB);
             children.add(paramCB);
+        }
+    }
+
+    private void refreshParamOpts(ChoiceBox<String> paramCB, InstrumentEnum instVal, boolean isLineParam, boolean checkForMapping) {
+        try {
+            SingleSelectionModel<String> paramCBSelect = paramCB.getSelectionModel();
+            InstrParam paramVal = paramCBSelect.getSelectedItem() == null ? null : InstrParam.fromString(paramCBSelect.getSelectedItem());
+            paramCBSelect.select(null);
+            paramCB.getItems().clear();
+            InstrParam[] newOpts;
+            Function<InstrParam, InstrParam[]> getOpts = (pv) -> isLineParam ? mapping.getEmptyLineParams(instVal, pv) : mapping.getEmptyRangeParams(instVal, pv);
+            boolean flag = instVal != null && paramVal != null && (!checkForMapping || !mapping.isMapped(instVal, paramVal));
+            if (flag)
+                newOpts = getOpts.apply(paramVal);
+            else
+                newOpts = getOpts.apply(null);
+
+            paramCB.getItems().add(null);
+            for (InstrParam opt : newOpts) paramCB.getItems().add(opt.toString());
+
+            if (flag)
+                paramCBSelect.select(paramVal.toString());
+            // System.out.println("Selected: " + paramCBSelect.getSelectedItem());
+        } catch (AppError e) {
+            CommonController.displayError(anchor, e.getMessage(), "Interner Fehler");
         }
     }
 
