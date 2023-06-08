@@ -7,7 +7,6 @@ set javafx-path="C:\Languages\Java\javafx-sdk-20.0.1"
 set "jar-name=SoundInvestments.jar"
 set "robocopy-params=/E /njh /njs /ndl /nc /ns >NUL"
 
-
 @REM Build clean dist directory
 if exist dist (	@RD /S /Q dist )
 mkdir dist
@@ -35,5 +34,9 @@ copy DistReadme.txt dist\README.txt >NUL
 echo Writing Script...
 echo java\bin\java.exe --module-path javafx\lib --add-modules javafx.base,javafx.controls,javafx.fxml,javafx.graphics -jar %jar-name% > dist/SoundInvestments.bat
 echo ./java/bin/java.exe --module-path javafx\lib --add-modules javafx.base,javafx.controls,javafx.fxml,javafx.graphics -jar %jar-name% > dist/SoundInvestments.bash
+echo #! /usr/bin/env bash >> dist/SoundInvestments.command
+echo cd -- \$(dirname \$BASH_SOURCE) >> dist/SoundInvestments.command
+echo java --module-path javafx/lib --add-modules javafx.base,javafx.controls,javafx.fxml,javafx.graphics -jar %jar-name% >> dist/SoundInvestments.command
+@REM Can't make the .command file executable from a windows machine, since windows apparently doesn't have the same file-permission scheme
 
 echo Done

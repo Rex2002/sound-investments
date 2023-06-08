@@ -1,4 +1,5 @@
 # @author Val Richter
+# @reviewer Malte Richert
 
 javaPath=/opt/homebrew/Cellar/openjdk/20.0.1
 javafxPath=/Users/malterichert/Dev/javafx-sdk-20.0.1
