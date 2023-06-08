@@ -6,7 +6,6 @@ import audio.Constants;
 import audio.Util;
 import audio.synth.InstrumentData;
 import audio.synth.fx.FilterData;
-import com.groupdocs.metadata.internal.c.a.w.internal.DE;
 
 import java.util.Arrays;
 import java.util.Random;
@@ -24,7 +23,7 @@ public class Harmonizer {
         InstrumentData data = new InstrumentData();
         data.setInstrument(dataRaw.getInstrument());
 
-        data.setPitch(normalizePitch(dataRaw.getPitch()));
+        data.setPitch(normalizePitch());
         data.setVolume(normalizeVolume());
 
         if (!(dataRaw.getDelayEcho() == null && dataRaw.getFeedbackEcho() == null && dataRaw.getOnOffEcho() == null)) {
@@ -48,13 +47,13 @@ public class Harmonizer {
         return data;
     }
 
-    private int[] normalizePitch(double[] pitch) throws AppError {
+    private int[] normalizePitch() throws AppError {
         int NUMBER_OCTAVES = 4;
         int FIRST_NOTE = 36;
 
         int[] scale = getRandomScale();
 
-        pitch = quantizePitch(pitch);
+        double[] pitch = quantizePitch();
 
         int[] output = new int[pitch.length];
         for (int i = 0; i < pitch.length; i++) {
@@ -89,14 +88,13 @@ public class Harmonizer {
     }
 
     /**
-     * @param pitch data array which is presumed to be much longer than the amount
-     *              of beats needed
      * @return data array that has the exact length where one data point can be
      *         sonified as one quarter note
      *         compresses long data array to the required length by averaging a
      *         number of data points into one note.
      */
-    private double[] quantizePitch(double[] pitch) {
+    private double[] quantizePitch() {
+        double[] pitch = dataRaw.getPitch();
         double[] notes = new double[numberBeats];
         int bufferLength = pitch.length / numberBeats;
         if (bufferLength > 0) {
