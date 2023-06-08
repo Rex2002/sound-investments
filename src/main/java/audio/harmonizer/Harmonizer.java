@@ -150,6 +150,7 @@ public class Harmonizer {
     private int[] normalizeDelayEcho() throws AppError {
         int SAMPLES_PER_BAR = Constants.SAMPLE_RATE * 60 / (Constants.TEMPO / 4);
         double[] delayEcho = dataRaw.getDelayEcho();
+        int defaultDelay = (int) (1 / 8f * SAMPLES_PER_BAR);
 
         // TODO: test delay times
         if (delayEcho != null) {
@@ -159,11 +160,11 @@ public class Harmonizer {
             for (int i = 0; i < delayEcho.length; i++) {
                 checkDouble(delayEcho[i], "delayEcho", i);
 
-                output[i] = (int) (delays[(int) (delayEcho[i] * (delays.length - 1))] * SAMPLES_PER_BAR);
+                output[i] = delayEcho[i] == -1 ? defaultDelay : (int) (delays[(int) (delayEcho[i] * (delays.length - 1))] * SAMPLES_PER_BAR);
             }
             return output;
         } else {
-            return new int[] { (int) (1 / 8f * SAMPLES_PER_BAR) };
+            return new int[] { defaultDelay };
         }
     }
 
@@ -211,7 +212,7 @@ public class Harmonizer {
             for (int i = 0; i < delayReverb.length; i++) {
                 checkDouble(delayReverb[i], "delayReverb", i);
 
-                output[i] = (int) (delayReverb[i] * MAX_DELAY_REVERB);
+                output[i] = delayReverb[i] == -1 ? DEFAULT_DELAY_REVERB : (int) (delayReverb[i] * MAX_DELAY_REVERB);
             }
             return output;
         } else {
