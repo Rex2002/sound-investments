@@ -2,9 +2,8 @@ package app.communication;
 
 public enum MsgToUIType implements MsgType {
 	FILTERED_SONIFIABLES, // data: List<Sonifiable>
-	LOADABLE_MAPPINGS, // data: List<String>
+	SONIFIABLE_FILTER, // data: SonifiableFilter
 	ERROR, // data: String
-	VALIDATION_DONE, // data: null
-	VALIDATION_ERROR, // data: String
+	MAPPING, // data: Mapping
 	FINISHED // data: MusicData
 }

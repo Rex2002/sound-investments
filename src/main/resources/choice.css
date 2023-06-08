@@ -81,16 +81,16 @@
 	-fx-font-size: 20;
 }
 #errorTitle {
-	-fx-font-size: 30;
-	-fx-alignment: center;
+	-fx-font-size: 27;
+	/* -fx-alignment: left; */
 	-fx-pref-height: 50px;
 	-fx-text-fill: rgb(255, 255, 255);
-	-fx-pref-width: 200px;
+	-fx-pref-width: 310px;
 }
 #errorMessage {
-	-fx-font-size: 27;
-	-fx-pref-height: 200px;
-	-fx-pref-width: 200px;
+	-fx-font-size: 24;
+	-fx-pref-height: 400px;
+	-fx-pref-width: 460px;
 	-fx-text-fill: rgb(255, 255, 255);
 	-fx-alignment: center;
 }
@@ -118,12 +118,13 @@
 	-fx-border-radius: 30;
 }
 #closeBtn {
-	-fx-background-color: rgba(102, 84, 84, 0.26);
 	-fx-pref-height: 50px;
 	-fx-pref-width: 150px;
 	-fx-alignment: center;
 	-fx-font-size: 20px;
+	-fx-background-color: rgb(128, 45, 45);
 	-fx-text-fill: rgb(255, 255, 255);
+	-fx-font-weight: bold;
 	-fx-background-radius: 30;
 }
 #searchBar {
