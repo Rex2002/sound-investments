@@ -15,6 +15,7 @@ public class Mapping {
 	public static int MIN_SOUND_LENGTH = 30;
 	public static int MAX_SOUND_LENGTH = 5 * 60;
 	public static int MAX_SONIFIABLES_AMOUNT = 10;
+	public static int START_END_DATE_MIN_DISTANCE = 4;
 
 	private Set<Sonifiable> sonifiables = new HashSet<>(16);
 	private final InstrumentMapping[] mappedInstruments = new InstrumentMapping[InstrumentEnum.size];
@@ -60,6 +61,9 @@ public class Mapping {
 			return "Start-Datum ist nicht gesetzt.";
 		if (endDate == null)
 			return "End-Datum ist nicht gesetzt.";
+		startDate.roll(Calendar.DATE, START_END_DATE_MIN_DISTANCE);
+		if (startDate.after(endDate))
+			return "Start-Datum muss mindestens " + Integer.toString(START_END_DATE_MIN_DISTANCE) + " Tage vor dem Enddatum liegen";
 		if (soundLength == null || soundLength < MIN_SOUND_LENGTH || soundLength > MAX_SOUND_LENGTH)
 			return "Ungültige Audio-Länge gewählt. Die Audio-Länge muss zwischen 30 Sekunden und 5 Minuten liegen.";
 		if (sonifiables.isEmpty())
