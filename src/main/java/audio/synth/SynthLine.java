@@ -13,23 +13,16 @@ import static audio.Constants.SAMPLE_RATE;
 
 public class SynthLine {
 
-    enum WaveTypes {
-        SINE,
-        SQUARE,
-        SAWTOOTH
-    }
-
     @Data
     static class UnpackedInstr {
-        private WaveTypes waveType;
         private double modFactor;
         private Envelope env;
         private Envelope modEnv;
     }
 
-    InstrumentData data;
+    final InstrumentData data;
     double[] out;
-    int sampleNumber;
+    final int sampleNumber;
 
     public SynthLine(InstrumentData data, double length) {
         this.data = data;
@@ -61,14 +54,8 @@ public class SynthLine {
     private void applyTimbre() {
         UnpackedInstr instr = this.unpackInstrument();
         double[] transformedPitch = this.transformNotesToFreq();
-
-        switch (instr.waveType) {
-            case SINE -> {
-                SineWaveGenerator gen = new SineWaveGenerator();
-                out = gen.generate(transformedPitch, sampleNumber, out, instr.env, instr.getModFactor(), instr.modEnv);
-            }
-            case SQUARE, SAWTOOTH -> throw new RuntimeException("implement Sawtooth, square");
-        }
+        SineWaveGenerator gen = new SineWaveGenerator();
+        out = gen.generate(transformedPitch, sampleNumber, out, instr.env, instr.getModFactor(), instr.modEnv);
     }
 
     private void applyEcho() {
@@ -116,25 +103,21 @@ public class SynthLine {
         UnpackedInstr uInstr = new UnpackedInstr();
         switch (this.data.getInstrument()) {
             case RETRO_SYNTH -> {
-                uInstr.setWaveType(WaveTypes.SINE);
                 uInstr.setModFactor(1.5);
                 uInstr.env = new ADSR(.1, .3, .5, .2);
                 uInstr.modEnv = new ADSR(.1, .3, .5, .2);
             }
             case STRINGS_SYNTH -> {
-                uInstr.setWaveType(WaveTypes.SINE);
                 uInstr.setModFactor(0.2142070863);
                 uInstr.env = new ADSR(.25, .15, .5, .14);
                 uInstr.modEnv = new ADSR(.15, .14, .5, .16);
             }
             case BANJO_SYNTH -> {
-                uInstr.setWaveType(WaveTypes.SINE);
                 uInstr.setModFactor(0.4715820051);
                 uInstr.env = new ADSR(.03, .4, .25, .4);
                 uInstr.modEnv = new ADSR(.15, .14, .5, .16);
             }
             case BRASS_SYNTH -> {
-                uInstr.setWaveType(WaveTypes.SINE);
                 uInstr.setModFactor(0.5);
                 uInstr.env = new ADSR(.15, .2, .55, .1);
                 uInstr.modEnv = new ADSR(.15, .2, .55, .1);

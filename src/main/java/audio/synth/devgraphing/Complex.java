@@ -1,4 +1,4 @@
-package audio.synth;
+package audio.synth.devgraphing;
 
 public class Complex {
     public final double real;

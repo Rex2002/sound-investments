@@ -2,5 +2,5 @@ package app;
 
 @FunctionalInterface
 public interface AppFunction {
-	public void call() throws AppError;
+	void call() throws AppError;
 }

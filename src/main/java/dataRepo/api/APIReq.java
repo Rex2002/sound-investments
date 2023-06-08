@@ -1,9 +1,16 @@
 package dataRepo.api;
 
+import dataRepo.json.JsonPrimitive;
+import dataRepo.json.Parser;
+import util.ArrayFunctions;
+import util.FutureList;
+
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.net.http.*;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -12,11 +19,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Future;
 import java.util.function.Function;
 import java.util.function.Predicate;
-
-import dataRepo.json.JsonPrimitive;
-import dataRepo.json.Parser;
-import util.ArrayFunctions;
-import util.FutureList;
 
 public class APIReq {
 	// Conditions based on the debug-variable will be evaluated at compile time

@@ -1,4 +1,4 @@
-package audio.synth;
+package audio.synth.devgraphing;
 
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
@@ -19,8 +19,8 @@ public class FrequencyChart extends JFrame {
 
     double[] data;
     Complex[] complexData;
-    int graphDefinition;
-    String title;
+    final int graphDefinition;
+    final String title;
 
     boolean useFFT = false;
 
