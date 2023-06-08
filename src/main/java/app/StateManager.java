@@ -1,5 +1,8 @@
 package app;
 
+import app.communication.*;
+import app.mapping.*;
+import app.ui.App;
 import audio.Sonifier;
 import audio.synth.EvInstrData;
 import audio.synth.EvInstrEnum;
@@ -7,18 +10,16 @@ import audio.synth.InstrumentEnum;
 import audio.synth.playback.PlayControlEvent;
 import audio.synth.playback.PlayControlEventsEnum;
 import audio.synth.playback.PlaybackController;
+import dataAnalyzer.*;
+import dataRepo.*;
 import javafx.application.Application;
+import util.DateUtil;
+import util.FutureList;
+
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
-
-import app.communication.*;
-import app.mapping.*;
-import app.ui.App;
-import dataAnalyzer.*;
-import dataRepo.*;
-import util.*;
 
 // This class runs in the main thread and coordinates all tasks and the creation of the UI thread
 // This is atypical, as JavaFX's UI thread is usually the main thread as well

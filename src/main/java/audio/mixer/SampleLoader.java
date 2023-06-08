@@ -1,9 +1,5 @@
 package audio.mixer;
 
-//import com.groupdocs.metadata.Metadata;
-//import com.groupdocs.metadata.core.WavRootPackage;
-//import com.groupdocs.metadata.internal.c.a.s.internal.nb.Au;
-
 import javax.sound.sampled.*;
 import java.io.IOException;
 import java.util.Objects;
@@ -46,18 +42,4 @@ public class SampleLoader {
         }
 
     }
-
-// INFO: only needed for debugging, only works when adding groupdocs to mvn and after uncommenting respective imports
-//    public static void printAudioFormat(String filename){
-//        try (Metadata metadata = new Metadata(filename))
-//        {
-//            WavRootPackage root = metadata.getRootPackageGeneric();
-//            System.out.println(root.getWavPackage().getBitsPerSample()); // Bits per Sample
-//            System.out.println(root.getWavPackage().getBlockAlign()); // Block Align
-//            System.out.println(root.getWavPackage().getByteRate()); // Byte Rate
-//            System.out.println(root.getWavPackage().getNumberOfChannels()); // No. of Channels
-//            System.out.println(root.getWavPackage().getAudioFormat()); // Audio Format
-//            System.out.println(root.getWavPackage().getSampleRate()); // Sample Rate
-//        }
-//    }
 }

@@ -1,14 +1,13 @@
 package app.ui;
 
-import java.io.IOException;
-import java.net.URL;
-import java.time.LocalDate;
-import java.util.Calendar;
-import java.util.List;
-import java.util.ResourceBundle;
-import java.util.Timer;
-import java.util.TimerTask;
-import java.util.function.Function;
+import app.AppError;
+import app.communication.*;
+import app.mapping.*;
+import audio.synth.EvInstrEnum;
+import audio.synth.InstrumentEnum;
+import dataRepo.FilterFlag;
+import dataRepo.Sonifiable;
+import dataRepo.SonifiableID;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -17,15 +16,7 @@ import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.CheckBox;
-import javafx.scene.control.ChoiceBox;
-import javafx.scene.control.DateCell;
-import javafx.scene.control.DatePicker;
-import javafx.scene.control.Label;
-import javafx.scene.control.SelectionModel;
-import javafx.scene.control.SingleSelectionModel;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.AnchorPane;
@@ -36,27 +27,12 @@ import javafx.stage.Stage;
 import javafx.util.Duration;
 import util.ArrayFunctions;
 import util.DateUtil;
-import app.AppError;
-import app.communication.EventQueues;
-import app.communication.Msg;
-import app.communication.MsgToSMType;
-import app.communication.MsgToUIType;
-import app.communication.MusicData;
-import app.communication.SonifiableFilter;
-import app.mapping.EvInstrMapping;
-import app.mapping.ExchangeData;
-import app.mapping.ExchangeParam;
-import app.mapping.InstrParam;
-import app.mapping.LineData;
-import app.mapping.MappedInstr;
-import app.mapping.Mapping;
-import app.mapping.PointData;
-import app.mapping.RangeData;
-import audio.synth.EvInstrEnum;
-import audio.synth.InstrumentEnum;
-import dataRepo.Sonifiable;
-import dataRepo.SonifiableID;
-import dataRepo.FilterFlag;
+
+import java.io.IOException;
+import java.net.URL;
+import java.time.LocalDate;
+import java.util.*;
+import java.util.function.Function;
 
 public class MainSceneController implements Initializable {
     // WARNING: Kommentare werden noch normalisiert
@@ -141,7 +117,7 @@ public class MainSceneController implements Initializable {
 
         closeImg = new Image(getClass().getResource("/close_icon.png").toExternalForm());
 
-        checkEQService = new CheckEQService();
+            checkEQService = new CheckEQService();
         checkEQService.setPeriod(Duration.millis(100));
         checkEQService.setOnSucceeded((event) -> {
             List<Msg<MsgToUIType>> messages = checkEQService.getValue();
@@ -342,7 +318,7 @@ public class MainSceneController implements Initializable {
                 } else {
                     CommonController.displayError(anchor,
                             "Zu viele Börsenkurse gewählt. Es dürfen höchstens "
-                                    + Integer.toString(Mapping.MAX_SONIFIABLES_AMOUNT) + " Börsenkurse gewählt werden.",
+                                    + Mapping.MAX_SONIFIABLES_AMOUNT + " Börsenkurse gewählt werden.",
                             "Zu viele Börsenkurse");
                     cBox.setSelected(false);
                 }
@@ -630,10 +606,8 @@ public class MainSceneController implements Initializable {
     }
 
     private void enableBtnIfValid() {
-        if (!startedSonification && mapping.isValid())
-            startBtn.setDisable(false);
-        else
-            startBtn.setDisable(true);
+
+        startBtn.setDisable(startedSonification || !mapping.isValid());
     }
 
     private void instAdded(String name) {
