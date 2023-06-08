@@ -32,7 +32,8 @@ robocopy src\main\resources dist\src\main\resources %robocopy-params%
 copy DistReadme.txt dist\README.txt >NUL
 
 @REM Write executable into the distributable
-echo Writing Batch-Script...
+echo Writing Script...
 echo java\bin\java.exe --module-path javafx\lib --add-modules javafx.base,javafx.controls,javafx.fxml,javafx.graphics -jar %jar-name% > dist/SoundInvestments.bat
+echo ./java/bin/java.exe --module-path javafx\lib --add-modules javafx.base,javafx.controls,javafx.fxml,javafx.graphics -jar %jar-name% > dist/SoundInvestments.bash
 
 echo Done
