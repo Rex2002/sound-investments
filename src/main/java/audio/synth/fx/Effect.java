@@ -1,7 +1,7 @@
 package audio.synth.fx;
 
 
-  import audio.Util;
+import audio.Util;
 
 import static audio.Constants.SAMPLE_RATE;
 
@@ -47,6 +47,59 @@ public class Effect {
             out[2 * pos + 1] = bR;
         }
         return out;
+    }
+
+    public static double[] copyOfOneChannel(double[] in, int len, int start){
+        double[] out = new double[len];
+        for(int i = 0; i < len ; i ++){
+            out[i] = in[start + 2 * i];
+        }
+        return out;
+    }
+
+    public static double[] echoPart(double[] input, double[] feedback, int delay, int start, int length, int overlap){
+        if(delay == 0){
+            return input;
+        }
+        double[] bufferL = new double[delay];//copyOfOneChannel(input, delay, start);
+        double[] bufferR = new double[delay];//copyOfOneChannel(input, delay, start + 1);
+        double inL, inR, bL, bR;
+        int cursor = 0;
+        for(int pos = start; pos < start + length + overlap; pos += 2){
+            inL = input[pos];
+            inR = input[pos + 1];
+            bL = bufferL[cursor];
+            bR = bufferR[cursor];
+            bufferL[cursor] = inL +  bL * (pos > start+length ? 0.1 : feedback[Util.getRelPosition(pos, input.length, feedback.length)]);
+            bufferR[cursor] = inR + bR * (pos > start+length ? 0.1 : feedback[Util.getRelPosition(pos, input.length, feedback.length)]);
+            cursor += 1;
+            if(cursor >= delay){
+                cursor = 0;
+            }
+            input[pos] = bL;
+            input[pos + 1] = bR;
+        }
+        return input;
+    }
+
+    public static double[] reverb(double[] input, double[] feedback, int[] delayArray){
+        int overlap = 44100;
+        int sectionSize;
+        int sectionLen = input.length / delayArray.length;
+        int delay = -1;
+        int delayPointer = 0;
+        while(delayPointer < delayArray.length){
+            delay = delayArray[delayPointer];
+            sectionSize = 0;
+            do{
+                sectionSize++;
+            } while( delayPointer + sectionSize < delayArray.length && delayArray[delayPointer] == delayArray[delayPointer + sectionSize]);
+            input = echoPart(input, feedback, delay, delayPointer * sectionLen,
+                    delayPointer * sectionLen + sectionLen * sectionSize < input.length ? sectionLen * sectionSize : input.length - delayPointer * sectionLen > 0 ? input.length - delayPointer * sectionLen : 0,
+                    delayPointer * sectionLen + sectionLen * sectionSize + overlap < input.length ? overlap : 0);
+            delayPointer += sectionSize;
+        }
+        return input;
     }
 
     public static double[] echo(double[] input, double[] feedback, int[] delayArray){

@@ -66,7 +66,7 @@ public class SynthLine {
 
     private void applyReverb() {
         if (data.feedbackReverb != null && data.delayReverb != null) {
-            out = Effect.echo(out, data.feedbackReverb, data.delayReverb);
+            out = Effect.reverb(out, data.feedbackReverb, data.delayReverb);
         }
     }
 
