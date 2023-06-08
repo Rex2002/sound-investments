@@ -13,7 +13,7 @@ mkdir "./dist"
 
 # Build Fat-Jar
 echo "Building JAR..."
-# mvn clean package >/dev/null
+mvn clean package >/dev/null
 cp "$mavenJarPath" "./dist/$jarName" >/dev/null
 
 # Build Java Runtime
@@ -27,7 +27,7 @@ rm     "./dist/javafx/src.zip" >/dev/null
 
 # Copy resources into the distributable
 echo "Copying Resources..."
-distResourcesPath=./dist/src/main/resources
+distResourcesPath=./dist/src/main
 mkdir -p "$distResourcesPath"
 cp -r "./src/main/resources" "$distResourcesPath" >/dev/null
 
