@@ -298,7 +298,7 @@ public class MainSceneController implements Initializable {
             stage.show();
         } catch (IOException e) {
             e.printStackTrace();
-            CommonController.displayError(anchor, "Fehler beim Laden de nächsten UI-Szene", "Interner Fehler");
+            CommonController.displayError(anchor, "Fehler beim Laden der nächsten UI-Szene", "Interner Fehler");
         }
     }
 

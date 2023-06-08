@@ -12,7 +12,6 @@ import app.communication.MsgToUIType;
 public class CheckEQService extends ScheduledService<List<Msg<MsgToUIType>>> {
 	private List<Msg<MsgToUIType>> l = new ArrayList<>(8);
 
-	@Override
 	protected Task<List<Msg<MsgToUIType>>> createTask() {
 		return new Task<>() {
 			@Override

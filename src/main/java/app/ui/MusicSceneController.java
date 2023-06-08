@@ -243,24 +243,30 @@ public class MusicSceneController implements Initializable {
 	}
 
 	public void switchToMainScene(ActionEvent event) throws IOException {
-		// Tell StateManager, that we are back in the main scene again
-		checkEQService.cancel();
 		try {
+			myTimer.cancel();
+            checkEQService.cancel();
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/MainScene.fxml"));
+            Parent root = loader.load();
+            Stage stage = (Stage) anchor.getScene().getWindow();
+            Scene scene = new Scene(root);
+            String css = this.getClass().getResource("/choice.css").toExternalForm();
+            // Set the stylesheet after the scene creation
+            scene.getStylesheets().add(css);
+            stage.setScene(scene);
+            stage.show();
+			// Tell the StateManager, that we are back in the main scene again
 			EventQueues.toSM.put(new Msg<>(MsgToSMType.ENTERED_MAIN_SCENE));
-		} catch (InterruptedException ie) {
-			// TODO: Error Handling
+        } catch (IOException e) {
+            CommonController.displayError(anchor, "Fehler beim Laden der nächsten UI-Szene", "Interner Fehler");
+        } catch (InterruptedException e) {
+			Pane pane = anchor;
+			if (!root.getChildrenUnmodifiable().isEmpty() && root.getChildrenUnmodifiable().get(0) instanceof Pane)
+				pane = (Pane) root.getChildrenUnmodifiable().get(0);
+			CommonController.displayError(pane, "Es konnte keine Verbindung mit dem Backend der Anwendung hergestellt werden", "Interner Fehler");
 		}
-		myTimer.cancel();
-		FXMLLoader loader = new FXMLLoader(getClass().getResource("/MusicScene.fxml"));
-        Parent root = loader.load();
-		root = FXMLLoader.load(getClass().getResource("/MainScene.fxml"));
-		stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-		scene = new Scene(root);
-		String css = this.getClass().getResource("/choice.css").toExternalForm();
-		// Set the stylesheet after the scene creation
-		scene.getStylesheets().add(css);
-		stage.setScene(scene);
-		stage.show();
+
+
 	}
 
 	public void pausePlaySound(){
