@@ -338,7 +338,7 @@ public class MainSceneController implements Initializable {
         int idx = 0;
         while (idx < children.size() && !id.equals(children.get(idx).getUserData()))
             idx++;
-        if (idx != children.size()) {
+        if (idx == children.size()) {
             System.out.println("rmSonifiable was called on " + id + " which couldn't be found in SceneTree.");
             return;
         }
