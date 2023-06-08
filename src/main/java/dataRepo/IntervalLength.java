@@ -9,6 +9,14 @@ public enum IntervalLength {
 	HOUR,
 	DAY;
 
+	public static IntervalLength inc(IntervalLength interval) {
+		return switch (interval) {
+			case MIN -> HOUR;
+			case HOUR -> DAY;
+			case DAY -> DAY;
+		};
+	}
+
 	public Instant addToInstant(Instant x) {
 		long millis = 1000;
 		millis *= switch (this) {
