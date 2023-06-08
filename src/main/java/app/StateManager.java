@@ -137,7 +137,7 @@ public class StateManager {
 		double[] calculatedPrices = switch (ed.getData()) {
 			case PRICE -> normalizeValues(getPriceValues(cutPrices));
 			case MOVINGAVG -> normalizeValues(GeneralTrends.calculateMovingAverage(cutPrices));
-			case RELCHANGE -> throw new AppError("RELCHANGE is not yet implemented");
+ 			case RELCHANGE -> throw new AppError("RELCHANGE ist noch nicht implementiert");
 		};
 		double[] ret = new double[prices.size()];
 		Arrays.fill(ret, -1);
@@ -186,9 +186,9 @@ public class StateManager {
 		List<Price> prices = priceMap.get(ed.getId());
 		return switch (ed.getData()) {
 			case EQMOVINGAVG -> GeneralTrends.AverageIntersectsStock(GeneralTrends.calculateMovingAverage(prices), prices);
-			case TRENDBREAK -> throw new AppError("TRENDBREAK is not yet implemented");
-			case EQSUPPORT -> throw new AppError("EQSUPPORT is not yet implemented");
-			case EQRESIST -> throw new AppError("EQRESIST is not yet implemented");
+			case TRENDBREAK -> throw new AppError("TRENDBREAK ist noch nicht implementiert");
+			case EQSUPPORT -> throw new AppError("EQSUPPORT ist noch nicht implementiert");
+			case EQRESIST -> throw new AppError("EQRESIST ist noch nicht implementiert");
 		};
 	}
 
