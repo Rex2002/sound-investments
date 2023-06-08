@@ -134,6 +134,7 @@ public class MainSceneController implements Initializable {
     }
 
     @Override
+    @SuppressWarnings("unchecked")
     public void initialize(URL arg0, ResourceBundle arg1) { // Initialisierung mit den Optionen
         categoriesCB.getItems().addAll(MainSceneController.categoryKeys);
         locationCB.getItems().addAll(locations);
@@ -333,12 +334,10 @@ public class MainSceneController implements Initializable {
         if (mapping.hasSonifiable(sonifiable.getId())) {
             cBox.setSelected(true);
         }
-        Pane[] stockPane = new Pane[1];
-        stockPane[0] = new Pane();
         cBox.selectedProperty().addListener((observable, oldValue, newValue) -> {
             if (newValue) {
                 if (paneBoxSonifiables.getChildren().size() < Mapping.MAX_SONIFIABLES_AMOUNT) {
-                    stockPane[0]=  addToPaneBox((Sonifiable) cBox.getUserData());
+                    addToPaneBox((Sonifiable) cBox.getUserData());
                 } else {
                     CommonController.displayError(anchor,
                             "Zu viele Börsenkurse gewählt. Es dürfen höchstens "
@@ -347,27 +346,32 @@ public class MainSceneController implements Initializable {
                     cBox.setSelected(false);
                 }
             } else {
-                rmSonifiable(((Sonifiable) cBox.getUserData()).getId(), stockPane[0], false);
-
-
+                rmSonifiable(((Sonifiable) cBox.getUserData()).getId(), false);
             }
         });
         checkVBox.setPrefHeight((checkVBox.getChildren().size()) * 42.0);
         checkVBox.getChildren().add(cBox);
     }
 
-    private void rmSonifiable(SonifiableID id, Pane stockPane, boolean updateSearchResult) {
-        mapping.rmSonifiable(id);
-        enableBtnIfValid();
-
+    private void rmSonifiable(SonifiableID id, boolean updateSearchResult) {
         ObservableList<Node> children = paneBoxSonifiables.getChildren();
         int idx = 0;
         while (idx < children.size() && !id.equals(children.get(idx).getUserData()))
             idx++;
         assert idx != children.size() : "rmSonifiable was called on " + id + " which couldn't be found in SceneTree.";
-        paneBoxSonifiables.getChildren().remove(stockPane);
-        paneBoxSonifiables.prefHeight(children.size() * 511.0);
+        rmSonifiable(id, idx, updateSearchResult);
+    }
 
+    private void rmSonifiable(SonifiableID id, Pane stockPane, boolean updateSearchResult) {
+        rmSonifiable(id, paneBoxSonifiables.getChildren().indexOf(stockPane), updateSearchResult);
+    }
+
+    private void rmSonifiable(SonifiableID id, int paneIdx, boolean updateSearchResult) {
+        mapping.rmSonifiable(id);
+        enableBtnIfValid();
+
+        paneBoxSonifiables.prefHeight(paneBoxSonifiables.getChildren().size() * 511.0);
+        paneBoxSonifiables.getChildren().remove(paneIdx);
         if (updateSearchResult) {
             ObservableList<Node> checkBoxes = checkVBox.getChildren();
             for (int i = 0; i < checkBoxes.size(); i++) {
@@ -391,10 +395,10 @@ public class MainSceneController implements Initializable {
         // add a Sharepanel to the Panel Box
         // Checking whether the maximum of sharePanels has already been reached must be
         // done before calling this function
-        Pane test  = createSharePane(sonifiable, showMapping);
-        paneBoxSonifiables.getChildren().add(test);
+        Pane sonifiablePane  = createSharePane(sonifiable, showMapping);
+        paneBoxSonifiables.getChildren().add(sonifiablePane);
         paneBoxSonifiables.setPrefHeight((paneBoxSonifiables.getChildren().size()) * 511.0);
-        return test;
+        return sonifiablePane;
     }
 
     private void addLine(String cssClass, int layoutX, int layoutY, int startX, int startY, int endX, int endY,
@@ -587,6 +591,7 @@ public class MainSceneController implements Initializable {
         for (String name : mapping.getMappedInstrNames()) {
             instAdded(name);
         }
+
         startPicker.setValue(DateUtil.calendarToLocalDate(mapping.getStartDate()));
         endPicker.setValue(DateUtil.calendarToLocalDate(mapping.getEndDate()));
         System.out.println("SoundLength: " + mapping.getSoundLength());
