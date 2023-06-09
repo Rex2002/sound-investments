@@ -44,16 +44,16 @@ public enum InstrParam {
 	public String toString() {
 		return switch (this) {
 			case PITCH -> "Pitch";
-			case RELVOLUME -> "Relvolume";
-			case ABSVOLUME -> "Absvolume";
-			case DELAY_ECHO -> "Delay_Echo";
-			case FEEDBACK_ECHO -> "Feedback_Echo";
-			case ON_OFF_ECHO -> "On_Off_Echo";
-			case DELAY_REVERB -> "Delay_Reverb";
-			case FEEDBACK_REVERB -> "Feedback_Reverb";
-			case ON_OFF_REVERB -> "On_Off_Reverb";
-			case CUTOFF -> "Cutoff";
-			case ON_OFF_FILTER -> "On_Off_Filter";
+			case RELVOLUME -> "Lautstärke";
+			case ABSVOLUME -> "An/Aus";
+			case DELAY_ECHO -> "Echo: Delay";
+			case FEEDBACK_ECHO -> "Echo: Level";
+			case ON_OFF_ECHO -> "Echo: An/Aus";
+			case DELAY_REVERB -> "Reverb: Delay";
+			case FEEDBACK_REVERB -> "Reverb: Level";
+			case ON_OFF_REVERB -> "Reverb: An/Aus";
+			case CUTOFF -> "Filter: Frequenz";
+			case ON_OFF_FILTER -> "Filter: An/Aus";
 			case HIGHPASS -> "Highpass";
 			case PAN -> "Pan";
 		};

@@ -19,7 +19,7 @@
 <children>
 	<!-- Title -->
 	<Rectangle arcHeight="5.0" arcWidth="5.0" fill="#121315" height="85.6" stroke="#121315" strokeType="INSIDE" width="1584.0" />
-	<Label fx:id="headerTitle" layoutX="59.0" layoutY="-20.0" prefHeight="125.0" prefWidth="885.0" text="Sound Investments" textFill="WHITE">
+	<Label fx:id="headerTitle" layoutX="59.0" layoutY="-20.0" prefHeight="125.0" prefWidth="885.0" text="SoundInvestments" textFill="WHITE">
 		<font>
 			<Font name="Rage Italic" size="80.0" />
 		</font>
@@ -28,7 +28,7 @@
 	<!-- "Choosing Sonifiables"-Box -->
 	<Pane layoutX="29.0" layoutY="110.0" prefHeight="655.0" prefWidth="332.0" style="-fx-background-color: #D9D9D9; -fx-background-radius: 30;">
 		<children>
-			<Label layoutX="24.0" layoutY="21.0" prefHeight="53.0" prefWidth="131.0" style="-fx-font-style: &quot;Roboto&quot;;" text="Aktien">
+			<Label layoutX="24.0" layoutY="21.0" prefHeight="53.0" prefWidth="131.0" style="-fx-font-style: &quot;Roboto&quot;;" text="Kurse">
 				<font>
 					<Font name="System Bold" size="29.0" />
 				</font>

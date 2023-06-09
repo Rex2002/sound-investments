@@ -31,8 +31,6 @@ import java.io.IOException;
 import java.net.URL;
 import java.text.ParseException;
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.function.Function;
 
@@ -99,7 +97,6 @@ public class MainSceneController implements Initializable {
         instKeys[0] = "";
         instVals[0] = null;
         instKeys[1] = "Globale Audio-Parameter";
-        instVals[0] = null;
         for (int i = 0; i < insts.length; i++) {
             instKeys[i + 2] = insts[i].toString();
             instVals[i + 2] = insts[i];
@@ -168,16 +165,14 @@ public class MainSceneController implements Initializable {
         });
         checkEQService.start();
 
-        categoriesCB.getSelectionModel().selectedIndexProperty().addListener((observable, oldIdx, newIdx) -> {
-            EventQueues.toSM.add(new Msg<>(MsgToSMType.FILTERED_SONIFIABLES,
-                    new SonifiableFilter(searchBar.getText(), categoryValues[(int) newIdx])));
-        });
+        categoriesCB.getSelectionModel().selectedIndexProperty().addListener((observable, oldIdx, newIdx) ->
+                EventQueues.toSM.add(new Msg<>(MsgToSMType.FILTERED_SONIFIABLES,
+                new SonifiableFilter(searchBar.getText(), categoryValues[(int) newIdx]))));
         categoriesCB.getSelectionModel().selectFirst();
 
-        searchBar.textProperty().addListener((observable, oldVal, newVal) -> {
-            EventQueues.toSM.add(new Msg<>(MsgToSMType.FILTERED_SONIFIABLES, new SonifiableFilter(newVal,
-                    categoryValues[categoriesCB.getSelectionModel().getSelectedIndex()])));
-        });
+        searchBar.textProperty().addListener((observable, oldVal, newVal) ->
+                EventQueues.toSM.add(new Msg<>(MsgToSMType.FILTERED_SONIFIABLES, new SonifiableFilter(newVal,
+                categoryValues[categoriesCB.getSelectionModel().getSelectedIndex()]))));
 
         setDatePickerListeners(startPicker, true);
         setDatePickerListeners(endPicker, false);
@@ -366,11 +361,11 @@ public class MainSceneController implements Initializable {
         paneBoxSonifiables.getChildren().remove(paneIdx);
         if (updateSearchResult) {
             ObservableList<Node> checkBoxes = checkVBox.getChildren();
-            for (int i = 0; i < checkBoxes.size(); i++) {
+            for (Node c : checkBoxes) {
                 try {
-                    CheckBox c = (CheckBox) checkBoxes.get(i);
-                    if (((Sonifiable) c.getUserData()).getId() == id) {
-                        c.setSelected(false);
+                    CheckBox checkBox = (CheckBox) c;
+                    if (((Sonifiable) checkBox.getUserData()).getId() == id) {
+                        checkBox.setSelected(false);
                         break;
                     }
                 } catch (ClassCastException e) {
@@ -603,9 +598,9 @@ public class MainSceneController implements Initializable {
         addLine("pinkline", 512, 177, -100, -60, -100, 263, stockPane.getChildren());
         addStockParamToPane("Preis", "paneShareLabel", 14, 80, 14, 115, 14, 160, sonifiable, LineData.PRICE,
                 stockPane.getChildren(), showMapping);
-        addStockParamToPane("Gleitender Durchschnitt", "paneShareLabel", 14, 215, 14, 250, 14, 295, sonifiable,
+        addStockParamToPane("Gleitender Schnitt", "paneShareLabel", 14, 215, 14, 250, 14, 295, sonifiable,
                 LineData.MOVINGAVG, stockPane.getChildren(), showMapping);
-        addStockParamToPane("Steigungsgrad", "paneShareLabel", 14, 350, 14, 385, 14, 430, sonifiable,
+        addStockParamToPane("Steigung", "paneShareLabel", 14, 350, 14, 385, 14, 430, sonifiable,
                 LineData.RELCHANGE, stockPane.getChildren(), showMapping);
         addStockParamToPane("Flagge", "paneShareLabel", 226, 80, 226, 115, 226, 160, sonifiable, RangeData.FLAG,
                 stockPane.getChildren(), showMapping);
@@ -613,13 +608,13 @@ public class MainSceneController implements Initializable {
                 stockPane.getChildren(), showMapping);
         addStockParamToPane("V-Form", "paneShareLabel", 226, 350, 226, 385, 226, 430, sonifiable, RangeData.VFORM,
                 stockPane.getChildren(), showMapping);
-        addStockParamToPane("Trendbrüche", "paneShareLabel", 422, 80, 422, 115, 0, 0, sonifiable, PointData.TRENDBREAK,
+        addStockParamToPane("Trendbruch", "paneShareLabel", 422, 80, 422, 115, 0, 0, sonifiable, PointData.TRENDBREAK,
                 stockPane.getChildren(), showMapping);
-        addStockParamToPane("EQMOVINGAVG", "paneShareLabel", 422, 180, 422, 215, 0, 0, sonifiable,
+        addStockParamToPane("Preis = Schnitt", "paneShareLabel", 422, 180, 422, 215, 0, 0, sonifiable,
                 PointData.EQMOVINGAVG, stockPane.getChildren(), showMapping);
-        addStockParamToPane("EQSUPPORT", "paneShareLabel", 422, 280, 422, 315, 0, 0, sonifiable, PointData.EQSUPPORT,
+        addStockParamToPane("Preis = Stütz", "paneShareLabel", 422, 280, 422, 315, 0, 0, sonifiable, PointData.EQSUPPORT,
                 stockPane.getChildren(), showMapping);
-        addStockParamToPane("EQRESIST", "paneShareLabel", 422, 380, 422, 415, 0, 0, sonifiable, PointData.EQRESIST,
+        addStockParamToPane("Preis = Widerstand", "paneShareLabel", 422, 380, 422, 415, 0, 0, sonifiable, PointData.EQRESIST,
                 stockPane.getChildren(), showMapping);
 
         return stockPane;
@@ -637,11 +632,11 @@ public class MainSceneController implements Initializable {
         endPicker.setValue(DateUtil.calendarToLocalDate(mapping.getEndDate()));
         System.out.println("SoundLength: " + mapping.getSoundLength());
 
-        String min = Integer.toString((int) (mapping.getSoundLength() / 60));
-        String sec = Integer.toString(mapping.getSoundLength() % 60);
+        String min = Integer.toString( mapping.getSoundLength() / 60);
+        String sec = Integer.toString(mapping.getSoundLength() % 60 );
         audioLength1.setText(min);
         audioLength.setText(sec);
-        assert filterValues[0] == false;
+        assert !filterValues[0];
         filterCB.getSelectionModel().select(mapping.getHighPass() ? 1 : 0);
     }
 
@@ -690,7 +685,7 @@ public class MainSceneController implements Initializable {
         int idx = 0;
         for (Node child : instBox.getChildren()) {
             try {
-                if (((Label) child).getText() == name)
+                if (((Label) child).getText().equals(name))
                     break;
             } catch (Exception e) {
             }
