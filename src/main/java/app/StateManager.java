@@ -4,6 +4,7 @@ import app.communication.*;
 import app.mapping.*;
 import app.ui.App;
 import audio.Sonifier;
+import audio.mixer.Backing;
 import audio.synth.EvInstrData;
 import audio.synth.EvInstrEnum;
 import audio.synth.InstrumentEnum;

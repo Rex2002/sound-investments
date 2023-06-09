@@ -16,15 +16,23 @@ public class PlaybackController {
     public final int SKIP_LENGTH = 100;
     private final SourceDataLine s;
     private final short[] data;
+    private final double lengthInSeconds;
 
-    public PlaybackController(SourceDataLine s, short[] data) {
+    public PlaybackController(SourceDataLine s, short[] data, double lengthInSeconds) {
         this.s = s;
         this.data = data;
+        this.lengthInSeconds = lengthInSeconds;
     }
 
-    public PlaybackController(SourceDataLine s, double[] data){
+    public PlaybackController(SourceDataLine s, double[] data, double lengthInSeconds) {
         this.s = s;
         this.data = Util.scaleToShort(data);
+        this.lengthInSeconds = lengthInSeconds;
+    }
+
+    // Returns length of audio stream in seconds
+    public double getLengthInSeconds() {
+        return lengthInSeconds;
     }
 
     public double getPlayedPercentage() {

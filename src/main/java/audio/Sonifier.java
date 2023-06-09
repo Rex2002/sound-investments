@@ -20,7 +20,7 @@ import javax.sound.sampled.SourceDataLine;
 import static audio.Util.concatArrays;
 
 public class Sonifier {
-    public static PlaybackController sonify(InstrumentDataRaw[] instrumentDataRaw, EvInstrData[] evInstrData, int lengthInSecondsRaw) throws AppError{
+    public static PlaybackController sonify(InstrumentDataRaw[] instrumentDataRaw, EvInstrData[] evInstrData, int lengthInSecondsRaw) throws AppError {
         Backing backing = new Backing();
         Constants.TEMPO = backing.setSamplesAndGetTempo();
 
@@ -58,6 +58,6 @@ public class Sonifier {
             throw new RuntimeException(e);
         }
 
-        return new PlaybackController(sdl, out);
+        return new PlaybackController(sdl, out, lengthInSeconds);
     }
 }

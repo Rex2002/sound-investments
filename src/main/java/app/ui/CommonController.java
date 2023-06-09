@@ -1,6 +1,7 @@
 package app.ui;
 
 import javafx.scene.layout.Pane;
+import util.DateUtil;
 import javafx.scene.control.Label;
 import javafx.scene.control.Button;
 
@@ -27,13 +28,18 @@ public class CommonController {
         errorTit.setWrapText(true);
         Button close = new Button("Schließen");
         close.setOnMouseClicked(event ->{
-                parent.getChildren().remove(errorPane);
+            parent.getChildren().remove(errorPane);
         });
         close.setLayoutX(330);
         close.setLayoutY(20);
         close.setId("closeBtn");
         errorPane.getChildren().addAll(errorMes, close, errorTit);
         parent.getChildren().add(errorPane);
+    }
 
+    public static String secToMinSecString(double secs, int minStrLen) {
+        int quot = (int) (secs / 60);
+        int rest = (int) Math.round(secs - quot * 60);
+        return DateUtil.paddedParse(quot, minStrLen, '0') + ":" + DateUtil.paddedParse(rest, 2, '0');
     }
 }
