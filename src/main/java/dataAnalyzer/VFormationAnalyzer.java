@@ -1,15 +1,13 @@
 package dataAnalyzer;
 
 import java.util.List;
-import java.util.Calendar;
 
 import dataRepo.Price;
 
 public class VFormationAnalyzer {
     public boolean[] analyze(List<Price> priceList) {
 
-        double[] input = new double[priceList.size()];
-		input = gaussianBlur(priceList);
+		double[] input = Blur.averageBlur(priceList);
         int length = input.length;
         boolean[] Vformations = new boolean[length];
         int formationLength = 0;

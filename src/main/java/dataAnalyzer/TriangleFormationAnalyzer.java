@@ -8,8 +8,7 @@ public class TriangleFormationAnalyzer {
 
     public boolean[] analyze(List<Price> priceList) {
         boolean[] triangleformations = new boolean[priceList.size()];
-        double[] blurredValues = new double[priceList.size()];
-		blurredValues = gaussianBlur(priceList);
+        double[] blurredValues = Blur.averageBlur(priceList);
 
         for (int i = 0; i < triangleformations.length; i++) {
             double lastPrice = blurredValues[i];
