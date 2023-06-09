@@ -11,14 +11,13 @@ public enum InstrParam {
 	FEEDBACK_REVERB,
 	ON_OFF_REVERB,
 	CUTOFF,
-	ORDER,
 	ON_OFF_FILTER,
 	HIGHPASS,
 	PAN;
 
 	public static InstrParam[] LineDataParams = { PITCH, RELVOLUME, DELAY_ECHO, FEEDBACK_ECHO, DELAY_REVERB,
 			FEEDBACK_REVERB,
-			CUTOFF, ORDER, PAN };
+			CUTOFF, PAN };
 	public static InstrParam[] RangeDataParams = { ABSVOLUME, ON_OFF_FILTER, ON_OFF_REVERB, ON_OFF_ECHO };
 	public static InstrParam[] BoolParams = { HIGHPASS };
 
@@ -35,7 +34,6 @@ public enum InstrParam {
 			case "Feedback_Reverb" -> FEEDBACK_REVERB;
 			case "On_Off_Reverb" -> ON_OFF_REVERB;
 			case "Cutoff" -> CUTOFF;
-			case "Order" -> ORDER;
 			case "On_Off_Filter" -> ON_OFF_FILTER;
 			case "Highpass" -> HIGHPASS;
 			case "Pan" -> PAN;
@@ -55,7 +53,6 @@ public enum InstrParam {
 			case FEEDBACK_REVERB -> "Feedback_Reverb";
 			case ON_OFF_REVERB -> "On_Off_Reverb";
 			case CUTOFF -> "Cutoff";
-			case ORDER -> "Order";
 			case ON_OFF_FILTER -> "On_Off_Filter";
 			case HIGHPASS -> "Highpass";
 			case PAN -> "Pan";

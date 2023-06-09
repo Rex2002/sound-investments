@@ -248,7 +248,6 @@ public class Mapping {
 			case FEEDBACK_REVERB -> instrMap.setFeedbackReverb(setParamHelper(id, eparam, iparam));
 			case ON_OFF_REVERB   -> instrMap.setOnOffReverb(setParamHelper(id, eparam, iparam));
 			case CUTOFF          -> instrMap.setCutoff(setParamHelper(id, eparam, iparam));
-			case ORDER           -> instrMap.setOrder(setParamHelper(id, eparam, iparam));
 			case ON_OFF_FILTER   -> instrMap.setOnOffFilter(setParamHelper(id, eparam, iparam));
 			case PAN             -> instrMap.setPan(setParamHelper(id, eparam, iparam));
 			case HIGHPASS        -> throw new AppError(eparam.toString() + " kann nicht auf " + iparam + " gemappt werden.");
@@ -269,7 +268,6 @@ public class Mapping {
 			case FEEDBACK_REVERB -> instrMap.getFeedbackReverb() != null;
 			case ON_OFF_REVERB   -> instrMap.getOnOffReverb() != null;
 			case CUTOFF          -> instrMap.getCutoff() != null;
-			case ORDER           -> instrMap.getOrder() != null;
 			case ON_OFF_FILTER   -> instrMap.getOnOffFilter() != null;
 			case PAN             -> instrMap.getPan() != null;
 			case HIGHPASS        -> throw new AppError(iparam + " kann nicht gemappt sein");
@@ -289,7 +287,6 @@ public class Mapping {
 			case FEEDBACK_REVERB -> instrMap.setFeedbackReverb(null);
 			case ON_OFF_REVERB   -> instrMap.setOnOffReverb(null);
 			case CUTOFF          -> instrMap.setCutoff(null);
-			case ORDER           -> instrMap.setOrder(null);
 			case ON_OFF_FILTER   -> instrMap.setOnOffFilter(null);
 			case PAN             -> instrMap.setPan(null);
 			case HIGHPASS        -> throw new AppError(iparam + " kann nicht gelöscht werden.");

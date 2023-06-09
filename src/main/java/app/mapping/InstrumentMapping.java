@@ -49,7 +49,6 @@ public class InstrumentMapping {
 		if (delayReverb    == null || oldVal == InstrParam.DELAY_REVERB)     params.add(InstrParam.DELAY_REVERB);
 		if (feedbackReverb == null || oldVal == InstrParam.FEEDBACK_REVERB)  params.add(InstrParam.FEEDBACK_REVERB);
 		if (cutoff         == null || oldVal == InstrParam.CUTOFF)           params.add(InstrParam.CUTOFF);
-		if (order          == null || oldVal == InstrParam.ORDER)            params.add(InstrParam.ORDER);
 		InstrParam[] out = new InstrParam[params.size()];
 		return params.toArray(out);
 	}
@@ -124,7 +123,6 @@ public class InstrumentMapping {
 			case FEEDBACK_REVERB -> feedbackEcho = null;
 			case ON_OFF_REVERB   -> onOffReverb = null;
 			case CUTOFF          -> cutoff = null;
-			case ORDER           -> order = null;
 			case ON_OFF_FILTER   -> onOffFilter = null;
 			case PAN             -> pan = null;
 			default              -> {}
@@ -143,7 +141,6 @@ public class InstrumentMapping {
 			case FEEDBACK_REVERB -> getFeedbackEcho();
 			case ON_OFF_REVERB   -> getOnOffReverb();
 			case CUTOFF          -> getCutoff();
-			case ORDER           -> getOrder();
 			case ON_OFF_FILTER   -> getOnOffFilter();
 			case PAN             -> getPan();
 			default              -> null;
@@ -158,7 +155,6 @@ public class InstrumentMapping {
 		if (ed.equals(delayReverb))    return InstrParam.DELAY_REVERB;
 		if (ed.equals(feedbackReverb)) return InstrParam.FEEDBACK_REVERB;
 		if (ed.equals(cutoff))         return InstrParam.CUTOFF;
-		if (ed.equals(order))          return InstrParam.ORDER;
 		if (ed.equals(absVolume))      return InstrParam.ABSVOLUME;
 		if (ed.equals(onOffEcho))      return InstrParam.ON_OFF_ECHO;
 		if (ed.equals(onOffReverb))    return InstrParam.ON_OFF_REVERB;
@@ -250,14 +246,6 @@ public class InstrumentMapping {
 		this.cutoff = cutoff;
 	}
 
-	public ExchangeData<LineData> getOrder() {
-		return this.order;
-	}
-
-	public void setOrder(ExchangeData<LineData> order) {
-		this.order = order;
-	}
-
 	public ExchangeData<RangeData> getOnOffFilter() {
 		return this.onOffFilter;
 	}
@@ -296,7 +284,6 @@ public class InstrumentMapping {
 				", feedbackReverb='" + this.feedbackReverb + "'" +
 				", onOffReverb='" + this.onOffReverb + "'" +
 				", cutoff='" + this.cutoff + "'" +
-				", order='" + this.order + "'" +
 				", onOffFilter='" + this.onOffFilter + "'" +
 				", highPass='" + this.highPass + "'" +
 				", pan='" + this.pan + "'" +
