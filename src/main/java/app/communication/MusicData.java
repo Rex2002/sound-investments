@@ -18,11 +18,13 @@ public class MusicData {
 	public List<XYChart.Series<Integer, Double>> prices;
 	public double maxPrice; // @Perfomance we already calculate this in the SM, so we could just get the value from there
 	public Calendar[] dates;
+	public double lengthInSeconds;
 
-	public MusicData(PlaybackController pbc, String[] sonifiableNames, Collection<List<Price>> prices) {
+	public MusicData(PlaybackController pbc, String[] sonifiableNames, Collection<List<Price>> prices, double lengthInSeconds) {
 		assert sonifiableNames.length == prices.size();
 		this.pbc = pbc;
 		this.sonifiableNames = sonifiableNames;
+		this.lengthInSeconds = lengthInSeconds;
 
 		this.maxPrice = 0;
 		this.dates = null;

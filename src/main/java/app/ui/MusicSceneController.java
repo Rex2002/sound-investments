@@ -34,6 +34,7 @@ import javafx.util.Duration;
 import javafx.util.StringConverter;
 import util.ArrayFunctions;
 import util.DateUtil;
+import util.Maths;
 
 import java.io.File;
 import java.io.IOException;
@@ -62,6 +63,7 @@ public class MusicSceneController implements Initializable {
 	@FXML private Button exportBtn;
 	@FXML private Button closeBtn;
 	@FXML private Slider musicSlider;
+	@FXML private Label lengthLabel;
 	@FXML private Parent root;
 	@FXML private ImageView playBtn;
 	@FXML private ImageView stopBtn;
@@ -74,6 +76,8 @@ public class MusicSceneController implements Initializable {
 	private List<XYChart.Series<Integer, Double>> prices;
 	private double maxPrice;
 	private Calendar[] dates;
+	public  double lengthInSeconds;
+	public  String lengthStr;
 	private Timer myTimer = new Timer();
 	private boolean paused = false;
 	private Image playImage;
@@ -146,7 +150,6 @@ public class MusicSceneController implements Initializable {
 
 		Platform.runLater(() -> {
 			setupSlider();
-			beginTimer();
 		});
 	}
 
@@ -156,11 +159,14 @@ public class MusicSceneController implements Initializable {
 		this.prices          = musicData.prices;
 		this.dates           = musicData.dates;
 		this.maxPrice        = musicData.maxPrice;
+		this.lengthInSeconds = musicData.lengthInSeconds;
+		this.lengthStr       = CommonController.secToMinSecString(lengthInSeconds, 1);
 
 		assert sonifiableNames.length <= colors.length;
 		Platform.runLater(() -> {
 			setVisualization();
 			pbc.startPlayback();
+			beginTimer(lengthInSeconds, lengthStr);
 		});
 	}
 
@@ -291,17 +297,39 @@ public class MusicSceneController implements Initializable {
 		pbc.goToRelative(0);
 	}
 
-	public void beginTimer() {
-		myTimer.schedule(new TimerTask() {
-			@Override
-			public void run() {
-				musicSlider.setValue(pbc.getPlayedPercentage() * musicSlider.getMax());
-			}
-		}, 0, 50);
+	public void beginTimer(double len, String lenStr) {
+		myTimer.schedule(new AudioTimeLineUpdater(musicSlider, pbc, len, lenStr, lengthLabel), 0, 50);
 
 	}
+
 	public void closeWindow(ActionEvent event) throws IOException {
 		onClose();
 		switchToMainScene(event);
+	}
+
+	static class AudioTimeLineUpdater extends TimerTask {
+		Slider musicSlider;
+		PlaybackController pbc;
+		double lengthInSeconds;
+		String lengthStr;
+		Label lengthLabel;
+
+		public AudioTimeLineUpdater(Slider musicSlider, PlaybackController pbc, double lengthInSeconds, String lengthStr, Label lengthLabel) {
+			this.musicSlider = musicSlider;
+			this.pbc = pbc;
+			this.lengthInSeconds = lengthInSeconds;
+			this.lengthStr = lengthStr;
+			this.lengthLabel = lengthLabel;
+		}
+
+		@Override
+		public void run() {
+			Platform.runLater(() -> {
+				double perc = pbc.getPlayedPercentage();
+				musicSlider.setValue(perc * musicSlider.getMax());
+				double curSec = perc * lengthInSeconds;
+				lengthLabel.setText(CommonController.secToMinSecString(curSec, 1) + " / " + lengthStr);
+			});
+		}
 	}
 }

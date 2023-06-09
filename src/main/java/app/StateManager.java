@@ -4,6 +4,7 @@ import app.communication.*;
 import app.mapping.*;
 import app.ui.App;
 import audio.Sonifier;
+import audio.mixer.Backing;
 import audio.synth.EvInstrData;
 import audio.synth.EvInstrEnum;
 import audio.synth.InstrumentEnum;
@@ -315,14 +316,17 @@ public class StateManager {
 			EvInstrData[] evInstrDatas = new EvInstrData[evInstrRawDatas.size()];
 			evInstrDatas = evInstrRawDatas.toArray(evInstrDatas);
 
-			PlaybackController pbc = Sonifier.sonify(passedInstrRawDatas, evInstrDatas, mapping.getSoundLength());
+			Backing backing        = Sonifier.getBacking();
+			int lengthInBeats      = Sonifier.getLengthInBeats(mapping.getSoundLength());
+			double lengthInSeconds = Sonifier.getLengthInSeconds(mapping.getSoundLength(), lengthInBeats);
+			PlaybackController pbc = Sonifier.sonify(passedInstrRawDatas, evInstrDatas, backing, lengthInSeconds, lengthInBeats);
 
 			String[] sonifiableNames = new String[sonifiables.length];
 			for (int i = 0; i < sonifiableNames.length; i++) {
 				sonifiableNames[i] = DataRepo.getSonifiableName(sonifiables[i]);
 			}
 			isCurrentlySonifying = false;
-			return new MusicData(pbc, sonifiableNames, priceMap.values());
+			return new MusicData(pbc, sonifiableNames, priceMap.values(), lengthInSeconds);
 		}, null);
 
 	}

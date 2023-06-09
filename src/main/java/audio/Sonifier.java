@@ -20,16 +20,24 @@ import javax.sound.sampled.SourceDataLine;
 import static audio.Util.concatArrays;
 
 public class Sonifier {
-    public static PlaybackController sonify(InstrumentDataRaw[] instrumentDataRaw, EvInstrData[] evInstrData, int lengthInSecondsRaw) throws AppError{
+    public static Backing getBacking() throws AppError {
         Backing backing = new Backing();
         Constants.TEMPO = backing.setSamplesAndGetTempo();
+        return backing;
+    }
 
+    public static int getLengthInBeats(int lengthInSecondsRaw) {
         double numberBeatsRaw = (Constants.TEMPO / 60f) * lengthInSecondsRaw;
         // get number of beats to nearest multiple of 16 so that audio always lasts for
         // a full multiple of 4 bars
-        int lengthInBeats = (int) Math.round(numberBeatsRaw / 16) * 16;
-        double lengthInSeconds = lengthInBeats / (Constants.TEMPO / 60f);
+        return (int) Math.round(numberBeatsRaw / 16) * 16;
+    }
 
+    public static double getLengthInSeconds(int lengthInSecondsRaw, int lengthInBeats) {
+        return lengthInBeats / (Constants.TEMPO / 60f);
+    }
+
+    public static PlaybackController sonify(InstrumentDataRaw[] instrumentDataRaw, EvInstrData[] evInstrData, Backing backing, double lengthInSeconds, int lengthInBeats) throws AppError {
         double[][] synthLines = new double[instrumentDataRaw.length + 1][];
         for(int i = 0; i < instrumentDataRaw.length; i++){
             InstrumentData instrData = new Harmonizer(instrumentDataRaw[i], lengthInBeats).harmonize();
