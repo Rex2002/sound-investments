@@ -16,7 +16,7 @@
 <AnchorPane fx:id="anchor" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="825.0" prefWidth="1586.0" style="-fx-background-color: #09080E;" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="app.ui.MusicSceneController">
    <children>
       <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#121315" height="85.6" layoutX="-8.0" layoutY="1.0" stroke="#121315" strokeType="INSIDE" width="1592.0" />
-      <Label layoutX="83.0" layoutY="-18.0" prefHeight="124.0" prefWidth="885.0" text="Sound Investments" textFill="WHITE">
+      <Label layoutX="83.0" layoutY="-18.0" prefHeight="124.0" prefWidth="885.0" text="SoundInvestments" textFill="WHITE">
          <font>
             <Font name="Rage Italic" size="80.0" />
          </font>
@@ -31,11 +31,16 @@
         </yAxis>
       </LineChart>
       <Accordion layoutX="221.0" layoutY="880.0" />
+      <Label fx:id="lengthLabel" layoutX="1485.0" layoutY="630.0" text="0:00/0:00" textFill="WHITE" >
+         <font>
+            <Font name="System Bold" size="15.0" />
+         </font>
+      </Label>
 
-      <Pane fx:id="legendPane">
+      <Pane fx:id="legendPane" >
       </Pane>
 
-      <Button fx:id="exportBtn" layoutX="1243.0" layoutY="21.0" mnemonicParsing="false" onAction="#beginTimer" prefHeight="45.0" prefWidth="146.0" style="-fx-background-color: #121315; -fx-border-radius: 30;" text="Exportieren" textFill="WHITE">
+      <Button fx:id="exportBtn" layoutX="1243.0" layoutY="21.0" mnemonicParsing="false" prefHeight="45.0" prefWidth="146.0" style="-fx-background-color: #121315; -fx-border-radius: 30;" text="Exportieren" textFill="WHITE">
          <font>
             <Font size="19.0" />
          </font>

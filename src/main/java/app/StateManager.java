@@ -15,6 +15,7 @@ import dataRepo.*;
 import javafx.application.Application;
 import util.DateUtil;
 import util.FutureList;
+import util.Maths;
 
 import java.time.temporal.ChronoUnit;
 import java.util.*;
@@ -119,23 +120,49 @@ public class StateManager {
 		for (double x : prices) {
 			if (x < min)
 				min = x;
-			else if (x > max)
+			if (x > max)
 				max = x;
 		}
+		// Calculate the Standard Deviation -> if it's too small, then we want to pack the normalized values
+		// closer together as well. The cutoff-point at which we reduce the range of normalized values is
+		// set arbitrarily and was decided through testing.
+		// Afterward, we offset all values to put the normalized-value range into the middle between 0 and 1
+		double std = Maths.std(prices);
+		double stdCutoff = 10;
+		double normalizedValRange = Maths.clamp(std / stdCutoff, 0.25, 1);
+		double offset = (1 - normalizedValRange) / 2;
+		System.out.println("normalizedValRange: " + normalizedValRange + ", offset: " + offset);
 		// Normalize values
 		for (int i = 0; i < normalized.length; i++)
-			normalized[i] = (prices[i] - min) / (max - min);
+			normalized[i] = offset + (prices[i] - min) / (max - min) * normalizedValRange;
 		return normalized;
 	}
 
 	public static double[] calcLineData(ExchangeData<LineData> ed, HashMap<SonifiableID, List<Price>> priceMap) throws AppError {
 		if (ed == null) return null;
 		List<Price> prices = priceMap.get(ed.getId());
-		return switch (ed.getData()) {
-			case PRICE -> normalizeValues(getPriceValues(prices));
-			case MOVINGAVG -> normalizeValues(GeneralTrends.calculateMovingAverage(prices));
-			case RELCHANGE -> throw new AppError("RELCHANGE is not yet implemented");
+		int firstNoneNull = getValidPrice(prices, true);
+		int lastNoneNull = getValidPrice(prices, false);
+		List<Price> cutPrices = prices.subList(firstNoneNull, lastNoneNull + 1);
+		double[] calculatedPrices = switch (ed.getData()) {
+			case PRICE -> normalizeValues(getPriceValues(cutPrices));
+			case MOVINGAVG -> normalizeValues(GeneralTrends.calculateMovingAverage(cutPrices));
+ 			case RELCHANGE -> throw new AppError("RELCHANGE ist noch nicht implementiert");
 		};
+		double[] ret = new double[prices.size()];
+		Arrays.fill(ret, -1);
+		System.arraycopy(calculatedPrices, 0, ret, firstNoneNull, calculatedPrices.length);
+		return ret;
+
+	}
+
+	public static int getValidPrice(List<Price> prices, boolean first){
+		for(int i = first ? 0 : prices.size() - 1; first ?  i < prices.size() : i >= 0; i += first ? 1 : -1){
+			if(!(prices.get(i).open == -1 || prices.get(i).close == -1 || prices.get(i).high == -1 || prices.get(i).low == -1)){
+				return i;
+			}
+		}
+		return first ? prices.size() : 0;
 	}
 
 	public static boolean isDateInFormations(List<FormationResult> formations, Calendar date) {
@@ -147,14 +174,21 @@ public class StateManager {
 		return false;
 	}
 
-	public static boolean[] calcRangeData(ExchangeData<RangeData> ed, HashMap<SonifiableID, List<Price>> priceMap) throws AppError {
+	public static boolean[] calcRangeData(ExchangeData<RangeData> ed, HashMap<SonifiableID, List<Price>> priceMap) {
 		if (ed == null) return null;
 		List<Price> prices = priceMap.get(ed.getId());
-		return switch (ed.getData()) {
-			case FLAG -> FlagFormationAnalyzer.analyze(prices);
-			case TRIANGLE -> new TriangleFormationAnalyzer().analyze(prices);
-			case VFORM -> new VFormationAnalyzer().analyze(prices);
+		int firstNoneNull = getValidPrice(prices, true);
+		int lastNoneNull = getValidPrice(prices, false);
+		List<Price> cutPrices = prices.subList(firstNoneNull, lastNoneNull + 1);
+		boolean[] calculatedPrices = switch (ed.getData()) {
+			case FLAG -> FlagFormationAnalyzer.analyze(cutPrices);
+			case TRIANGLE -> new TriangleFormationAnalyzer().analyze(cutPrices);
+			case VFORM -> new VFormationAnalyzer().analyze(cutPrices);
 		};
+		boolean[] ret = new boolean[prices.size()];
+		Arrays.fill(ret, false);
+		System.arraycopy(calculatedPrices, 0, ret, firstNoneNull, calculatedPrices.length);
+		return ret;
 	}
 
 	public static boolean[] calcPointData(ExchangeData<PointData> ed, HashMap<SonifiableID, List<Price>> priceMap) throws AppError {
@@ -162,9 +196,9 @@ public class StateManager {
 		List<Price> prices = priceMap.get(ed.getId());
 		return switch (ed.getData()) {
 			case EQMOVINGAVG -> GeneralTrends.AverageIntersectsStock(GeneralTrends.calculateMovingAverage(prices), prices);
-			case TRENDBREAK -> throw new AppError("TRENDBREAK is not yet implemented");
-			case EQSUPPORT -> throw new AppError("EQSUPPORT is not yet implemented");
-			case EQRESIST -> throw new AppError("EQRESIST is not yet implemented");
+			case TRENDBREAK -> throw new AppError("TRENDBREAK ist noch nicht implementiert");
+			case EQSUPPORT -> throw new AppError("EQSUPPORT ist noch nicht implementiert");
+			case EQRESIST -> throw new AppError("EQRESIST ist noch nicht implementiert");
 		};
 	}
 
@@ -186,7 +220,8 @@ public class StateManager {
 		return mapping;
 	}
 
-	public static void padPrices(Map<SonifiableID, List<Price>> priceMap, Calendar startDate, Calendar endDate, IntervalLength interval, int maxLength){
+
+	public static void padPrices(Map<SonifiableID, List<Price>> priceMap, Calendar startDate, Calendar endDate, IntervalLength interval, int maxLength) {
 		for(SonifiableID id : priceMap.keySet()){
 			List<Price> prices = priceMap.get(id);
 			int lengthDiff = maxLength - prices.size();
@@ -200,14 +235,15 @@ public class StateManager {
 			// find the fraction of days that should be padded before the start
 			int paddingsBefore = (int) ((maxLength - prices.size()) * (dayDifferenceStart / (dayDifferenceEnd + dayDifferenceStart)));
 			for(int i = 0; i < paddingsBefore && prices.size() < maxLength; i++){
-				prices.add(0, new Price(startDate, prices.get(0).start, prices.get(0).end, 0.0,0.0,0.0,0.0));
+				prices.add(0, new Price(startDate, prices.get(0).start, prices.get(0).end, -1.0,-1.0,-1.0,-1.0));
 			}
 			// fill the rest (which is the equivalent to paddingsAfter) until size is maxLength
 			while(prices.size() < maxLength){
-				prices.add(new Price(startDate, prices.get(0).start, prices.get(0).end, 0.0,0.0,0.0,0.0));
+				prices.add(new Price(startDate, prices.get(0).start, prices.get(0).end, -1.0,-1.0,-1.0,-1.0));
 			}
 			// not quite sure if this is necessary, but not taking any risks for weird bugs...
 			priceMap.put(id, prices);
+			System.out.println("Updated length: " + prices.size());
 		}
 	}
 
@@ -221,7 +257,7 @@ public class StateManager {
 	}
 
 	public static MusicData sonifyMapping(Mapping mapping) {
-		try {
+		return call(() -> {
 			SonifiableID[] sonifiables = mapping.getMappedSonifiableIDs().toArray(new SonifiableID[0]);
 			HashMap<SonifiableID, List<Price>> priceMap = new HashMap<>(sonifiables.length);
 			FutureList<List<Price>> getPricesFutures = new FutureList<>(sonifiables.length);
@@ -229,26 +265,29 @@ public class StateManager {
 			for (SonifiableID sonifiableID : sonifiables) {
 				getPricesFutures.add(DataRepo.getPrices(sonifiableID, mapping.getStartDate(), mapping.getEndDate(), intervalLength));
 			}
+
+			int maxPriceLen = 0;
 			try {
 				List<List<Price>> prices = getPricesFutures.getAll(new ArrayList<>(sonifiables.length));
 				assert prices.size() == sonifiables.length;
-        int maxPriceLen = 0;
 				for (int i = 0; i < prices.size(); i++) {
 					if (prices.get(i) == null || prices.get(i).size() == 0)
 						throw new AppError("Fehler beim Einholen von Preis-Daten von " + sonifiables[i].getSymbol());
-          maxPriceLen = Math.max(maxPriceLen, prices.get(i).size());
 					priceMap.put(sonifiables[i], prices.get(i));
+					System.out.println("Length: " + prices.get(i).size());
+					maxPriceLen = Math.max(maxPriceLen, prices.get(i).size());
 				}
-        padPrices(priceMap, mapping.getStartDate(), mapping.getEndDate(), intervalLength, maxPriceLen);
+        		padPrices(priceMap, mapping.getStartDate(), mapping.getEndDate(), intervalLength, maxPriceLen);
 			} catch (ExecutionException e) {
 				throw new AppError(e.getMessage());
 			} catch (InterruptedException e) {
 				throw new AppError("Fehler beim Einholen von Preisdaten.");
 			}
 
+
 			// Create InstrumentDataRaw objects for Harmonizer
 			InstrumentMapping[] instrMappings = mapping.getMappedInstruments();
-			List<InstrumentDataRaw> instrRawDatas = new ArrayList<>(instrMappings.length);
+			List<InstrumentDataRaw> instrRawData = new ArrayList<>(instrMappings.length);
 			for (InstrumentMapping instrMap : instrMappings) {
 				if (instrMap.getPitch() == null)
 					continue;
@@ -268,12 +307,11 @@ public class StateManager {
 				boolean[] onOffFilter = calcRangeData(instrMap.getOnOffFilter(), priceMap);
 				double[] pan = calcLineData(instrMap.getPan(), priceMap);
 
-				instrRawDatas.add(new InstrumentDataRaw(relVolume, absVolume, pitch, instrument, delayEcho,
-						feedbackEcho,
+				instrRawData.add(new InstrumentDataRaw(relVolume, absVolume, pitch, instrument, delayEcho, feedbackEcho,
 						onOffEcho, delayReverb, feedbackReverb, onOffReverb, frequency, highPass, onOffFilter, pan));
 			}
-			InstrumentDataRaw[] passedInstrRawDatas = new InstrumentDataRaw[instrRawDatas.size()];
-			passedInstrRawDatas = instrRawDatas.toArray(passedInstrRawDatas);
+			InstrumentDataRaw[] passedInstrRawDatas = new InstrumentDataRaw[instrRawData.size()];
+			passedInstrRawDatas = instrRawData.toArray(passedInstrRawDatas);
 
 			List<EvInstrData> evInstrRawDatas = new ArrayList<>();
 			for(EvInstrMapping evInstrMap : mapping.getEventInstruments()){
@@ -295,14 +333,8 @@ public class StateManager {
 			}
 			isCurrentlySonifying = false;
 			return new MusicData(pbc, sonifiableNames, priceMap.values());
-		} catch (AppError e) {
-			EventQueues.toUI.add(new Msg<>(MsgToUIType.ERROR, "Fehler beim Sonifizieren: " + e.getMessage()));
-			return null;
-		} catch (Exception e) {
-			e.printStackTrace();
-			EventQueues.toUI.add(new Msg<>(MsgToUIType.ERROR, "Fehler beim Sonifizieren."));
-			return null;
-		}
+		}, null);
+
 	}
 
 	public static Consumer<InterruptedException> getInterruptedExceptionHandler() {

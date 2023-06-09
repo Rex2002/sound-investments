@@ -13,18 +13,26 @@ import java.io.File;
 import java.io.IOException;
 
 public class PlaybackController {
-    public final int SKIP_LENGTH = 10;
+    public final int SKIP_LENGTH = 100;
     private final SourceDataLine s;
     private final short[] data;
+    private final double lengthInSeconds;
 
-    public PlaybackController(SourceDataLine s, short[] data) {
+    public PlaybackController(SourceDataLine s, short[] data, double lengthInSeconds) {
         this.s = s;
         this.data = data;
+        this.lengthInSeconds = lengthInSeconds;
     }
 
-    public PlaybackController(SourceDataLine s, double[] data){
+    public PlaybackController(SourceDataLine s, double[] data, double lengthInSeconds) {
         this.s = s;
         this.data = Util.scaleToShort(data);
+        this.lengthInSeconds = lengthInSeconds;
+    }
+
+    // Returns length of audio stream in seconds
+    public double getLengthInSeconds() {
+        return lengthInSeconds;
     }
 
     public double getPlayedPercentage() {
@@ -110,7 +118,7 @@ public class PlaybackController {
         try {
             AudioSystem.write(stream, AudioFileFormat.Type.WAVE, outFile);
         } catch (IOException e) {
-            throw new AppError("Cannot create file " +  outFile.getPath() + " to save audioStream");
+            throw new AppError("Die Datei " +  outFile.getPath() + " zum Speichern des AudioStreams kann nicht erstellt werden.");
         }
     }
 

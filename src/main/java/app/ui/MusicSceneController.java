@@ -1,11 +1,7 @@
 package app.ui;
 
-import java.io.File;
-import java.io.IOException;
-import java.net.URL;
-import java.util.ResourceBundle;
-import java.util.Timer;
-import java.util.TimerTask;
+import app.AppError;
+import app.communication.*;
 import audio.synth.playback.PlaybackController;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
@@ -13,6 +9,13 @@ import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
+import javafx.scene.Cursor;
+import javafx.scene.Node;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.scene.chart.LineChart;
+import javafx.scene.chart.NumberAxis;
+import javafx.scene.chart.XYChart;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.Slider;
@@ -29,24 +32,13 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import javafx.util.Duration;
 import javafx.util.StringConverter;
-import javafx.scene.Parent;
-import javafx.scene.Scene;
-import javafx.scene.chart.LineChart;
-import javafx.scene.chart.NumberAxis;
-import javafx.scene.chart.XYChart;
-import javafx.scene.Cursor;
-import javafx.scene.Node;
-import java.util.Calendar;
-import java.util.List;
-
 import util.ArrayFunctions;
 import util.DateUtil;
-import app.AppError;
-import app.communication.EventQueues;
-import app.communication.Msg;
-import app.communication.MsgToSMType;
-import app.communication.MsgToUIType;
-import app.communication.MusicData;
+
+import java.io.File;
+import java.io.IOException;
+import java.net.URL;
+import java.util.*;
 
 public class MusicSceneController implements Initializable {
 	// Colors have to be kept in sync with colors in css file
@@ -59,44 +51,32 @@ public class MusicSceneController implements Initializable {
 		Paint.valueOf("#891fff"), Paint.valueOf("#07321d")
 	};
 
-	@FXML
-	private AnchorPane anchor;
-	@FXML
-	private LineChart<Integer, Double> lineChart;
-	@FXML
-	private NumberAxis xAxis;
-	@FXML
-	private NumberAxis yAxis;
-	@FXML
-	private Pane legendPane;
-	@FXML
-	private TextField headerTitle;
-	@FXML
-	private Stage stage;
-	@FXML
-	private Scene scene;
-	@FXML
-	private Button exportBtn;
-	@FXML
-	private Button closeBtn;
-	@FXML
-	private Slider musicSlider;
-	@FXML
-	private Parent root;
-	@FXML
-	private ImageView playBtn;
-	@FXML
-	private ImageView stopBtn;
-	@FXML
-	private ImageView backBtn;
-	@FXML
-	private ImageView forBtn;
+	@FXML private AnchorPane anchor;
+	@FXML private LineChart<Integer, Double> lineChart;
+	@FXML private NumberAxis xAxis;
+	@FXML private NumberAxis yAxis;
+	@FXML private Pane legendPane;
+	@FXML private TextField headerTitle;
+	@FXML private Stage stage;
+	@FXML private Scene scene;
+	@FXML private Button exportBtn;
+	@FXML private Button closeBtn;
+	@FXML private Slider musicSlider;
+	@FXML private Label lengthLabel;
+	@FXML private Parent root;
+	@FXML private ImageView playBtn;
+	@FXML private ImageView stopBtn;
+	@FXML private ImageView backBtn;
+	@FXML private ImageView forBtn;
 
 	private CheckEQService checkEQService;
 	private PlaybackController pbc;
 	private String[] sonifiableNames;
 	private List<XYChart.Series<Integer, Double>> prices;
+	private double maxPrice;
 	private Calendar[] dates;
+	public  double lengthInSeconds;
+	public  String lengthStr;
 	private Timer myTimer = new Timer();
 	private boolean paused = false;
 	private Image playImage;
@@ -115,7 +95,7 @@ public class MusicSceneController implements Initializable {
 					pbc.save(selectedFile);
 				} catch (AppError e) {
 					e.printStackTrace();
-					// TODO: Display Error message
+					CommonController.displayError(anchor, e.getMessage(), "Interner Fehler");
 				}
 			}
 		});
@@ -169,20 +149,23 @@ public class MusicSceneController implements Initializable {
 
 		Platform.runLater(() -> {
 			setupSlider();
-			beginTimer();
 		});
 	}
 
 	public void passData(MusicData musicData) {
-		this.pbc = musicData.pbc;
+		this.pbc             = musicData.pbc;
 		this.sonifiableNames = musicData.sonifiableNames;
-		this.prices = musicData.prices;
-		this.dates = musicData.dates;
+		this.prices          = musicData.prices;
+		this.dates           = musicData.dates;
+		this.maxPrice        = musicData.maxPrice;
+		this.lengthInSeconds = pbc.getLengthInSeconds();
+		this.lengthStr       = CommonController.secToMinSecString(lengthInSeconds, 1);
 
 		assert sonifiableNames.length <= colors.length;
 		Platform.runLater(() -> {
 			setVisualization();
 			pbc.startPlayback();
+			beginTimer(lengthInSeconds, lengthStr);
 		});
 	}
 
@@ -190,7 +173,7 @@ public class MusicSceneController implements Initializable {
 		// Show legend of sonifiable names
 		legendPane.getChildren().clear();
 		for (int i = 0; i < sonifiableNames.length; i++) {
-			addSonifiableName(sonifiableNames[i], colors[i], 60 + (i % 3) * 240, 646 + ((int) (i / 4)) * 50);
+			addSonifiableName(sonifiableNames[i], colors[i], 60 + (i % 3) * 240, 646 + ((int) (i / 3f)) * 50);
 		}
 
 		// Show price data in line chart
@@ -207,6 +190,17 @@ public class MusicSceneController implements Initializable {
 			}
 			public Number fromString(String string) {
 				return 0;
+			}
+		});
+		yAxis.setAutoRanging(false);
+		yAxis.setLowerBound(0);
+		yAxis.setUpperBound(Math.ceil(maxPrice / 10) * 10);
+		yAxis.setTickLabelFormatter(new StringConverter<Number>() {
+			public String toString(Number i) {
+				return i.toString() + "$";
+			}
+			public Number fromString(String string) {
+				return Double.parseDouble(string.substring(0, string.length() - 1));
 			}
 		});
 
@@ -251,24 +245,30 @@ public class MusicSceneController implements Initializable {
 	}
 
 	public void switchToMainScene(ActionEvent event) throws IOException {
-		// Tell StateManager, that we are back in the main scene again
-		checkEQService.cancel();
 		try {
+			myTimer.cancel();
+            checkEQService.cancel();
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/MainScene.fxml"));
+            Parent root = loader.load();
+            Stage stage = (Stage) anchor.getScene().getWindow();
+            Scene scene = new Scene(root);
+            String css = this.getClass().getResource("/choice.css").toExternalForm();
+            // Set the stylesheet after the scene creation
+            scene.getStylesheets().add(css);
+            stage.setScene(scene);
+            stage.show();
+			// Tell the StateManager, that we are back in the main scene again
 			EventQueues.toSM.put(new Msg<>(MsgToSMType.ENTERED_MAIN_SCENE));
-		} catch (InterruptedException ie) {
-			// TODO: Error Handling
+        } catch (IOException e) {
+            CommonController.displayError(anchor, "Fehler beim Laden der nächsten UI-Szene", "Interner Fehler");
+        } catch (InterruptedException e) {
+			Pane pane = anchor;
+			if (!root.getChildrenUnmodifiable().isEmpty() && root.getChildrenUnmodifiable().get(0) instanceof Pane)
+				pane = (Pane) root.getChildrenUnmodifiable().get(0);
+			CommonController.displayError(pane, "Es konnte keine Verbindung mit dem Backend der Anwendung hergestellt werden", "Interner Fehler");
 		}
-		myTimer.cancel();
-		FXMLLoader loader = new FXMLLoader(getClass().getResource("/MusicScene.fxml"));
-        Parent root = loader.load();
-		root = FXMLLoader.load(getClass().getResource("/MainScene.fxml"));
-		stage = (Stage) ((Node) event.getSource()).getScene().getWindow();
-		scene = new Scene(root);
-		String css = this.getClass().getResource("/choice.css").toExternalForm();
-		// Set the stylesheet after the scene creation
-		scene.getStylesheets().add(css);
-		stage.setScene(scene);
-		stage.show();
+
+
 	}
 
 	public void pausePlaySound(){
@@ -296,17 +296,39 @@ public class MusicSceneController implements Initializable {
 		pbc.goToRelative(0);
 	}
 
-	public void beginTimer() {
-		myTimer.schedule(new TimerTask() {
-			@Override
-			public void run() {
-				musicSlider.setValue(pbc.getPlayedPercentage() * musicSlider.getMax());
-			}
-		}, 0, 50);
+	public void beginTimer(double len, String lenStr) {
+		myTimer.schedule(new AudioTimeLineUpdater(musicSlider, pbc, len, lenStr, lengthLabel), 0, 50);
 
 	}
+
 	public void closeWindow(ActionEvent event) throws IOException {
 		onClose();
 		switchToMainScene(event);
+	}
+
+	static class AudioTimeLineUpdater extends TimerTask {
+		Slider musicSlider;
+		PlaybackController pbc;
+		double lengthInSeconds;
+		String lengthStr;
+		Label lengthLabel;
+
+		public AudioTimeLineUpdater(Slider musicSlider, PlaybackController pbc, double lengthInSeconds, String lengthStr, Label lengthLabel) {
+			this.musicSlider = musicSlider;
+			this.pbc = pbc;
+			this.lengthInSeconds = lengthInSeconds;
+			this.lengthStr = lengthStr;
+			this.lengthLabel = lengthLabel;
+		}
+
+		@Override
+		public void run() {
+			Platform.runLater(() -> {
+				double perc = pbc.getPlayedPercentage();
+				musicSlider.setValue(perc * musicSlider.getMax());
+				double curSec = perc * lengthInSeconds;
+				lengthLabel.setText(CommonController.secToMinSecString(curSec, 1) + " / " + lengthStr);
+			});
+		}
 	}
 }

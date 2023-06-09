@@ -38,7 +38,7 @@ public class Backing {
 
         backings = backings.stream().filter((string) -> string.contains("groove") || string.contains("fill")).toList();
         if (backings.isEmpty()) {
-            throw new AppError("Encountered error while selecting backing track: No valid backings found");
+            throw new AppError("Fehler bei der Backing-Track Auswahl: Kein Backing-Track gefunden");
         }
 
         String randomSample = backings.get( random.nextInt(backings.size()) );

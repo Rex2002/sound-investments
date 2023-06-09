@@ -15,6 +15,7 @@ public class Mapping {
 	public static int MIN_SOUND_LENGTH = 30;
 	public static int MAX_SOUND_LENGTH = 5 * 60;
 	public static int MAX_SONIFIABLES_AMOUNT = 10;
+	public static int START_END_DATE_MIN_DISTANCE = 4;
 
 	private Set<Sonifiable> sonifiables = new HashSet<>(16);
 	private final InstrumentMapping[] mappedInstruments = new InstrumentMapping[InstrumentEnum.size];
@@ -60,6 +61,9 @@ public class Mapping {
 			return "Start-Datum ist nicht gesetzt.";
 		if (endDate == null)
 			return "End-Datum ist nicht gesetzt.";
+		startDate.roll(Calendar.DATE, START_END_DATE_MIN_DISTANCE);
+		if (startDate.after(endDate))
+			return "Start-Datum muss mindestens " + Integer.toString(START_END_DATE_MIN_DISTANCE) + " Tage vor dem Enddatum liegen";
 		if (soundLength == null || soundLength < MIN_SOUND_LENGTH || soundLength > MAX_SOUND_LENGTH)
 			return "Ungültige Audio-Länge gewählt. Die Audio-Länge muss zwischen 30 Sekunden und 5 Minuten liegen.";
 		if (sonifiables.isEmpty())
@@ -203,7 +207,7 @@ public class Mapping {
 		while (e.getId() != sonifiable || e.getData() != eparam) {
 			idx++;
 			if (idx == evInstrAmount)
-				throw new AppError("Can't remove non-existent Event-Instrument.");
+				throw new AppError("Fehler beim Entfernen des EventInstruments. \n Das EventInstrument existiert nicht");
 			e = eventInstruments[idx].getData();
 		}
 		rmEvInstr(idx);
@@ -244,7 +248,6 @@ public class Mapping {
 			case FEEDBACK_REVERB -> instrMap.setFeedbackReverb(setParamHelper(id, eparam, iparam));
 			case ON_OFF_REVERB   -> instrMap.setOnOffReverb(setParamHelper(id, eparam, iparam));
 			case CUTOFF          -> instrMap.setCutoff(setParamHelper(id, eparam, iparam));
-			case ORDER           -> instrMap.setOrder(setParamHelper(id, eparam, iparam));
 			case ON_OFF_FILTER   -> instrMap.setOnOffFilter(setParamHelper(id, eparam, iparam));
 			case PAN             -> instrMap.setPan(setParamHelper(id, eparam, iparam));
 			case HIGHPASS        -> throw new AppError(eparam.toString() + " kann nicht auf " + iparam + " gemappt werden.");
@@ -265,7 +268,6 @@ public class Mapping {
 			case FEEDBACK_REVERB -> instrMap.getFeedbackReverb() != null;
 			case ON_OFF_REVERB   -> instrMap.getOnOffReverb() != null;
 			case CUTOFF          -> instrMap.getCutoff() != null;
-			case ORDER           -> instrMap.getOrder() != null;
 			case ON_OFF_FILTER   -> instrMap.getOnOffFilter() != null;
 			case PAN             -> instrMap.getPan() != null;
 			case HIGHPASS        -> throw new AppError(iparam + " kann nicht gemappt sein");
@@ -273,6 +275,10 @@ public class Mapping {
 	}
 
 	public void rmParam(InstrumentEnum instr, InstrParam iparam) throws AppError {
+		if (instr == null) {
+			rmParam(iparam);
+			return;
+		}
 		InstrumentMapping instrMap = ArrayFunctions.find(mappedInstruments, x -> x.getInstrument() == instr);
 		switch (iparam) {
 			case PITCH           -> instrMap.setPitch(null);
@@ -285,7 +291,6 @@ public class Mapping {
 			case FEEDBACK_REVERB -> instrMap.setFeedbackReverb(null);
 			case ON_OFF_REVERB   -> instrMap.setOnOffReverb(null);
 			case CUTOFF          -> instrMap.setCutoff(null);
-			case ORDER           -> instrMap.setOrder(null);
 			case ON_OFF_FILTER   -> instrMap.setOnOffFilter(null);
 			case PAN             -> instrMap.setPan(null);
 			case HIGHPASS        -> throw new AppError(iparam + " kann nicht gelöscht werden.");
