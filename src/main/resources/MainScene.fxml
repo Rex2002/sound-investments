@@ -28,12 +28,13 @@
 	<!-- "Choosing Sonifiables"-Box -->
 	<Pane fx:id="searchPane" layoutX="29.0" layoutY="110.0" prefHeight="655.0" prefWidth="332.0" style="-fx-background-color: #D9D9D9; -fx-background-radius: 30;">
 		<children>
-			<Label fx:id="searchPaneTitle" layoutX="24.0" layoutY="21.0" prefHeight="53.0" prefWidth="131.0" style="-fx-font-style: &quot;Roboto&quot;;" text="Aktien">
+			<Line fx:id="searchPaneTitleLine" strokeWidth="2.0" />
+			<Label fx:id="searchPaneTitle" style="-fx-font-style: &quot;Roboto&quot;;" text="Aktien">
 				<font>
 					<Font name="System Bold" size="29.0" />
 				</font>
 			</Label>
-			<TextField id="searchBar" fx:id="searchBar" layoutX="15.0" layoutY="94.0" prefHeight="63.0" prefWidth="305.0" promptText="Suche" style="-fx-background-color: #4D505B; -fx-background-radius: 30;">
+			<TextField fx:id="searchBar" layoutX="15.0" layoutY="94.0" prefHeight="63.0" prefWidth="305.0" promptText="Suche" style="-fx-background-color: #4D505B; -fx-background-radius: 30;">
 				<font>
 					<Font size="20.0" />
 				</font>
@@ -43,19 +44,18 @@
 					<Font size="24.0" />
 				</font>
 			</Label>
-			<ChoiceBox id="categoriesCB" fx:id="categoriesCB" layoutX="151.0" layoutY="275.0" prefHeight="49.0" prefWidth="165.0" style="-fx-background-radius: 10; -fx-background-color: #4D505B;" />
+			<ChoiceBox fx:id="categoriesCB" style="-fx-background-radius: 10; -fx-background-color: #4D505B;" />
 			<Label fx:id="locationLabel" layoutX="17.0" layoutY="195.0" prefHeight="53.0" prefWidth="165.0" style="-fx-font-style: &quot;Roboto&quot;;" text="Standort">
 				<font>
 					<Font size="24.0" />
 				</font>
 			</Label>
-			<ChoiceBox fx:id="locationCB" layoutX="151.0" layoutY="197.0" prefHeight="49.0" prefWidth="165.0" style="-fx-background-radius: 10; -fx-background-color: #4D505B;" />
+			<ChoiceBox fx:id="locationCB" style="-fx-background-radius: 10; -fx-background-color: #4D505B;" />
 			<ScrollPane fx:id="resultsScrollPane" hbarPolicy="NEVER" layoutX="17.0" layoutY="359.0" maxWidth="1.7976931348623157E308" prefHeight="282.0" prefWidth="299.0" style="-fx-background-color: #4D505B; -fx-border-color: #4D505B;">
 				<content>
 					<VBox fx:id="resultsVBox" prefHeight="275.0" prefWidth="296.0" />
 				</content>
 			</ScrollPane>
-			<Line fx:id="searchPaneTitleLine" endX="290.0" layoutX="25.0" layoutY="70.0" strokeWidth="2.0" />
 		</children>
 
 	</Pane>
@@ -63,12 +63,9 @@
 	<!-- "Sonifiable Parameters"-Box -->
 	<Pane fx:id="sonifiablesPane" layoutX="380.0" layoutY="110.0" prefHeight="655.0" prefWidth="816.0" style="-fx-background-color: #D9D9D9; -fx-background-radius: 30;">
 		<children>
-			<Label fx:id="sonifiablesPaneTitle" layoutX="35.0" layoutY="18.0" prefHeight="53.0" prefWidth="305.0" style="-fx-font-style: &quot;Roboto&quot;;" text="Konfigurationen">
-				<font>
-					<Font name="System Bold" size="29.0" />
-				</font>
+			<Line fx:id="sonifiablesPaneTitleLine" strokeWidth="2.0" />
+			<Label fx:id="sonifiablesPaneTitle" style="-fx-font-style: &quot;Roboto&quot;;" text="Konfigurationen">
 			</Label>
-			<Line fx:id="sonifiablesPaneTitleLine" endX="290.0" layoutX="33.0" layoutY="71.0" strokeWidth="2.0" />
 			<ScrollPane fx:id="sonifiablesScrollPane" hbarPolicy="NEVER" layoutX="32.0" layoutY="97.0" prefHeight="540.0" prefWidth="740.0" vbarPolicy="NEVER">
 				<content>
 						<VBox fx:id="sonifiablesVBox" prefHeight="1800.0" prefWidth="740.0" style="-fx-background-color: #D9D9D9;" />
@@ -81,12 +78,9 @@
 	<Pane fx:id="settingsPane" layoutX="1210.0" layoutY="114.0" prefHeight="549.0" prefWidth="332.0" style="-fx-background-color: #D9D9D9; -fx-background-radius: 30;">
 		<children>
 			<!-- Title -->
-			<Label fx:id="settingsPaneTitle" layoutX="18.0" layoutY="20.0" prefHeight="53.0" prefWidth="305.0" style="-fx-font-style: &quot;Roboto&quot;;" text="Einstellungen">
-				<font>
-					<Font name="System Bold" size="29.0" />
-				</font>
+			<Line fx:id="settingsPaneTitleLine" strokeWidth="2.0" />
+			<Label fx:id="settingsPaneTitle" style="-fx-font-style: &quot;Roboto&quot;;" text="Einstellungen">
 			</Label>
-			<Line fx:id="settingsPaneTitleLine" endX="290.0" layoutX="14.0" layoutY="74.0" strokeWidth="2.0" />
 
 			<Label fx:id="startDateLabel" layoutX="13.0" layoutY="87.0" prefHeight="53.0" prefWidth="153.0" style="-fx-font-style: &quot;Roboto&quot;;" text="Startdatum">
 				<font>
@@ -107,8 +101,8 @@
 					<Font size="20.0" />
 				</font>
 			</Label>
-			<TextField id="lengthMinField" fx:id="lengthMinField" layoutX="256.0" layoutY="204.0" prefHeight="27.0" prefWidth="57.0" />
-            <TextField id="lengthSecField" fx:id="lengthSecField" layoutX="182.0" layoutY="204.0" prefHeight="27.0" prefWidth="57.0" />
+			<TextField fx:id="lengthMinField" layoutX="256.0" layoutY="204.0" prefHeight="27.0" prefWidth="57.0" />
+            <TextField fx:id="lengthSecField" layoutX="182.0" layoutY="204.0" prefHeight="27.0" prefWidth="57.0" />
             <Label fx:id="lengthSep" layoutX="245.0" layoutY="200.0" text=":">
                <font>
                   <Font size="24.0" />
