@@ -277,6 +277,10 @@ public class Mapping {
 	}
 
 	public void rmParam(InstrumentEnum instr, InstrParam iparam) throws AppError {
+		if (instr == null) {
+			rmParam(iparam);
+			return;
+		}
 		InstrumentMapping instrMap = ArrayFunctions.find(mappedInstruments, x -> x.getInstrument() == instr);
 		switch (iparam) {
 			case PITCH           -> instrMap.setPitch(null);
