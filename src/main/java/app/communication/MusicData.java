@@ -32,7 +32,9 @@ public class MusicData {
 
 			XYChart.Series<Integer, Double> series = new XYChart.Series<>();
 			for (int i = 0; i < priceList.size(); i++) {
-				series.getData().add(new XYChart.Data<>(i, priceList.get(i).getOpen()));
+				double p = priceList.get(i).getOpen();
+				if (p != 0)
+					series.getData().add(new XYChart.Data<>(i, p));
 				if (firstIteration)
 					this.dates[i] = priceList.get(i).getDay();
 			}
