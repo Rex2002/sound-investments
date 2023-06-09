@@ -174,7 +174,7 @@ public class StateManager {
 		return false;
 	}
 
-	public static boolean[] calcRangeData(ExchangeData<RangeData> ed, HashMap<SonifiableID, List<Price>> priceMap) throws AppError {
+	public static boolean[] calcRangeData(ExchangeData<RangeData> ed, HashMap<SonifiableID, List<Price>> priceMap) {
 		if (ed == null) return null;
 		List<Price> prices = priceMap.get(ed.getId());
 		int firstNoneNull = getValidPrice(prices, true);
@@ -287,7 +287,7 @@ public class StateManager {
 
 			// Create InstrumentDataRaw objects for Harmonizer
 			InstrumentMapping[] instrMappings = mapping.getMappedInstruments();
-			List<InstrumentDataRaw> instrRawDatas = new ArrayList<>(instrMappings.length);
+			List<InstrumentDataRaw> instrRawData = new ArrayList<>(instrMappings.length);
 			for (InstrumentMapping instrMap : instrMappings) {
 				if (instrMap.getPitch() == null)
 					continue;
@@ -307,11 +307,11 @@ public class StateManager {
 				boolean[] onOffFilter = calcRangeData(instrMap.getOnOffFilter(), priceMap);
 				double[] pan = calcLineData(instrMap.getPan(), priceMap);
 
-				instrRawDatas.add(new InstrumentDataRaw(relVolume, absVolume, pitch, instrument, delayEcho, feedbackEcho,
+				instrRawData.add(new InstrumentDataRaw(relVolume, absVolume, pitch, instrument, delayEcho, feedbackEcho,
 						onOffEcho, delayReverb, feedbackReverb, onOffReverb, frequency, highPass, onOffFilter, pan));
 			}
-			InstrumentDataRaw[] passedInstrRawDatas = new InstrumentDataRaw[instrRawDatas.size()];
-			passedInstrRawDatas = instrRawDatas.toArray(passedInstrRawDatas);
+			InstrumentDataRaw[] passedInstrRawDatas = new InstrumentDataRaw[instrRawData.size()];
+			passedInstrRawDatas = instrRawData.toArray(passedInstrRawDatas);
 
 			List<EvInstrData> evInstrRawDatas = new ArrayList<>();
 			for(EvInstrMapping evInstrMap : mapping.getEventInstruments()){
