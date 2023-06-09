@@ -4,7 +4,6 @@ import app.communication.*;
 import app.mapping.*;
 import app.ui.App;
 import audio.Sonifier;
-import audio.mixer.Backing;
 import audio.synth.EvInstrData;
 import audio.synth.EvInstrEnum;
 import audio.synth.InstrumentEnum;
@@ -127,7 +126,7 @@ public class StateManager {
 		// Calculate the Standard Deviation -> if it's too small, then we want to pack the normalized values
 		// closer together as well. The cutoff-point at which we reduce the range of normalized values is
 		// set arbitrarily and was decided through testing.
-		// Afterwards, we offset all values to put the normalized-value range into the middle between 0 and 1
+		// Afterward, we offset all values to put the normalized-value range into the middle between 0 and 1
 		double std = Maths.std(prices);
 		double stdCutoff = 10;
 		double normalizedValRange = Maths.clamp(std / stdCutoff, 0.25, 1);
