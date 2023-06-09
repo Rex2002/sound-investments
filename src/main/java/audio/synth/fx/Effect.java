@@ -2,6 +2,7 @@ package audio.synth.fx;
 
 
 import audio.Util;
+import audio.synth.envelopes.ADSR;
 
 import static audio.Constants.SAMPLE_RATE;
 
@@ -61,8 +62,8 @@ public class Effect {
         if(delay == 0){
             return input;
         }
-        double[] bufferL = new double[delay];//copyOfOneChannel(input, delay, start);
-        double[] bufferR = new double[delay];//copyOfOneChannel(input, delay, start + 1);
+        double[] bufferL = copyOfOneChannel(input, delay, start);
+        double[] bufferR = copyOfOneChannel(input, delay, start + 1);
         double inL, inR, bL, bR;
         int cursor = 0;
         for(int pos = start; pos < start + length + overlap; pos += 2){
@@ -129,13 +130,20 @@ public class Effect {
         bufferL[0] = input[0];
         bufferR[0] = input[1];
         int cursor = 0;
+        double inL, inR, bL, bR, feedbackValue;
         for(int pos = 0; pos < input.length/2; pos++){
-            double inL = input[2 * pos];
-            double inR = input[2 * pos + 1];
-            double bL = bufferL[cursor];
-            double bR = bufferR[cursor];
-            bufferL[cursor] = ( inL +  bL * ((pos > start && pos < start + length) ? feedback[((int) (2 * (double) pos/input.length) * feedback.length)] : 0.1));
-            bufferR[cursor] = ( inR +  bR * ((pos > start && pos < start + length) ? feedback[((int) (2 * (double) pos/input.length) * feedback.length)] : 0.1));
+            inL = input[2 * pos];
+            inR = input[2 * pos + 1];
+            bL = bufferL[cursor];
+            bR = bufferR[cursor];
+            feedbackValue = feedback[((int) (2 * (double) pos/input.length) * feedback.length)];
+            if(! (pos > start && pos < start + length)){
+                feedbackValue = 0.1;
+                // int diff = (pos < start ? start - pos : pos - start + length) / 10000;
+                // feedbackValue = (1.0 / (diff != 0 ? diff : 1)) * feedbackValue;
+            }
+            bufferL[cursor] = inL +  bL * feedbackValue;
+            bufferR[cursor] = inR +  bR * feedbackValue;
             cursor += 1;
             if(cursor >= delay){
                 cursor = 0;
@@ -143,11 +151,89 @@ public class Effect {
             preOut[2 * pos] = bL;
             preOut[2 * pos + 1] = bR;
         }
-        System.out.println("Max after another go: " + Util.findAverage(preOut)/Util.findMax(preOut));
+        //System.out.println("Max after another go: " + Util.findAverage(preOut)/Util.findMax(preOut));
 //        System.out.println("Average: " + Util.findAverage(preOut));
         return preOut;
     }
 
+    public static double[] fifthGoAtChangingDelay(double[] input, double[] feedback, int[] delayArray){
+        int delay = delayArray[0];
+        double[] preOut = new double[input.length];
+        double[] bufferL = new double[input.length / 2];
+        double[] bufferR = new double[input.length / 2];
+        bufferL[0] = input[0];
+        bufferR[0] = input[1];
+        int cursor = 0;
+        for(int pos = 0; pos < input.length/2; pos++){
+
+            double inL = input[2 * pos];
+            double inR = input[2 * pos + 1];
+            double bL = bufferL[cursor];
+            double bR = bufferR[cursor];
+            bufferL[cursor] = ( inL +  bL * feedback[((int) (2 * (double) pos/input.length) * feedback.length)]);
+            bufferR[cursor] = ( inR +  bR * feedback[((int) (2 * (double) pos/input.length) * feedback.length)]);
+            cursor += 1;
+            if(cursor >= delay){
+                cursor = 0;
+                if(delay > delayArray[Util.getRelPosition(pos, input.length, delayArray.length)]){
+                    delay -= 1;
+                }
+                else if( delay < delayArray[Util.getRelPosition(pos, input.length, delayArray.length)]){
+                    delay += 1;
+                }
+            }
+            preOut[2 * pos] = bL;
+            preOut[2 * pos + 1] = bR;
+        }
+        return preOut;
+    }
+
+    public static double[] echoWithFeeeeedback(double[] input, double[] feedback, int[] delayArray){
+        System.out.println("delay Array length: " + delayArray.length);
+        int delay = -1;
+        double[] preOut = new double[input.length];
+        double[] bufferL = new double[input.length / 2];
+        double[] bufferR = new double[input.length / 2];
+        bufferL[0] = input[0];
+        bufferR[0] = input[1];
+        double inL, inR, bL, bR, feedbackValue;
+        int cursor = 0;
+        int delayIdx = -1;
+        int sectionOffset = 0, sectionLen;
+        ADSR feedbackEnv = new ADSR(0.5, 0.02, 0.95, 0.46);
+        for(int pos = 0; pos < input.length/2; pos++){
+            if(delayIdx == -1 || (delayArray[delayIdx] != delayArray[Util.getRelPosition(pos, input.length/2, delayArray.length)])){
+                delayIdx = Util.getRelPosition(pos, input.length/2, delayArray.length);
+                delay = delayArray[delayIdx];
+                sectionOffset = pos;
+                sectionLen = 0;
+                while(delayIdx + sectionLen < delayArray.length && delayArray[delayIdx] == delayArray[delayIdx + sectionLen]){
+                    sectionLen++;
+                }
+                feedbackEnv.setSectionLen(input.length / (2 * delayArray.length) * sectionLen);
+                bufferR = new double[delay];
+                bufferL = new double[delay];
+                cursor = 0;
+            }
+
+            inL = input[2 * pos];
+            inR = input[2 * pos + 1];
+            bL = bufferL[cursor];
+            bR = bufferR[cursor];
+            feedbackValue = feedbackEnv.getAmplitudeFactor(pos - sectionOffset) * feedback[((int) (2 * (double) pos/input.length) * feedback.length)];
+            bufferL[cursor] = inL +  bL * feedbackValue;
+            bufferR[cursor] = inR +  bR * feedbackValue;
+            preOut[2 * pos] = inL +  bL * feedbackValue;;
+            preOut[2 * pos + 1] = inR +  bR * feedbackValue;;
+            cursor += 1;
+            if(cursor >= delay){
+                cursor = 0;
+            }
+
+
+        }
+        return preOut;
+    }
 
     public static double[] echo(double[] input, double[] feedback, int[] delayArray){
         int delay;
