@@ -35,7 +35,7 @@ public enum EvInstrEnum {
     public String toFileName() {
         switch (this){
             case BOOM -> {
-                return "Impact_Bass_0.wav";
+                return "Impact_Timp_0.wav";
             }
             case GANG -> {
                 // TODO
