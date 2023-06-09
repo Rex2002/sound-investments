@@ -2,14 +2,12 @@ package dataAnalyzer;
 
 import java.util.List;
 import dataRepo.Price;
-import dataAnalyzer.Blurr;
 
 public class FlagFormationAnalyzer {
 	public static boolean[] analyze(List<Price> priceList) {
 		boolean[] out = new boolean[priceList.size()];
 		out[0] = false;
-		double[] blurredValues = new double[priceList.size()];
-		blurredValues = gaussianBlur(priceList);
+		double[] blurredValues = Blur.gaussianBlur(priceList);
 
 		
 		int formationLength = 0;

@@ -3,7 +3,7 @@ package dataAnalyzer;
 import java.util.List;
 import dataRepo.Price;
 
-public class Blurr {
+public class Blur {
     public static double[] gaussianBlur(List<Price> prices) {
         int size = prices.size();
         double[] blurredValues = new double[size];
