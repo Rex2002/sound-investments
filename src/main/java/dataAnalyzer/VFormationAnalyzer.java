@@ -6,7 +6,7 @@ import java.util.Calendar;
 import dataRepo.Price;
 
 public class VFormationAnalyzer {
-    public boolean[] analyze(List<Price> priceList) {
+    public static boolean[] analyze(List<Price> priceList) {
         // Implementiere die V-Formation Analyse
         // Gib eine Liste von Booleans zurück, die zu jedem Zeitpunkt angibt, ob eine
         // V-Formation vorliegt

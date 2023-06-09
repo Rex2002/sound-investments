@@ -19,7 +19,7 @@ public class MusicData {
 	public double maxPrice; // @Perfomance we already calculate this in the SM, so we could just get the value from there
 	public Calendar[] dates;
 
-	public MusicData(PlaybackController pbc, String[] sonifiableNames, Collection<List<Price>> prices) {
+	public MusicData(PlaybackController pbc, String[] sonifiableNames, List<List<Price>> prices) {
 		assert sonifiableNames.length == prices.size();
 		this.pbc = pbc;
 		this.sonifiableNames = sonifiableNames;

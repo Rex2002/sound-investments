@@ -45,38 +45,14 @@ public class GeneralTrends {
 		return intersections;
 	}
 
-	public static List<Double> calculateMinAndMax(List<Price> priceList) {
-		List<Double> minMax = new ArrayList<>();
-		// Implementiert die Erkennung von lokalen Minima/Maxima
-		// Vergleicht alle gegebenen Min/Max Werte
-		// Gibt die jeweils höchsten(/niedrigsten) Werte als Liste von doubles aus
-		// Maximum gesamt = Widerstand
-		// Minimum gesamt = Unterstützung
-		double max = Double.MIN_VALUE;
-		double min = Double.MAX_VALUE;
-
-		for (Price price : priceList) {
-			if (price.getLow() < min) {
-				min = price.getLow();
-			}
-
-			if (price.getHigh() > max) {
-				max = price.getHigh();
-			}
-		}
-		minMax.add(min);
-		minMax.add(max);
-		return minMax;
-	}
-
-	public static Double[] calculateSlope(List<Price> priceList) {
-		Double[] Slope = new Double[priceList.size()];
-		for (int i = 0; i <= priceList.size(); i++) {
+	public static double[] calculateSlope(List<Price> priceList) {
+		double[] slope = new double[priceList.size()];
+		for (int i = 0; i < priceList.size(); i++) {
 			double graphClose = priceList.get(i).getClose();
 			double graphOpen = priceList.get(i+1).getOpen();
-			Slope[i] = graphClose - graphOpen;
+			slope[i] = graphClose - graphOpen;
 		}
-		return Slope;
+		return slope;
 	}
 
 	public static boolean[] GraphIntersectsMinMax(List<Price> priceList, List<Double> minMax){

@@ -6,7 +6,7 @@ import dataRepo.Price;
 public class TriangleFormationAnalyzer {
     public static int MIN_FORMATION_LEN = 5;
 
-    public boolean[] analyze(List<Price> priceList) {
+    public static boolean[] analyze(List<Price> priceList) {
         boolean[] triangleformations = new boolean[priceList.size()];
         double[] blurredValues = Blur.averageBlur(priceList);
 
