@@ -13,9 +13,14 @@ import javafx.scene.control.*;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.Background;
+import javafx.scene.layout.BackgroundFill;
+import javafx.scene.layout.Border;
+import javafx.scene.layout.BorderStroke;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Paint;
 import javafx.scene.shape.Line;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.text.Font;
@@ -110,6 +115,7 @@ public class MainSceneController implements Initializable {
     private double paneLRMargin;         // Left-Right margin of panes
     private double paneY;                // Y position of panes
     private double paneHeight;           // Height of panes
+    private double paneTBPad;
     private double paneTitleHeight;      // Height of the pane titles
     private double paneTitleTBPad;       // Top-Bottom padding for pane titles
     private double paneTitleLineXOffset; // offset in x-direction that the paneTitleLine has relative to the paneTitle
@@ -118,6 +124,9 @@ public class MainSceneController implements Initializable {
     private double btnPaneMargin;        // Margin between Button and Pane
     private double valueBoxHeight;
     private double valueBoxPad;
+    private double paneValTBPad;
+    private double minorTitleHeight;
+    private double defaultValueHeight;
 
     private LocalDate minDateStart = LocalDate.now().minusMonths(3);
     private LocalDate maxDateStart = LocalDate.now().minusDays(3);
@@ -340,13 +349,12 @@ public class MainSceneController implements Initializable {
 
     private void layout(double width, double height) {
         anchor.setPrefSize(width, height);
-        double headerHeight      = Maths.clamp(height/6d, 30, 100);
+        double headerHeight      = Maths.clamp(height/12d, 30, 100);
         double headerPad         = Maths.clamp(headerHeight/6d, 0, 20);
         double headerTitleHeight = headerHeight - 2*headerPad;
-        setFontSize(headerFont, headerTitleHeight);
         headerRect.setWidth(width);
         headerRect.setHeight(headerHeight);
-        headerTitle.setLayoutX(headerPad);
+        headerTitle.setLayoutX(width/2 - headerTitle.getWidth()/2);
         headerTitle.setLayoutY(Math.max(0, headerHeight - headerTitle.getHeight()) / 2);
 
         winSidePad           = Maths.clamp(width /80d, 0, 40);
@@ -354,31 +362,35 @@ public class MainSceneController implements Initializable {
         paneLRMargin         = Maths.clamp(width /70d, 5, 40);
         paneY                = headerHeight + paneTBMargin;
         paneHeight           = height - headerHeight - 2*paneTBMargin;
-        paneTitleHeight      = Maths.clamp(paneHeight       /15d,  10, 40);
-        paneTitleTBPad       = Maths.clamp(paneTitleHeight  /2d,   5,  40);
-        paneTitleLineXOffset = Maths.clamp(width            /300d, 0,  10);
-        btnHeight            = Maths.clamp(paneHeight       /8d,   30, 80);
-        btnPad               = Maths.clamp(btnHeight        /8d,   2,  10);
-        btnPaneMargin        = Maths.clamp(paneLRMargin,           2,  15);
-        valueBoxHeight       = Maths.clamp(paneTitleHeight*3/2d,   10, 50);
-        valueBoxPad          = Maths.clamp(valueBoxHeight   /5d,   2,   8);
+        paneTBPad            = Maths.clamp(paneHeight      /40d,  2,  25);
+        paneTitleHeight      = Maths.clamp(paneHeight      /15d,  10, 40);
+        paneTitleTBPad       = Maths.clamp(paneTitleHeight /2d,   5,  40);
+        paneTitleLineXOffset = Maths.clamp(width           /300d, 0,  10);
+        btnHeight            = Maths.clamp(paneHeight      /8d,   10, 80);
+        btnPad               = Maths.clamp(btnHeight       /8d,   2,  10);
+        btnPaneMargin        = Maths.clamp(paneLRMargin,          2,  15);
+        paneValTBPad         = Maths.clamp(paneHeight      /40d,  1,  25);
+        valueBoxHeight       = Maths.clamp(paneHeight      /10d,   10, 50);
+        valueBoxPad          = Maths.clamp(valueBoxHeight  /10d,   2,   8);
+        minorTitleHeight     = 4d/5d * valueBoxHeight - valueBoxPad;
+        defaultValueHeight   = 4d/5d * minorTitleHeight;
 
+        // Layout Panes & Start-Button
         layoutPane(searchPane,      searchPaneTitle,      searchPaneTitleLine,       0d/4d, 1d/4d, 0d,                          width);
         layoutPane(sonifiablesPane, sonifiablesPaneTitle, sonifiablesPaneTitleLine,  1d/4d, 2d/4d, 0d,                          width);
-        layoutPane(settingsPane,    settingsPaneTitle,    settingsPaneTitleLine,     3d/4d, 1d/4d, btnHeight + 2*btnPaneMargin, width);
-
-        startBtn.relocate(settingsPane.getLayoutX(), settingsPane.getLayoutY() + settingsPane.getPrefHeight() + btnPaneMargin);
+        layoutPane(settingsPane,    settingsPaneTitle,    settingsPaneTitleLine,     3d/4d, 1d/4d, btnHeight + btnPaneMargin + paneTBMargin, width);
+        startBtn.   relocate(settingsPane.getLayoutX(),   settingsPane.getLayoutY() + settingsPane.getPrefHeight() + btnPaneMargin);
         startBtn.setPrefSize(settingsPane.getPrefWidth(), btnHeight);
 
-        double searchPaneWidth     = searchPane.getPrefWidth();
-        double searchPaneLRPad     = Maths.clamp(searchPaneWidth/10d, 2, 20);
-        double searchPaneValTBPad  = Maths.clamp(paneHeight     /10d, 2, 25);
-        searchBar.relocate   (searchPaneLRPad,                     searchPaneTitleLine.getLayoutY() + paneTitleTBPad);
+        // Layout Search Pane
+        double searchPaneWidth    = searchPane.getPrefWidth();
+        double searchPaneLRPad    = Maths.clamp(searchPaneWidth/10d, 2, 20);
+        searchBar.   relocate(searchPaneLRPad, searchPaneTitleLine.getLayoutY() + paneTitleTBPad);
         searchBar.setPrefSize(searchPaneWidth - 2*searchPaneLRPad, valueBoxHeight*4/3);
         double searchFilterCBX     = searchPaneWidth/2 + searchPaneLRPad/2;
         double searchFilterCBWidth = searchPaneWidth/2 - 1.5*searchPaneLRPad;
-        locationLabel.  relocate(searchPaneLRPad, searchBar.getLayoutY()     + searchBar.getPrefHeight()     + searchPaneValTBPad*2/3);
-        categoriesLabel.relocate(searchPaneLRPad, locationLabel.getLayoutY() + locationLabel.getPrefHeight() + searchPaneValTBPad);
+        locationLabel.  relocate(searchPaneLRPad, searchBar.getLayoutY()     + searchBar.getPrefHeight()     + paneValTBPad*2/3);
+        categoriesLabel.relocate(searchPaneLRPad, locationLabel.getLayoutY() + locationLabel.getPrefHeight() + paneValTBPad);
         locationCB.     relocate(searchFilterCBX, locationLabel.getLayoutY());
         categoriesCB.   relocate(searchFilterCBX, categoriesLabel.getLayoutY());
         locationCB.  setPrefSize(searchFilterCBWidth, valueBoxHeight);
@@ -387,61 +399,49 @@ public class MainSceneController implements Initializable {
         locationCB.  setMaxSize(locationCB.  getPrefWidth(), locationCB.  getPrefHeight());
         categoriesCB.setMinSize(categoriesCB.getPrefWidth(), categoriesCB.getPrefHeight());
         categoriesCB.setMaxSize(categoriesCB.getPrefWidth(), categoriesCB.getPrefHeight());
-        resultsScrollPane.relocate(searchPaneLRPad, categoriesCB.getLayoutY() + categoriesCB.getPrefHeight() + searchPaneValTBPad);
-        resultsScrollPane.setPrefSize(searchPaneWidth - 2*searchPaneLRPad, paneHeight - resultsScrollPane.getLayoutY() - searchPaneValTBPad);
-        // resultsScrollPane.setPrefSize();
-        // resultsScrollPane.relocate();
-        // resultsVBox.setPrefSize();
-        // resultsVBox.relocate();
-        // sonifiablesPane.setPrefSize();
-        // sonifiablesPane.relocate();
-        // sonifiablesPaneTitle.setPrefSize();
-        // sonifiablesPaneTitle.relocate();
-        // sonifiablesPaneTitleLine.setPrefSize();
-        // sonifiablesPaneTitleLine.relocate();
-        // sonifiablesScrollPane.setPrefSize();
-        // sonifiablesScrollPane.relocate();
-        // sonifiablesVBox.setPrefSize();
-        // sonifiablesVBox.relocate();
-        // settingsPane.setPrefSize();
-        // settingsPane.relocate();
-        // settingsPaneTitle.setPrefSize();
-        // settingsPaneTitle.relocate();
-        // settingsPaneTitleLine.setPrefSize();
-        // settingsPaneTitleLine.relocate();
-        // startDateLabel.setPrefSize();
-        // startDateLabel.relocate();
-        // startDatePicker.setPrefSize();
-        // startDatePicker.relocate();
-        // endDateLabel.setPrefSize();
-        // endDateLabel.relocate();
-        // endDatePicker.setPrefSize();
-        // endDatePicker.relocate();
-        // lengthLabel.setPrefSize();
-        // lengthLabel.relocate();
-        // lengthMinField.setPrefSize();
-        // lengthMinField.relocate();
-        // lengthSecField.setPrefSize();
-        // lengthSecField.relocate();
-        // lengthSep.setPrefSize();
-        // lengthSep.relocate();
-        // instScrollPane.setPrefSize();
-        // instScrollPane.relocate();
-        // instVBox.setPrefSize();
-        // instVBox.relocate();
-        // filterLabel.setPrefSize();
-        // filterLabel.relocate();
-        // filterCB.setPrefSize();
-        // filterCB.relocate();
-        // duration.setPrefSize();
-        // duration.relocate();
-        // startBtn.setPrefSize();
-        // startBtn.relocate();
+        resultsScrollPane.relocate(searchPaneLRPad, categoriesCB.getLayoutY() + categoriesCB.getPrefHeight() + paneTBPad);
+        resultsScrollPane.setPrefSize(searchPaneWidth - 2*searchPaneLRPad, paneHeight - resultsScrollPane.getLayoutY() - paneTBPad);
 
+        // Layout Sonifiables Pane
+        double sonifiablesPaneWidth = sonifiablesPane.getPrefWidth();
+        double sonifiablesPaneLRPad = Maths.clamp(sonifiablesPaneWidth/15d, 5, 35);
+        sonifiablesScrollPane.relocate(sonifiablesPaneLRPad, sonifiablesPaneTitleLine.getLayoutY() + paneTitleTBPad);
+        sonifiablesScrollPane.setPrefSize(sonifiablesPaneWidth - 2*sonifiablesPaneLRPad, paneHeight - sonifiablesScrollPane.getLayoutY() - paneTBPad);
+        sonifiablesVBox.      setPrefSize(sonifiablesScrollPane.getPrefWidth(),          sonifiablesScrollPane.getPrefHeight());
+
+        // Layout Settings Pane
+        double settingsPaneWidth    = settingsPane.getPrefWidth();
+        double settingsPaneLRPad    = Maths.clamp(settingsPaneWidth/10d, 2, 20);
+        double settingsLabelCBWidth = settingsPaneWidth/2 - 1.5*settingsPaneLRPad;
+        double settingsCBX          = 2*settingsPaneLRPad + settingsLabelCBWidth;
+        startDateLabel. relocate(settingsPaneLRPad, settingsPaneTitleLine.getLayoutY() + paneTitleTBPad);
+        endDateLabel.   relocate(settingsPaneLRPad, startDateLabel.getLayoutY() + startDateLabel.getPrefHeight() + paneValTBPad);
+        lengthLabel.    relocate(settingsPaneLRPad, endDateLabel.getLayoutY() + endDateLabel.getPrefHeight() + paneValTBPad);
+        filterLabel.    relocate(settingsPaneLRPad, lengthLabel.getLayoutY() + lengthLabel.getPrefHeight() + paneValTBPad);
+        startDatePicker.relocate(settingsCBX, startDateLabel.getLayoutY());
+        endDatePicker.  relocate(settingsCBX, endDateLabel.  getLayoutY());
+        startDatePicker.setPrefSize(settingsLabelCBWidth, valueBoxHeight);
+        endDatePicker.  setPrefSize(settingsLabelCBWidth, valueBoxHeight);
+        double lengthSepMargin = 4;
+        double lengthTFPad     = 4;
+        double lengthTFWidth   = settingsLabelCBWidth / 2 - lengthSepMargin - lengthSep.getWidth();
+        double lengthTFHeight  = defaultValueHeight + 2*lengthTFPad;
+        lengthMinField.setPrefSize(lengthTFWidth, lengthTFHeight);
+        lengthSecField.setPrefSize(lengthTFWidth, lengthTFHeight);
+        lengthMinField.relocate(settingsCBX,                                                     lengthLabel.getLayoutY());
+        lengthSep.     relocate(settingsCBX + lengthMinField.getPrefWidth() + lengthSepMargin,   lengthLabel.getLayoutY());
+        lengthSecField.relocate(lengthSep.getLayoutX() + lengthSep.getWidth() + lengthSepMargin, lengthLabel.getLayoutY());
+        filterCB.      relocate(settingsCBX, filterLabel.getLayoutY());
+        instScrollPane.relocate(settingsPaneLRPad, filterLabel.getLayoutY() + filterLabel.getPrefHeight() + paneValTBPad);
+        instScrollPane.setPrefSize(settingsPaneWidth - 2*settingsPaneLRPad, settingsPane.getHeight() - instScrollPane.getLayoutY() - paneTBPad);
+        instVBox.      setPrefSize(instScrollPane.getPrefWidth(),           instScrollPane.getPrefHeight());
+
+        setFontSize(headerFont,       headerTitleHeight);
         setFontSize(btnFont,          btnHeight - 2*btnPad);
         setFontSize(paneTitleFont,    paneTitleHeight);
-        setFontSize(defaultValueFont, valueBoxHeight - 2*valueBoxPad);
         setFontSize(searchBarFont,    searchBar.getPrefHeight() - 2*valueBoxPad);
+        setFontSize(minorTitleFont,   minorTitleHeight);
+        setFontSize(defaultValueFont, defaultValueHeight);
         setFonts();
     }
 
@@ -852,7 +852,7 @@ public class MainSceneController implements Initializable {
         }
 
         startDatePicker.setValue(DateUtil.calendarToLocalDate(mapping.getStartDate()));
-        endDatePicker.setValue(DateUtil.calendarToLocalDate(mapping.getEndDate()));
+        endDatePicker.  setValue(DateUtil.calendarToLocalDate(mapping.getEndDate()));
         System.out.println("SoundLength: " + mapping.getSoundLength());
 
         String min = Integer.toString((int) (mapping.getSoundLength() / 60));
