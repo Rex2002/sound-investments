@@ -64,7 +64,7 @@ public class Effect {
      * @param delayArray the delay values that are to be applied
      * @return the input with respective reverb / echo effect
      */
-    public static double[] echoWithFeeeeedback(double[] input, double[] feedback, int[] delayArray){
+    public static double[] echoWithFeedback(double[] input, double[] feedback, int[] delayArray){
         int delay = -1;
         double[] preOut = new double[input.length];
         double[] bufferL = new double[input.length / 2];

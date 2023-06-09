@@ -60,13 +60,13 @@ public class SynthLine {
 
     private void applyEcho() {
         if (data.feedbackEcho != null && data.delayEcho != null) {
-            out = Effect.echoWithFeeeeedback(out, data.feedbackEcho, data.delayEcho);
+            out = Effect.echoWithFeedback(out, data.feedbackEcho, data.delayEcho);
         }
     }
 
     private void applyReverb() {
         if (data.feedbackReverb != null && data.delayReverb != null) {
-            out = Effect.echoWithFeeeeedback(out, data.feedbackReverb, data.delayReverb);
+            out = Effect.echoWithFeedback(out, data.feedbackReverb, data.delayReverb);
         }
     }
 

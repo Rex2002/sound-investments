@@ -149,8 +149,9 @@ public class Harmonizer {
 
     private int[] normalizeDelayEcho() throws AppError {
         int SAMPLES_PER_BAR = Constants.SAMPLE_RATE * 60 / (Constants.TEMPO / 4);
+        int DEFAULT_DELAY = (int) (1 / 8f * SAMPLES_PER_BAR);
         double[] delayEcho = dataRaw.getDelayEcho();
-        int defaultDelay = (int) (1 / 8f * SAMPLES_PER_BAR);
+
         int maxNoDelayValues = (int) (1.0/3 * (numberBeats / (Constants.TEMPO / 60f)));
 
         // TODO: test delay times
@@ -161,18 +162,17 @@ public class Harmonizer {
                 for (int i = 0; i < output.length; i++) {
                     double delayEchoVal = delayEcho[i];
                     checkDouble(delayEchoVal, "delayEcho", i);
-                    output[i] = delayEchoVal == -1 ? defaultDelay : (int) (delays[(int) (delayEchoVal * (delays.length - 1))] * SAMPLES_PER_BAR);
+                    output[i] = delayEchoVal == -1 ? DEFAULT_DELAY : (int) (delays[(int) (delayEchoVal * (delays.length - 1))] * SAMPLES_PER_BAR);
                 }
                 return output;
             }
             else{
-                System.out.println("max no delay values: " + maxNoDelayValues);
                 int bufferLength = delayEcho.length / maxNoDelayValues;
                 int[] output = new int[maxNoDelayValues];
                 for (int i = 0, bufferStart = 0; i < maxNoDelayValues; i++, bufferStart += bufferLength) {
                     output[i] = 0;
                     if (delayEcho[bufferStart] == -1 || delayEcho[bufferStart + bufferLength - 1] == -1) {
-                        output[i] = defaultDelay;
+                        output[i] = DEFAULT_DELAY;
                         continue;
                     }
                     double tmpForPreciseAddition = 0;
@@ -186,7 +186,7 @@ public class Harmonizer {
                 return output;
             }
         } else {
-            return new int[] { defaultDelay };
+            return new int[] {DEFAULT_DELAY};
         }
     }
 
