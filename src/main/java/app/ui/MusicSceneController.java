@@ -34,7 +34,6 @@ import javafx.util.Duration;
 import javafx.util.StringConverter;
 import util.ArrayFunctions;
 import util.DateUtil;
-import util.Maths;
 
 import java.io.File;
 import java.io.IOException;
@@ -159,7 +158,7 @@ public class MusicSceneController implements Initializable {
 		this.prices          = musicData.prices;
 		this.dates           = musicData.dates;
 		this.maxPrice        = musicData.maxPrice;
-		this.lengthInSeconds = musicData.lengthInSeconds;
+		this.lengthInSeconds = pbc.getLengthInSeconds();
 		this.lengthStr       = CommonController.secToMinSecString(lengthInSeconds, 1);
 
 		assert sonifiableNames.length <= colors.length;

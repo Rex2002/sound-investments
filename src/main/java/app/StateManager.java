@@ -316,17 +316,14 @@ public class StateManager {
 			EvInstrData[] evInstrDatas = new EvInstrData[evInstrRawDatas.size()];
 			evInstrDatas = evInstrRawDatas.toArray(evInstrDatas);
 
-			Backing backing        = Sonifier.getBacking();
-			int lengthInBeats      = Sonifier.getLengthInBeats(mapping.getSoundLength());
-			double lengthInSeconds = Sonifier.getLengthInSeconds(mapping.getSoundLength(), lengthInBeats);
-			PlaybackController pbc = Sonifier.sonify(passedInstrRawDatas, evInstrDatas, backing, lengthInSeconds, lengthInBeats);
+			PlaybackController pbc = Sonifier.sonify(passedInstrRawDatas, evInstrDatas, mapping.getSoundLength());
 
 			String[] sonifiableNames = new String[sonifiables.length];
 			for (int i = 0; i < sonifiableNames.length; i++) {
 				sonifiableNames[i] = DataRepo.getSonifiableName(sonifiables[i]);
 			}
 			isCurrentlySonifying = false;
-			return new MusicData(pbc, sonifiableNames, priceMap.values(), lengthInSeconds);
+			return new MusicData(pbc, sonifiableNames, priceMap.values());
 		}, null);
 
 	}
