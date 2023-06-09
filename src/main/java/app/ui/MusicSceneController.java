@@ -186,7 +186,7 @@ public class MusicSceneController implements Initializable {
 		xAxis.setTickLabelFont(new Font("System", 10));
 		xAxis.setTickLabelFormatter(new StringConverter<Number>() {
 			public String toString(Number i) {
-				return DateUtil.formatDate(ArrayFunctions.clampedArrAccess(i.intValue(), dates));
+				return DateUtil.formatDateGerman(ArrayFunctions.clampedArrAccess(i.intValue(), dates));
 			}
 			public Number fromString(String string) {
 				return 0;
