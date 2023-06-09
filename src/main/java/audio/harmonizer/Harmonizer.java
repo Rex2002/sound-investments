@@ -151,18 +151,40 @@ public class Harmonizer {
         int SAMPLES_PER_BAR = Constants.SAMPLE_RATE * 60 / (Constants.TEMPO / 4);
         double[] delayEcho = dataRaw.getDelayEcho();
         int defaultDelay = (int) (1 / 8f * SAMPLES_PER_BAR);
+        int maxNoDelayValues = (int) (1.0/3 * (numberBeats / (Constants.TEMPO / 60f)));
 
         // TODO: test delay times
         if (delayEcho != null) {
             double[] delays = new double[] { 1 / 24f, 1 / 16f, 1 / 12f, 1 / 8f, 1 / 6f, 1 / 4f, 1 / 3f, 1 / 2f, 1 };
-            int[] output = new int[delayEcho.length];
-
-            for (int i = 0; i < delayEcho.length; i++) {
-                checkDouble(delayEcho[i], "delayEcho", i);
-
-                output[i] = delayEcho[i] == -1 ? defaultDelay : (int) (delays[(int) (delayEcho[i] * (delays.length - 1))] * SAMPLES_PER_BAR);
+            if(delayEcho.length <= maxNoDelayValues){
+                int[] output = new int[delayEcho.length];
+                for (int i = 0; i < output.length; i++) {
+                    double delayEchoVal = delayEcho[i];
+                    checkDouble(delayEchoVal, "delayEcho", i);
+                    output[i] = delayEchoVal == -1 ? defaultDelay : (int) (delays[(int) (delayEchoVal * (delays.length - 1))] * SAMPLES_PER_BAR);
+                }
+                return output;
             }
-            return output;
+            else{
+                System.out.println("max no delay values: " + maxNoDelayValues);
+                int bufferLength = delayEcho.length / maxNoDelayValues;
+                int[] output = new int[maxNoDelayValues];
+                for (int i = 0, bufferStart = 0; i < maxNoDelayValues; i++, bufferStart += bufferLength) {
+                    output[i] = 0;
+                    if (delayEcho[bufferStart] == -1 || delayEcho[bufferStart + bufferLength - 1] == -1) {
+                        output[i] = defaultDelay;
+                        continue;
+                    }
+                    double tmpForPreciseAddition = 0;
+                    for (int j = bufferStart; j < bufferStart + bufferLength; j++) {
+                        checkDouble(delayEcho[j], "delayEcho", j);
+                        tmpForPreciseAddition += delayEcho[j] / bufferLength;
+                    }
+                    output[i] = (int) (delays[(int) (tmpForPreciseAddition * (delays.length - 1))] * SAMPLES_PER_BAR);
+
+                }
+                return output;
+            }
         } else {
             return new int[] { defaultDelay };
         }
@@ -207,14 +229,36 @@ public class Harmonizer {
         int MAX_DELAY_REVERB = Constants.SAMPLE_RATE / 20; // number of samples corresponding to 50ms
         int DEFAULT_DELAY_REVERB = Constants.SAMPLE_RATE / 25; // number of samples corresponding to 40ms
         double[] delayReverb = dataRaw.getDelayReverb();
-        if (delayReverb != null) {
-            int[] output = new int[delayReverb.length];
-            for (int i = 0; i < delayReverb.length; i++) {
-                checkDouble(delayReverb[i], "delayReverb", i);
+        int maxNoDelayValues = (int) (1.0/3 * (numberBeats / (Constants.TEMPO / 60f)));
 
-                output[i] = delayReverb[i] == -1 ? DEFAULT_DELAY_REVERB : (int) (delayReverb[i] * MAX_DELAY_REVERB);
+        if (delayReverb != null) {
+            if(delayReverb.length <= maxNoDelayValues){
+                int[] output = new int[delayReverb.length];
+                for (int i = 0; i < output.length; i++) {
+                    double delayReverbVal = delayReverb[i];
+                    checkDouble(delayReverbVal, "delayReverb", i);
+                    output[i] = delayReverbVal == -1 ? DEFAULT_DELAY_REVERB : (int) (delayReverbVal * MAX_DELAY_REVERB);
+                }
+                return output;
             }
-            return output;
+            else{
+                int bufferLength = delayReverb.length / maxNoDelayValues;
+                int[] output = new int[maxNoDelayValues];
+                for (int i = 0, bufferStart = 0; i < maxNoDelayValues; i++, bufferStart += bufferLength) {
+                    output[i] = 0;
+                    if (delayReverb[bufferStart] == -1 || delayReverb[bufferStart + bufferLength - 1] == -1) {
+                        output[i] = DEFAULT_DELAY_REVERB;
+                        continue;
+                    }
+                    double tmpForPreciseAddition = 0;
+                    for (int j = bufferStart; j < bufferStart + bufferLength; j++) {
+                        checkDouble(delayReverb[j], "delayReverb", j);
+                        tmpForPreciseAddition += delayReverb[j] / bufferLength;
+                    }
+                    output[i] = (int)(tmpForPreciseAddition * MAX_DELAY_REVERB);
+                }
+                return output;
+            }
         } else {
             // TODO: test value
             return new int[] { DEFAULT_DELAY_REVERB };

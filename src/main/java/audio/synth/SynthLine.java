@@ -60,7 +60,7 @@ public class SynthLine {
 
     private void applyEcho() {
         if (data.feedbackEcho != null && data.delayEcho != null) {
-            out = Effect.echo(out, data.feedbackEcho, data.delayEcho);
+            out = Effect.echoWithFeeeeedback(out, data.feedbackEcho, data.delayEcho);
         }
     }
 

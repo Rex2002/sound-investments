@@ -215,22 +215,27 @@ public class Effect {
                 bufferL = new double[delay];
                 cursor = 0;
             }
-
-            inL = input[2 * pos];
-            inR = input[2 * pos + 1];
-            bL = bufferL[cursor];
-            bR = bufferR[cursor];
-            feedbackValue = feedbackEnv.getAmplitudeFactor(pos - sectionOffset) * feedback[((int) (2 * (double) pos/input.length) * feedback.length)];
-            bufferL[cursor] = inL +  bL * feedbackValue;
-            bufferR[cursor] = inR +  bR * feedbackValue;
-            preOut[2 * pos] = inL +  bL * feedbackValue;;
-            preOut[2 * pos + 1] = inR +  bR * feedbackValue;;
-            cursor += 1;
-            if(cursor >= delay){
-                cursor = 0;
+            if(delay != 0) {
+                inL = input[2 * pos];
+                inR = input[2 * pos + 1];
+                bL = bufferL[cursor];
+                bR = bufferR[cursor];
+                feedbackValue = feedbackEnv.getAmplitudeFactor(pos - sectionOffset) * feedback[((int) (2 * (double) pos / input.length) * feedback.length)];
+                bufferL[cursor] = inL + bL * feedbackValue;
+                bufferR[cursor] = inR + bR * feedbackValue;
+                preOut[2 * pos] = inL + bL * feedbackValue;
+                ;
+                preOut[2 * pos + 1] = inR + bR * feedbackValue;
+                ;
+                cursor += 1;
+                if (cursor >= delay) {
+                    cursor = 0;
+                }
             }
-
-
+            else{
+                preOut[2 * pos] = input[2 * pos];
+                preOut[2 * pos + 1] = input[2 * pos + 1];
+            }
         }
         return preOut;
     }
