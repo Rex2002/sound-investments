@@ -8,10 +8,10 @@ public class FlagFormationAnalyzer {
 	public static boolean[] analyze(List<Price> priceList) {
 		boolean[] out = new boolean[priceList.size()];
 		out[0] = false;
-		double[] blurredValues = new double[priceList.size()];
+		double[] blurredValues = new double[out.length];
 		blurredValues = gaussianBlur(priceList);
 
-		
+
 		int formationLength = 0;
     	boolean isRising = false;
     	boolean isFalling = false;
