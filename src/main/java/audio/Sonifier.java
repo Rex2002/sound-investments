@@ -47,7 +47,7 @@ public class Sonifier {
 
         double[][] outArrays = concatArrays(evInstrs, synthLines);
 
-        double[] out = Mixer.mixAudioStreams(outArrays);
+        double[] out = Mixer.mixAudioStreams(outArrays, evInstrs.length, synthLines.length - 1);
         out = Effect.antiAliasing(out);
         AudioFormat af = new AudioFormat(Constants.SAMPLE_RATE, 16, Constants.CHANNEL_NO, true, true);
         SourceDataLine sdl;

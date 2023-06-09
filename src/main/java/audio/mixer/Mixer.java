@@ -7,7 +7,7 @@ public class Mixer {
      * @param audioStreams array of double-arrays to be mixed
      * @return mixed audio stream as double-array
      */
-    public static double[] mixAudioStreams(double[][] audioStreams) {
+    public static double[] mixAudioStreams(double[][] audioStreams, int numberEvLines, int indexBacking) {
         int maxLength = 0;
         for (double[] stream : audioStreams) {
             maxLength = Math.max(maxLength, stream.length);
@@ -19,8 +19,13 @@ public class Mixer {
             double[] audioStream = audioStreams[i];
 
             double mixFactor = 1;
-            // reduce amount of backing to 90% of original volume
-            if (i == audioStream.length -1) {
+
+            //reduce volume of event instruments
+            if (i < numberEvLines) {
+                mixFactor = 0.65;
+            }
+            // reduce volume of backing
+            if (i == indexBacking) {
                 mixFactor = 0.95;
             }
 
