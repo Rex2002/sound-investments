@@ -574,7 +574,7 @@ public class MainSceneController implements Initializable {
 
         ImageView closeIcon = new ImageView(closeImg);
         double paneWidth = 738; // see css for width value
-        double iconSideLen = 50;
+        double iconSideLen = 35;
         double iconMargin = 15;
         closeIcon.setFitHeight(iconSideLen);
         closeIcon.setFitWidth(iconSideLen);
