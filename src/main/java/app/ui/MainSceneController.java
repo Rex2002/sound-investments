@@ -474,14 +474,12 @@ public class MainSceneController implements Initializable {
                     // then we need to remove the parameter in the UI
                     // otherwise we also need to set the parameter in the mapping
                     // in any case, we need to remove the old mapping with the old instrument
-                    if (currentlyUpdatingCB)
-                        return;
+                    if (currentlyUpdatingCB) return;
                     currentlyUpdatingCB = true;
                     InstrumentEnum newValue = instVals[Math.max(newIdx.intValue(), 0)];
                     InstrumentEnum oldValue = instVals[Math.max(oldIdx.intValue(), 0)];
                     SingleSelectionModel<String> paramCBSelect = paramCB.getSelectionModel();
-                    InstrParam paramVal = paramCBSelect.getSelectedItem() == null ? null
-                            : InstrParam.fromString(paramCBSelect.getSelectedItem());
+                    InstrParam paramVal = paramCBSelect.getSelectedItem() == null ? null : InstrParam.fromString(paramCBSelect.getSelectedItem());
 
                     paramCB.setDisable(newIdx.intValue() <= 0);
                     refreshParamOpts(paramCB, newValue, isLineParam, true);
@@ -500,8 +498,7 @@ public class MainSceneController implements Initializable {
                 if (currentlyUpdatingCB)
                     return;
                 currentlyUpdatingCB = true;
-                refreshParamOpts(paramCB, instVals[Math.max(instCB.getSelectionModel().getSelectedIndex(), 0)],
-                        isLineParam, false);
+                refreshParamOpts(paramCB, instVals[Math.max(instCB.getSelectionModel().getSelectedIndex(), 0)], isLineParam, false);
                 currentlyUpdatingCB = false;
                 paramCB.show();
             });
@@ -542,30 +539,30 @@ public class MainSceneController implements Initializable {
         }
     }
 
-    private void refreshParamOpts(ChoiceBox<String> paramCB, InstrumentEnum instVal, boolean isLineParam,
-            boolean checkForMapping) {
+    private void refreshParamOpts(ChoiceBox<String> paramCB, InstrumentEnum instVal, boolean isLineParam, boolean checkForMapping) {
         try {
             SingleSelectionModel<String> paramCBSelect = paramCB.getSelectionModel();
-            InstrParam paramVal = paramCBSelect.getSelectedItem() == null ? null
-                    : InstrParam.fromString(paramCBSelect.getSelectedItem());
-            paramCBSelect.select(null);
+            InstrParam paramVal = paramCBSelect.getSelectedItem() == null ? null : InstrParam.fromString(paramCBSelect.getSelectedItem());
+            paramCBSelect.select(-1);
             paramCB.getItems().clear();
             InstrParam[] newOpts;
-            Function<InstrParam, InstrParam[]> getOpts = (pv) -> isLineParam ? mapping.getEmptyLineParams(instVal, pv)
-                    : mapping.getEmptyRangeParams(instVal, pv);
-            boolean flag = instVal != null && paramVal != null
-                    && (!checkForMapping || !mapping.isMapped(instVal, paramVal));
+            Function<InstrParam, InstrParam[]> getOpts = (pv) -> isLineParam ? mapping.getEmptyLineParams(instVal, pv) : mapping.getEmptyRangeParams(instVal, pv);
+            boolean flag = paramVal != null && (!checkForMapping || instVal == null || !mapping.isMapped(instVal, paramVal));
             if (flag)
                 newOpts = getOpts.apply(paramVal);
             else
                 newOpts = getOpts.apply(null);
 
             paramCB.getItems().add(null);
-            for (InstrParam opt : newOpts)
-                paramCB.getItems().add(opt.toString());
+            int idxToSelect = -1;
+            for (int i = 0; i < newOpts.length; i++) {
+                paramCB.getItems().add(newOpts[i].toString());
+                if (newOpts[i].equals(paramVal))
+                    idxToSelect = i;
+            }
 
-            if (flag)
-                paramCBSelect.select(paramVal.toString());
+            if (idxToSelect >= 0)
+                paramCBSelect.select(idxToSelect + 1);
             // System.out.println("Selected: " + paramCBSelect.getSelectedItem());
         } catch (AppError e) {
             CommonController.displayError(anchor, e.getMessage(), "Interner Fehler");
