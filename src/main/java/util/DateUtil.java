@@ -28,6 +28,10 @@ public class DateUtil {
 		return cal;
 	}
 
+	public static String formatDateGerman(Calendar date) {
+		return paddedParse(date.get(Calendar.DAY_OF_MONTH), 2, '0') + "." + paddedParse(date.get(Calendar.MONTH), 2, '0') + "." + paddedParse(date.get(Calendar.YEAR), 4, '0');
+	}
+
 	public static String formatDate(Calendar date) {
 		return paddedParse(date.get(Calendar.YEAR), 4, '0') + "-" + paddedParse(date.get(Calendar.MONTH) + 1, 2, '0') + "-" + paddedParse(date.get(Calendar.DAY_OF_MONTH), 2, '0');
 	}
