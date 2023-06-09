@@ -100,6 +100,11 @@ public class MainSceneController implements Initializable {
     private Font[] searchBarFont    = { new Font("System", 20)      };
     private Font[] btnFont          = { new Font("System", 40)      };
 
+    // The actual height is apparently stage.getHeight() - heightOffset
+    // I have no idea why that's the case, but I through experimentation
+    // I found that we need some offset like that, and that its value
+    // is approximately 38 (at least on my machine)
+    private final double heightOffset = 38;
     private double winSidePad;     // Side-Padding of Window
     private double paneTBMargin;   // Top-Bottom margin of panes
     private double paneLRMargin;   // Left-Right margin of panes
@@ -158,12 +163,12 @@ public class MainSceneController implements Initializable {
         Platform.runLater(() -> {
             // @Performance Buffer resizing listeners
             initFontList();
-            layout(stage.getWidth(), stage.getHeight());
-            stage.widthProperty().addListener((obs, oldWidth, newWidth) -> layout(newWidth.doubleValue(), stage.getHeight()));
-            stage.heightProperty().addListener((obs, oldHeight, newHeight) -> layout(stage.getWidth(), newHeight.doubleValue()));
+            layout(stage.getWidth(), stage.getHeight() - heightOffset);
+            stage.widthProperty().addListener((obs, oldWidth, newWidth) -> layout(newWidth.doubleValue(), stage.getHeight() - heightOffset));
+            stage.heightProperty().addListener((obs, oldHeight, newHeight) -> layout(stage.getWidth(), newHeight.doubleValue() - heightOffset));
             // @Perfomance Since not all preliminary values needed for proper layouting may have been computed by JavaFX before
-            // we run the layouting twice in the beginning
-            Platform.runLater(() -> layout(stage.getWidth(), stage.getHeight()));
+            // we run the layouting twice in the beginning. This might decrease startup-speed, but doesn't seem too bad at the moment
+            Platform.runLater(() -> layout(stage.getWidth(), stage.getHeight() - heightOffset));
         });
 
         categoriesCB.getItems().addAll(MainSceneController.categoryKeys);
@@ -339,22 +344,19 @@ public class MainSceneController implements Initializable {
         headerTitle.setLayoutX(headerPad);
         headerTitle.setLayoutY(Math.max(0, headerHeight - headerTitle.getHeight()) / 2);
 
-        winSidePad    = Maths.clamp(width /10d, 0, 20);
-        paneTBMargin  = Maths.clamp(height/10d, 0, 20);
-        paneLRMargin  = Maths.clamp(width /10d, 5, 15);
+        winSidePad    = Maths.clamp(width /80d, 0, 40);
+        paneTBMargin  = Maths.clamp(height/50d, 0, 40);
+        paneLRMargin  = Maths.clamp(width /70d, 5, 40);
         paneY         = headerHeight + paneTBMargin;
-        // TODO: Figure out why we have to multiply by 4 here
-        // logically, I think, it should be 2, so it smells like
-        // some bug is hiding here
-        paneHeight    = height - headerHeight - 4*paneTBMargin;
-        btnHeight     = Maths.clamp(paneHeight  /8d, 30, 80);
-        btnPad        = Maths.clamp(btnHeight   /6d, 2,  20);
-        btnPaneMargin = Maths.clamp(paneTBMargin/2,  2,  20);
+        paneHeight    = height - headerHeight - 2*paneTBMargin;
+        btnHeight     = Maths.clamp(paneHeight/8d, 30, 80);
+        btnPad        = Maths.clamp(btnHeight /8d, 2,  10);
+        btnPaneMargin = Maths.clamp(paneLRMargin,  2,  15);
         setFontSize(btnFont, btnHeight - 2*btnPad);
 
-        layoutPane(searchPane,      0d/4d, 1d/4d, 0d,                        width);
-        layoutPane(sonifiablesPane, 1d/4d, 2d/4d, 0d,                        width);
-        layoutPane(settingsPane,    3d/4d, 1d/4d, btnHeight + btnPaneMargin, width);
+        layoutPane(searchPane,      0d/4d, 1d/4d, 0d,                          width);
+        layoutPane(sonifiablesPane, 1d/4d, 2d/4d, 0d,                          width);
+        layoutPane(settingsPane,    3d/4d, 1d/4d, btnHeight + 2*btnPaneMargin, width);
 
         startBtn.relocate(settingsPane.getLayoutX(), settingsPane.getLayoutY() + settingsPane.getPrefHeight() + btnPaneMargin);
         startBtn.setPrefSize(settingsPane.getPrefWidth(), btnHeight);

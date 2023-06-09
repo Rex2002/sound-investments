@@ -132,12 +132,6 @@
 
       	<!-- Start Button -->
 	<Button fx:id="startBtn" layoutX="1210.0" layoutY="679.0" mnemonicParsing="false" prefHeight="86.0" prefWidth="332.0" style="-fx-background-color: #9C5EEB; -fx-background-radius: 30;" text="Start" textFill="WHITE">
-		<font>
-			<Font size="40.0" />
-		</font>
-		<opaqueInsets>
-			<Insets />
-		</opaqueInsets>
 		<cursor>
 			<Cursor fx:constant="HAND" />
 		</cursor>
