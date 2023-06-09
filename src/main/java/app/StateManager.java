@@ -16,6 +16,7 @@ import dataRepo.*;
 import javafx.application.Application;
 import util.DateUtil;
 import util.FutureList;
+import util.Maths;
 
 import java.time.temporal.ChronoUnit;
 import java.util.*;
@@ -123,9 +124,18 @@ public class StateManager {
 			if (x > max)
 				max = x;
 		}
+		// Calculate the Standard Deviation -> if it's too small, then we want to pack the normalized values
+		// closer together as well. The cutoff-point at which we reduce the range of normalized values is
+		// set arbitrarily and was decided through testing.
+		// Afterwards, we offset all values to put the normalized-value range into the middle between 0 and 1
+		double std = Maths.std(prices);
+		double stdCutoff = 10;
+		double normalizedValRange = Maths.clamp(std / stdCutoff, 0.25, 1);
+		double offset = (1 - normalizedValRange) / 2;
+		System.out.println("normalizedValRange: " + normalizedValRange + ", offset: " + offset);
 		// Normalize values
 		for (int i = 0; i < normalized.length; i++)
-			normalized[i] = (prices[i] - min) / (max - min);
+			normalized[i] = offset + (prices[i] - min) / (max - min) * normalizedValRange;
 		return normalized;
 	}
 
