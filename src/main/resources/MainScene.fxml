@@ -38,19 +38,13 @@
 					<Font size="20.0" />
 				</font>
 			</TextField>
-			<Label layoutX="17.0" layoutY="273.0" prefHeight="53.0" prefWidth="165.0" style="-fx-font-style: &quot;Roboto&quot;;" text="Kategorie">
+			<Label layoutX="17.0" layoutY="195.0" prefHeight="53.0" prefWidth="165.0" style="-fx-font-style: &quot;Roboto&quot;;" text="Kategorie">
 				<font>
 					<Font size="24.0" />
 				</font>
 			</Label>
-			<ChoiceBox id="categoriesCB" fx:id="categoriesCB" layoutX="151.0" layoutY="275.0" prefHeight="49.0" prefWidth="165.0" style="-fx-background-radius: 10; -fx-background-color: #4D505B;" />
-			<Label layoutX="17.0" layoutY="195.0" prefHeight="53.0" prefWidth="165.0" style="-fx-font-style: &quot;Roboto&quot;;" text="Standort">
-				<font>
-					<Font size="24.0" />
-				</font>
-			</Label>
-			<ChoiceBox fx:id="locationCB" layoutX="151.0" layoutY="197.0" prefHeight="49.0" prefWidth="165.0" style="-fx-background-radius: 10; -fx-background-color: #4D505B;" />
-			<ScrollPane hbarPolicy="NEVER" layoutX="17.0" layoutY="359.0" maxWidth="1.7976931348623157E308" prefHeight="282.0" prefWidth="299.0" style="-fx-background-color: #4D505B; -fx-border-color: #4D505B;">
+			<ChoiceBox id="categoriesCB" fx:id="categoriesCB" layoutX="151.0" layoutY="197.0" prefHeight="49.0" prefWidth="165.0" style="-fx-background-radius: 10; -fx-background-color: #4D505B;" />
+			<ScrollPane hbarPolicy="NEVER" layoutX="17.0" layoutY="275.0" maxWidth="1.7976931348623157E308" prefHeight="340.0" prefWidth="299.0" style="-fx-background-color: #4D505B; -fx-border-color: #4D505B;">
 				<content>
 					<VBox fx:id="checkVBox" prefHeight="275.0" prefWidth="296.0" />
 				</content>

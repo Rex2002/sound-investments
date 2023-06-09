@@ -49,8 +49,6 @@ public class MainSceneController implements Initializable {
     @FXML
     private ChoiceBox<String> categoriesCB;
     @FXML
-    private ChoiceBox<String> locationCB;
-    @FXML
     private ChoiceBox<String> filterCB;
     @FXML
     private DatePicker startPicker;
@@ -79,8 +77,6 @@ public class MainSceneController implements Initializable {
     private Mapping mapping = new Mapping();
     private boolean currentlyUpdatingCB = false;
     private boolean startedSonification = false;
-
-    private String[] locations = { "Deutschland" }; // TODO: Get available locations from StateManager
 
     // Choice-Box String->Value Maps
     private static String[] categoryKeys = { "Alle Kategorien", "Aktien", "ETFs", "Indizes" };
@@ -114,10 +110,9 @@ public class MainSceneController implements Initializable {
     @SuppressWarnings("unchecked")
     public void initialize(URL arg0, ResourceBundle arg1) { // Initialisierung mit den Optionen
         categoriesCB.getItems().addAll(MainSceneController.categoryKeys);
-        locationCB.getItems().addAll(locations);
         enableBtnIfValid();
 
-        closeImg = new Image(getClass().getResource("/close_icon.png").toExternalForm());
+        closeImg = new Image(getClass().getResource("/close_icon_w_bg.png").toExternalForm());
 
         checkEQService = new CheckEQService();
         checkEQService.setPeriod(Duration.millis(100));
@@ -231,7 +226,6 @@ public class MainSceneController implements Initializable {
         });
 
         filterCB.setCursor(Cursor.HAND);
-        locationCB.setCursor(Cursor.HAND);
         categoriesCB.setCursor(Cursor.HAND);
 
         mapping.setOnInstrAdded(inst -> instAdded(inst.toString()));
@@ -580,7 +574,7 @@ public class MainSceneController implements Initializable {
 
         ImageView closeIcon = new ImageView(closeImg);
         double paneWidth = 738; // see css for width value
-        double iconSideLen = 30;
+        double iconSideLen = 50;
         double iconMargin = 15;
         closeIcon.setFitHeight(iconSideLen);
         closeIcon.setFitWidth(iconSideLen);
