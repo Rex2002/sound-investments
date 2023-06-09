@@ -11,9 +11,10 @@ public class FlagFormationAnalyzer {
 		boolean[] out = new boolean[priceList.size()];
 		out[0] = false;
 		double[] blurredValues = Blur.averageBlur(priceList);
+		int formationLength=0;
 
-		int formationLength = 0;
-    	boolean isRising = false;
+		boolean isRising = false;
+
     	boolean isFalling = false;
     	boolean findFlag = false;
     	boolean isFlag = false;

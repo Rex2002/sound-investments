@@ -11,29 +11,24 @@ public class TriangleFormationAnalyzer {
         double[] blurredValues = Blur.averageBlur(priceList);
 
         for (int i = 0; i < triangleformations.length; i++) {
-            Price p1 = priceList.get(i);
-            double lastHigh = p1.getHigh();
-            double lastLow = p1.getLow();
+            double lastPrice = blurredValues[i];
+
             // Check for decreasing formation
             int formationLen = 0;
             for (int j = i + 1; j < triangleformations.length; j++, formationLen++) {
-                double currentHigh = priceList.get(j).getHigh();
-                double currentLow = priceList.get(j).getLow();
-                if (currentHigh > lastHigh || currentLow < lastLow)
+                double currentPrice = blurredValues[j];
+                if (currentPrice > lastPrice)
                     break;
-                lastHigh = currentHigh;
-                lastLow = currentLow;
+                lastPrice = currentPrice;
             }
 
             // Check for increasing formation
             if (formationLen == 0) {
                 for (int j = i + 1; j < triangleformations.length; j++, formationLen++) {
-                    double currentHigh = priceList.get(j).getHigh();
-                    double currentLow = priceList.get(j).getLow();
-                    if (currentHigh < lastHigh || currentLow > lastLow)
-                        break;
-                    lastHigh = currentHigh;
-                    lastLow = currentLow;
+                    double currentPrice = blurredValues[j];
+                    if (currentPrice < lastPrice)
+                        {break;}
+                    lastPrice = currentPrice;
                 }
             }
 

@@ -1,7 +1,6 @@
 package dataAnalyzer;
 
 import java.util.List;
-import java.util.Calendar;
 
 import dataRepo.Price;
 
@@ -11,35 +10,44 @@ public class VFormationAnalyzer {
         // Gib eine Liste von Booleans zurück, die zu jedem Zeitpunkt angibt, ob eine
         // V-Formation vorliegt
 
-        boolean[] Vformations = new boolean[priceList.size()];
+		double[] input = Blur.averageBlur(priceList);
+        int length = input.length;
+        boolean[] Vformations = new boolean[length];
+        int formationLength = 0;
+        boolean downwardImpulse = false;
+        boolean isFlag = false;
+        boolean TrendDone = false;
 
-        for (int i = 0; i < priceList.size(); i++) {
-            Price startPrice = priceList.get(i);
-            double startClose = startPrice.getClose();
-            Calendar startDate = startPrice.getDay();
-
-            for (int j = i + 1; j < priceList.size(); j++) {
-                Price endPrice = priceList.get(j);
-                double endClose = endPrice.getClose();
-                Calendar endDate = endPrice.getDay();
-
-                // Überprüfen, ob ein dynamischer Abwärtsimpuls stattfindet
-                boolean downwardImpulse = false;
-                for (int k = i + 1; k < j; k++) {
-                    Price intermediatePrice = priceList.get(k);
-                    double intermediateClose = intermediatePrice.getClose();
-
-                    if (intermediateClose < startClose) {
-                        downwardImpulse = true;
-                        break;
-                    }
-                }
-
-                // V-Formation gefunden
-                Vformations[i] = downwardImpulse && endClose > startClose;
-            }
+        for (int i = 1; i < length; i++) {
+        double startPrice = input[i - 1];
+        double nextPrice = input[i];
+        // Überprüfen, ob ein dynamischer Abwärtsimpuls stattfindet
+        // Price intermediatePrice = priceList.get(k);
+        if (nextPrice < startPrice) {
+            downwardImpulse = true;
+            formationLength++;
+        } else if (nextPrice > startPrice && downwardImpulse) {
+            formationLength++;
+            downwardImpulse = false;
+            isFlag = true;
+        } else if (nextPrice >= startPrice && isFlag) {
+            formationLength++;
+        }
+        if (nextPrice < startPrice && isFlag) {
+            TrendDone = true;
         }
 
+        // V-Formation gefunden
+        if (TrendDone && isFlag && formationLength >= 5 && formationLength <= 90) {
+            for (int k = 0; k < formationLength; k++) {
+            Vformations[i - k] = true;
+            }
+            formationLength = 0;
+            isFlag = false;
+        } else {
+            Vformations[i] = false;
+        }
+        }
         return Vformations;
 
     }
