@@ -2,7 +2,6 @@ package dataAnalyzer;
 
 import dataRepo.Price;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class GeneralTrends {

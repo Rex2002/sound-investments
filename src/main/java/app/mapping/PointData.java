@@ -18,10 +18,10 @@ public enum PointData implements ExchangeParam {
 
 	public String toString() {
 		return switch (this) {
-			case TRENDBREAK -> "Trendlinien-Brüche";
-			case EQMOVINGAVG -> "Gleich gleitendem Preis";
-			case EQSUPPORT -> "Gleich Support-Linie";
-			case EQRESIST -> "Gleich Resist-Linie";
+			case TRENDBREAK -> "Trendbrüche";
+			case EQMOVINGAVG -> "Durchbruch - Gleitender Schnitt";
+			case EQSUPPORT -> "Durchbruch - Support Linie";
+			case EQRESIST -> "Durchbruch - Widerstandslinie";
 		};
 	}
 }
