@@ -1,14 +1,15 @@
 package dataRepo;
 
 import java.util.Objects;
+import util.General;
 
 public class SonifiableID {
 	public String exchange;
 	public String symbol;
 
 	public SonifiableID(String symbol, String exchange) {
-		this.symbol = symbol;
-		this.exchange = exchange;
+		this.symbol   = General.strReplace(symbol,   '"', '\'');
+		this.exchange = General.strReplace(exchange, '"', '\'');
 	}
 
 	public String getExchange() {

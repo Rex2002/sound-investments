@@ -2,13 +2,15 @@ package dataRepo;
 
 import java.util.Objects;
 
+import util.General;
+
 // @Cleanup let Lombok create this boilerplate
 public class Sonifiable {
 	public String name;
 	public SonifiableID id;
 
 	public Sonifiable(String name, SonifiableID id) {
-		this.name = name;
+		this.name = General.strReplace(name, '"', '\'');
 		this.id = id;
 	}
 

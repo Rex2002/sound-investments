@@ -11,10 +11,8 @@ import util.DateUtil;
 import util.FutureList;
 import util.UnorderedList;
 
-import java.io.PrintWriter;
 import java.net.URL;
 import java.nio.file.Files;
-import java.nio.file.OpenOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
@@ -25,7 +23,11 @@ import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class DataRepo {
-	private static final boolean GET_PRICES_DYNAMICALLY = true;
+	private static final boolean GET_PRICES_DYNAMICALLY    = true;
+	private static final boolean GET_EXCHANGES_DYNAMICALLY = false;
+	private static final boolean UPDATE_SONIFIABLES        = true;
+
+	private static final List<String> DEFAULT_EXCHANGES = List.of("NYSE", "NASDAQ", "XETRA", "F", "BE", "MU");
 
 	private static final String[] apiToksLeeway = { "pgz64a5qiuvw4qhkoullnx", "9pe3xyaplenvfvbnyxtomm", "r7splaijduabfpcu2z2l14",
 			"o5npdx6elm2pcpp395uaun", "2ja5gszii8g63hzjd41x78", "ftd5l4hscm9biueu5ptptr", "42dreongzzo5yqkyg2r3cr",
@@ -76,25 +78,25 @@ public class DataRepo {
 	// a single boolean flag would not be sufficient of course. Since we know,
 	// however, that only the StateManager reacts to this information, having a
 	// single boolean flag is completely sufficient
-	public static AtomicBoolean updatedData = new AtomicBoolean(false);
+	public static AtomicBoolean updatedData        = new AtomicBoolean(false);
 	private static BlockingQueue<Runnable> tpQueue = new LinkedBlockingQueue<>();
-	private static ThreadPoolExecutor threadPool = new ThreadPoolExecutor(16, 64, 60, TimeUnit.SECONDS, tpQueue);
+	private static ThreadPoolExecutor threadPool   = new ThreadPoolExecutor(16, 64, 60, TimeUnit.SECONDS, tpQueue);
 
-	private static UnorderedList<Stock> stocks = new UnorderedList<>(128);
-	private static UnorderedList<ETF> etfs = new UnorderedList<>(128);
-	private static UnorderedList<Index> indices = new UnorderedList<>(128);
+	private static UnorderedList<Sonifiable> stocks  = new UnorderedList<>(128);
+	private static UnorderedList<Sonifiable> etfs    = new UnorderedList<>(128);
+	private static UnorderedList<Sonifiable> indices = new UnorderedList<>(128);
 
 	private static List<Price> testPrices() {
 		try {
-			String fname = "./src/main/resources/TestData/TestPrices.json";
-			String json = Files.readString(Path.of(fname));
+			String fname  = "./src/main/resources/TestData/TestPrices.json";
+			String json   = Files.readString(Path.of(fname));
 			Parser parser = new Parser();
 			List<Price> prices = parser.parse(fname, json).applyList(x -> {
 				try {
 					HashMap<String, JsonPrimitive<?>> m = x.asMap();
 					Calendar startDay = DateUtil.calFromDateStr(m.get("datetime").asStr());
 					Instant startTime = DateUtil.fmtDatetime.parse(m.get("datetime").asStr()).toInstant();
-					Instant endTime = IntervalLength.HOUR.addToInstant(startTime);
+					Instant endTime   = IntervalLength.HOUR.addToInstant(startTime);
 
 					return new Price(startDay, startTime, endTime, m.get("open").asDouble(),
 							m.get("close").asDouble(), m.get("low").asDouble(), m.get("high").asDouble());
@@ -116,32 +118,47 @@ public class DataRepo {
 			etfs    = readFromJSON("etfs");
 			indices = readFromJSON("indices");
 
-			updateSonifiablesList();
+			if (UPDATE_SONIFIABLES)
+				updateSonifiablesList();
 		} catch (Exception e) {
 			e.printStackTrace();
 			throw new AppError(e.getMessage());
 		}
 	}
 
-	public static List<Sonifiable> findByPrefix(String prefix, FilterFlag... filters) {
+	public static Sonifiable[] findByPrefix(int startIdx, int length, String prefix, FilterFlag... filters) {
+		int filledLen = 0;
 		int flag = FilterFlag.getFilterVal(filters);
-		List<Sonifiable> l = new ArrayList<>(128);
+		Sonifiable[] l = new Sonifiable[length];
+
 		if ((flag & FilterFlag.STOCK.getVal()) > 0)
-			findByPrefix(prefix, stocks, l);
+			filledLen = findByPrefix(prefix, stocks,  startIdx,             l, filledLen);
 		if ((flag & FilterFlag.ETF.getVal()) > 0)
-			findByPrefix(prefix, etfs, l);
+			filledLen = findByPrefix(prefix, etfs,    startIdx - filledLen, l, filledLen);
 		if ((flag & FilterFlag.INDEX.getVal()) > 0)
-			findByPrefix(prefix, indices, l);
-		return l;
+			filledLen = findByPrefix(prefix, indices, startIdx - filledLen, l, filledLen);
+
+		if (filledLen < length) {
+			Sonifiable[] newL = new Sonifiable[filledLen];
+			System.arraycopy(l, 0, newL, 0, filledLen);
+			return newL;
+		} else {
+			return l;
+		}
 	}
 
-	private static void findByPrefix(String prefix, List<? extends Sonifiable> src, List<Sonifiable> dst) {
+	private static int findByPrefix(String prefix, List<? extends Sonifiable> src, int srcOffset, Sonifiable[] dst, int dstOffset) {
+		if (dstOffset == dst.length) return dstOffset;
+		int i = 0;
 		for (Sonifiable s : src) {
 			if (s != null && (s.name.toLowerCase().startsWith(prefix.toLowerCase())
-					|| s.getId().symbol.toLowerCase().startsWith(prefix.toLowerCase()))) {
-				dst.add(s);
+					           || s.getId().symbol.toLowerCase().startsWith(prefix.toLowerCase()))
+					      && i++ >= srcOffset) {
+				dst[dstOffset++] = s;
+				if (dstOffset == dst.length) break;
 			}
 		}
+		return dstOffset;
 	}
 
 	public static List<Sonifiable> getAll(FilterFlag... filters) {
@@ -164,20 +181,8 @@ public class DataRepo {
 		else return s.getName();
 	}
 
-	public static Stock getStock(SonifiableID id) {
-		return getSonifable(id, stocks);
-	}
-
-	public static ETF getETF(SonifiableID id) {
-		return getSonifable(id, etfs);
-	}
-
-	public static Index getIndex(SonifiableID id) {
-		return getSonifable(id, indices);
-	}
-
-	private static <T extends Sonifiable> T getSonifable(SonifiableID id, List<T> list) {
-		for (T x : list) {
+	private static Sonifiable getSonifable(SonifiableID id, List<Sonifiable> list) {
+		for (Sonifiable x : list) {
 			if (x.getId() == id)
 				return x;
 		}
@@ -263,29 +268,35 @@ public class DataRepo {
 	public static void updateSonifiablesList() {
 		threadPool.submit(() -> {
 			try {
-				APIReq apiLeeway = getApiLeeway();
-				List<String> exchanges = apiLeeway.getJSONList("general/exchanges", json -> json.asMap().get("Code").asStr());
+				List<String> exchanges = DEFAULT_EXCHANGES;
+				if (GET_EXCHANGES_DYNAMICALLY) {
+					APIReq apiLeeway = getApiLeeway();
+					exchanges = apiLeeway.getJSONList("general/exchanges", json -> json.asMap().get("Code").asStr());
+				}
 
 				FutureList<List<ExtendedSonifiable>> fl = new FutureList<>(exchanges.size());
-				// @nocheckin `i < 4` is only during debugging rn
-				for (int i = 0; i < exchanges.size() && i < 4; i++) {
+				for (int i = 0; i < exchanges.size(); i++) {
 					String exchange = exchanges.get(i);
 					fl.add(threadPool.submit(() -> {
-						return getApiLeeway().getJSONList("general/symbols/" + exchange, json -> {
-							HashMap<String, JsonPrimitive<?>> m = json.asMap();
-							JsonPrimitive<?> typeJson = m.get("Type");
-							SonifiableType type = SonifiableType.fromString(typeJson.isNull() ? "" : typeJson.asStr());
-							if (type == SonifiableType.NONE) return null;
-							return new ExtendedSonifiable(type, new Sonifiable(
-								m.get("Name").asStr(), new SonifiableID(m.get("Code").asStr(), exchange)
-							));
-						}, true);
+						try {
+							return getApiLeeway().getJSONList("general/symbols/" + exchange, json -> {
+								HashMap<String, JsonPrimitive<?>> m = json.asMap();
+								JsonPrimitive<?> typeJson = m.get("Type");
+								SonifiableType type = SonifiableType.fromString(typeJson.isNull() ? "" : typeJson.asStr());
+								if (type == SonifiableType.NONE) return null;
+								return new ExtendedSonifiable(type, new Sonifiable(
+									m.get("Name").asStr(), new SonifiableID(m.get("Code").asStr(), exchange)
+								));
+							}, true);
+						} catch (Exception e) {
+							return null;
+						}
 					}));
 				}
 
-				UnorderedList<Stock> newStocks = new UnorderedList<>(4096);
-				UnorderedList<ETF> newEtfs = new UnorderedList<>(2048);
-				UnorderedList<Index> newIndices = new UnorderedList<>(2048);
+				UnorderedList<Sonifiable> newStocks  = new UnorderedList<>(4096);
+				UnorderedList<Sonifiable> newEtfs    = new UnorderedList<>(2048);
+				UnorderedList<Sonifiable> newIndices = new UnorderedList<>(2048);
 				Object[] allSonifiables = fl.getAll();
 				for (Object sonifiables : allSonifiables) {
 					for (ExtendedSonifiable s : (List<ExtendedSonifiable>) sonifiables) {
@@ -311,6 +322,9 @@ public class DataRepo {
 				writeToJSON("indices", ArrayFunctions.toStringArr(indices.getArray(), s -> ((Sonifiable) s).toJSON(), true));
 				System.out.println("Wrote new data into cached files");
 
+				System.out.println("New stocks length: " + stocks.size());
+				System.out.println("New etfs length: " + etfs.size());
+				System.out.println("New indices length: " + indices.size());
 				updatedData.set(true);
 			} catch (Throwable e) {
 				// we intentionally ignore this error, as it's not effecting the user in this moment

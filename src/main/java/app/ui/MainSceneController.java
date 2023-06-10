@@ -107,7 +107,6 @@ public class MainSceneController implements Initializable {
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public void initialize(URL arg0, ResourceBundle arg1) { // Initialisierung mit den Optionen
         categoriesCB.getItems().addAll(MainSceneController.categoryKeys);
         enableBtnIfValid();
@@ -122,11 +121,9 @@ public class MainSceneController implements Initializable {
                 switch (msg.type) {
                     case FILTERED_SONIFIABLES -> {
                         clearCheckList();
-                        List<Sonifiable> sonifiables = (List<Sonifiable>) msg.data;
-                        // TODO: Decide whether we want to show all found sonifiables immediately or
-                        // only like 10 at once, unless prompted by the user to show more
-                        for (Sonifiable s : sonifiables) {
-                            addToCheckList(s);
+                        Object[] sonifiables = (Object[]) msg.data;
+                        for (Object s : sonifiables) {
+                            addToCheckList((Sonifiable) s);
                         }
                     }
                     case SONIFIABLE_FILTER -> {
