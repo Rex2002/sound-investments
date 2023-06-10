@@ -23,10 +23,8 @@ public class TriangleFormationAnalyzer {
         end = true;
       }
       if (end&&MIN_FORMATION_LEN<=formationLen) {
-        for (int j = 0; j <= formationLen; j++) {
-          triangleformations[i - j] = true;
-          triangleformations[i - j - 1] = true;
-          triangleformations[i - j - 2] = true;
+        for (int j = 0; j <= formationLen+2; j++) {
+          triangleformations[i-j] = true;
         }
         end = false;
         formationLen = 0;
