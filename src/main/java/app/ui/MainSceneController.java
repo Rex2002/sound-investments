@@ -25,7 +25,6 @@ import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.scene.shape.Line;
-import javafx.stage.Stage;
 import javafx.util.Duration;
 import java.io.IOException;
 import java.net.URL;
@@ -35,35 +34,23 @@ import java.util.*;
 import java.util.function.Function;
 
 public class MainSceneController implements Initializable {
-    // WARNING: Kommentare werden noch normalisiert
-    @FXML
-    private AnchorPane anchor;
-    @FXML
-    private TextField searchBar;
-    @FXML
-    private Button startBtn;
-    @FXML
-    private VBox paneBoxSonifiables;
-    @FXML
-    private Label headerTitle;
-    @FXML
-    private ChoiceBox<String> categoriesCB;
-    @FXML
-    private ChoiceBox<String> filterCB;
-    @FXML
-    private DatePicker startPicker;
-    @FXML
-    private DatePicker endPicker;
-    @FXML
-    private TextField audioLength;
-    @FXML
-    private TextField audioLength1;
-    @FXML
-    private VBox checkVBox;
-    @FXML
-    private VBox instBox;
-    @FXML
-    private double duration;
+    @FXML private AnchorPane anchor;
+    @FXML private TextField searchBar;
+    @FXML private Button startBtn;
+    @FXML private VBox paneBoxSonifiables;
+    @FXML private Label headerTitle;
+    @FXML private ChoiceBox<String> categoriesCB;
+    @FXML private ChoiceBox<String> filterCB;
+    @FXML private DatePicker startPicker;
+    @FXML private DatePicker endPicker;
+    @FXML private TextField audioLength;
+    @FXML private TextField audioLength1;
+    @FXML private VBox checkVBox;
+    @FXML private VBox instBox;
+    @FXML private double duration;
+
+    // initialized externally
+    public Scene scene;
 
     private LocalDate minDateStart = LocalDate.now().minusMonths(3);
     private LocalDate maxDateStart = LocalDate.now().minusDays(3);
@@ -282,13 +269,8 @@ public class MainSceneController implements Initializable {
             Parent root = loader.load();
             MusicSceneController controller = loader.getController();
             controller.passData(musicData);
-            Stage stage = (Stage) startBtn.getScene().getWindow();
-            Scene scene = new Scene(root);
-            String css = this.getClass().getResource("/UI/choice.css").toExternalForm();
-            // Set the stylesheet after the scene creation
-            scene.getStylesheets().add(css);
-            stage.setScene(scene);
-            stage.show();
+            controller.scene = scene;
+            scene.setRoot(root);
         } catch (IOException e) {
             e.printStackTrace();
             CommonController.displayError(anchor, "Fehler beim Laden der nächsten UI-Szene", "Interner Fehler");

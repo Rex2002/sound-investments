@@ -16,13 +16,18 @@ public class App extends Application {
     @Override
     public void start(Stage primaryStage) {
         try {
-            Parent root = FXMLLoader.load(getClass().getResource("/UI/MainScene.fxml"));
+            primaryStage.setTitle("Sound Investments");
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/UI/MainScene.fxml"));
+            Parent root = (Parent) loader.load();
             Scene scene = new Scene(root);
-            // scene.getStylesheets().add(getClass().getResource("/UI/Label.css").toExternalForm());
             String css = getClass().getResource("/UI/choice.css").toExternalForm();
             scene.getStylesheets().add(css);
             primaryStage.setScene(scene);
+
             primaryStage.show();
+
+            MainSceneController controller = (MainSceneController) loader.getController();
+            controller.scene = scene;
         } catch (IOException e) {
             e.printStackTrace();
         }
