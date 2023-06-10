@@ -22,6 +22,7 @@ public class Backing {
      * @throws AppError when there are no backing tracks matching the name schema in resources/audio/backings
      */
     public int setSamplesAndGetTempo() throws AppError {
+        //TODO: I think this method of getting file names doesn't work in a JAR. Needs to be changed for release
         File directory = new File("./src/main/resources/audio/backings");
         List<String> backings = List.of(Objects.requireNonNull(directory.list()));
 

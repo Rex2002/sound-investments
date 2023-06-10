@@ -40,7 +40,7 @@ public class Sonifier {
 
         double[][] synthLines = new double[instrumentDataRaw.length + 1][];
         for(int i = 0; i < instrumentDataRaw.length; i++){
-            InstrumentData instrData = new Harmonizer(instrumentDataRaw[i], lengthInBeats).harmonize();
+            InstrumentData instrData = new Harmonizer(instrumentDataRaw[i], lengthInBeats).harmonizeInstrumentData();
 
             synthLines[i] = new SynthLine(instrData, lengthInSeconds).synthesize();
         }

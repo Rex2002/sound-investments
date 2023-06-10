@@ -12,22 +12,51 @@ import audio.synth.fx.FilterData;
 import java.util.Arrays;
 import java.util.Random;
 
+
+/**
+ * The main purpose of this class is to translate Market/Stock-domain information to the music-domain. <br/>
+ * This is needed in two ways: <br/>
+ *  Raw InstrumentData needs to be translated  toInstrumentData that is understood by the SynthLine-class <br/>
+ *  Raw GlobalFxData needs to be translated to GlobalFxData that is understood by the sonify-method <br/>
+ *
+ *  Since the operations performed by the latter are a subset of the operations performed by the first, the latter is included into this class as well. <br/>
+ *  Please note therefor that calling harmonizeGlobalData only yields results, when the constructor was called with an object of the GlobalFxDataRaw-type and vice versa. <br/>
+ */
 public class Harmonizer {
     private InstrumentDataRaw dataRaw;
     private GlobalFxDataRaw gDataRaw;
     private final int numberBeats;
 
+    /**
+     * Constructor that should be used, if Instruments are to be harmonized.
+     * @param dataRaw raw instrumentData
+     * @param numberBeats target length of the Sonification
+     */
     public Harmonizer(InstrumentDataRaw dataRaw, int numberBeats) {
         this.dataRaw = dataRaw;
         this.numberBeats = numberBeats;
     }
 
+    /**
+     * Constructor that should be used, if GlobalFx are to be harmonized.
+     * @param dataRaw raw GlobalFxData
+     * @param numberBeats target length of the Sonification
+     */
     public Harmonizer(GlobalFxDataRaw dataRaw, int numberBeats){
         this.numberBeats = numberBeats;
         this.gDataRaw = dataRaw;
     }
 
+    /**
+     * Method orchestrating the harmonizing of the raw globalFxData. <br/>
+     * The GlobalFx-harmonization consists of filter-normalization and feverb-normalization
+     * @return a GlobalData-Object that is understood by the Sonify-method and can be used to apply global effects
+     * @throws AppError if an error occurs the user is informed
+     */
     public GlobalFxData harmonizeGlobalData() throws AppError{
+        if(gDataRaw == null){
+            throw new AppError("Interner Fehler bei der Global-FX-Harmonisierung");
+        }
         GlobalFxData data = new GlobalFxData();
         if (!(gDataRaw.getCutOffFrequency() == null && gDataRaw.getOnOffFilter() == null)) {
             data.setFilterData(normalizeFilter(gDataRaw.getCutOffFrequency(), gDataRaw.getOnOffFilter(), gDataRaw.isHighPass()));
@@ -41,7 +70,16 @@ public class Harmonizer {
         return data;
     }
 
-    public InstrumentData harmonize() throws AppError {
+    /**
+     * Method orchestrating the harmonizing of the raw InstrumentData. <br/>
+     * The Harmonization consists of pitch-, volume-, echo-, reverb-, filter- and pan-normalization
+     * @return an InstrumentData-Object that is understood by the SynthLine and can be used to synthesize the corresponding sound
+     * @throws AppError if an error occurs the user is informed
+     */
+    public InstrumentData harmonizeInstrumentData() throws AppError {
+        if(dataRaw == null){
+            throw new AppError("Interner Fehler bei der Instrument-Harmonisierung");
+        }
         InstrumentData data = new InstrumentData();
         data.setInstrument(dataRaw.getInstrument());
 
@@ -70,6 +108,15 @@ public class Harmonizer {
         return data;
     }
 
+    /**
+     * Pitch normalization is done in three steps:<br/>
+     * 1. selecting a music-key-pattern<br/>
+     * 2. quantizing the available data (i.e. making sure that exactly one pitch value is present for each beat)<br/>
+     * 3. creating midi-note-values based on the quantized pitch values and the scale that was selected in step one.<br/>
+     * For an in-depth understanding on how the scale is incorporated into the result, it is probably best to refer to the architecture document.
+     * @return an int-array that contains one midi-note between 36 and 83 for each beat.
+     * @throws AppError if an invalid values is detected in the pitch, an AppError is thrown to inform the user.
+     */
     private int[] normalizePitch() throws AppError {
         int NUMBER_OCTAVES = 4;
         int FIRST_NOTE = 36;
@@ -111,10 +158,9 @@ public class Harmonizer {
     }
 
     /**
+     * compresses long data array to the required length by averaging a number of data points into one note. <br/>
      * @return data array that has the exact length where one data point can be
      *         sonified as one quarter note
-     *         compresses long data array to the required length by averaging a
-     *         number of data points into one note.
      */
     private double[] quantizePitch() {
         double[] pitch = dataRaw.getPitch();
@@ -140,6 +186,16 @@ public class Harmonizer {
         return notes;
     }
 
+    /**
+     * the volume creates an array that contains the volumes based on the provided absolute and relative volumes. <br/>
+     * The combining of the absolute and relative volumes is done in such a way that the relative volume is applied when the absolute volume is True. <br/>
+     * and that muting is done, when the absolute volume is False, i.e. absolute volume overrides relative volume to a certain extent. <br/>
+     * If only absolute volume is provided, the resulting volume is the MAX_VOLUME for every datapoint of the absolute volume that reads True and MUTE_VOLUME for every False-datapoint <br/>
+     * If neither is provided, the volume is set to MAX_VOLUME.
+     * Furthermore, in each of the cases, the volume is set to MUTE_VOLUME if no pitch is available for this datapoint (e.g. because one stock was not traded at that time) and to MAX_VOLUME otherwise
+     * @return double array that contains the normalized volume
+     * @throws AppError if invalid datapoints are discovered, the user is informed of that
+     */
     private double[] normalizeVolume() throws AppError {
         double MAX_VOLUME = 1.0;
         double MUTE_VOLUME = 0.0;
@@ -170,6 +226,13 @@ public class Harmonizer {
         }
     }
 
+    /**
+     * Since echo only sounds good when it is somehow rhythmically related to the tempo/beat, the provided delay-values are quantized to represent meaningful numbers of samples, <br/>
+     * e.g. the length of a quarter, a sixteenth, etc. <br/>
+     * The method is designed to yield more short delay-times (for an evenly distributed input), because long-delays would not necessarily reflect the actual market-state at the time they can be heard.<br/>
+     * @return an int array that contains the number of samples for the echo-delay
+     * @throws AppError if invalid datapoints are discovered, the user is informed of that
+     */
     private int[] normalizeDelayEcho() throws AppError {
         int SAMPLES_PER_BAR = Constants.SAMPLE_RATE * 60 / (Constants.TEMPO / 4);
         int DEFAULT_DELAY = (int) (1 / 8f * SAMPLES_PER_BAR);
@@ -179,6 +242,14 @@ public class Harmonizer {
         return normalizeDelayGeneric(false, delayEcho, DEFAULT_DELAY, delays);
     }
 
+    /**
+     * The feedback is basically just scaled to a maximum value of 0.9, (because values closer to 1.0 tend to create screeching sounds)
+     * Additionally the method sets the feedback to 0 if at the time of the feedback either the echoOnOff-array is false
+     * or the delay-array has no valid values (i.e. is -1, meaning no stock-market data available for this moment in time).
+     * If no feedback is given, but onOff exists, the feedback is set to the DEFAULT_FEEDBACK_ECHO value at every True-datapoint.
+     * @return the normalized feedback between 0 and MAX_FEEDBACK_ECHO
+     * @throws AppError if invalid datapoints are discovered, the user is informed of that
+     */
     private double[] normalizeFeedbackEcho() throws AppError {
         double MAX_FEEDBACK_ECHO = 0.9;
         double DEFAULT_FEEDBACK_ECHO = 0.7;
@@ -214,6 +285,12 @@ public class Harmonizer {
         return feedbackEcho;
     }
 
+    /**
+     * Since reverb is basically echo with delay times of less than 50ms,
+     * this method primarily has to normalize the inputs to sample-numbers that represent reverberation-times between 0 and 50ms;
+     * @return an int array that contains the number of samples for the reverb-delay
+     * @throws AppError if invalid datapoints are discovered, the user is informed of that
+     */
     private int[] normalizeDelayReverb(double[] delayReverb) throws AppError {
         int MAX_DELAY_REVERB = Constants.SAMPLE_RATE / 20; // number of samples corresponding to 50ms
         int DEFAULT_DELAY_REVERB = Constants.SAMPLE_RATE / 25; // number of samples corresponding to 40ms
@@ -223,6 +300,15 @@ public class Harmonizer {
 
     }
 
+    /**
+     * Some generic-delay-normalization-maigc
+     * @param reverb
+     * @param delayInput
+     * @param defaultDelayTime
+     * @param delayTimes
+     * @return
+     * @throws AppError
+     */
     private int[] normalizeDelayGeneric(boolean reverb, double[] delayInput, int defaultDelayTime, double[] delayTimes) throws AppError {
         int SAMPLES_PER_BAR = Constants.SAMPLE_RATE * 60 / (Constants.TEMPO / 4);
         int maxNoDelayValues = (int) (1.0/3 * (numberBeats / (Constants.TEMPO / 60f)));
@@ -269,6 +355,16 @@ public class Harmonizer {
         }
     }
 
+    /**
+     * basically the same as normalizeFeedbackEcho, just with different default values.
+     * This method receives the input data as parameters, because it is used by both the InstrumentHarmonization and the GlobalFx-Harmonization,
+     * hence only at runtime it is known from where the data that is supposed to processed would have to be taken.
+     * @param feedbackReverb feedback input array
+     * @param delayReverb delay input array
+     * @param onOffReverb on-off input array
+     * @return an array containing the normalized feedback
+     * @throws AppError if invalid datapoints are discovered, the user is informed of that
+     */
     private double[] normalizeFeedbackReverb(double[] feedbackReverb, double[] delayReverb, boolean[] onOffReverb) throws AppError {
         double MAX_FEEDBACK_REVERB = 0.8;
         double DEFAULT_FEEDBACK_REVERB = 0.6;
@@ -300,13 +396,21 @@ public class Harmonizer {
         return feedbackReverb;
     }
 
+    /**
+     * combines the cutoff-frequency array and the on-off-frequency array to one cutoff-frequency array for the corresponding filter-type (described by the highPass-Parameter).
+     * @param cutoff
+     * @param onOff
+     * @param highPass
+     * @return a FilterData object that contains all the data needed by the Effect.IIR to properly create the desired filter-effect
+     * @throws AppError
+     */
     private FilterData normalizeFilter(double[] cutoff, boolean[] onOff, boolean highPass) throws AppError {
         double BANDWIDTH = 0.5;
         int MIN_FREQ = 40;
         int MAX_FREQ = 20000;
         int HIGH_PASS_OFF = 1;
         int HIGH_PASS_DEFAULT_FREQ = 1000;
-        int LOW_PASS_OFF = 50000;
+        int LOW_PASS_OFF = 22050;
         int LOW_PASS_DEFAULT_FREQ = 500;
         FilterData filter = new FilterData();
 
@@ -333,6 +437,12 @@ public class Harmonizer {
         return filter;
     }
 
+    /**
+     * Pan normalization normalizes the panning by decreasing one channel if the input is below 0.5 and decreasing the other one for values above 0.5.
+     * @param pan
+     * @return the data-array containing the normalized panning values
+     * @throws AppError if invalid datapoints are discovered, the user is informed of that
+     */
     private double[] normalizePan(double[] pan) throws AppError {
         if (pan != null) {
             for (int i = 0; i < pan.length; i++) {
@@ -346,6 +456,14 @@ public class Harmonizer {
         }
     }
 
+    /**
+     * method to check if a given value is valid (i.e. is -1.0 or between 0.0. and 1.0).
+     * Every other value results in an error being shown to the user.
+     * @param value that is to be checked
+     * @param collection type of source-array of the value
+     * @param index position of the value in the source array
+     * @throws AppError if invalid datapoints are discovered, the user is informed of that
+     */
     private void checkDouble(double value, String collection, int index) throws AppError {
         // -1 is needed, because that is the internal "off"/switch
         if ((value > 1 || value < 0) && value != -1) {
