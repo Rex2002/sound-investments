@@ -9,28 +9,28 @@ public class CommonController {
 	public static void displayError(Pane parent, String errorMessage, String errorTitle) {
         Pane errorPane = new Pane();
         errorPane.setId("errorPane");
-        errorPane.setLayoutX(542);
-        errorPane.setLayoutY(200);
-        errorPane.setPrefHeight(500);
+        errorPane.setLayoutX(593);
+        errorPane.setLayoutY(262.5);
+        errorPane.setPrefHeight(300);
         errorPane.toFront();
-        errorPane.setPrefWidth(500);
+        errorPane.setPrefWidth(400);
         Label errorMes = new Label(errorMessage);
         errorMes.setId("errorMessage");
-        errorMes.setLayoutY(50);
+        errorMes.setLayoutY(40);
         errorMes.setWrapText(true);
-
+        
         errorMes.setLayoutX(20);
         Label errorTit = new Label(errorTitle);
         errorTit.setId("errorTitle");
         errorTit.setLayoutY(20);
-        errorTit.setLayoutX(20);
-
+        errorTit.setLayoutX(30);
+        
         errorTit.setWrapText(true);
         Button close = new Button("Schließen");
         close.setOnMouseClicked(event ->{
-            parent.getChildren().remove(errorPane);
+                parent.getChildren().remove(errorPane);
         });
-        close.setLayoutX(330);
+        close.setLayoutX(257.5);
         close.setLayoutY(20);
         close.setId("closeBtn");
         errorPane.getChildren().addAll(errorMes, close, errorTit);
