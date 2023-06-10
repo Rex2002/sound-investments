@@ -14,6 +14,10 @@ public class EvInstrLine {
         this.sampleNumber = (int) (length * SAMPLE_RATE * CHANNEL_NO);
     }
 
+    /**
+     * this method puts the specified sample into an array at the relatively same positions as the true values in the data.values array.
+     * @return an array containing the evInstr sample at the positions specified by the data.values
+     */
     public double[] synthesize(){
         double[] out = new double[sampleNumber];
         double[] sample = SampleLoader.loadEventSample(data.type.toFileName());
