@@ -1,7 +1,6 @@
 package dataRepo;
 
 import java.util.Objects;
-import util.General;
 
 public class SonifiableID {
 	public String exchange;

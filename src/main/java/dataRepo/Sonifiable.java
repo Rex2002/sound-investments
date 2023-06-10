@@ -2,8 +2,6 @@ package dataRepo;
 
 import java.util.Objects;
 
-import util.General;
-
 // @Cleanup let Lombok create this boilerplate
 public class Sonifiable {
 	public String name;
