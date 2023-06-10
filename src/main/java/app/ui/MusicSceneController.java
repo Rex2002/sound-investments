@@ -2,7 +2,7 @@ package app.ui;
 
 import app.AppError;
 import app.communication.*;
-import audio.synth.playback.PlaybackController;
+import audio.playback.PlaybackController;
 import javafx.application.Platform;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;

@@ -1,4 +1,4 @@
-package audio.synth;
+package audio.events;
 
 public class EvInstrData {
     final EvInstrEnum type;

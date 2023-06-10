@@ -1,6 +1,6 @@
 package app.mapping;
 
-import audio.synth.EvInstrEnum;
+import audio.events.EvInstrEnum;
 
 public class EvInstrMapping {
 	private EvInstrEnum instrument;

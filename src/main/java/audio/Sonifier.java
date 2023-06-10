@@ -3,11 +3,13 @@ package audio;
 import app.AppError;
 import app.mapping.GlobalFxDataRaw;
 import app.mapping.InstrumentDataRaw;
+import audio.events.EvInstrData;
+import audio.events.EvInstrLine;
 import audio.mixer.Backing;
 import audio.mixer.Mixer;
 import audio.synth.*;
 import audio.synth.fx.Effect;
-import audio.synth.playback.PlaybackController;
+import audio.playback.PlaybackController;
 
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioSystem;

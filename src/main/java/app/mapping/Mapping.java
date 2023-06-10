@@ -1,7 +1,7 @@
 package app.mapping;
 
 import app.AppError;
-import audio.synth.EvInstrEnum;
+import audio.events.EvInstrEnum;
 import audio.synth.InstrumentEnum;
 import dataRepo.Sonifiable;
 import dataRepo.SonifiableID;

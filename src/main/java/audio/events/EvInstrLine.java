@@ -1,4 +1,4 @@
-package audio.synth;
+package audio.events;
 
 import app.AppError;
 import audio.Util;
@@ -32,7 +32,6 @@ public class EvInstrLine {
                 lastCopy = i;
                 if(i + sample.length < out.length)
                     System.arraycopy(sample, 0, out, i, sample.length);
-                //else System.arraycopy(sample, 0, out, i, sample.length - ());
             }
         }
 

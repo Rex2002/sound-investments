@@ -1,4 +1,4 @@
-package audio.synth.playback;
+package audio.playback;
 
 import app.communication.EventQueues;
 

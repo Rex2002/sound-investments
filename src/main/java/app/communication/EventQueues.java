@@ -3,7 +3,7 @@ package app.communication;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 
-import audio.synth.playback.PlayControlEvent;
+import audio.playback.PlayControlEvent;
 
 public class EventQueues {
 	public static final BlockingQueue<Msg<MsgToUIType>> toUI = new ArrayBlockingQueue<>(10);

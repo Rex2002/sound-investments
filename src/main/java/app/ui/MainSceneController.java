@@ -3,7 +3,7 @@ package app.ui;
 import app.AppError;
 import app.communication.*;
 import app.mapping.*;
-import audio.synth.EvInstrEnum;
+import audio.events.EvInstrEnum;
 import audio.synth.InstrumentEnum;
 import dataRepo.FilterFlag;
 import dataRepo.Sonifiable;

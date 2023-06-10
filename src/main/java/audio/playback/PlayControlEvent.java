@@ -1,4 +1,4 @@
-package audio.synth.playback;
+package audio.playback;
 
 public class PlayControlEvent {
     private PlayControlEventsEnum type;
