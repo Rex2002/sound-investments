@@ -25,7 +25,7 @@ public class SynthLine {
     final int sampleNumber;
 
     /**
-     * puts data to the data-field and calculates the number of samples for this line based on length, sample rate and number of channels.
+     * puts data to the data-field and calculates the number of samples for this line based on length, sample rate and number of channels.<br/>
      * @param data object that hold all necessary information for sound creation
      * @param length length in seconds
      */
@@ -35,7 +35,7 @@ public class SynthLine {
     }
 
     /**
-     * method to orchestrate sound generation pipeline based on this.data (set in the constructor)
+     * method to orchestrate sound generation pipeline based on this.data (set in the constructor) <br/>
      * @return an array that contains sound-data and can be passed to the playbackController or the mixer
      */
     public double[] synthesize() {
@@ -49,7 +49,7 @@ public class SynthLine {
     }
 
     /**
-     * for each sample the volume is determined by stretching data.volume to the necessary length.
+     * for each sample the volume is determined by stretching data.volume to the necessary length.<br/>
      * Afterward a highpass filter is used to remove all steep changes in the volume (which create a cracking-sound)
      */
     private void applyVolume() {
@@ -65,9 +65,9 @@ public class SynthLine {
     }
 
     /**
-     * this method transforms the volume array to an array that contains actual, meaningful sound-data.
-     * Depending on the instrument that was passed, the correct settings for modulation and envelopes for the sound-wave-generation are set.
-     * Also, the notes are transformed from midi-notes to actual frequencies.
+     * this method transforms the volume array to an array that contains actual, meaningful sound-data.<br/>
+     * Depending on the instrument that was passed, the correct settings for modulation and envelopes for the sound-wave-generation are set. <br/>
+     * Also, the notes are transformed from midi-notes to actual frequencies. <br/>
      */
     private void applyTimbre() {
         UnpackedInstr instr = this.unpackInstrument();

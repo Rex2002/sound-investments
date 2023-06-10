@@ -10,12 +10,12 @@ public class Effect {
 
 
     /**
-     * the whole buffer-stuff is left as an exercise to the reader.
-     * The interesting part is probably the ADSR feedbackEnv anyway.
-     * The envelope solves the problem of crackings-sounds when the delay changes.
-     * This is achieved by scaling down the feedback to zero, each time the delay value changes using the envelope.
-     * Since the scaling of the feedback can not be done to fast, because then the cracking reappears,
-     * this method is limited to delay arrays that have at most a length of 1/3 of the sound length in seconds.
+     * the whole buffer-stuff is left as an exercise to the reader. <br/>
+     * The interesting part is probably the ADSR feedbackEnv anyway. <br/>
+     * The envelope solves the problem of crackings-sounds when the delay changes. <br/>
+     * This is achieved by scaling down the feedback to zero, each time the delay value changes using the envelope. <br/>
+     * Since the scaling of the feedback can not be done to fast, because then the cracking reappears, <br/>
+     * this method is limited to delay arrays that have at most a length of 1/3 of the sound length in seconds. <br/>
      * (the length limiting of the delayArray is already done in the Harmonizer)
      * @param input the sound-array that is supposed to be echoed / reverbed
      * @param feedback the feedback values that are to be applied
@@ -87,8 +87,8 @@ public class Effect {
     }
 
     /**
-     * using a recursive filter the input array is filtered.
-     * The name is actually misleading, since an FIR could be realised with different coefficients,
+     * using a recursive filter the input array is filtered. <br/>
+     * The name is actually misleading, since an FIR could be realised with different coefficients, <br/>
      * but since the calculateCoefficients method only returns IIR-coefficients, it is probably somehow fine.
      * @param in the array that is supposed to be filtered
      * @param filterData object that contains information about the type of filtering, i.e. Cutoff-frequencies, Filtertype & bandwitdth

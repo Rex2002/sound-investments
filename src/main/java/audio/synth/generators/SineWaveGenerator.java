@@ -31,7 +31,7 @@ public class SineWaveGenerator {
     }
 
     /**
-     * generates a sound based on the provided inputs
+     * generates a sound based on the provided inputs <br/>
      * @param freq array of frequencies in hz
      * @param sampleNumber total number of samples to be created
      * @param amplitude provides the amplitudes, could theoretically be any length less than sampleNumber (is relatively stretched).

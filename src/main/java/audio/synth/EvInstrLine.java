@@ -1,5 +1,6 @@
 package audio.synth;
 
+import app.AppError;
 import audio.Util;
 import audio.mixer.SampleLoader;
 
@@ -15,10 +16,10 @@ public class EvInstrLine {
     }
 
     /**
-     * this method puts the specified sample into an array at the relatively same positions as the true values in the data.values array.
+     * this method puts the specified sample into an array at the relatively same positions as the true values in the data.values array.<br/>
      * @return an array containing the evInstr sample at the positions specified by the data.values
      */
-    public double[] synthesize(){
+    public double[] synthesize() throws AppError {
         double[] out = new double[sampleNumber];
         double[] sample = SampleLoader.loadEventSample(data.type.toFileName());
 
