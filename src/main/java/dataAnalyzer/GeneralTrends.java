@@ -5,10 +5,11 @@ import dataRepo.Price;
 import java.util.List;
 
 public class GeneralTrends {
+	/**
+	 * 	Implements calculation of Moving Average
+	 * 	returns moving average for every point in time as double[]
+	 */
 	public static double[] calculateMovingAverage(List<Price> priceList) {
-		// Implementiere die Berechnung des gleitenden Durchschnitts (Moving Average)
-		// Gib den Durchschnitt zu jedem Zeitpunkt als Liste von Double-Wert zurück
-
 		double[] priceAverages = new double[priceList.size()];
 		double[] previousPrices = new double[200];
 
@@ -54,14 +55,4 @@ public class GeneralTrends {
 		return slope;
 	}
 
-	public static boolean[] GraphIntersectsMinMax(List<Price> priceList, List<Double> minMax){
-		boolean[] intersectsminMax = new boolean[minMax.size()];
-		double min = minMax.get(0);
-		double max = minMax.get(1);
-		for (int i = 0; i <= priceList.size(); i++) {
-			Price p = priceList.get(i);
-			intersectsminMax[i] = (p.getHigh() >= min && p.getLow() <= min) || (p.getHigh() >= max && p.getLow() <= max);
-		}
-		return intersectsminMax;
-	}
 }

@@ -182,9 +182,7 @@ public class UnorderedList<E> implements List<E>, RandomAccess {
 				return;
 		}
 
-		if (toRemove.length == 0) {
-			toRemove = new int[DEFAULT_CAPACITY];
-		} else if (toRemove.length == toRemoveAmount) {
+		if (toRemove.length == toRemoveAmount) {
 			toRemove = Arrays.copyOf(toRemove, toRemove.length + (toRemove.length >> 1));
 		}
 		toRemove[toRemoveAmount] = index;
@@ -267,12 +265,11 @@ public class UnorderedList<E> implements List<E>, RandomAccess {
 		return res;
 	}
 
-	@SuppressWarnings("unchecked")
 	public boolean retainAll(Collection<?> c) {
 		boolean res = false;
 		int i = 0;
 		while (i < len) {
-			if (!c.contains((E) arr[i])) {
+			if (!c.contains(arr[i])) {
 				remove(i);
 				res = true;
 			} else {
@@ -342,8 +339,8 @@ public class UnorderedList<E> implements List<E>, RandomAccess {
 	}
 
 	private static class SubList<E> implements List<E>, RandomAccess {
-		private UnorderedList<E> root;
-		private int from;
+		private final UnorderedList<E> root;
+		private final int from;
 		private int to;
 
 		public SubList(UnorderedList<E> root, int from, int to) {
@@ -369,8 +366,8 @@ public class UnorderedList<E> implements List<E>, RandomAccess {
 		}
 
 		public void clear() {
-			for (int i = from; i < to; i++) {
-				root.remove(from);
+			if (to > from) {
+				root.subList(from, to).clear();
 			}
 		}
 

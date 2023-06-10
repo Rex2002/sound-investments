@@ -2,34 +2,8 @@ package audio.synth.generators;
 
  import audio.Util;
 import audio.synth.envelopes.Envelope;
-import audio.synth.envelopes.OneEnvelope;
-import audio.synth.envelopes.ZeroEnvelope;
 
 public class SineWaveGenerator {
-
-    public double[] generate(double freq, int duration, short amplitude){
-        return generate(freq, duration, new double[]{amplitude});
-    }
-    public double[] generate(double freq, int duration, double[] amplitude) {
-        return generate(new double[]{freq}, duration, amplitude);
-    }
-    public double[] generate(double[] freq, int duration, double[] amplitude){
-        Envelope oneEnvelope = new OneEnvelope();
-        return generate(freq, duration, amplitude, oneEnvelope);
-    }
-    public double[] generate(double[] freq, int duration, double[] amplitude, Envelope env) {
-        Envelope zeroEnvelope = new ZeroEnvelope();
-        return generate(freq, duration, amplitude, env, 1, zeroEnvelope);
-    }
-    public double[] generate(double[] freq, int duration, double[] amplitude, double modFactor) {
-        Envelope oneEnvelope = new OneEnvelope();
-        return generate(freq, duration, amplitude, oneEnvelope, modFactor);
-    }
-    public double[] generate(double[] freq, int duration, double[] amplitude, Envelope env, double modFactor) {
-        Envelope oneEnvelope = new OneEnvelope();
-        return generate(freq, duration, amplitude, env, modFactor, oneEnvelope);
-    }
-
     /**
      * generates a sound based on the provided inputs <br/>
      * @param freq array of frequencies in hz

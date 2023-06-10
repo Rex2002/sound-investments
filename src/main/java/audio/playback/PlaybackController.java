@@ -18,12 +18,6 @@ public class PlaybackController {
     private final short[] data;
     private final double lengthInSeconds;
 
-    public PlaybackController(SourceDataLine s, short[] data, double lengthInSeconds) {
-        this.s = s;
-        this.data = data;
-        this.lengthInSeconds = lengthInSeconds;
-    }
-
     public PlaybackController(SourceDataLine s, double[] data, double lengthInSeconds) {
         this.s = s;
         this.data = Util.scaleToShort(data);

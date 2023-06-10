@@ -18,7 +18,7 @@ public class App extends Application {
         try {
             primaryStage.setTitle("Sound Investments");
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/UI/MainScene.fxml"));
-            Parent root = (Parent) loader.load();
+            Parent root = loader.load();
             Scene scene = new Scene(root);
             String css = getClass().getResource("/UI/choice.css").toExternalForm();
             scene.getStylesheets().add(css);
@@ -26,7 +26,7 @@ public class App extends Application {
 
             primaryStage.show();
 
-            MainSceneController controller = (MainSceneController) loader.getController();
+            MainSceneController controller = loader.getController();
             controller.scene = scene;
         } catch (IOException e) {
             e.printStackTrace();

@@ -4,7 +4,6 @@ import app.AppError;
 import app.communication.*;
 import audio.playback.PlaybackController;
 import javafx.application.Platform;
-import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -40,9 +39,7 @@ import java.util.*;
 public class MusicSceneController implements Initializable {
 	// Colors have to be kept in sync with colors in css file
 	// In css the colors are specified under .default-color-<x>.chart-series-line
-	// TODO: Find a way to set the colors of the chart lines without css
-	// so we don't need to keep both places updated
-	private static Paint[] colors = {
+	private static final Paint[] colors = {
 		Paint.valueOf("#ff1fec"), Paint.valueOf("#071d32"), Paint.valueOf("#3b4854"), Paint.valueOf("#ff5a1f"),
 		Paint.valueOf("#e3ff1f"), Paint.valueOf("#7a4d69"), Paint.valueOf("#1fff43"), Paint.valueOf("#ff2121"),
 		Paint.valueOf("#891fff"), Paint.valueOf("#07321d")
@@ -53,11 +50,13 @@ public class MusicSceneController implements Initializable {
 	@FXML private NumberAxis xAxis;
 	@FXML private NumberAxis yAxis;
 	@FXML private Pane legendPane;
+	@SuppressWarnings("unused")
 	@FXML private TextField headerTitle;
 	@FXML private Button exportBtn;
 	@FXML private Button closeBtn;
 	@FXML private Slider musicSlider;
 	@FXML private Label lengthLabel;
+	@SuppressWarnings("unused")
 	@FXML private Parent root;
 	@FXML private ImageView playBtn;
 	@FXML private ImageView stopBtn;
@@ -75,7 +74,7 @@ public class MusicSceneController implements Initializable {
 	private Calendar[] dates;
 	public  double lengthInSeconds;
 	public  String lengthStr;
-	private Timer myTimer = new Timer();
+	private final Timer myTimer = new Timer();
 	private boolean paused = false;
 	private Image playImage;
 	private Image pauseImage;
@@ -107,13 +106,9 @@ public class MusicSceneController implements Initializable {
 		stopBtn.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
 				@Override
 				public void handle(MouseEvent event) {
-					try {
-						stopSound(event);
-						playBtn.setImage(playImage);
-					} catch (IOException e) {
-						// TODO: Error Handling
-						e.printStackTrace();
-					}
+					stopSound();
+					playBtn.setImage(playImage);
+
 				}
 		});
 		playBtn.setCursor(Cursor.HAND);
@@ -128,19 +123,16 @@ public class MusicSceneController implements Initializable {
         checkEQService.setOnSucceeded((event) -> {
             List<Msg<MsgToUIType>> messages = checkEQService.getValue();
             for (Msg<MsgToUIType> msg : messages) {
-                switch (msg.type) {
-                    case ERROR -> {
-                        CommonController.displayError(anchor, (String) msg.data, "Interner Fehler");
-                        paused = false;
-						this.pausePlaySound();
-                    }
-					default -> {
-						System.out.println("MusicScene received a message of type " + msg.type);
-						// Put the message back
-						// The assumption here is, that we only get other messages when we are switching back to the main scene, so when we put the messages back into the queue again, we assume to not see them again
-						EventQueues.toUI.add(msg);
-					}
-                }
+				if (Objects.requireNonNull(msg.type) == MsgToUIType.ERROR) {
+					CommonController.displayError(anchor, (String) msg.data, "Interner Fehler");
+					paused = false;
+					this.pausePlaySound();
+				} else {
+					System.out.println("MusicScene received a message of type " + msg.type);
+					// Put the message back
+					// The assumption here is, that we only get other messages when we are switching back to the main scene, so when we put the messages back into the queue again, we assume to not see them again
+					EventQueues.toUI.add(msg);
+				}
             }
         });
         checkEQService.start();
@@ -253,7 +245,7 @@ public class MusicSceneController implements Initializable {
 		pbc.goToRelative(perc);
 	}
 
-	public void switchToMainScene(ActionEvent event) throws IOException {
+	public void switchToMainScene() {
 		try {
 			myTimer.cancel();
             checkEQService.cancel();
@@ -295,7 +287,7 @@ public class MusicSceneController implements Initializable {
 		myTimer.cancel();
 	}
 
-	public void stopSound(MouseEvent event) throws IOException {
+	public void stopSound() {
 		pbc.pause();
 		paused = true;
 		pbc.goToRelative(0);
@@ -306,17 +298,17 @@ public class MusicSceneController implements Initializable {
 
 	}
 
-	public void closeWindow(ActionEvent event) throws IOException {
+	public void closeWindow() throws IOException {
 		onClose();
-		switchToMainScene(event);
+		switchToMainScene();
 	}
 
 	static class AudioTimeLineUpdater extends TimerTask {
-		Slider musicSlider;
-		PlaybackController pbc;
-		double lengthInSeconds;
-		String lengthStr;
-		Label lengthLabel;
+		final Slider musicSlider;
+		final PlaybackController pbc;
+		final double lengthInSeconds;
+		final String lengthStr;
+		final Label lengthLabel;
 
 		public AudioTimeLineUpdater(Slider musicSlider, PlaybackController pbc, double lengthInSeconds, String lengthStr, Label lengthLabel) {
 			this.musicSlider = musicSlider;

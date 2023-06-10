@@ -14,9 +14,6 @@ public class Playback implements Runnable {
     private static final int PLAYBACK_SAMPLE_SIZE = 4410;
     private final SourceDataLine s;
     private final short[] data;
-    private int positionPointer;
-    private boolean paused;
-    private boolean running;
 
     public Playback(SourceDataLine s, short[] data) {
         this.s = s;
@@ -25,10 +22,10 @@ public class Playback implements Runnable {
 
     @Override
     public void run() {
-        // TODO test / implement edge behaviour
-        positionPointer = 0;
-        paused = false;
-        running = true;
+        int positionPointer = 0;
+        boolean paused = false;
+        boolean running = true;
+
         try {
             s.open();
             s.start();

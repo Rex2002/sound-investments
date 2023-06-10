@@ -28,6 +28,7 @@ public class SampleLoader {
      * @param filename of the sample that is to be loaded
      * @return the data array representing the sample in the desired format
      */
+    @SuppressWarnings("ResultOfMethodCallIgnored")
     private static double[] loadSample(String filename) throws AppError {
         try {
             AudioInputStream audioStream = AudioSystem.getAudioInputStream(new BufferedInputStream(Objects.requireNonNull(SampleLoader.class.getResourceAsStream(filename))));

@@ -47,15 +47,11 @@ public class MainSceneController implements Initializable {
     @FXML private TextField audioLength1;
     @FXML private VBox checkVBox;
     @FXML private VBox instBox;
+    @SuppressWarnings("unused")
     @FXML private double duration;
 
     // initialized externally
     public Scene scene;
-
-    private LocalDate minDateStart = LocalDate.now().minusMonths(3);
-    private LocalDate maxDateStart = LocalDate.now().minusDays(3);
-    private LocalDate minDateEnd = LocalDate.now().minusMonths(3).plusDays(3);
-    private LocalDate maxDateEnd = LocalDate.now();
 
     private Timer loadingAnimTimer;
     private ImageView loading;
@@ -66,10 +62,10 @@ public class MainSceneController implements Initializable {
     private boolean startedSonification = false;
 
     // Choice-Box String->Value Maps
-    private static String[] categoryKeys = { "Alle Kategorien", "Aktien", "ETFs", "Indizes" };
-    private static FilterFlag[] categoryValues = { FilterFlag.ALL, FilterFlag.STOCK, FilterFlag.ETF, FilterFlag.INDEX };
-    private static String[] filterKeys = { "Low-Pass", "High-Pass" };
-    private static boolean[] filterValues = { false, true };
+    private static final String[] categoryKeys = { "Alle Kategorien", "Aktien", "ETFs", "Indizes" };
+    private static final FilterFlag[] categoryValues = { FilterFlag.ALL, FilterFlag.STOCK, FilterFlag.ETF, FilterFlag.INDEX };
+    private static final String[] filterKeys = { "Low-Pass", "High-Pass" };
+    private static final boolean[] filterValues = { false, true };
     private static String[] instKeys;
     private static InstrumentEnum[] instVals;
 
@@ -239,13 +235,13 @@ public class MainSceneController implements Initializable {
     private void updateSoundLength() {
         if (Integer.parseInt(audioLength.getText()) <= 59) {
             if (audioLength1.getText() != null) {
-                Integer minValue = 0;
+                int minValue = 0;
                 try {
                     minValue = Integer.parseInt(audioLength1.getText());
                 } catch (NumberFormatException e) {
                 }
 
-                Integer passValue = minValue * 60;
+                int passValue = minValue * 60;
                 try {
                     passValue += Integer.parseInt(audioLength.getText());
                 } catch (NumberFormatException e) {
@@ -301,14 +297,14 @@ public class MainSceneController implements Initializable {
                     cBox.setSelected(false);
                 }
             } else {
-                rmSonifiable(((Sonifiable) cBox.getUserData()).getId(), false);
+                rmSonifiable(((Sonifiable) cBox.getUserData()).getId());
             }
         });
         checkVBox.setPrefHeight((checkVBox.getChildren().size()) * 42.0);
         checkVBox.getChildren().add(cBox);
     }
 
-    private void rmSonifiable(SonifiableID id, boolean updateSearchResult) {
+    private void rmSonifiable(SonifiableID id) {
         ObservableList<Node> children = paneBoxSonifiables.getChildren();
         int idx = 0;
         while (idx < children.size() && !id.equals(children.get(idx).getUserData()))
@@ -317,11 +313,11 @@ public class MainSceneController implements Initializable {
             System.out.println("rmSonifiable was called on " + id + " which couldn't be found in SceneTree.");
             return;
         }
-        rmSonifiable(id, idx, updateSearchResult);
+        rmSonifiable(id, idx, false);
     }
 
-    private void rmSonifiable(SonifiableID id, Pane stockPane, boolean updateSearchResult) {
-        rmSonifiable(id, paneBoxSonifiables.getChildren().indexOf(stockPane), updateSearchResult);
+    private void rmSonifiable(SonifiableID id, Pane stockPane) {
+        rmSonifiable(id, paneBoxSonifiables.getChildren().indexOf(stockPane), true);
     }
 
     private void rmSonifiable(SonifiableID id, int paneIdx, boolean updateSearchResult) {
@@ -346,18 +342,17 @@ public class MainSceneController implements Initializable {
     }
 
     @FXML
-    public Pane addToPaneBox(Sonifiable sonifiable) {
-        return addToPaneBox(sonifiable, false);
+    public void addToPaneBox(Sonifiable sonifiable) {
+        addToPaneBox(sonifiable, false);
     }
 
-    public Pane addToPaneBox(Sonifiable sonifiable, boolean showMapping) {
+    public void addToPaneBox(Sonifiable sonifiable, boolean showMapping) {
         // add a Sharepanel to the Panel Box
         // Checking whether the maximum of sharePanels has already been reached must be
         // done before calling this function
         Pane sonifiablePane = createSharePane(sonifiable, showMapping);
         paneBoxSonifiables.getChildren().add(sonifiablePane);
         paneBoxSonifiables.setPrefHeight((paneBoxSonifiables.getChildren().size()) * 511.0);
-        return sonifiablePane;
     }
 
     private void addLine(String cssClass, int layoutX, int layoutY, int startX, int startY, int endX, int endY,
@@ -451,7 +446,7 @@ public class MainSceneController implements Initializable {
                     refreshParamOpts(paramCB, newValue, isLineParam, true);
                     if (newValue != null && paramVal != null) {
                         mapping.rmParam(oldValue, paramVal);
-                        if (!mapping.isMapped(newValue, paramVal))
+                        if (mapping.isNotMapped(newValue, paramVal))
                             mapping.setParam(newValue, sonifiable, paramVal, eparam);
                     }
                     enableBtnIfValid();
@@ -513,7 +508,7 @@ public class MainSceneController implements Initializable {
             paramCB.getItems().clear();
             InstrParam[] newOpts;
             Function<InstrParam, InstrParam[]> getOpts = (pv) -> isLineParam ? mapping.getEmptyLineParams(instVal, pv) : mapping.getEmptyRangeParams(instVal, pv);
-            boolean flag = paramVal != null && (!checkForMapping || instVal == null || !mapping.isMapped(instVal, paramVal));
+            boolean flag = paramVal != null && (!checkForMapping || instVal == null || mapping.isNotMapped(instVal, paramVal));
             if (flag)
                 newOpts = getOpts.apply(paramVal);
             else
@@ -557,7 +552,7 @@ public class MainSceneController implements Initializable {
         closeIcon.setLayoutX(paneWidth - iconSideLen - iconMargin);
         closeIcon.setLayoutY(iconMargin);
         closeIcon.setCursor(Cursor.HAND);
-        closeIcon.setOnMouseClicked(ev -> rmSonifiable(sonifiable.getId(), stockPane, true));
+        closeIcon.setOnMouseClicked(ev -> rmSonifiable(sonifiable.getId(), stockPane));
         stockPane.getChildren().add(closeIcon);
 
         addLine(null, 174, 53, 0, 0, 391, 0, stockPane.getChildren());
@@ -607,28 +602,7 @@ public class MainSceneController implements Initializable {
         filterCB.getSelectionModel().select(mapping.getHighPass() ? 1 : 0);
     }
 
-    private void updateStartPicker() {
-        startPicker.setDayCellFactory(d -> new DateCell() {
-            @Override
-            public void updateItem(LocalDate item, boolean empty) {
-                super.updateItem(item, empty);
-                setDisable(item.isAfter(maxDateStart) || item.isBefore(minDateStart));
-            }
-        });
-    }
-
-    private void updateEndPicker() {
-        endPicker.setDayCellFactory(d -> new DateCell() {
-            @Override
-            public void updateItem(LocalDate item, boolean empty) {
-                super.updateItem(item, empty);
-                setDisable(item.isAfter(maxDateEnd) || item.isBefore(minDateEnd));
-            }
-        });
-    }
-
     private void enableBtnIfValid() {
-
         startBtn.setDisable(startedSonification || !mapping.isValid());
     }
 

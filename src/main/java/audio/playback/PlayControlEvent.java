@@ -1,5 +1,8 @@
 package audio.playback;
 
+import lombok.Data;
+
+@Data
 public class PlayControlEvent {
     private PlayControlEventsEnum type;
     private int duration;
@@ -20,30 +23,6 @@ public class PlayControlEvent {
     }
 
     public PlayControlEvent() {
-    }
-
-    public void setType(PlayControlEventsEnum type) {
-        this.type = type;
-    }
-
-    public void setDuration(int duration) {
-        this.duration = duration;
-    }
-
-    public void setGoToRelative(double goToRelative) {
-        this.goToRelative = goToRelative;
-    }
-
-    public PlayControlEventsEnum getType() {
-        return type;
-    }
-
-    public int getDuration() {
-        return duration;
-    }
-
-    public double getGoToRelative() {
-        return goToRelative;
     }
 
     @Override

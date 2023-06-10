@@ -1,7 +1,10 @@
 package dataRepo;
 
+import lombok.Data;
+
 import java.util.Objects;
 
+@Data
 public class SonifiableID {
 	public String exchange;
 	public String symbol;
@@ -11,30 +14,13 @@ public class SonifiableID {
 		this.exchange = exchange.replace('"', '\'');
 	}
 
-	public String getExchange() {
-		return this.exchange;
-	}
-
-	public void setExchange(String exchange) {
-		this.exchange = exchange;
-	}
-
-	public String getSymbol() {
-		return this.symbol;
-	}
-
-	public void setSymbol(String symbol) {
-		this.symbol = symbol;
-	}
-
 	@Override
 	public boolean equals(Object o) {
 		if (o == this)
 			return true;
-		if (!(o instanceof SonifiableID)) {
+		if (!(o instanceof SonifiableID sonifiableID)) {
 			return false;
 		}
-		SonifiableID sonifiableID = (SonifiableID) o;
 		return Objects.equals(exchange, sonifiableID.exchange) && Objects.equals(symbol, sonifiableID.symbol);
 	}
 

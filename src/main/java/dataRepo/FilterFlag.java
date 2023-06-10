@@ -1,10 +1,10 @@
 package dataRepo;
 
 public enum FilterFlag {
-	STOCK(1 << 0),
+	STOCK(1),
 	ETF(1 << 1),
 	INDEX(1 << 2),
-	ALL((1 << 0) | (1 << 1) | (1 << 2));
+	ALL(1 | (1 << 1) | (1 << 2));
 
 	private final int x;
 

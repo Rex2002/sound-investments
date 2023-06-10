@@ -1,8 +1,10 @@
 package dataRepo;
 
+import lombok.Data;
+
 import java.util.Objects;
 
-// @Cleanup let Lombok create this boilerplate
+@Data
 public class Sonifiable {
 	public String name;
 	public SonifiableID id;
@@ -16,36 +18,14 @@ public class Sonifiable {
 		return name + " (" + id.symbol + ")";
 	}
 
-	public String getName() {
-		return this.name;
-	}
-
-	public void setName(String name) {
-		this.name = name;
-	}
-
-	public SonifiableID getId() {
-		return this.id;
-	}
-
-	public void setId(SonifiableID id) {
-		this.id = id;
-	}
-
 	@Override
 	public boolean equals(Object o) {
 		if (o == this)
 			return true;
-		if (!(o instanceof Sonifiable)) {
+		if (!(o instanceof Sonifiable sonifiable)) {
 			return false;
 		}
-		Sonifiable sonifiable = (Sonifiable) o;
 		return Objects.equals(name, sonifiable.name) && Objects.equals(id, sonifiable.id);
-	}
-
-	@Override
-	public int hashCode() {
-		return Objects.hash(name, id);
 	}
 
 	public String toJSON() {

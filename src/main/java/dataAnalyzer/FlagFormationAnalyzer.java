@@ -4,8 +4,8 @@ import java.util.List;
 import dataRepo.Price;
 
 public class FlagFormationAnalyzer {
-	public static int MIN_FORMATION_LENGTH = 2;
-	public static int MAX_FORMATION_LENGTH = 60;
+	public static final int MIN_FORMATION_LENGTH = 2;
+	public static final int MAX_FORMATION_LENGTH = 60;
 
 	public static boolean[] analyze(List<Price> priceList) {
 		boolean[] out = new boolean[priceList.size()];
@@ -13,9 +13,7 @@ public class FlagFormationAnalyzer {
 		double[] blurredValues = Blur.averageBlur(priceList);
 		int formationLength=0;
 
-		boolean isRising = false;
-
-    	boolean isFalling = false;
+		boolean isFalling = false;
     	boolean findFlag = false;
     	boolean isFlag = false;
 
@@ -23,10 +21,8 @@ public class FlagFormationAnalyzer {
 			double value = blurredValues[i];
 			if (value > blurredValues[i - 1] && !isFalling) {
 				findFlag = true;
-				isRising = true;
 				formationLength++;
 			} else if (value < blurredValues[i - 1] && findFlag) {
-				isRising = false;
 				isFalling = true;
 				formationLength++;
 				isFlag = true;

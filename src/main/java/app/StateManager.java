@@ -31,7 +31,7 @@ public class StateManager {
 
 	public static boolean isCurrentlySonifying = false;
 	public static SonifiableFilter sonifiableFilter = new SonifiableFilter("", FilterFlag.ALL);
-	public static int filterOffset = 0;
+	public static final int filterOffset = 0;
 	public static Mapping currentMapping;
 
 	public static void main(String[] args) {
@@ -101,7 +101,7 @@ public class StateManager {
 		}, 10, 100);
 	}
 
-	private static void sendFilteredSonifiables() throws InterruptedException {
+	private static void sendFilteredSonifiables() {
 		Sonifiable[] arr = StateManager.call(() -> DataRepo.findByPrefix(filterOffset, FILTER_MAX_AMOUNT, sonifiableFilter.prefix, sonifiableFilter.categoryFilter), new Sonifiable[0]);
 		EventQueues.toUI.add(new Msg<>(MsgToUIType.FILTERED_SONIFIABLES, arr));
 	}

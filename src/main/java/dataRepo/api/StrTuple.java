@@ -1,7 +1,7 @@
 package dataRepo.api;
 
 public class StrTuple {
-	private String[] h = { "\0", "\0" };
+	private final String[] h = { "\0", "\0" };
 
 	public StrTuple(String first, String second) {
 		h[0] = first;

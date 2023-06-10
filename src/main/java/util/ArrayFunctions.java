@@ -46,31 +46,14 @@ public class ArrayFunctions {
 
 	public static <T> T[] add(T[] a, T[] b) {
 		T[] res = Arrays.copyOf(a, a.length + b.length);
-		for (int i = 0; i < b.length; i++)
-			res[i + a.length] = b[i];
+		System.arraycopy(b, 0, res, a.length, b.length);
 		return res;
-	}
-
-	public static <T> void setRange(T[] src, T[] valsToSet, int offset) {
-		for (int i = 0; i + offset < src.length; i++) {
-			src[i + offset] = valsToSet[i];
-		}
 	}
 
 	public static<T> T clampedArrAccess(int idx, T[] arr) {
 		if (idx <= 0) return arr[0];
 		if (idx >= arr.length) return arr[arr.length - 1];
 		return arr[idx];
-	}
-
-	public static<T> T[] rmSome(T[] arr, Predicate<T> toRem) {
-		int rmAmount = 0;
-		for (int i = 0; i < arr.length; i++) {
-			if (toRem.test(arr[i])) rmAmount++;
-			else arr[i - rmAmount] = arr[i];
-		}
-		if (rmAmount == 0) return arr;
-		return Arrays.copyOf(arr, arr.length - rmAmount);
 	}
 
 	public static<T> void rmDuplicates(List<T> list, int searchRadius, TwoValPredicate<T, T> areEqual) {

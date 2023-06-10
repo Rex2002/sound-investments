@@ -9,13 +9,13 @@ import java.util.concurrent.TimeoutException;
 
 /**
  * A FutureList is a list of Futures, that should be awaited together
- *
+ * <p>
  * The FutureList implements the Future interface itself and allows awaiting all contained futures together.
  * There are two methods for retrieving the results of the Futures.
- *
+ * <p>
  * {@code get} returns the result of the last future of the list.
  * It still blocks until *all* futures in the list are done.
- *
+ * <p>
  * {@code getAll} on the other hand returns a list of all results.
  *
  * @ImplNote
@@ -154,25 +154,6 @@ public class FutureList<V> implements Future<V> {
 		long start = System.nanoTime();
 		for (Future<V> f : arr) {
 			res = f.get(timeout + start - System.nanoTime(), TimeUnit.NANOSECONDS);
-		}
-		return res;
-	}
-
-	/**
-	 * Waits for at most the given time for all tasks to be done and retrieves the
-	 * result from the last task. To get a list of all results from all tasks, use
-	 * {@code getAll} instead.
-	 *
-	 * @param timeout the maximum time to wait
-	 * @param unit    the time unit of the timeout argument
-	 */
-	@SuppressWarnings("unchecked")
-	public V[] getAll(long timeout, TimeUnit unit) throws InterruptedException, ExecutionException, TimeoutException {
-		V[] res = (V[]) new Object[len];
-		timeout = unit.toNanos(timeout);
-		long start = System.nanoTime();
-		for (int i = 0; i < len; i++) {
-			res[i] = arr[i].get(timeout + start - System.nanoTime(), TimeUnit.NANOSECONDS);
 		}
 		return res;
 	}

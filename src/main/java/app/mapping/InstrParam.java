@@ -15,12 +15,6 @@ public enum InstrParam {
 	HIGHPASS,
 	PAN;
 
-	public static InstrParam[] LineDataParams = { PITCH, RELVOLUME, DELAY_ECHO, FEEDBACK_ECHO, DELAY_REVERB,
-			FEEDBACK_REVERB,
-			CUTOFF, PAN };
-	public static InstrParam[] RangeDataParams = { ABSVOLUME, ON_OFF_FILTER, ON_OFF_REVERB, ON_OFF_ECHO };
-	public static InstrParam[] BoolParams = { HIGHPASS };
-
 	public static InstrParam fromString(String s) {
 		if (s == null) return null;
 		return switch (s) {

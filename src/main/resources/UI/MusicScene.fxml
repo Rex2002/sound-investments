@@ -22,7 +22,7 @@
          </font>
       </Label>
       <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#121315" height="200.0" layoutY="624.0" stroke="#121315" strokeType="INSIDE" width="1586.0" />
-      <LineChart fx:id="lineChart" layoutX="0.0" layoutY="106.0" prefHeight="516.0" prefWidth="1570.0">
+      <LineChart fx:id="lineChart" layoutY="106.0" prefHeight="516.0" prefWidth="1570.0">
         <xAxis>
           <NumberAxis side="BOTTOM" fx:id="xAxis" />
         </xAxis>

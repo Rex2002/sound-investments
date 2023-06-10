@@ -1,8 +1,8 @@
 package dataRepo;
 
 public class ExtendedSonifiable {
-	public SonifiableType type;
-	public Sonifiable sonifiable;
+	public final SonifiableType type;
+	public final Sonifiable sonifiable;
 
 	public ExtendedSonifiable(SonifiableType type, Sonifiable sonifiable) {
 		this.type = type;

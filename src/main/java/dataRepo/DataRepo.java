@@ -11,7 +11,6 @@ import util.FutureList;
 import util.UnorderedList;
 
 import java.net.URL;
-import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -38,25 +37,24 @@ public class DataRepo {
 			"1a7byxsvpyleppn373eel2", "hgffb6jusiy2yb3121wxik", "oogf9s7g8oqg9tg4fxc2yr"
 	};
 
-	private static String lastUpdateFilePath = "/Data/last-updated.txt";
+	private static final String lastUpdateFilePath = "/Data/last-updated.txt";
 
 	// to prevent race conditions when making requests via the same APIReq object in different threads,
 	// we create a new APIReq object for each sequential task
 	private static APIReq getApiLeeway() {
 		return new APIReq("https://api.leeway.tech/api/v1/public/", apiToksLeeway, AuthPolicy.QUERY, "apitoken",
-			null, null, APIReq.rateLimitErrHandler(res -> {
+				APIReq.rateLimitErrHandler(res -> {
 				if (res.statusCode() == 429) return true;
-				if (res.body().startsWith("Your limit of")) return true;
-				return false;
-			}));
+			return res.body().startsWith("Your limit of");
+		}));
 	}
 
 	// @Scalability If more than one component would need to react to updated data,
 	// a single boolean flag would not be sufficient of course. Since we know,
 	// however, that only the StateManager reacts to this information, having a
 	// single boolean flag is completely sufficient
-	public static AtomicBoolean updatedData        = new AtomicBoolean(false);
-	private static ThreadPoolExecutor threadPool   = new ThreadPoolExecutor(16, 64, 60, TimeUnit.SECONDS, new LinkedBlockingQueue<>());
+	public static final AtomicBoolean updatedData        = new AtomicBoolean(false);
+	private static final ThreadPoolExecutor threadPool   = new ThreadPoolExecutor(16, 64, 60, TimeUnit.SECONDS, new LinkedBlockingQueue<>());
 
 	private static UnorderedList<Sonifiable> stocks  = new UnorderedList<>(128);
 	private static UnorderedList<Sonifiable> etfs    = new UnorderedList<>(128);
@@ -67,7 +65,7 @@ public class DataRepo {
 			String fname  = "./src/main/resources/TestData/TestPrices.json";
 			String json   = Files.readString(Path.of(fname));
 			Parser parser = new Parser();
-			List<Price> prices = parser.parse(fname, json).applyList(x -> {
+			return parser.parse(fname, json).applyList(x -> {
 				try {
 					HashMap<String, JsonPrimitive<?>> m = x.asMap();
 					Calendar startDay = DateUtil.calFromDateStr(m.get("datetime").asStr());
@@ -80,7 +78,6 @@ public class DataRepo {
 					return null;
 				}
 			}, true);
-			return prices;
 		} catch (Exception e) {
 			return List.of();
 		}
@@ -138,18 +135,6 @@ public class DataRepo {
 			}
 		}
 		return dstOffset;
-	}
-
-	public static List<Sonifiable> getAll(FilterFlag... filters) {
-		int flag = FilterFlag.getFilterVal(filters);
-		List<Sonifiable> l = new ArrayList<>(128);
-		if ((flag & FilterFlag.STOCK.getVal()) > 0)
-			l.addAll(stocks);
-		if ((flag & FilterFlag.ETF.getVal()) > 0)
-			l.addAll(etfs);
-		if ((flag & FilterFlag.INDEX.getVal()) > 0)
-			l.addAll(indices);
-		return l;
 	}
 
 	public static String getSonifiableName(SonifiableID id) {
@@ -290,9 +275,7 @@ public class DataRepo {
 							case STOCK -> newStocks.add(s.sonifiable);
 							case ETF -> newEtfs.add(s.sonifiable);
 							case INDEX -> newIndices.add(s.sonifiable);
-							case NONE -> {
-								System.out.println("Unreachable: We shouldn't be able to still get unidentified Sonifiables after awaiting all futures");
-							}
+							case NONE -> System.out.println("Unreachable: We shouldn't be able to still get unidentified Sonifiables after awaiting all futures");
 						}
 					}
 				}

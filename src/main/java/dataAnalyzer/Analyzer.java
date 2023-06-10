@@ -94,7 +94,7 @@ public class Analyzer {
 
 	private static void accTrendbreaks(boolean[] breaks, boolean[] trends){
         for(int i=0; i < breaks.length - 1; i++){
-            breaks[i] |= trends[i]==true && trends[i+1]==false;
+            breaks[i] |= trends[i] && !trends[i + 1];
         }
 		breaks[breaks.length - 1] = false;
     }

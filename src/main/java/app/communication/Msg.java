@@ -1,7 +1,7 @@
 package app.communication;
 
 public class Msg<T extends MsgType> {
-	public T type;
+	public final T type;
 	public Object data = null;
 
 	public Msg(T type) {

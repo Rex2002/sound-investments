@@ -102,8 +102,8 @@ public class InstrumentMapping {
 			case DELAY_ECHO      -> delayEcho = null;
 			case FEEDBACK_ECHO   -> feedbackEcho = null;
 			case ON_OFF_ECHO     -> onOffEcho = null;
-			case DELAY_REVERB    -> delayEcho = null;
-			case FEEDBACK_REVERB -> feedbackEcho = null;
+			case DELAY_REVERB    -> delayReverb = null;
+			case FEEDBACK_REVERB -> feedbackReverb = null;
 			case ON_OFF_REVERB   -> onOffReverb = null;
 			case CUTOFF          -> cutoff = null;
 			case ON_OFF_FILTER   -> onOffFilter = null;
@@ -120,8 +120,8 @@ public class InstrumentMapping {
 			case DELAY_ECHO      -> getDelayEcho();
 			case FEEDBACK_ECHO   -> getFeedbackEcho();
 			case ON_OFF_ECHO     -> getOnOffEcho();
-			case DELAY_REVERB    -> getDelayEcho();
-			case FEEDBACK_REVERB -> getFeedbackEcho();
+			case DELAY_REVERB    -> getDelayReverb();
+			case FEEDBACK_REVERB -> getFeedbackReverb();
 			case ON_OFF_REVERB   -> getOnOffReverb();
 			case CUTOFF          -> getCutoff();
 			case ON_OFF_FILTER   -> getOnOffFilter();

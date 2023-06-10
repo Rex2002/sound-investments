@@ -4,7 +4,7 @@ import java.util.List;
 import dataRepo.Price;
 
 public class TriangleFormationAnalyzer {
-    public static int MIN_FORMATION_LEN = 5;
+    public static final int MIN_FORMATION_LEN = 5;
 
     public static boolean[] analyze(List<Price> priceList) {
         boolean[] triangleformations = new boolean[priceList.size()];

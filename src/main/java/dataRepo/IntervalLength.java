@@ -4,18 +4,8 @@ import java.time.Instant;
 
 public enum IntervalLength {
 	MIN,
-	// MIN5,
-	// MIN30,
 	HOUR,
 	DAY;
-
-	public static IntervalLength inc(IntervalLength interval) {
-		return switch (interval) {
-			case MIN -> HOUR;
-			case HOUR -> DAY;
-			case DAY -> DAY;
-		};
-	}
 
 	public Instant addToInstant(Instant x) {
 		long millis = 1000;
@@ -28,6 +18,7 @@ public enum IntervalLength {
 		return Instant.ofEpochMilli(res);
 	}
 
+	@SuppressWarnings("SwitchStatementWithTooFewBranches")
 	public String toString(API api) {
 		return switch (this) {
 			case MIN -> switch (api) {

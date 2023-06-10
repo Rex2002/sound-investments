@@ -1,9 +1,12 @@
 package dataRepo;
 
+import lombok.Data;
+
 import java.time.Instant;
 import java.util.Calendar;
 import java.util.Objects;
 
+@Data
 public class Price {
 	public Calendar day;
 	public Instant start;
@@ -23,78 +26,16 @@ public class Price {
 		this.high = high;
 	}
 
-	public Calendar getDay() {
-		return this.day;
-	}
-
-	public void setDay(Calendar day) {
-		this.day = day;
-	}
-
-	public Instant getStart() {
-		return this.start;
-	}
-
-	public void setStart(Instant start) {
-		this.start = start;
-	}
-
-	public Instant getEnd() {
-		return this.end;
-	}
-
-	public void setEnd(Instant end) {
-		this.end = end;
-	}
-
-	public Double getOpen() {
-		return this.open;
-	}
-
-	public void setOpen(Double open) {
-		this.open = open;
-	}
-
-	public Double getClose() {
-		return this.close;
-	}
-
-	public void setClose(Double close) {
-		this.close = close;
-	}
-
-	public Double getLow() {
-		return this.low;
-	}
-
-	public void setLow(Double low) {
-		this.low = low;
-	}
-
-	public Double getHigh() {
-		return this.high;
-	}
-
-	public void setHigh(Double high) {
-		this.high = high;
-	}
-
 	@Override
 	public boolean equals(Object o) {
 		if (o == this)
 			return true;
-		if (!(o instanceof Price)) {
+		if (!(o instanceof Price price)) {
 			return false;
 		}
-		Price price = (Price) o;
 		return Objects.equals(day, price.day) && Objects.equals(start, price.start) && Objects.equals(end, price.end)
 				&& Objects.equals(open, price.open) && Objects.equals(close, price.close)
 				&& Objects.equals(low, price.low) && Objects.equals(high, price.high);
-	}
-
-	@Override
-	public int hashCode() {
-		return Objects.hash(day, start, end, open, close, low, high);
 	}
 
 	@Override

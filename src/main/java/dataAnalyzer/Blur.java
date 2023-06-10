@@ -4,7 +4,7 @@ import java.util.List;
 import dataRepo.Price;
 
 public class Blur {
-    public static int BLUR_LENGTH = 5;
+    public static final int BLUR_LENGTH = 5;
 
     public static double[] averageBlur(List<Price> prices) {
         int size = prices.size();

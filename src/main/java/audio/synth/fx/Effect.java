@@ -57,9 +57,7 @@ public class Effect {
                 bufferL[cursor] = inL + bL * feedbackValue;
                 bufferR[cursor] = inR + bR * feedbackValue;
                 preOut[2 * pos] = inL + bL * feedbackValue;
-                ;
                 preOut[2 * pos + 1] = inR + bR * feedbackValue;
-                ;
                 cursor += 1;
                 if (cursor >= delay) {
                     cursor = 0;

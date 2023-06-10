@@ -1,7 +1,9 @@
 package app.mapping;
 
 import audio.events.EvInstrEnum;
+import lombok.Data;
 
+@Data
 public class EvInstrMapping {
 	private EvInstrEnum instrument;
 	private ExchangeData<PointData> data;
@@ -13,26 +15,6 @@ public class EvInstrMapping {
 
 	public boolean isEmpty() {
 		return data == null;
-	}
-
-	/////////
-	// Getters & Setters:
-	/////////
-
-	public EvInstrEnum getInstrument() {
-		return this.instrument;
-	}
-
-	public void setInstrument(EvInstrEnum instrument) {
-		this.instrument = instrument;
-	}
-
-	public ExchangeData<PointData> getData() {
-		return this.data;
-	}
-
-	public void setData(ExchangeData<PointData> data) {
-		this.data = data;
 	}
 
 	@Override

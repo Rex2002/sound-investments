@@ -12,13 +12,13 @@ import javax.lang.model.type.NullType;
 
 @SuppressWarnings("unchecked")
 public class JsonPrimitive<T> {
-	private T el;
+	private final T el;
 
 	public JsonPrimitive(T el) {
 		this.el = el;
 	}
 
-	public Class<? extends Object> getElClass() {
+	public Class<?> getElClass() {
 		return this.el.getClass();
 	}
 
@@ -155,7 +155,7 @@ public class JsonPrimitive<T> {
 					sb.append(", ");
 				else
 					isFirst = false;
-				sb.append("\"" + e.getKey() + "\": " + e.getValue().toString());
+				sb.append("\"").append(e.getKey()).append("\": ").append(e.getValue().toString());
 			}
 			sb.append("}");
 			return sb.toString();

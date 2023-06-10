@@ -1,9 +1,9 @@
 package dataRepo.json;
 
 public class Location {
-	public String file;
-	public int row;
-	public int col;
+	public final String file;
+	public final int row;
+	public final int col;
 
 	public Location(String file, int row, int col) {
 		this.file = file;

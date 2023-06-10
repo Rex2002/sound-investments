@@ -10,11 +10,11 @@ import java.util.GregorianCalendar;
 import java.util.Locale;
 
 public class DateUtil {
-	public static SimpleDateFormat fmtDate       = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
-	public static SimpleDateFormat fmtDatetime   = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss", Locale.US);
-	public static SimpleDateFormat germanDateFmt = new SimpleDateFormat("dd.MM.yyyy", Locale.GERMANY);
-	public static int germanDateFmtExpectedLen   = 10;
-	public static DateTimeFormatter dateTimeFmt  = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+	public static final SimpleDateFormat fmtDate       = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
+	public static final SimpleDateFormat fmtDatetime   = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss", Locale.US);
+	public static final SimpleDateFormat germanDateFmt = new SimpleDateFormat("dd.MM.yyyy", Locale.GERMANY);
+	public static final int germanDateFmtExpectedLen   = 10;
+	public static final DateTimeFormatter dateTimeFmt  = DateTimeFormatter.ofPattern("yyyy-MM-dd");
 
 	public static Calendar calFromDateTimeStr(String dateTimeStr) throws ParseException {
 		Calendar cal = new GregorianCalendar();

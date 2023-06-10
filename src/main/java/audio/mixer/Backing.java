@@ -9,6 +9,7 @@ import java.util.Objects;
 import java.util.Random;
 
 public class Backing {
+    @SuppressWarnings("FieldCanBeLocal")
     private final int SAMPLE_BARS = 4;
     private double[] groove;
     private double[][] fills;

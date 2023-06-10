@@ -5,13 +5,6 @@ public class Maths {
 		return x < min ? min : Math.min(x, max);
 	}
 
-	public static double max(double[] xs) {
-		double max = Double.MIN_VALUE;
-		for (double x : xs)
-			if (x > max) max = x;
-		return max;
-	}
-
 	public static double mean(double[] xs) {
 		double mean = 0;
 		for (double x : xs)
