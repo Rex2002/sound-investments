@@ -191,7 +191,7 @@ public class Mapping {
 
 	public boolean hasSonifiable(SonifiableID id) {
 		for (Sonifiable s : sonifiables) {
-			if (s.getId() == id) return true;
+			if (s.getId().equals(id)) return true;
 		}
 		return false;
 	}
