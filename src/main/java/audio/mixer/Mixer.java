@@ -27,11 +27,11 @@ public class Mixer {
 
             //reduce volume of event instruments
             if (i < numberEvLines) {
-                mixFactor = EVENT_LINES_MIX_FACTOR;
+                mixFactor = (1 - EVENT_LINES_MIX_FACTOR) * audioStreams.length / ( 1+audioStreams.length) + EVENT_LINES_MIX_FACTOR;
             }
             // reduce volume of backing
             if (i == indexBacking) {
-                mixFactor = BACKING_MIX_FACTOR;
+                mixFactor = (1 - BACKING_MIX_FACTOR) * audioStreams.length / ( 1 + audioStreams.length) + BACKING_MIX_FACTOR;
             }
 
             for (int j = 0; j < audioStream.length; j++) {
