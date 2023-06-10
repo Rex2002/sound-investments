@@ -305,7 +305,7 @@ public class MainSceneController implements Initializable {
     }
 
     public void addToCheckList(Sonifiable sonifiable) {
-        CheckBox cBox = new CheckBox(sonifiable.getName());
+        CheckBox cBox = new CheckBox(sonifiable.getCompositeName());
         cBox.setCursor(Cursor.HAND);
         cBox.setUserData(sonifiable);
 
@@ -566,7 +566,7 @@ public class MainSceneController implements Initializable {
         stockPane.getStyleClass().add("stockPane");
         stockPane.setUserData(sonifiable.getId());
         Label tField = new Label();
-        tField.setText(sonifiable.getName());
+        tField.setText(sonifiable.getCompositeName());
         tField.getStyleClass().add("txtField");
         tField.setLayoutX(168);
         tField.setLayoutY(8);
