@@ -192,25 +192,6 @@ public class StateManager {
 		return analyzer.get(ed.getData());
 	}
 
-	// Change the mapping to test different functionalities
-	public static Mapping getTestMapping() {
-		Mapping mapping = new Mapping();
-		try {
-			mapping.setStartDate(DateUtil.calFromDateStr("2022-06-16"));
-			mapping.setEndDate(DateUtil.calFromDateStr("2023-05-16"));
-			mapping.setSoundLength(60);
-
-			Sonifiable s = new Stock("SAP", new SonifiableID("SAP", "XETRA"));
-			mapping.setParam(InstrumentEnum.RETRO_SYNTH, s, InstrParam.PITCH, LineData.PRICE);
-			mapping.setParam(InstrumentEnum.RETRO_SYNTH, s, InstrParam.RELVOLUME, LineData.MOVINGAVG);
-			mapping.setHighPass(true);
-		} catch (Throwable e) {
-			e.printStackTrace();
-		}
-		return mapping;
-	}
-
-
 	public static void padPrices(Map<SonifiableID, Analyzer> priceMap, Calendar startDate, Calendar endDate, IntervalLength interval, int maxLength) {
 		for(SonifiableID id : priceMap.keySet()){
 			List<Price> prices = priceMap.get(id).getPrices();

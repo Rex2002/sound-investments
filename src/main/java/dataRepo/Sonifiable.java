@@ -14,18 +14,6 @@ public class Sonifiable {
 		this.id = id;
 	}
 
-	public Stock asStock() {
-		return new Stock(name, id);
-	}
-
-	public ETF asETF() {
-		return new ETF(name, id);
-	}
-
-	public Index asIndex() {
-		return new Index(name, id);
-	}
-
 	public String getName() {
 		return this.name;
 	}

@@ -36,20 +36,8 @@ public class DataRepo {
 			"1a7byxsvpyleppn373eel2", "hgffb6jusiy2yb3121wxik", "oogf9s7g8oqg9tg4fxc2yr"
 	};
 
-	private static final String[] apiToksMarketstack = { "4b6a78c092537f07bbdedff8f134372d",
-			"0c2e8a9c96f2a74c0049f4b662f47b40",
-			"621fc5e0add038cc7d9697bcb7f15caa", "4312dfd8788579ec14ee9e9c9bec4557",
-			"0a99047c49080d975013978d3609ca9e" };
-	private static final String[] apiToksTwelvedata = { "04ed9e666cbb4873ac6d29651e2b4d7e",
-			"7e51ed4d1d5f4cbfa6e6bcc8569c1e54",
-			"98888ec975884e98a9555233c3dd59da", "af38d2454c2c4a579768b8262d3e039e",
-			"facbd6808e6d436e95c4935ab8cc082e" };
-
 	// to prevent race conditions when making requests via the same APIReq object in different threads,
 	// we create a new APIReq object for each sequential task
-	private static APIReq getApiTwelvedata() {
-		return new APIReq("https://api.twelvedata.com/", apiToksTwelvedata, AuthPolicy.QUERY, "apikey");
-	}
 	private static APIReq getApiLeeway() {
 		return new APIReq("https://api.leeway.tech/api/v1/public/", apiToksLeeway, AuthPolicy.QUERY, "apitoken",
 			null, null, APIReq.rateLimitErrHandler(res -> {
@@ -58,29 +46,13 @@ public class DataRepo {
 				return false;
 			}));
 	}
-	private static APIReq getApiMarketstack() {
-		return new APIReq("http://api.marketstack.com/v1/", apiToksMarketstack, AuthPolicy.QUERY, "access_key",
-			new PaginationHandler(json -> {
-				// @Cleanup Remove hardcoded limit
-				return 30;
-			}, json -> json.asMap().get("data")),
-			(page) -> {
-				// @Cleanup Remove hardcoded offset
-				// The function signature might have to change too, bc we need the current limit
-				// for calculating the offset and I don't know how to get the limit without
-				// having access to the APIReq object
-				String[] res = { "offset", Integer.toString(10 * page) };
-				return res;
-			}, APIReq.defaultErrHandler());
-	}
 
 	// @Scalability If more than one component would need to react to updated data,
 	// a single boolean flag would not be sufficient of course. Since we know,
 	// however, that only the StateManager reacts to this information, having a
 	// single boolean flag is completely sufficient
 	public static AtomicBoolean updatedData        = new AtomicBoolean(false);
-	private static BlockingQueue<Runnable> tpQueue = new LinkedBlockingQueue<>();
-	private static ThreadPoolExecutor threadPool   = new ThreadPoolExecutor(16, 64, 60, TimeUnit.SECONDS, tpQueue);
+	private static ThreadPoolExecutor threadPool   = new ThreadPoolExecutor(16, 64, 60, TimeUnit.SECONDS, new LinkedBlockingQueue<>());
 
 	private static UnorderedList<Sonifiable> stocks  = new UnorderedList<>(128);
 	private static UnorderedList<Sonifiable> etfs    = new UnorderedList<>(128);
@@ -200,18 +172,14 @@ public class DataRepo {
 			// Idea for doing this: See how long the date-range in the first response was
 			// then split the rest of the range for start->end into chunks of that range
 			// To achieve this, the signatures for pagination handlers most certainly have to be changed again
-
-			// TODO: Use interval - at the moment we assume that interval == DAY and just make end-of-day API-requests
 			try {
 				List<Price> out = new ArrayList<>(1024);
 				Calendar earliestDay = startEnd[1];
 				// Because leeway's range is exclusive, we need to decrease the startdate that we put in the request and keep the same for comparison of the loop
 				Calendar startCmp = (Calendar) startEnd[0].clone();
 				startEnd[0].roll(Calendar.DATE, false);
-				// TODO: Leeway throws error if range is more than 600 days
+				// Leeway throws error if range is more than 600 days -> is handled in StateManager determining the Interval
 
-				// TODO Bug: There seems to be an issue with DateUtil parsing the dates of the prices wrong or something
-				// until that bug is fixed, I commented the otherwise potentially endless loop out
 				boolean isEoD = interval == IntervalLength.DAY;
 				String endpoint = (isEoD ? "historicalquotes/" : "intraday/") + s;
 				String[] intervalQueries = {"interval", interval.toString(API.LEEWAY)};
@@ -303,9 +271,9 @@ public class DataRepo {
 						switch (s.type) {
 							// @Performance it's absurd to create new objects here
 							// solution would be to have stocks/etfs/indices be lists of sonifiables
-							case STOCK -> newStocks.add(s.sonifiable.asStock());
-							case ETF -> newEtfs.add(s.sonifiable.asETF());
-							case INDEX -> newIndices.add(s.sonifiable.asIndex());
+							case STOCK -> newStocks.add(s.sonifiable);
+							case ETF -> newEtfs.add(s.sonifiable);
+							case INDEX -> newIndices.add(s.sonifiable);
 							case NONE -> {
 								System.out.println("Unreachable: We shouldn't be able to still get unidentified Sonifiables after awaiting all futures");
 							}
