@@ -1,13 +1,13 @@
 package app.mapping;
 
+import audio.synth.InstrumentEnum;
+import dataRepo.SonifiableID;
+
 import java.lang.reflect.Field;
-import java.util.Set;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-
-import audio.synth.InstrumentEnum;
-import dataRepo.SonifiableID;
+import java.util.Set;
 
 public class InstrumentMapping {
 	// Optional fields represent that the user can leave those empty
@@ -31,7 +31,6 @@ public class InstrumentMapping {
 	// Filter parameters
 	public ExchangeData<LineData> cutoff = null;
 	public ExchangeData<RangeData> onOffFilter = null;
-	public boolean highPass = false;
 	// Panning
 	public ExchangeData<LineData> pan = null;
 
@@ -239,14 +238,6 @@ public class InstrumentMapping {
 		this.onOffFilter = onOffFilter;
 	}
 
-	public boolean getHighPass() {
-		return this.highPass;
-	}
-
-	public void setHighPass(boolean highPass) {
-		this.highPass = highPass;
-	}
-
 	public ExchangeData<LineData> getPan() {
 		return this.pan;
 	}
@@ -271,7 +262,7 @@ public class InstrumentMapping {
 				", onOffReverb='" + this.onOffReverb + "'" +
 				", cutoff='" + this.cutoff + "'" +
 				", onOffFilter='" + this.onOffFilter + "'" +
-				", highPass='" + this.highPass + "'" +
+				", pan='" + this.pan + "'" +
 				"}";
 	}
 }
