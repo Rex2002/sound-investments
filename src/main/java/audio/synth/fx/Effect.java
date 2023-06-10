@@ -1,7 +1,8 @@
 package audio.synth.fx;
 
 
-  import audio.Util;
+import audio.Util;
+import audio.synth.envelopes.ADSR;
 
 import static audio.Constants.SAMPLE_RATE;
 
@@ -49,31 +50,71 @@ public class Effect {
         return out;
     }
 
-    public static double[] echo(double[] input, double[] feedback, int[] delayArray){
-        int delay;
+
+    /**
+     * the whole buffer-stuff is left as an exercise to the reader.
+     * The interesting part is probably the ADSR feedbackEnv anyway.
+     * The envelope solves the problem of crackings-sounds when the delay changes.
+     * This is achieved by scaling down the feedback to zero, each time the delay value changes using the envelope.
+     * Since the scaling of the feedback can not be done to fast, because then the cracking reappears,
+     * this method is limited to delay arrays that have at most a length of 1/3 of the sound length in seconds.
+     * (the length limiting of the delayArray is already done in the Harmonizer)
+     * @param input the sound-array that is supposed to be echoed / reverbed
+     * @param feedback the feedback values that are to be applied
+     * @param delayArray the delay values that are to be applied
+     * @return the input with respective reverb / echo effect
+     */
+    public static double[] echoWithFeedback(double[] input, double[] feedback, int[] delayArray){
+        int delay = -1;
         double[] preOut = new double[input.length];
         double[] bufferL = new double[input.length / 2];
         double[] bufferR = new double[input.length / 2];
         bufferL[0] = input[0];
         bufferR[0] = input[1];
+        double inL, inR, bL, bR, feedbackValue;
         int cursor = 0;
+        int delayIdx = -1;
+        int sectionOffset = 0, sectionLen;
+        ADSR feedbackEnv = new ADSR(0.5, 0.02, 0.95, 0.46);
         for(int pos = 0; pos < input.length/2; pos++){
-            delay = delayArray[Util.getRelPosition(pos, input.length, delayArray.length)];
-            double inL = input[2 * pos];
-            double inR = input[2 * pos + 1];
-            double bL = bufferL[cursor];
-            double bR = bufferR[cursor];
-            bufferL[cursor] = ( inL +  bL * feedback[((int) (2 * (double) pos/input.length) * feedback.length)]);
-            bufferR[cursor] = ( inR +  bR * feedback[((int) (2 * (double) pos/input.length) * feedback.length)]);
-            cursor += 1;
-            if(cursor >= delay){
+            if(delayIdx == -1 || (delayArray[delayIdx] != delayArray[Util.getRelPosition(pos, input.length/2, delayArray.length)])){
+                delayIdx = Util.getRelPosition(pos, input.length/2, delayArray.length);
+                delay = delayArray[delayIdx];
+                sectionOffset = pos;
+                sectionLen = 0;
+                while(delayIdx + sectionLen < delayArray.length && delayArray[delayIdx] == delayArray[delayIdx + sectionLen]){
+                    sectionLen++;
+                }
+                feedbackEnv.setSectionLen(input.length / (2 * delayArray.length) * sectionLen);
+                bufferR = new double[delay];
+                bufferL = new double[delay];
                 cursor = 0;
             }
-            preOut[2 * pos] = bL;
-            preOut[2 * pos + 1] = bR;
+            if(delay != 0) {
+                inL = input[2 * pos];
+                inR = input[2 * pos + 1];
+                bL = bufferL[cursor];
+                bR = bufferR[cursor];
+                feedbackValue = feedbackEnv.getAmplitudeFactor(pos - sectionOffset) * feedback[((int) (2 * (double) pos / input.length) * feedback.length)];
+                bufferL[cursor] = inL + bL * feedbackValue;
+                bufferR[cursor] = inR + bR * feedbackValue;
+                preOut[2 * pos] = inL + bL * feedbackValue;
+                ;
+                preOut[2 * pos + 1] = inR + bR * feedbackValue;
+                ;
+                cursor += 1;
+                if (cursor >= delay) {
+                    cursor = 0;
+                }
+            }
+            else{
+                preOut[2 * pos] = input[2 * pos];
+                preOut[2 * pos + 1] = input[2 * pos + 1];
+            }
         }
         return preOut;
     }
+
 
     public static double[] antiAliasing(double[] in){
         FilterData antiAliasingFilterData = new FilterData();

@@ -149,23 +149,11 @@ public class Harmonizer {
 
     private int[] normalizeDelayEcho() throws AppError {
         int SAMPLES_PER_BAR = Constants.SAMPLE_RATE * 60 / (Constants.TEMPO / 4);
+        int DEFAULT_DELAY = (int) (1 / 8f * SAMPLES_PER_BAR);
         double[] delayEcho = dataRaw.getDelayEcho();
-        int defaultDelay = (int) (1 / 8f * SAMPLES_PER_BAR);
+        double[] delays = new double[] { 1 / 24f, 1 / 16f, 1 / 12f, 1 / 8f, 1 / 6f, 1 / 4f, 1 / 3f, 1 / 2f, 1 };
 
-        // TODO: test delay times
-        if (delayEcho != null) {
-            double[] delays = new double[] { 1 / 24f, 1 / 16f, 1 / 12f, 1 / 8f, 1 / 6f, 1 / 4f, 1 / 3f, 1 / 2f, 1 };
-            int[] output = new int[delayEcho.length];
-
-            for (int i = 0; i < delayEcho.length; i++) {
-                checkDouble(delayEcho[i], "delayEcho", i);
-
-                output[i] = delayEcho[i] == -1 ? defaultDelay : (int) (delays[(int) (delayEcho[i] * (delays.length - 1))] * SAMPLES_PER_BAR);
-            }
-            return output;
-        } else {
-            return new int[] { defaultDelay };
-        }
+        return normalizeDelayGeneric(false, delayEcho, DEFAULT_DELAY, delays);
     }
 
     private double[] normalizeFeedbackEcho() throws AppError {
@@ -207,17 +195,54 @@ public class Harmonizer {
         int MAX_DELAY_REVERB = Constants.SAMPLE_RATE / 20; // number of samples corresponding to 50ms
         int DEFAULT_DELAY_REVERB = Constants.SAMPLE_RATE / 25; // number of samples corresponding to 40ms
         double[] delayReverb = dataRaw.getDelayReverb();
-        if (delayReverb != null) {
-            int[] output = new int[delayReverb.length];
-            for (int i = 0; i < delayReverb.length; i++) {
-                checkDouble(delayReverb[i], "delayReverb", i);
 
-                output[i] = delayReverb[i] == -1 ? DEFAULT_DELAY_REVERB : (int) (delayReverb[i] * MAX_DELAY_REVERB);
+        return normalizeDelayGeneric(true, delayReverb, DEFAULT_DELAY_REVERB, new double[]{ MAX_DELAY_REVERB });
+
+    }
+
+    private int[] normalizeDelayGeneric(boolean reverb, double[] delayInput, int defaultDelayTime, double[] delayTimes) throws AppError {
+        int SAMPLES_PER_BAR = Constants.SAMPLE_RATE * 60 / (Constants.TEMPO / 4);
+        int maxNoDelayValues = (int) (1.0/3 * (numberBeats / (Constants.TEMPO / 60f)));
+
+        if (delayInput != null) {
+            if (delayInput.length <= maxNoDelayValues) {
+                int[] output = new int[delayInput.length];
+                for (int i = 0; i < output.length; i++) {
+                    double delayValue = delayInput[i];
+                    checkDouble(delayValue, "delayInput", i);
+                    if (reverb) {
+                        output[i] = delayValue == -1 ? defaultDelayTime : (int) (delayValue * delayTimes[0]);
+                    } else {
+                        output[i] = delayValue == -1 ? defaultDelayTime : (int) (delayTimes[(int) (delayValue * (delayTimes.length - 1))] * SAMPLES_PER_BAR);
+                    }
+                }
+                return output;
             }
-            return output;
+            else {
+                int bufferLength = delayInput.length / maxNoDelayValues;
+                int[] output = new int[maxNoDelayValues];
+                for (int i = 0, bufferStart = 0; i < maxNoDelayValues; i++, bufferStart += bufferLength) {
+                    output[i] = 0;
+                    if (delayInput[bufferStart] == -1 || delayInput[bufferStart + bufferLength - 1] == -1) {
+                        output[i] = defaultDelayTime;
+                        continue;
+                    }
+                    double tmpForPreciseAddition = 0;
+                    for (int j = bufferStart; j < bufferStart + bufferLength; j++) {
+                        checkDouble(delayInput[j], reverb ? "delayReverb" : "delayEcho", j);
+                        tmpForPreciseAddition += delayInput[j] / bufferLength;
+                    }
+                    if (reverb) {
+                        output[i] = (int)(tmpForPreciseAddition * delayTimes[0]);
+                    } else {
+                        output[i] = (int) (delayTimes[(int) (tmpForPreciseAddition * (delayTimes.length - 1))] * SAMPLES_PER_BAR);
+                    }
+
+                }
+                return output;
+            }
         } else {
-            // TODO: test value
-            return new int[] { DEFAULT_DELAY_REVERB };
+            return new int[] { defaultDelayTime };
         }
     }
 

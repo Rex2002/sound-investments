@@ -2,8 +2,8 @@ package audio.synth;
 
 public enum EvInstrEnum {
     BOOM,
-    GING,
-    GANG;
+    BIKE_BELL,
+    SLEIGH_BELL;
 
     public static final int size;
     public static final String[] displayVals;
@@ -18,8 +18,8 @@ public enum EvInstrEnum {
     public static EvInstrEnum fromString(String s) {
         return switch (s) {
             case "Boom" -> BOOM;
-            case "Ging" -> GING;
-            case "Gang" -> GANG;
+            case "Bike Bell" -> BIKE_BELL;
+            case "Sleigh Bell" -> SLEIGH_BELL;
             default     -> null;
         };
     }
@@ -27,27 +27,21 @@ public enum EvInstrEnum {
     public String toString() {
         return switch (this) {
             case BOOM -> "Boom";
-            case GING -> "Ging";
-            case GANG -> "Gang";
+            case BIKE_BELL -> "Bike Bell";
+            case SLEIGH_BELL -> "Sleigh Bell";
         };
     }
 
     public String toFileName() {
         switch (this){
             case BOOM -> {
-                return "Impact_Bass_0.wav";
+                return "Impact_Timp_0.wav";
             }
-            case GANG -> {
-                // TODO
-                return "";
-            }
-            case GING -> {
-                //TODO
-                return "";
+            case BIKE_BELL -> {
+                return "Impact_Bell_0.wav";
             }
             default -> {
-                // TODO
-                return "defaultSample";
+                return "Impact_Bell_1.wav";
             }
         }
     }
