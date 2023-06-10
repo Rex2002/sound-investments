@@ -10,7 +10,6 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
 import javafx.scene.Cursor;
-import javafx.scene.Node;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.scene.chart.LineChart;
@@ -87,7 +86,7 @@ public class MusicSceneController implements Initializable {
 		exportBtn.setOnMouseClicked(ev -> {
 			FileChooser fileChooser = new FileChooser();
 			fileChooser.setTitle("Exportiere Audio-stream");
-			fileChooser.setInitialFileName("Börsen-Sonifizierung.wav");
+			fileChooser.setInitialFileName(getAllSymbols() + "Sonifizierung.wav");
 			fileChooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Wave-Dateien", "*.wav"));
 			File selectedFile = fileChooser.showSaveDialog(exportBtn.getScene().getWindow());
 			if (selectedFile != null) {
@@ -150,6 +149,17 @@ public class MusicSceneController implements Initializable {
 		Platform.runLater(() -> {
 			setupSlider();
 		});
+	}
+
+	private String getAllSymbols() {
+		StringBuilder out = new StringBuilder();
+		for (String name : sonifiableNames) {
+			String symbol = name.split("\\(")[1];
+			symbol = symbol.substring(0, symbol.length() - 1);
+			out.append(symbol).append("_");
+		}
+
+		return out.toString();
 	}
 
 	public void passData(MusicData musicData) {
