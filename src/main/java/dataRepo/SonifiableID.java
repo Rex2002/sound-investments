@@ -8,8 +8,8 @@ public class SonifiableID {
 	public String symbol;
 
 	public SonifiableID(String symbol, String exchange) {
-		this.symbol   = General.strReplace(symbol,   '"', '\'');
-		this.exchange = General.strReplace(exchange, '"', '\'');
+		this.symbol   = symbol.replace('"', '\'');
+		this.exchange = exchange.replace('"', '\'');
 	}
 
 	public String getExchange() {

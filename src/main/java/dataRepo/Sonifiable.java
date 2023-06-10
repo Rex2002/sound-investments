@@ -10,7 +10,7 @@ public class Sonifiable {
 	public SonifiableID id;
 
 	public Sonifiable(String name, SonifiableID id) {
-		this.name = General.strReplace(name, '"', '\'');
+		this.name = name.replace('"', '\'');
 		this.id = id;
 	}
 
