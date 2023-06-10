@@ -1,28 +1,27 @@
 package dataRepo;
 
-import java.util.Calendar;
 import java.util.Objects;
 
-import util.DateUtil;
-
-public abstract class Sonifiable {
+// @Cleanup let Lombok create this boilerplate
+public class Sonifiable {
 	public String name;
 	public SonifiableID id;
-	public Calendar earliest;
-	public Calendar latest;
 
 	public Sonifiable(String name, SonifiableID id) {
 		this.name = name;
 		this.id = id;
-		this.earliest = null;
-		this.latest = null;
 	}
 
-	public Sonifiable(String name, SonifiableID id, Calendar earliest, Calendar latest) {
-		this.name = name;
-		this.id = id;
-		this.earliest = earliest;
-		this.latest = latest;
+	public Stock asStock() {
+		return new Stock(name, id);
+	}
+
+	public ETF asETF() {
+		return new ETF(name, id);
+	}
+
+	public Index asIndex() {
+		return new Index(name, id);
 	}
 
 	public String getName() {
@@ -41,22 +40,6 @@ public abstract class Sonifiable {
 		this.id = id;
 	}
 
-	public Calendar getEarliest() {
-		return this.earliest;
-	}
-
-	public void setEarliest(Calendar earliest) {
-		this.earliest = earliest;
-	}
-
-	public Calendar getLatest() {
-		return this.latest;
-	}
-
-	public void setLatest(Calendar latest) {
-		this.latest = latest;
-	}
-
 	@Override
 	public boolean equals(Object o) {
 		if (o == this)
@@ -65,22 +48,17 @@ public abstract class Sonifiable {
 			return false;
 		}
 		Sonifiable sonifiable = (Sonifiable) o;
-		return Objects.equals(name, sonifiable.name) && Objects.equals(id, sonifiable.id)
-				&& Objects.equals(earliest, sonifiable.earliest)
-				&& Objects.equals(latest, sonifiable.latest);
+		return Objects.equals(name, sonifiable.name) && Objects.equals(id, sonifiable.id);
 	}
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(name, id, earliest, latest);
+		return Objects.hash(name, id);
 	}
 
 	public String toJSON() {
-		return "{ " + "\"name\": " + "\"" + name.toString() + "\"" + ", " +
-				"\"id\": " + id.toJSON() + ", " +
-				"\"earliest\": " + (earliest == null ? "null" : "\"" + DateUtil.formatDate(earliest) + "\"")
-				+ ", " +
-				"\"latest\": " + (latest == null ? "null" : "\"" + DateUtil.formatDate(latest) + "\"") + " }";
+		return "{ " + "\"name\": " + "\"" + name + "\"" + ", " +
+				"\"id\": " + id.toJSON() + " }";
 	}
 
 	@Override
@@ -88,12 +66,6 @@ public abstract class Sonifiable {
 		return "{" +
 				" name='" + getName() + "'" +
 				", id='" + getId() + "'" +
-				", earliest='" + (earliest == null ? "null"
-						: DateUtil.formatDate(earliest))
-				+ "'" +
-				", latest='" + (latest == null ? "null"
-						: DateUtil.formatDate(latest))
-				+ "'" +
 				"}";
 	}
 }

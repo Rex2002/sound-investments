@@ -1,7 +1,6 @@
 package dataRepo;
 
 import app.AppError;
-import dataRepo.api.APIErr;
 import dataRepo.api.APIReq;
 import dataRepo.api.AuthPolicy;
 import dataRepo.api.PaginationHandler;
@@ -13,15 +12,17 @@ import util.FutureList;
 import util.UnorderedList;
 
 import java.io.PrintWriter;
+import java.net.URL;
 import java.nio.file.Files;
+import java.nio.file.OpenOption;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.sql.Timestamp;
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Function;
 
 public class DataRepo {
 	private static final boolean GET_PRICES_DYNAMICALLY = true;
@@ -77,18 +78,11 @@ public class DataRepo {
 	// single boolean flag is completely sufficient
 	public static AtomicBoolean updatedData = new AtomicBoolean(false);
 	private static BlockingQueue<Runnable> tpQueue = new LinkedBlockingQueue<>();
-	private static ThreadPoolExecutor threadPool = new ThreadPoolExecutor(16, 64, 60, TimeUnit.SECONDS,
-			tpQueue);
+	private static ThreadPoolExecutor threadPool = new ThreadPoolExecutor(16, 64, 60, TimeUnit.SECONDS, tpQueue);
 
 	private static UnorderedList<Stock> stocks = new UnorderedList<>(128);
 	private static UnorderedList<ETF> etfs = new UnorderedList<>(128);
 	private static UnorderedList<Index> indices = new UnorderedList<>(128);
-
-	// When updatedStocksTradingPeriods == stocks.size(), all stocks are updated set by setTradingPeriods()
-	private static AtomicInteger updatedStocksTradingPeriods = new AtomicInteger(stocks.size());
-	private static AtomicInteger updatedETFsTradingPeriods = new AtomicInteger(etfs.size());
-	private static AtomicInteger updatedIndicesTradingPeriods = new AtomicInteger(indices.size());
-	private static int updatedTradingPeriodsCounter = 0; // Amount of sonifiables lists, whose trading periods have updated
 
 	private static List<Price> testPrices() {
 		try {
@@ -118,29 +112,11 @@ public class DataRepo {
 	public static void init() throws AppError {
 		try {
 			// Read cached stocks
-			Parser parser = new Parser();
-			String stocksRes = Files.readString(Path.of("./src/main/resources/Data/stocks.json"));
-			JsonPrimitive<?> json = parser.parse(stocksRes);
-			stocks = json
-					.applyList(x -> {
-						Calendar earliest = null, latest = null;
-						try {
-							earliest = DateUtil.calFromDateStr(x.asMap().get("earliest").asStr());
-							latest = DateUtil.calFromDateStr(x.asMap().get("latest").asStr());
-						} catch (Exception e) {
-						}
-						return new Stock(x.asMap().get("name").asStr(),
-								new SonifiableID(x.asMap().get("id").asMap().get("symbol").asStr(),
-										x.asMap().get("id").asMap().get("exchange").asStr()),
-								earliest,
-								latest);
-					}, new UnorderedList<>(json.asList().size()), true);
+			stocks  = readFromJSON("stocks");
+			etfs    = readFromJSON("etfs");
+			indices = readFromJSON("indices");
 
-			// TODO: Read cached ETFs/Indices
-
-			// @Cleanup uncomment for production
-			// Start updating stocks in background
-			// updateSonifiablesList();
+			updateSonifiablesList();
 		} catch (Exception e) {
 			e.printStackTrace();
 			throw new AppError(e.getMessage());
@@ -284,187 +260,91 @@ public class DataRepo {
 		});
 	}
 
+	public static void updateSonifiablesList() {
+		threadPool.submit(() -> {
+			try {
+				APIReq apiLeeway = getApiLeeway();
+				List<String> exchanges = apiLeeway.getJSONList("general/exchanges", json -> json.asMap().get("Code").asStr());
 
-	//////////////////////////
-	// Potentially obsolete???
-	//////////////////////////
-
-	public static void updateSonifiablesList() throws AppError {
-		try {
-			// @Cleanup increase limit to the maximum (1000) for production
-			// @Cleanup As of now this limit value has to be synced with the offset when creating the Marketstack APIReq bc of hardcoded values
-			APIReq apiMarketstack = getApiMarketstack();
-			apiMarketstack.setQueries("limit", "10");
-			FutureList<UnorderedList<Stock>> fl = apiMarketstack.getPaginatedJSONList("tickers", threadPool, 8,
-					(Function<Integer, UnorderedList<Stock>>) (size -> {
-						UnorderedList<Stock> l = new UnorderedList<>(size);
-						for (int i = 0; i < size; i++)
-							l.add(i, null);
-						return l;
-					}),
-					x -> x, (Function<JsonPrimitive<?>, Stock>) (x -> {
-						try {
-							String symbol = x.asMap().get("symbol").asStr();
-							String exchange = x.asMap().get("stock_exchange").asMap().get("acronym").asStr();
-							if (symbol.contains(".") || exchange.contains("."))
-								return null;
-							return new Stock(x.asMap().get("name").asStr(),
-									new SonifiableID(symbol, exchange));
-						} catch (Exception e) {
-							return null;
-						}
+				FutureList<List<ExtendedSonifiable>> fl = new FutureList<>(exchanges.size());
+				// @nocheckin `i < 4` is only during debugging rn
+				for (int i = 0; i < exchanges.size() && i < 4; i++) {
+					String exchange = exchanges.get(i);
+					fl.add(threadPool.submit(() -> {
+						return getApiLeeway().getJSONList("general/symbols/" + exchange, json -> {
+							HashMap<String, JsonPrimitive<?>> m = json.asMap();
+							JsonPrimitive<?> typeJson = m.get("Type");
+							SonifiableType type = SonifiableType.fromString(typeJson.isNull() ? "" : typeJson.asStr());
+							if (type == SonifiableType.NONE) return null;
+							return new ExtendedSonifiable(type, new Sonifiable(
+								m.get("Name").asStr(), new SonifiableID(m.get("Code").asStr(), exchange)
+							));
+						}, true);
 					}));
-			Timer checkFLTimer = new Timer();
-			checkFLTimer.scheduleAtFixedRate(new TimerTask() {
-				public void run() {
-					try {
-						if (fl.isDone()) {
-							// Remove nulls from stocks-list
-							stocks = fl.get();
-							stocks.applyRemoves();
-							for (int i = 0; i < stocks.size(); i++) {
-								if (stocks.get(i) == null) {
-									stocks.remove(i);
-									i--;
-								}
+				}
+
+				UnorderedList<Stock> newStocks = new UnorderedList<>(4096);
+				UnorderedList<ETF> newEtfs = new UnorderedList<>(2048);
+				UnorderedList<Index> newIndices = new UnorderedList<>(2048);
+				Object[] allSonifiables = fl.getAll();
+				for (Object sonifiables : allSonifiables) {
+					for (ExtendedSonifiable s : (List<ExtendedSonifiable>) sonifiables) {
+						switch (s.type) {
+							// @Performance it's absurd to create new objects here
+							// solution would be to have stocks/etfs/indices be lists of sonifiables
+							case STOCK -> newStocks.add(s.sonifiable.asStock());
+							case ETF -> newEtfs.add(s.sonifiable.asETF());
+							case INDEX -> newIndices.add(s.sonifiable.asIndex());
+							case NONE -> {
+								System.out.println("Unreachable: We shouldn't be able to still get unidentified Sonifiables after awaiting all futures");
 							}
-
-							setTradingPeriods(stocks, updatedStocksTradingPeriods);
-
-							// TODO: Update ETFs and Stocks too
-
-							Timer timer = new Timer();
-							timer.scheduleAtFixedRate(new TimerTask() {
-								public void run() {
-									// TODO: Refactor to reduce code duplication
-									boolean updatedTradingPeriods = false;
-									if (updatedStocksTradingPeriods.compareAndSet(stocks.size(), 0)) {
-										updatedTradingPeriods = true;
-										updatedTradingPeriodsCounter++;
-										for (int i = 0; i < stocks.size(); i++) {
-											if (stocks.get(i) == null || stocks.get(i).getEarliest() == null) {
-												stocks.remove(i);
-												i--;
-											}
-										}
-									}
-									// @Cleanup uncomment once we actually get data for etfs/indices
-									// needs to be commented out for now, bc the code doesn't work when list.size()
-									// == 0
-									// if (updatedETFsTradingPeriods.compareAndSet(etfs.size(), 0)) {
-									// updatedTradingPeriods = true;
-									// updatedTradingPeriodsCounter++;
-									// etfs.applyRemoves();
-									// }
-									// if (updatedIndicesTradingPeriods.compareAndSet(indices.size(), 0)) {
-									// updatedTradingPeriods = true;
-									// updatedTradingPeriodsCounter++;
-									// indices.applyRemoves();
-									// }
-
-									System.out.println(
-											"Timer check: ThreadPool = " + threadPool.toString());
-
-									if (updatedTradingPeriods)
-										updatedData.set(true);
-									// @Cleanup exchange 1 with 3, once we get data for etfs/indices too
-									if (updatedTradingPeriodsCounter >= 1) {
-										updatedTradingPeriodsCounter = 0;
-										System.out.println("Setting Trading Periods done");
-										timer.cancel();
-										try {
-											writeToJSON("stocks.json", ArrayFunctions.toStringArr(stocks.getArray(), x -> ((Sonifiable) x).toJSON(), true));
-										} catch (AppError e) {
-											e.printStackTrace();
-										}
-									}
-								}
-							}, 500, 200);
-
-							checkFLTimer.cancel();
 						}
-					} catch (Throwable e) {
-						e.printStackTrace();
-						checkFLTimer.cancel();
 					}
 				}
-			}, 1000, 200);
+
+				// Cache data for future use
+				stocks = newStocks;
+				etfs = newEtfs;
+				indices = newIndices;
+				writeToJSON("stocks",  ArrayFunctions.toStringArr(stocks.getArray(),  s -> ((Sonifiable) s).toJSON(), true));
+				writeToJSON("etfs",    ArrayFunctions.toStringArr(etfs.getArray(),    s -> ((Sonifiable) s).toJSON(), true));
+				writeToJSON("indices", ArrayFunctions.toStringArr(indices.getArray(), s -> ((Sonifiable) s).toJSON(), true));
+				System.out.println("Wrote new data into cached files");
+
+				updatedData.set(true);
+			} catch (Throwable e) {
+				// we intentionally ignore this error, as it's not effecting the user in this moment
+				e.printStackTrace();
+			}
+		});
+	}
+
+	@SuppressWarnings("unchecked")
+	public static<T extends Sonifiable> UnorderedList<T> readFromJSON(String filename) throws AppError {
+		try {
+			Parser parser = new Parser();
+			String str = Files.readString(Paths.get(DataRepo.class.getResource("/Data/" + filename + ".json").toURI()));
+			JsonPrimitive<?> json = parser.parse(str);
+			return json.applyList(x -> {
+				return (T) new Sonifiable(x.asMap().get("name").asStr(), new SonifiableID(
+					x.asMap().get("id").asMap().get("symbol").asStr(),
+					x.asMap().get("id").asMap().get("exchange").asStr()));
+			}, new UnorderedList<>(json.asList().size()), true);
 		} catch (Exception e) {
 			e.printStackTrace();
-			throw new AppError(e.getMessage());
+			throw new AppError("Die gespeicherten Daten für '" + filename + "' konnten nicht gelesen werden. Stelle sicher, dass keine App-internen Dateien verschoben oder gelöscht wurden.");
 		}
 	}
 
 	private static <T> void writeToJSON(String filename, String data) throws AppError {
 		try {
-			PrintWriter out = new PrintWriter("./src/main/resources/Data/" + filename);
-			out.write(data);
-			out.close();
+			URL url = DataRepo.class.getResource("/Data/" + filename + ".json");
+			Path path = Paths.get(url.toURI());
+			// System.out.println("data: " + data);
+			Files.write(path, data.getBytes(), StandardOpenOption.WRITE);
 		} catch (Exception e) {
-			throw new AppError(e.getMessage());
+			e.printStackTrace();
+			throw new AppError("Die neuen Daten für '" + filename + "' konnten nicht gespeichert werden.");
 		}
-	}
-
-	private static <T extends Sonifiable> void setTradingPeriods(UnorderedList<T> list,
-			AtomicInteger updatedTradingPeriods) {
-		updatedTradingPeriods.set(0);
-		for (int i = 0; i < list.size(); i++) {
-			T s = list.get(i);
-			final int idx = i;
-			getTradingPeriod(s, dates -> {
-				if (dates == null || dates[0] == null || dates[1] == null) {
-					list.removeLater(idx);
-				} else {
-					s.setEarliest(dates[0]);
-					s.setLatest(dates[1]);
-				}
-				int x = updatedTradingPeriods.incrementAndGet();
-				System.out.println("Set trading periods. idx = " + idx + ", updatedCount = " + x + ", tpQueue.size() = "
-						+ tpQueue.size());
-				return s;
-			});
-		}
-	}
-
-	// Returns list of two Calendar objects. The first element is the starting date,
-	// the second the ending date. If an error happened, `null` is returned
-	public static <T> Future<T> getTradingPeriod(Sonifiable s, Function<Calendar[], T> callback) {
-		return threadPool.submit(() -> {
-			APIReq apiLeeway = getApiLeeway();
-			APIReq apiTwelvedata = getApiTwelvedata();
-			Calendar[] res = { null, null };
-			T out = null;
-			try {
-				HashMap<String, JsonPrimitive<?>> json = apiLeeway.getJSON("general/tradingperiod/" + s.getId().toString(), x -> x.asMap());
-				res[0] = DateUtil.calFromDateStr(json.get("start").asStr());
-				res[1] = DateUtil.calFromDateStr(json.get("end").asStr());
-				out = callback.apply(res);
-			} catch (APIErr e) {
-				// Try again using Twelvedata's API instead
-				try {
-					apiTwelvedata.setQueries("symbol", s.getId().getSymbol(), "exchange", s.getId().getExchange(), "outputsize", "10", "interval", IntervalLength.DAY.toString(API.TWELVEDATA));
-
-					List<JsonPrimitive<?>> vals = apiTwelvedata.getJSON("time_series", x -> x.asMap().get("values").asList(), "order", "ASC", "start_date", "1990-01-01");
-					res[0] = DateUtil.calFromDateStr(vals.get(0).asMap().get("datetime").asStr());
-
-					vals = apiTwelvedata.getJSON("time_series", x -> x.asMap().get("values").asList(), "order", "DESC", "end_date", DateUtil.formatDate(Calendar.getInstance()));
-					res[1] = DateUtil.calFromDateStr(vals.get(0).asMap().get("datetime").asStr());
-
-					apiTwelvedata.resetQueries();
-					out = callback.apply(res);
-				} catch (Exception e2) {
-					// @Debug
-					// System.out.println("Error in inner getTradingPeriod:");
-					// e2.printStackTrace();
-					out = callback.apply(null);
-				}
-			} catch (Exception e) {
-				// @Debug
-				// System.out.println("Error in outer getTradingPeriod:");
-				// e.printStackTrace();
-				out = callback.apply(null);
-			}
-			return out;
-		});
 	}
 }

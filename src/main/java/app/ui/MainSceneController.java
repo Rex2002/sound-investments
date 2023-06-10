@@ -560,7 +560,6 @@ public class MainSceneController implements Initializable {
 
     private Pane createSharePane(Sonifiable sonifiable, boolean showMapping) { // initialize and dek the Share Pane
         mapping.addSonifiable(sonifiable);
-        updateDateRange();
 
         Pane stockPane = new Pane();
         stockPane.getStyleClass().add("stockPane");
@@ -629,16 +628,6 @@ public class MainSceneController implements Initializable {
         audioLength.setText(sec);
         assert !filterValues[0];
         filterCB.getSelectionModel().select(mapping.getHighPass() ? 1 : 0);
-    }
-
-    private void updateDateRange() {
-        Calendar[] minMaxDates = mapping.getDateRange();
-        minDateStart = DateUtil.calendarToLocalDate(minMaxDates[0]);
-        maxDateEnd = DateUtil.calendarToLocalDate(minMaxDates[1]);
-        maxDateStart = maxDateEnd.minusDays(3);
-        minDateEnd = minDateStart.minusDays(3);
-        updateStartPicker();
-        updateEndPicker();
     }
 
     private void updateStartPicker() {
