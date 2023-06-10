@@ -127,6 +127,8 @@ public class MainSceneController implements Initializable {
     private double paneValTBPad;
     private double minorTitleHeight;
     private double defaultValueHeight;
+    private double labelMargin;
+    private double cbMargin;
 
     private LocalDate minDateStart = LocalDate.now().minusMonths(3);
     private LocalDate maxDateStart = LocalDate.now().minusDays(3);
@@ -436,6 +438,12 @@ public class MainSceneController implements Initializable {
         instScrollPane.setPrefSize(settingsPaneWidth - 2*settingsPaneLRPad, settingsPane.getHeight() - instScrollPane.getLayoutY() - paneTBPad);
         instVBox.      setPrefSize(instScrollPane.getPrefWidth(),           instScrollPane.getPrefHeight());
 
+        for (Node c : sonifiablesVBox.getChildren()) {
+            if (c instanceof SonifiablePane) {
+                ((SonifiablePane) c).layout(0, 0, width, height, minorTitleFont[0].getSize(), defaultValueFont[0].getSize(), valueBoxPad, 3, 3);
+            }
+        }
+
         setFontSize(headerFont,       headerTitleHeight);
         setFontSize(btnFont,          btnHeight - 2*btnPad);
         setFontSize(paneTitleFont,    paneTitleHeight);
@@ -598,17 +606,17 @@ public class MainSceneController implements Initializable {
         }
     }
 
-    public Pane addToPaneBox(Sonifiable sonifiable) {
+    public SonifiablePane addToPaneBox(Sonifiable sonifiable) {
         return addToPaneBox(sonifiable, false);
     }
 
-    public Pane addToPaneBox(Sonifiable sonifiable, boolean showMapping) {
-        // add a Sharepanel to the Panel Box
+    public SonifiablePane addToPaneBox(Sonifiable sonifiable, boolean showMapping) {
         // Checking whether the maximum of sharePanels has already been reached must be
         // done before calling this function
-        Pane sonifiablePane = createSharePane(sonifiable, showMapping);
+        SonifiablePane sonifiablePane = new SonifiablePane(mapping, sonifiable, mi -> enableBtnIfValid());
+        sonifiablePane.layout(0, 0, stage.getWidth(), stage.getHeight(), minorTitleFont[0].getSize(), defaultValueFont[0].getSize(), valueBoxPad, 3, 3);
+        if (showMapping) sonifiablePane.showMapping();
         sonifiablesVBox.getChildren().add(sonifiablePane);
-        sonifiablesVBox.setPrefHeight((sonifiablesVBox.getChildren().size()) * 511.0);
         return sonifiablePane;
     }
 
@@ -760,8 +768,7 @@ public class MainSceneController implements Initializable {
         }
     }
 
-    private void refreshParamOpts(ChoiceBox<String> paramCB, InstrumentEnum instVal, boolean isLineParam,
-            boolean checkForMapping) {
+    private void refreshParamOpts(ChoiceBox<String> paramCB, InstrumentEnum instVal, boolean isLineParam, boolean checkForMapping) {
         try {
             SingleSelectionModel<String> paramCBSelect = paramCB.getSelectionModel();
             InstrParam paramVal = paramCBSelect.getSelectedItem() == null ? null
@@ -893,7 +900,7 @@ public class MainSceneController implements Initializable {
         });
     }
 
-    private void enableBtnIfValid() {
+    public void enableBtnIfValid() {
         startBtn.setDisable(startedSonification || !mapping.isValid());
     }
 

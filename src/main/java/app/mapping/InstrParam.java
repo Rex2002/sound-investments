@@ -16,11 +16,24 @@ public enum InstrParam {
 	HIGHPASS,
 	PAN;
 
-	public static InstrParam[] LineDataParams = { PITCH, RELVOLUME, DELAY_ECHO, FEEDBACK_ECHO, DELAY_REVERB,
-			FEEDBACK_REVERB,
-			CUTOFF, ORDER, PAN };
+	public static InstrParam[] LineDataParams = { PITCH, RELVOLUME, DELAY_ECHO, FEEDBACK_ECHO, DELAY_REVERB, FEEDBACK_REVERB, CUTOFF, ORDER, PAN };
+	public static String[] LineParamDisplays;
 	public static InstrParam[] RangeDataParams = { ABSVOLUME, ON_OFF_FILTER, ON_OFF_REVERB, ON_OFF_ECHO };
+	public static String[] RangeParamDisplays;
 	public static InstrParam[] BoolParams = { HIGHPASS };
+	public static String[] BoolParamDisplays;
+
+	static {
+		LineParamDisplays = new String[LineDataParams.length];
+		for (int i = 0; i < LineDataParams.length; i++)
+			LineParamDisplays[i] = LineDataParams[i].toString();
+		RangeParamDisplays = new String[RangeDataParams.length];
+		for (int i = 0; i < RangeDataParams.length; i++)
+			RangeParamDisplays[i] = RangeDataParams[i].toString();
+		BoolParamDisplays = new String[BoolParams.length];
+		for (int i = 0; i < BoolParams.length; i++)
+			BoolParamDisplays[i] = BoolParams[i].toString();
+	}
 
 	public static InstrParam fromString(String s) {
 		if (s == null) return null;

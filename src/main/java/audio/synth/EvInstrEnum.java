@@ -6,7 +6,7 @@ public enum EvInstrEnum {
     GANG;
 
     public static final int size;
-    public static final String[] displayVals;
+    public static final String[] displayVals; // Guaranteed to be parallel to values()
     static {
         EvInstrEnum[] vals = values();
         size = vals.length;
