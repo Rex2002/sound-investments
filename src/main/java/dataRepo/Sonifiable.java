@@ -25,6 +25,10 @@ public abstract class Sonifiable {
 		this.latest = latest;
 	}
 
+	public String getCompositeName() {
+		return name + " (" + id.symbol + ")";
+	}
+
 	public String getName() {
 		return this.name;
 	}
@@ -61,10 +65,9 @@ public abstract class Sonifiable {
 	public boolean equals(Object o) {
 		if (o == this)
 			return true;
-		if (!(o instanceof Sonifiable)) {
+		if (!(o instanceof Sonifiable sonifiable)) {
 			return false;
 		}
-		Sonifiable sonifiable = (Sonifiable) o;
 		return Objects.equals(name, sonifiable.name) && Objects.equals(id, sonifiable.id)
 				&& Objects.equals(earliest, sonifiable.earliest)
 				&& Objects.equals(latest, sonifiable.latest);
@@ -76,7 +79,7 @@ public abstract class Sonifiable {
 	}
 
 	public String toJSON() {
-		return "{ " + "\"name\": " + "\"" + name.toString() + "\"" + ", " +
+		return "{ " + "\"name\": " + "\"" + name + "\"" + ", " +
 				"\"id\": " + id.toJSON() + ", " +
 				"\"earliest\": " + (earliest == null ? "null" : "\"" + DateUtil.formatDate(earliest) + "\"")
 				+ ", " +

@@ -94,12 +94,12 @@ public class SynthLine {
     }
 
     private void applyPan() {
-        for (int pos = 0; pos < out.length; pos += 2) {
+        for (int pos = 0; pos < out.length - 1; pos += 2) {
             double panValue = data.getPan()[Util.getRelPosition(pos, out.length, data.getPan().length)];
             if (panValue < 0) {
-                out[pos] = out[pos] * (1 - panValue) * -1;
+                out[pos + 1] *= (1 + panValue);
             } else if (panValue > 0) {
-                out[pos + 1] = out[pos + 1] * (1 - panValue);
+                out[pos] *= (1 - panValue);
             }
         }
     }
