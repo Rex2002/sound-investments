@@ -30,7 +30,6 @@ public class InstrumentMapping {
 	public ExchangeData<RangeData> onOffReverb = null;
 	// Filter parameters
 	public ExchangeData<LineData> cutoff = null;
-	public ExchangeData<LineData> order = null;
 	public ExchangeData<RangeData> onOffFilter = null;
 	public boolean highPass = false;
 	// Panning
@@ -44,6 +43,7 @@ public class InstrumentMapping {
 		List<InstrParam> params = new ArrayList<>();
 		if (pitch          == null || oldVal == InstrParam.PITCH)            params.add(InstrParam.PITCH);
 		if (relVolume      == null || oldVal == InstrParam.RELVOLUME)        params.add(InstrParam.RELVOLUME);
+		if (pan			   == null || oldVal == InstrParam.PAN)				 params.add(InstrParam.PAN);
 		if (delayEcho      == null || oldVal == InstrParam.DELAY_ECHO)       params.add(InstrParam.DELAY_ECHO);
 		if (feedbackEcho   == null || oldVal == InstrParam.FEEDBACK_ECHO)    params.add(InstrParam.FEEDBACK_ECHO);
 		if (delayReverb    == null || oldVal == InstrParam.DELAY_REVERB)     params.add(InstrParam.DELAY_REVERB);
@@ -77,22 +77,6 @@ public class InstrumentMapping {
 			}
 		}
 		return true;
-	}
-
-	public boolean hasSonifiableMapped(SonifiableID sonifiable) {
-		for (Field f : getClass().getFields()) {
-			if (ExchangeData.class.equals(f.getType())) {
-				try {
-					if (((ExchangeData<?>) f.get(this)).getId() == sonifiable)
-						return true;
-				} catch (Exception e) {
-					// Do nothing
-				}
-			} else {
-				// Do nothing
-			}
-		}
-		return false;
 	}
 
 	public Set<SonifiableID> getMappedSonifiables() {
@@ -150,6 +134,7 @@ public class InstrumentMapping {
 	public InstrParam get(ExchangeData<? extends ExchangeParam> ed) {
 		if (ed.equals(pitch))          return InstrParam.PITCH;
 		if (ed.equals(relVolume))      return InstrParam.RELVOLUME;
+		if (ed.equals(pan))      	   return InstrParam.PAN;
 		if (ed.equals(delayEcho))      return InstrParam.DELAY_ECHO;
 		if (ed.equals(feedbackEcho))   return InstrParam.FEEDBACK_ECHO;
 		if (ed.equals(delayReverb))    return InstrParam.DELAY_REVERB;
@@ -274,9 +259,10 @@ public class InstrumentMapping {
 	public String toString() {
 		return "{" +
 				" instrument='" + this.instrument + "'" +
-				", relVolume='" + this.relVolume + "'" +
 				", absVolume='" + this.absVolume + "'" +
+				", relVolume='" + this.relVolume + "'" +
 				", pitch='" + this.pitch + "'" +
+				", pan='" + this.pan + "'" +
 				", delayEcho='" + this.delayEcho + "'" +
 				", feedbackEcho='" + this.feedbackEcho + "'" +
 				", onOffEcho='" + this.onOffEcho + "'" +
@@ -286,7 +272,6 @@ public class InstrumentMapping {
 				", cutoff='" + this.cutoff + "'" +
 				", onOffFilter='" + this.onOffFilter + "'" +
 				", highPass='" + this.highPass + "'" +
-				", pan='" + this.pan + "'" +
 				"}";
 	}
 }
