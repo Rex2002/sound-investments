@@ -89,8 +89,10 @@ public class SynthLine {
     }
 
     private void applyFilter() {
-        if (data.getFilterData() != null)
-            Effect.IIR(out, data.getFilterData());
+        if (data.getFilterData() != null) {
+            System.out.println("we are filtering >party<");
+            out = Effect.IIR(out, data.getFilterData());
+        }
     }
 
     private void applyPan() {
