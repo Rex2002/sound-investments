@@ -92,7 +92,7 @@ public class DataRepo {
 
 	private static List<Price> testPrices() {
 		try {
-			String fname = "./src/main/resources/TestPrices.json";
+			String fname = "./src/main/resources/TestData/TestPrices.json";
 			String json = Files.readString(Path.of(fname));
 			Parser parser = new Parser();
 			List<Price> prices = parser.parse(fname, json).applyList(x -> {
@@ -119,7 +119,7 @@ public class DataRepo {
 		try {
 			// Read cached stocks
 			Parser parser = new Parser();
-			String stocksRes = Files.readString(Path.of("./src/main/resources/stocks.json"));
+			String stocksRes = Files.readString(Path.of("./src/main/resources/Data/stocks.json"));
 			JsonPrimitive<?> json = parser.parse(stocksRes);
 			stocks = json
 					.applyList(x -> {
@@ -397,7 +397,7 @@ public class DataRepo {
 
 	private static <T> void writeToJSON(String filename, String data) throws AppError {
 		try {
-			PrintWriter out = new PrintWriter("./src/main/resources/" + filename);
+			PrintWriter out = new PrintWriter("./src/main/resources/Data/" + filename);
 			out.write(data);
 			out.close();
 		} catch (Exception e) {

@@ -16,10 +16,10 @@ public class App extends Application {
     @Override
     public void start(Stage primaryStage) {
         try {
-            Parent root = FXMLLoader.load(getClass().getResource("/MainScene.fxml"));
+            Parent root = FXMLLoader.load(getClass().getResource("/UI/MainScene.fxml"));
             Scene scene = new Scene(root);
-            // scene.getStylesheets().add(getClass().getResource("/Label.css").toExternalForm());
-            String css = getClass().getResource("/choice.css").toExternalForm();
+            // scene.getStylesheets().add(getClass().getResource("/UI/Label.css").toExternalForm());
+            String css = getClass().getResource("/UI/choice.css").toExternalForm();
             scene.getStylesheets().add(css);
             primaryStage.setScene(scene);
             primaryStage.show();
