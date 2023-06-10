@@ -25,16 +25,16 @@ public enum InstrParam {
 		if (s == null) return null;
 		return switch (s) {
 			case "Pitch" -> PITCH;
-			case "Relvolume" -> RELVOLUME;
-			case "Absvolume" -> ABSVOLUME;
-			case "Delay_Echo" -> DELAY_ECHO;
-			case "Feedback_Echo" -> FEEDBACK_ECHO;
-			case "On_Off_Echo" -> ON_OFF_ECHO;
-			case "Delay_Reverb" -> DELAY_REVERB;
-			case "Feedback_Reverb" -> FEEDBACK_REVERB;
-			case "On_Off_Reverb" -> ON_OFF_REVERB;
-			case "Cutoff" -> CUTOFF;
-			case "On_Off_Filter" -> ON_OFF_FILTER;
+			case "Lautstärke" -> RELVOLUME;
+			case "An/Aus" -> ABSVOLUME;
+			case "Echo: Delay" -> DELAY_ECHO;
+			case "Echo: Level" -> FEEDBACK_ECHO;
+			case "Echo: An/Aus" -> ON_OFF_ECHO;
+			case "Reverb: Delay" -> DELAY_REVERB;
+			case "Reverb: Level" -> FEEDBACK_REVERB;
+			case "Reverb: An/Aus" -> ON_OFF_REVERB;
+			case "Filter: Frequenz" -> CUTOFF;
+			case "Filter: An/Aus" -> ON_OFF_FILTER;
 			case "Highpass" -> HIGHPASS;
 			case "Pan" -> PAN;
 			default -> null;
