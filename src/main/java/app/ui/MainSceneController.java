@@ -122,6 +122,11 @@ public class MainSceneController implements Initializable {
                 switch (msg.type) {
                     case FILTERED_SONIFIABLES -> {
                         clearCheckList();
+                        
+                        mapping.setOnInstrAdded(inst -> instAdded(inst.toString()));
+                        mapping.setOnEvInstrAdded(inst -> instAdded(inst.toString()));
+                        mapping.setOnInstrRemoved(inst -> instRemoved(inst.toString()));
+                        mapping.setOnEvInstrRemoved(inst -> instRemoved(inst.toString()));
                         List<Sonifiable> sonifiables = (List<Sonifiable>) msg.data;
                         // TODO: Decide whether we want to show all found sonifiables immediately or
                         // only like 10 at once, unless prompted by the user to show more
@@ -227,11 +232,6 @@ public class MainSceneController implements Initializable {
 
         filterCB.setCursor(Cursor.HAND);
         categoriesCB.setCursor(Cursor.HAND);
-
-        mapping.setOnInstrAdded(inst -> instAdded(inst.toString()));
-        mapping.setOnEvInstrAdded(inst -> instAdded(inst.toString()));
-        mapping.setOnInstrRemoved(inst -> instRemoved(inst.toString()));
-        mapping.setOnEvInstrRemoved(inst -> instRemoved(inst.toString()));
     }
 
     private void setDatePickerListeners(DatePicker datePicker, boolean isStartDate) {
@@ -667,9 +667,11 @@ public class MainSceneController implements Initializable {
     }
 
     private void instAdded(String name) {
+        if(name != null){
         Label label = new Label(name);
         label.setId("insLabel");
         instBox.getChildren().add(label);
+        }
     }
 
     private void instRemoved(String name) {
