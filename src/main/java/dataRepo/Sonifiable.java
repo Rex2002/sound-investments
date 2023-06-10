@@ -14,6 +14,10 @@ public class Sonifiable {
 		this.id = id;
 	}
 
+	public String getCompositeName() {
+		return name + " (" + id.symbol + ")";
+	}
+
 	public String getName() {
 		return this.name;
 	}

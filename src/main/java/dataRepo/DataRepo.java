@@ -150,7 +150,7 @@ public class DataRepo {
 		if (s == null) s = getSonifable(id, etfs);
 		if (s == null) s = getSonifable(id, indices);
 		if (s == null) return null;
-		else return s.getName();
+		else return s.getCompositeName();
 	}
 
 	private static Sonifiable getSonifable(SonifiableID id, List<Sonifiable> list) {

@@ -71,17 +71,19 @@ public class SynthLine {
     }
 
     private void applyFilter() {
-        if (data.getFilterData() != null)
-            Effect.IIR(out, data.getFilterData());
+        if (data.getFilterData() != null) {
+            System.out.println("we are filtering >party<");
+            out = Effect.IIR(out, data.getFilterData());
+        }
     }
 
     private void applyPan() {
-        for (int pos = 0; pos < out.length; pos += 2) {
+        for (int pos = 0; pos < out.length - 1; pos += 2) {
             double panValue = data.getPan()[Util.getRelPosition(pos, out.length, data.getPan().length)];
             if (panValue < 0) {
-                out[pos] = out[pos] * (1 - panValue) * -1;
+                out[pos + 1] *= (1 + panValue);
             } else if (panValue > 0) {
-                out[pos + 1] = out[pos + 1] * (1 - panValue);
+                out[pos] *= (1 - panValue);
             }
         }
     }

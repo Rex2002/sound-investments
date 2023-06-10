@@ -122,9 +122,12 @@ public class MainSceneController implements Initializable {
                     case FILTERED_SONIFIABLES -> {
                         clearCheckList();
                         Object[] sonifiables = (Object[]) msg.data;
-                        for (Object s : sonifiables) {
-                            addToCheckList((Sonifiable) s);
-                        }
+                        for (Object s : sonifiables) addToCheckList((Sonifiable) s);
+
+                        mapping.setOnInstrAdded(inst -> instAdded(inst.toString()));
+                        mapping.setOnEvInstrAdded(inst -> instAdded(inst.toString()));
+                        mapping.setOnInstrRemoved(inst -> instRemoved(inst.toString()));
+                        mapping.setOnEvInstrRemoved(inst -> instRemoved(inst.toString()));
                     }
                     case SONIFIABLE_FILTER -> {
                         SonifiableFilter filter = (SonifiableFilter) msg.data;
@@ -224,11 +227,6 @@ public class MainSceneController implements Initializable {
 
         filterCB.setCursor(Cursor.HAND);
         categoriesCB.setCursor(Cursor.HAND);
-
-        mapping.setOnInstrAdded(inst -> instAdded(inst.toString()));
-        mapping.setOnEvInstrAdded(inst -> instAdded(inst.toString()));
-        mapping.setOnInstrRemoved(inst -> instRemoved(inst.toString()));
-        mapping.setOnEvInstrRemoved(inst -> instRemoved(inst.toString()));
     }
 
     private void setDatePickerListeners(DatePicker datePicker, boolean isStartDate) {
@@ -302,7 +300,7 @@ public class MainSceneController implements Initializable {
     }
 
     public void addToCheckList(Sonifiable sonifiable) {
-        CheckBox cBox = new CheckBox(sonifiable.getName());
+        CheckBox cBox = new CheckBox(sonifiable.getCompositeName());
         cBox.setCursor(Cursor.HAND);
         cBox.setUserData(sonifiable);
 
@@ -562,7 +560,7 @@ public class MainSceneController implements Initializable {
         stockPane.getStyleClass().add("stockPane");
         stockPane.setUserData(sonifiable.getId());
         Label tField = new Label();
-        tField.setText(sonifiable.getName());
+        tField.setText(sonifiable.getCompositeName());
         tField.getStyleClass().add("txtField");
         tField.setLayoutX(168);
         tField.setLayoutY(8);
@@ -653,9 +651,11 @@ public class MainSceneController implements Initializable {
     }
 
     private void instAdded(String name) {
+        if(name != null){
         Label label = new Label(name);
         label.setId("insLabel");
         instBox.getChildren().add(label);
+        }
     }
 
     private void instRemoved(String name) {
