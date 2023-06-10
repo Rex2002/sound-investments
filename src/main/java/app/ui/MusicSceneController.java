@@ -28,12 +28,10 @@ import javafx.scene.paint.Paint;
 import javafx.scene.shape.Circle;
 import javafx.scene.text.Font;
 import javafx.stage.FileChooser;
-import javafx.stage.Stage;
 import javafx.util.Duration;
 import javafx.util.StringConverter;
 import util.ArrayFunctions;
 import util.DateUtil;
-
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
@@ -56,8 +54,6 @@ public class MusicSceneController implements Initializable {
 	@FXML private NumberAxis yAxis;
 	@FXML private Pane legendPane;
 	@FXML private TextField headerTitle;
-	@FXML private Stage stage;
-	@FXML private Scene scene;
 	@FXML private Button exportBtn;
 	@FXML private Button closeBtn;
 	@FXML private Slider musicSlider;
@@ -67,6 +63,9 @@ public class MusicSceneController implements Initializable {
 	@FXML private ImageView stopBtn;
 	@FXML private ImageView backBtn;
 	@FXML private ImageView forBtn;
+
+	// initialized externally
+    public Scene scene;
 
 	private CheckEQService checkEQService;
 	private PlaybackController pbc;
@@ -260,13 +259,9 @@ public class MusicSceneController implements Initializable {
             checkEQService.cancel();
             FXMLLoader loader = new FXMLLoader(getClass().getResource("/UI/MainScene.fxml"));
             Parent root = loader.load();
-            Stage stage = (Stage) anchor.getScene().getWindow();
-            Scene scene = new Scene(root);
-            String css = this.getClass().getResource("/UI/choice.css").toExternalForm();
-            // Set the stylesheet after the scene creation
-            scene.getStylesheets().add(css);
-            stage.setScene(scene);
-            stage.show();
+			MainSceneController controller = loader.getController();
+            controller.scene = scene;
+            scene.setRoot(root);
 			// Tell the StateManager, that we are back in the main scene again
 			EventQueues.toSM.put(new Msg<>(MsgToSMType.ENTERED_MAIN_SCENE));
         } catch (IOException e) {
