@@ -27,8 +27,11 @@ import java.util.function.Consumer;
 // however, it makes conceptually more sense to me, as the app's logic should be done in the main thread
 
 public class StateManager {
+	public static final int FILTER_MAX_AMOUNT = 100;
+
 	public static boolean isCurrentlySonifying = false;
 	public static SonifiableFilter sonifiableFilter = new SonifiableFilter("", FilterFlag.ALL);
+	public static int filterOffset = 0;
 	public static Mapping currentMapping;
 
 	public static void main(String[] args) {
@@ -99,8 +102,8 @@ public class StateManager {
 	}
 
 	private static void sendFilteredSonifiables() throws InterruptedException {
-		List<Sonifiable> list = StateManager.call(() -> DataRepo.findByPrefix(sonifiableFilter.prefix, sonifiableFilter.categoryFilter), List.of());
-		EventQueues.toUI.add(new Msg<>(MsgToUIType.FILTERED_SONIFIABLES, list));
+		Sonifiable[] arr = StateManager.call(() -> DataRepo.findByPrefix(filterOffset, FILTER_MAX_AMOUNT, sonifiableFilter.prefix, sonifiableFilter.categoryFilter), new Sonifiable[0]);
+		EventQueues.toUI.add(new Msg<>(MsgToUIType.FILTERED_SONIFIABLES, arr));
 	}
 
 	// Normalizes the values to be in the range of 0 to 1 (inclusive on both ends)

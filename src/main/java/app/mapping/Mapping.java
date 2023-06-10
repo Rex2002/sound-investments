@@ -191,7 +191,7 @@ public class Mapping {
 
 	public boolean hasSonifiable(SonifiableID id) {
 		for (Sonifiable s : sonifiables) {
-			if (s.getId() == id) return true;
+			if (s.getId().equals(id)) return true;
 		}
 		return false;
 	}
@@ -362,18 +362,6 @@ public class Mapping {
 		}
 		for (int i = 0; i < evInstrAmount; i++) {
 			out[len++] = eventInstruments[i].getInstrument().toString();
-		}
-		return out;
-	}
-
-	// Returns list with first element being the earliest & second element being the last allowed date
-	public Calendar[] getDateRange() {
-		Calendar[] out = {null, null};
-		for (Sonifiable s : sonifiables) {
-			if (out[0] == null || out[0].after(s.getEarliest()))
-				out[0] = s.getEarliest();
-			if (out[1] == null || out[1].before(s.getLatest()))
-				out[1] = s.getLatest();
 		}
 		return out;
 	}

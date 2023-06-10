@@ -7,8 +7,8 @@ public class SonifiableID {
 	public String symbol;
 
 	public SonifiableID(String symbol, String exchange) {
-		this.symbol = symbol;
-		this.exchange = exchange;
+		this.symbol   = symbol.replace('"', '\'');
+		this.exchange = exchange.replace('"', '\'');
 	}
 
 	public String getExchange() {
