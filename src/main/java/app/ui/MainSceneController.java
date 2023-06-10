@@ -112,7 +112,7 @@ public class MainSceneController implements Initializable {
         categoriesCB.getItems().addAll(MainSceneController.categoryKeys);
         enableBtnIfValid();
 
-        closeImg = new Image(getClass().getResource("/close_icon_w_bg.png").toExternalForm());
+        closeImg = new Image(getClass().getResource("/UI/close_icon.png").toExternalForm());
 
         checkEQService = new CheckEQService();
         checkEQService.setPeriod(Duration.millis(100));
@@ -198,7 +198,7 @@ public class MainSceneController implements Initializable {
                 startedSonification = true;
                 EventQueues.toSM.add(new Msg<>(MsgToSMType.START, mapping));
                 // Show loading image
-                loading = new ImageView(new Image(getClass().getResource("/loading.png").toExternalForm()));
+                loading = new ImageView(new Image(getClass().getResource("/UI/loading.png").toExternalForm()));
                 double loadingWidth = 150;
                 double loadingHeight = 150;
                 loading.setFitWidth(loadingWidth);
@@ -283,13 +283,13 @@ public class MainSceneController implements Initializable {
     public void switchToMusicScene(MusicData musicData) {
         try {
             checkEQService.cancel();
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/MusicScene.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/UI/MusicScene.fxml"));
             Parent root = loader.load();
             MusicSceneController controller = loader.getController();
             controller.passData(musicData);
             Stage stage = (Stage) startBtn.getScene().getWindow();
             Scene scene = new Scene(root);
-            String css = this.getClass().getResource("/choice.css").toExternalForm();
+            String css = this.getClass().getResource("/UI/choice.css").toExternalForm();
             // Set the stylesheet after the scene creation
             scene.getStylesheets().add(css);
             stage.setScene(scene);

@@ -1,0 +1,152 @@
+[
+    {
+    "timestamp": 1655467200,
+    "gmtoffset": 0,
+    "datetime": "2022-06-21 14:00:00",
+    "open": 1.0,
+    "high": 1.0,
+    "low": 1.0,
+    "close": 1.0,
+    "volume": 85123
+},
+{
+    "timestamp": 1655470800,
+    "gmtoffset": 0,
+    "datetime": "2022-06-21 14:30:00",
+    "open": 4.0,
+    "high": 4.0,
+    "low": 4.0,
+    "close": 4.0,
+    "volume": 4.0
+},
+{
+    "timestamp": 1655474400,
+    "gmtoffset": 0,
+    "datetime": "2022-06-21 15:00:00",
+    "open": 1.5,
+    "high": 1.5,
+    "low": 1.5,
+    "close": 1.5,
+    "volume": 187688
+},
+{
+    "timestamp": 1655478000,
+    "gmtoffset": 0,
+    "datetime": "2022-06-21 15:30:00",
+    "open": 3.5,
+    "high": 3.5,
+    "low": 3.5,
+    "close": 3.5,
+    "volume": 135547
+},
+{
+    "timestamp": 1655479800,
+    "gmtoffset": 0,
+    "datetime": "2022-06-21 16:00:00",
+    "open": 2.0,
+    "high": 2.0,
+    "low": 2.0,
+    "close": 2.0,
+    "volume": null
+},
+{
+    "timestamp": 1655708400,
+    "gmtoffset": 0,
+    "datetime": "2022-06-22 07:00:00",
+    "open": 3.0,
+    "high": 3.0,
+    "low": 3.0,
+    "close": 3.0,
+    "volume": null
+},
+{
+    "timestamp": 1655712000,
+    "gmtoffset": 0,
+    "datetime": "2022-06-22 08:00:00",
+    "open": 2.5,
+    "high": 2.5,
+    "low": 2.5,
+    "close": 2.5,
+    "volume": 85477
+},
+{
+    "timestamp": 1655715600,
+    "gmtoffset": 0,
+    "datetime": "2022-06-22 09:00:00",
+    "open": 85.18,
+    "high": 85.590002,
+    "low": 84.25,
+    "close": 85.400001,
+    "volume": 62234
+},
+{
+    "timestamp": 1655719200,
+    "gmtoffset": 0,
+    "datetime": "2022-06-22 10:00:00",
+    "open": 86.419998,
+    "high": 86.879997,
+    "low": 86.389999,
+    "close": 86.569999,
+    "volume": 63910
+},
+{
+    "timestamp": 1655722800,
+    "gmtoffset": 0,
+    "datetime": "2022-06-22 11:00:00",
+    "open": 80.639999,
+    "high": 80.800003,
+    "low": 80.480003,
+    "close": 80.68,
+    "volume": 43260
+},
+{
+    "timestamp": 1655722800,
+    "gmtoffset": 0,
+    "datetime": "2022-06-22 12:00:00",
+    "open": 85.639999,
+    "high": 85.800003,
+    "low": 85.480003,
+    "close": 85.68,
+    "volume": 43260
+},
+{
+    "timestamp": 1655722800,
+    "gmtoffset": 0,
+    "datetime": "2022-06-22 13:00:00",
+    "open": 83.639999,
+    "high": 83.800003,
+    "low": 83.480003,
+    "close": 83.68,
+    "volume": 43260
+},
+{
+    "timestamp": 1655722800,
+    "gmtoffset": 0,
+    "datetime": "2022-06-22 14:00:00",
+    "open": 84.639999,
+    "high": 84.800003,
+    "low": 84.480003,
+    "close": 84.68,
+    "volume": 43260
+},
+{
+    "timestamp": 1655722800,
+    "gmtoffset": 0,
+    "datetime": "2022-06-22 15:00:00",
+    "open": 88.639999,
+    "high": 88.800003,
+    "low": 88.480003,
+    "close": 88.68,
+    "volume": 43260
+},
+{
+    "timestamp": 1655722800,
+    "gmtoffset": 0,
+    "datetime": "2022-06-22 16:00:00",
+    "open": 88.639999,
+    "high": 88.800003,
+    "low": 88.480003,
+    "close": 88.68,
+    "volume": 43260
+}
+]

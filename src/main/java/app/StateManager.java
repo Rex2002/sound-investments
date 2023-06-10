@@ -138,20 +138,16 @@ public class StateManager {
 		return normalized;
 	}
 
-	public static double[] calcLineData(ExchangeData<LineData> ed, HashMap<SonifiableID, List<Price>> priceMap) throws AppError {
+	public static double[] calcLineData(ExchangeData<LineData> ed, HashMap<SonifiableID, Analyzer> priceMap) throws AppError {
 		if (ed == null) return null;
-		List<Price> prices = priceMap.get(ed.getId());
-		int firstNoneNull = getValidPrice(prices, true);
-		int lastNoneNull = getValidPrice(prices, false);
-		List<Price> cutPrices = prices.subList(firstNoneNull, lastNoneNull + 1);
-		double[] calculatedPrices = switch (ed.getData()) {
-			case PRICE -> normalizeValues(getPriceValues(cutPrices));
-			case MOVINGAVG -> normalizeValues(GeneralTrends.calculateMovingAverage(cutPrices));
- 			case RELCHANGE -> throw new AppError("RELCHANGE ist noch nicht implementiert");
-		};
-		double[] ret = new double[prices.size()];
+		Analyzer analyzer = priceMap.get(ed.getId());
+		double[] ret = new double[analyzer.getPrices().size()];
+		int firstNoneNull = getValidPrice(analyzer.getPrices(), true);
+		int lastNoneNull = getValidPrice(analyzer.getPrices(), false);
+		analyzer.cutPrices(firstNoneNull, lastNoneNull + 1);
+		double[] normalized = normalizeValues(analyzer.get(ed.getData()));
 		Arrays.fill(ret, -1);
-		System.arraycopy(calculatedPrices, 0, ret, firstNoneNull, calculatedPrices.length);
+		System.arraycopy(normalized, 0, ret, firstNoneNull, normalized.length);
 		return ret;
 
 	}
@@ -174,32 +170,23 @@ public class StateManager {
 		return false;
 	}
 
-	public static boolean[] calcRangeData(ExchangeData<RangeData> ed, HashMap<SonifiableID, List<Price>> priceMap) {
+	public static boolean[] calcRangeData(ExchangeData<RangeData> ed, HashMap<SonifiableID, Analyzer> priceMap) {
 		if (ed == null) return null;
-		List<Price> prices = priceMap.get(ed.getId());
-		int firstNoneNull = getValidPrice(prices, true);
-		int lastNoneNull = getValidPrice(prices, false);
-		List<Price> cutPrices = prices.subList(firstNoneNull, lastNoneNull + 1);
-		boolean[] calculatedPrices = switch (ed.getData()) {
-			case FLAG -> FlagFormationAnalyzer.analyze(cutPrices);
-			case TRIANGLE -> new TriangleFormationAnalyzer().analyze(cutPrices);
-			case VFORM -> new VFormationAnalyzer().analyze(cutPrices);
-		};
-		boolean[] ret = new boolean[prices.size()];
+		Analyzer analyzer = priceMap.get(ed.getId());
+		boolean[] ret = new boolean[analyzer.getPrices().size()];
+		int firstNoneNull = getValidPrice(analyzer.getPrices(), true);
+		int lastNoneNull = getValidPrice(analyzer.getPrices(), false);
+		analyzer.cutPrices(firstNoneNull, lastNoneNull + 1);
+		boolean[] calculatedPrices = analyzer.get(ed.getData());
 		Arrays.fill(ret, false);
 		System.arraycopy(calculatedPrices, 0, ret, firstNoneNull, calculatedPrices.length);
 		return ret;
 	}
 
-	public static boolean[] calcPointData(ExchangeData<PointData> ed, HashMap<SonifiableID, List<Price>> priceMap) throws AppError {
+	public static boolean[] calcPointData(ExchangeData<PointData> ed, HashMap<SonifiableID, Analyzer> priceMap) throws AppError {
 		if (ed == null) return null;
-		List<Price> prices = priceMap.get(ed.getId());
-		return switch (ed.getData()) {
-			case EQMOVINGAVG -> GeneralTrends.AverageIntersectsStock(GeneralTrends.calculateMovingAverage(prices), prices);
-			case TRENDBREAK -> throw new AppError("TRENDBREAK ist noch nicht implementiert");
-			case EQSUPPORT -> throw new AppError("EQSUPPORT ist noch nicht implementiert");
-			case EQRESIST -> throw new AppError("EQRESIST ist noch nicht implementiert");
-		};
+		Analyzer analyzer = priceMap.get(ed.getId());
+		return analyzer.get(ed.getData());
 	}
 
 	// Change the mapping to test different functionalities
@@ -221,9 +208,9 @@ public class StateManager {
 	}
 
 
-	public static void padPrices(Map<SonifiableID, List<Price>> priceMap, Calendar startDate, Calendar endDate, IntervalLength interval, int maxLength) {
+	public static void padPrices(Map<SonifiableID, Analyzer> priceMap, Calendar startDate, Calendar endDate, IntervalLength interval, int maxLength) {
 		for(SonifiableID id : priceMap.keySet()){
-			List<Price> prices = priceMap.get(id);
+			List<Price> prices = priceMap.get(id).getPrices();
 			int lengthDiff = maxLength - prices.size();
 			if(lengthDiff == 0){
 				continue;
@@ -242,7 +229,7 @@ public class StateManager {
 				prices.add(new Price(startDate, prices.get(0).start, prices.get(0).end, -1.0,-1.0,-1.0,-1.0));
 			}
 			// not quite sure if this is necessary, but not taking any risks for weird bugs...
-			priceMap.put(id, prices);
+			priceMap.get(id).setPrices(prices);
 			System.out.println("Updated length: " + prices.size());
 		}
 	}
@@ -259,7 +246,7 @@ public class StateManager {
 	public static MusicData sonifyMapping(Mapping mapping) {
 		return call(() -> {
 			SonifiableID[] sonifiables = mapping.getMappedSonifiableIDs().toArray(new SonifiableID[0]);
-			HashMap<SonifiableID, List<Price>> priceMap = new HashMap<>(sonifiables.length);
+			HashMap<SonifiableID, Analyzer> priceMap = new HashMap<>(sonifiables.length);
 			FutureList<List<Price>> getPricesFutures = new FutureList<>(sonifiables.length);
 			IntervalLength intervalLength = determineIntervalLength(mapping.getStartDate(), mapping.getEndDate());
 			for (SonifiableID sonifiableID : sonifiables) {
@@ -273,7 +260,7 @@ public class StateManager {
 				for (int i = 0; i < prices.size(); i++) {
 					if (prices.get(i) == null || prices.get(i).size() == 0)
 						throw new AppError("Fehler beim Einholen von Preis-Daten von " + sonifiables[i].getSymbol());
-					priceMap.put(sonifiables[i], prices.get(i));
+					priceMap.put(sonifiables[i], new Analyzer(prices.get(i)));
 					System.out.println("Length: " + prices.get(i).size());
 					maxPriceLen = Math.max(maxPriceLen, prices.get(i).size());
 				}
@@ -332,7 +319,9 @@ public class StateManager {
 				sonifiableNames[i] = DataRepo.getSonifiableName(sonifiables[i]);
 			}
 			isCurrentlySonifying = false;
-			return new MusicData(pbc, sonifiableNames, priceMap.values());
+			List<List<Price>> musicDataPrices = new ArrayList<>(priceMap.size());
+			for (Analyzer analyzer : priceMap.values()) musicDataPrices.add(analyzer.getPrices());
+			return new MusicData(pbc, sonifiableNames, musicDataPrices);
 		}, null);
 
 	}

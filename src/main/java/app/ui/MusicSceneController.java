@@ -100,8 +100,8 @@ public class MusicSceneController implements Initializable {
 			}
 		});
 
-		playImage = new Image(getClass().getResource("/play_btn.png").toString());
-		pauseImage = new Image(getClass().getResource("/pause_btn.png").toString());
+		playImage = new Image(getClass().getResource("/UI/play_btn.png").toString());
+		pauseImage = new Image(getClass().getResource("/UI/pause_btn.png").toString());
 		playBtn.setImage(pauseImage);
 		playBtn.setOnMouseClicked(ev -> this.pausePlaySound());
 		forBtn.setOnMouseClicked(ev -> pbc.skipForward());
@@ -248,11 +248,11 @@ public class MusicSceneController implements Initializable {
 		try {
 			myTimer.cancel();
             checkEQService.cancel();
-            FXMLLoader loader = new FXMLLoader(getClass().getResource("/MainScene.fxml"));
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/UI/MainScene.fxml"));
             Parent root = loader.load();
             Stage stage = (Stage) anchor.getScene().getWindow();
             Scene scene = new Scene(root);
-            String css = this.getClass().getResource("/choice.css").toExternalForm();
+            String css = this.getClass().getResource("/UI/choice.css").toExternalForm();
             // Set the stylesheet after the scene creation
             scene.getStylesheets().add(css);
             stage.setScene(scene);
