@@ -1,10 +1,8 @@
 package dataRepo;
 
 import app.AppError;
-import dataRepo.api.APIErr;
 import dataRepo.api.APIReq;
 import dataRepo.api.AuthPolicy;
-import dataRepo.api.PaginationHandler;
 import dataRepo.json.JsonPrimitive;
 import dataRepo.json.Parser;
 import util.ArrayFunctions;
@@ -12,19 +10,26 @@ import util.DateUtil;
 import util.FutureList;
 import util.UnorderedList;
 
-import java.io.PrintWriter;
+import java.net.URL;
+import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.sql.Timestamp;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Function;
 
 public class DataRepo {
-	private static final boolean GET_PRICES_DYNAMICALLY = true;
+	private static final boolean GET_PRICES_DYNAMICALLY    = true;
+	private static final boolean GET_EXCHANGES_DYNAMICALLY = false;
+	private static final boolean UPDATE_SONIFIABLES        = true;
+
+	private static final int          UPDATE_PERIOD_IN_DAYS = 5;
+	private static final List<String> DEFAULT_EXCHANGES     = List.of("NYSE", "NASDAQ", "XETRA", "F", "BE", "MU");
 
 	private static final String[] apiToksLeeway = { "pgz64a5qiuvw4qhkoullnx", "9pe3xyaplenvfvbnyxtomm", "r7splaijduabfpcu2z2l14",
 			"o5npdx6elm2pcpp395uaun", "2ja5gszii8g63hzjd41x78", "ftd5l4hscm9biueu5ptptr", "42dreongzzo5yqkyg2r3cr",
@@ -33,20 +38,10 @@ public class DataRepo {
 			"1a7byxsvpyleppn373eel2", "hgffb6jusiy2yb3121wxik", "oogf9s7g8oqg9tg4fxc2yr"
 	};
 
-	private static final String[] apiToksMarketstack = { "4b6a78c092537f07bbdedff8f134372d",
-			"0c2e8a9c96f2a74c0049f4b662f47b40",
-			"621fc5e0add038cc7d9697bcb7f15caa", "4312dfd8788579ec14ee9e9c9bec4557",
-			"0a99047c49080d975013978d3609ca9e" };
-	private static final String[] apiToksTwelvedata = { "04ed9e666cbb4873ac6d29651e2b4d7e",
-			"7e51ed4d1d5f4cbfa6e6bcc8569c1e54",
-			"98888ec975884e98a9555233c3dd59da", "af38d2454c2c4a579768b8262d3e039e",
-			"facbd6808e6d436e95c4935ab8cc082e" };
+	private static String lastUpdateFilePath = "/Data/last-updated.txt";
 
 	// to prevent race conditions when making requests via the same APIReq object in different threads,
 	// we create a new APIReq object for each sequential task
-	private static APIReq getApiTwelvedata() {
-		return new APIReq("https://api.twelvedata.com/", apiToksTwelvedata, AuthPolicy.QUERY, "apikey");
-	}
 	private static APIReq getApiLeeway() {
 		return new APIReq("https://api.leeway.tech/api/v1/public/", apiToksLeeway, AuthPolicy.QUERY, "apitoken",
 			null, null, APIReq.rateLimitErrHandler(res -> {
@@ -55,52 +50,29 @@ public class DataRepo {
 				return false;
 			}));
 	}
-	private static APIReq getApiMarketstack() {
-		return new APIReq("http://api.marketstack.com/v1/", apiToksMarketstack, AuthPolicy.QUERY, "access_key",
-			new PaginationHandler(json -> {
-				// @Cleanup Remove hardcoded limit
-				return 30;
-			}, json -> json.asMap().get("data")),
-			(page) -> {
-				// @Cleanup Remove hardcoded offset
-				// The function signature might have to change too, bc we need the current limit
-				// for calculating the offset and I don't know how to get the limit without
-				// having access to the APIReq object
-				String[] res = { "offset", Integer.toString(10 * page) };
-				return res;
-			}, APIReq.defaultErrHandler());
-	}
 
 	// @Scalability If more than one component would need to react to updated data,
 	// a single boolean flag would not be sufficient of course. Since we know,
 	// however, that only the StateManager reacts to this information, having a
 	// single boolean flag is completely sufficient
-	public static AtomicBoolean updatedData = new AtomicBoolean(false);
-	private static BlockingQueue<Runnable> tpQueue = new LinkedBlockingQueue<>();
-	private static ThreadPoolExecutor threadPool = new ThreadPoolExecutor(16, 64, 60, TimeUnit.SECONDS,
-			tpQueue);
+	public static AtomicBoolean updatedData        = new AtomicBoolean(false);
+	private static ThreadPoolExecutor threadPool   = new ThreadPoolExecutor(16, 64, 60, TimeUnit.SECONDS, new LinkedBlockingQueue<>());
 
-	private static UnorderedList<Stock> stocks = new UnorderedList<>(128);
-	private static UnorderedList<ETF> etfs = new UnorderedList<>(128);
-	private static UnorderedList<Index> indices = new UnorderedList<>(128);
-
-	// When updatedStocksTradingPeriods == stocks.size(), all stocks are updated set by setTradingPeriods()
-	private static AtomicInteger updatedStocksTradingPeriods = new AtomicInteger(stocks.size());
-	private static AtomicInteger updatedETFsTradingPeriods = new AtomicInteger(etfs.size());
-	private static AtomicInteger updatedIndicesTradingPeriods = new AtomicInteger(indices.size());
-	private static int updatedTradingPeriodsCounter = 0; // Amount of sonifiables lists, whose trading periods have updated
+	private static UnorderedList<Sonifiable> stocks  = new UnorderedList<>(128);
+	private static UnorderedList<Sonifiable> etfs    = new UnorderedList<>(128);
+	private static UnorderedList<Sonifiable> indices = new UnorderedList<>(128);
 
 	private static List<Price> testPrices() {
 		try {
-			String fname = "./src/main/resources/TestData/TestPrices.json";
-			String json = Files.readString(Path.of(fname));
+			String fname  = "./src/main/resources/TestData/TestPrices.json";
+			String json   = Files.readString(Path.of(fname));
 			Parser parser = new Parser();
 			List<Price> prices = parser.parse(fname, json).applyList(x -> {
 				try {
 					HashMap<String, JsonPrimitive<?>> m = x.asMap();
 					Calendar startDay = DateUtil.calFromDateStr(m.get("datetime").asStr());
 					Instant startTime = DateUtil.fmtDatetime.parse(m.get("datetime").asStr()).toInstant();
-					Instant endTime = IntervalLength.HOUR.addToInstant(startTime);
+					Instant endTime   = IntervalLength.HOUR.addToInstant(startTime);
 
 					return new Price(startDay, startTime, endTime, m.get("open").asDouble(),
 							m.get("close").asDouble(), m.get("low").asDouble(), m.get("high").asDouble());
@@ -118,54 +90,54 @@ public class DataRepo {
 	public static void init() throws AppError {
 		try {
 			// Read cached stocks
-			Parser parser = new Parser();
-			String stocksRes = Files.readString(Path.of("./src/main/resources/Data/stocks.json"));
-			JsonPrimitive<?> json = parser.parse(stocksRes);
-			stocks = json
-					.applyList(x -> {
-						Calendar earliest = null, latest = null;
-						try {
-							earliest = DateUtil.calFromDateStr(x.asMap().get("earliest").asStr());
-							latest = DateUtil.calFromDateStr(x.asMap().get("latest").asStr());
-						} catch (Exception e) {
-						}
-						return new Stock(x.asMap().get("name").asStr(),
-								new SonifiableID(x.asMap().get("id").asMap().get("symbol").asStr(),
-										x.asMap().get("id").asMap().get("exchange").asStr()),
-								earliest,
-								latest);
-					}, new UnorderedList<>(json.asList().size()), true);
+			stocks  = readFromJSON("stocks");
+			etfs    = readFromJSON("etfs");
+			indices = readFromJSON("indices");
 
-			// TODO: Read cached ETFs/Indices
-
-			// @Cleanup uncomment for production
-			// Start updating stocks in background
-			// updateSonifiablesList();
+			if (UPDATE_SONIFIABLES) {
+				Instant lastUpdate = getLastUpdateDay();
+				if (lastUpdate == null || lastUpdate.plus(UPDATE_PERIOD_IN_DAYS, ChronoUnit.DAYS).isBefore(Instant.now()))
+					updateSonifiablesList();
+			}
 		} catch (Exception e) {
 			e.printStackTrace();
 			throw new AppError(e.getMessage());
 		}
 	}
 
-	public static List<Sonifiable> findByPrefix(String prefix, FilterFlag... filters) {
+	public static Sonifiable[] findByPrefix(int startIdx, int length, String prefix, FilterFlag... filters) {
+		int filledLen = 0;
 		int flag = FilterFlag.getFilterVal(filters);
-		List<Sonifiable> l = new ArrayList<>(128);
+		Sonifiable[] l = new Sonifiable[length];
+
 		if ((flag & FilterFlag.STOCK.getVal()) > 0)
-			findByPrefix(prefix, stocks, l);
+			filledLen = findByPrefix(prefix, stocks,  startIdx,             l, filledLen);
 		if ((flag & FilterFlag.ETF.getVal()) > 0)
-			findByPrefix(prefix, etfs, l);
+			filledLen = findByPrefix(prefix, etfs,    startIdx - filledLen, l, filledLen);
 		if ((flag & FilterFlag.INDEX.getVal()) > 0)
-			findByPrefix(prefix, indices, l);
-		return l;
+			filledLen = findByPrefix(prefix, indices, startIdx - filledLen, l, filledLen);
+
+		if (filledLen < length) {
+			Sonifiable[] newL = new Sonifiable[filledLen];
+			System.arraycopy(l, 0, newL, 0, filledLen);
+			return newL;
+		} else {
+			return l;
+		}
 	}
 
-	private static void findByPrefix(String prefix, List<? extends Sonifiable> src, List<Sonifiable> dst) {
+	private static int findByPrefix(String prefix, List<? extends Sonifiable> src, int srcOffset, Sonifiable[] dst, int dstOffset) {
+		if (dstOffset == dst.length) return dstOffset;
+		int i = 0;
 		for (Sonifiable s : src) {
 			if (s != null && (s.name.toLowerCase().startsWith(prefix.toLowerCase())
-					|| s.getId().symbol.toLowerCase().startsWith(prefix.toLowerCase()))) {
-				dst.add(s);
+					           || s.getId().symbol.toLowerCase().startsWith(prefix.toLowerCase()))
+					      && i++ >= srcOffset) {
+				dst[dstOffset++] = s;
+				if (dstOffset == dst.length) break;
 			}
 		}
+		return dstOffset;
 	}
 
 	public static List<Sonifiable> getAll(FilterFlag... filters) {
@@ -188,20 +160,8 @@ public class DataRepo {
 		else return s.getCompositeName();
 	}
 
-	public static Stock getStock(SonifiableID id) {
-		return getSonifable(id, stocks);
-	}
-
-	public static ETF getETF(SonifiableID id) {
-		return getSonifable(id, etfs);
-	}
-
-	public static Index getIndex(SonifiableID id) {
-		return getSonifable(id, indices);
-	}
-
-	private static <T extends Sonifiable> T getSonifable(SonifiableID id, List<T> list) {
-		for (T x : list) {
+	private static Sonifiable getSonifable(SonifiableID id, List<Sonifiable> list) {
+		for (Sonifiable x : list) {
 			if (x.getId() == id)
 				return x;
 		}
@@ -219,18 +179,14 @@ public class DataRepo {
 			// Idea for doing this: See how long the date-range in the first response was
 			// then split the rest of the range for start->end into chunks of that range
 			// To achieve this, the signatures for pagination handlers most certainly have to be changed again
-
-			// TODO: Use interval - at the moment we assume that interval == DAY and just make end-of-day API-requests
 			try {
 				List<Price> out = new ArrayList<>(1024);
 				Calendar earliestDay = startEnd[1];
 				// Because leeway's range is exclusive, we need to decrease the startdate that we put in the request and keep the same for comparison of the loop
 				Calendar startCmp = (Calendar) startEnd[0].clone();
 				startEnd[0].roll(Calendar.DATE, false);
-				// TODO: Leeway throws error if range is more than 600 days
+				// Leeway throws error if range is more than 600 days -> is handled in StateManager determining the Interval
 
-				// TODO Bug: There seems to be an issue with DateUtil parsing the dates of the prices wrong or something
-				// until that bug is fixed, I commented the otherwise potentially endless loop out
 				boolean isEoD = interval == IntervalLength.DAY;
 				String endpoint = (isEoD ? "historicalquotes/" : "intraday/") + s;
 				String[] intervalQueries = {"interval", interval.toString(API.LEEWAY)};
@@ -284,187 +240,111 @@ public class DataRepo {
 		});
 	}
 
-
-	//////////////////////////
-	// Potentially obsolete???
-	//////////////////////////
-
-	public static void updateSonifiablesList() throws AppError {
+	public static Instant getLastUpdateDay() {
 		try {
-			// @Cleanup increase limit to the maximum (1000) for production
-			// @Cleanup As of now this limit value has to be synced with the offset when creating the Marketstack APIReq bc of hardcoded values
-			APIReq apiMarketstack = getApiMarketstack();
-			apiMarketstack.setQueries("limit", "10");
-			FutureList<UnorderedList<Stock>> fl = apiMarketstack.getPaginatedJSONList("tickers", threadPool, 8,
-					(Function<Integer, UnorderedList<Stock>>) (size -> {
-						UnorderedList<Stock> l = new UnorderedList<>(size);
-						for (int i = 0; i < size; i++)
-							l.add(i, null);
-						return l;
-					}),
-					x -> x, (Function<JsonPrimitive<?>, Stock>) (x -> {
+			String str = Files.readString(Paths.get(DataRepo.class.getResource(lastUpdateFilePath).toURI()));
+			return Instant.ofEpochMilli(Long.valueOf(str));
+		} catch (Exception e) {
+			return null;
+		}
+	}
+
+	public static void updateSonifiablesList() {
+		threadPool.submit(() -> {
+			try {
+				List<String> exchanges = DEFAULT_EXCHANGES;
+				if (GET_EXCHANGES_DYNAMICALLY) {
+					APIReq apiLeeway = getApiLeeway();
+					exchanges = apiLeeway.getJSONList("general/exchanges", json -> json.asMap().get("Code").asStr());
+				}
+
+				FutureList<List<ExtendedSonifiable>> fl = new FutureList<>(exchanges.size());
+				for (int i = 0; i < exchanges.size(); i++) {
+					String exchange = exchanges.get(i);
+					fl.add(threadPool.submit(() -> {
 						try {
-							String symbol = x.asMap().get("symbol").asStr();
-							String exchange = x.asMap().get("stock_exchange").asMap().get("acronym").asStr();
-							if (symbol.contains(".") || exchange.contains("."))
-								return null;
-							return new Stock(x.asMap().get("name").asStr(),
-									new SonifiableID(symbol, exchange));
+							return getApiLeeway().getJSONList("general/symbols/" + exchange, json -> {
+								HashMap<String, JsonPrimitive<?>> m = json.asMap();
+								JsonPrimitive<?> typeJson = m.get("Type");
+								SonifiableType type = SonifiableType.fromString(typeJson.isNull() ? "" : typeJson.asStr());
+								if (type == SonifiableType.NONE) return null;
+								return new ExtendedSonifiable(type, new Sonifiable(
+									m.get("Name").asStr(), new SonifiableID(m.get("Code").asStr(), exchange)
+								));
+							}, true);
 						} catch (Exception e) {
 							return null;
 						}
 					}));
-			Timer checkFLTimer = new Timer();
-			checkFLTimer.scheduleAtFixedRate(new TimerTask() {
-				public void run() {
-					try {
-						if (fl.isDone()) {
-							// Remove nulls from stocks-list
-							stocks = fl.get();
-							stocks.applyRemoves();
-							for (int i = 0; i < stocks.size(); i++) {
-								if (stocks.get(i) == null) {
-									stocks.remove(i);
-									i--;
-								}
+				}
+
+				UnorderedList<Sonifiable> newStocks  = new UnorderedList<>(4096);
+				UnorderedList<Sonifiable> newEtfs    = new UnorderedList<>(2048);
+				UnorderedList<Sonifiable> newIndices = new UnorderedList<>(2048);
+				Object[] allSonifiables = fl.getAll();
+				for (Object sonifiables : allSonifiables) {
+					for (ExtendedSonifiable s : (List<ExtendedSonifiable>) sonifiables) {
+						switch (s.type) {
+							// @Performance it's absurd to create new objects here
+							// solution would be to have stocks/etfs/indices be lists of sonifiables
+							case STOCK -> newStocks.add(s.sonifiable);
+							case ETF -> newEtfs.add(s.sonifiable);
+							case INDEX -> newIndices.add(s.sonifiable);
+							case NONE -> {
+								System.out.println("Unreachable: We shouldn't be able to still get unidentified Sonifiables after awaiting all futures");
 							}
-
-							setTradingPeriods(stocks, updatedStocksTradingPeriods);
-
-							// TODO: Update ETFs and Stocks too
-
-							Timer timer = new Timer();
-							timer.scheduleAtFixedRate(new TimerTask() {
-								public void run() {
-									// TODO: Refactor to reduce code duplication
-									boolean updatedTradingPeriods = false;
-									if (updatedStocksTradingPeriods.compareAndSet(stocks.size(), 0)) {
-										updatedTradingPeriods = true;
-										updatedTradingPeriodsCounter++;
-										for (int i = 0; i < stocks.size(); i++) {
-											if (stocks.get(i) == null || stocks.get(i).getEarliest() == null) {
-												stocks.remove(i);
-												i--;
-											}
-										}
-									}
-									// @Cleanup uncomment once we actually get data for etfs/indices
-									// needs to be commented out for now, bc the code doesn't work when list.size()
-									// == 0
-									// if (updatedETFsTradingPeriods.compareAndSet(etfs.size(), 0)) {
-									// updatedTradingPeriods = true;
-									// updatedTradingPeriodsCounter++;
-									// etfs.applyRemoves();
-									// }
-									// if (updatedIndicesTradingPeriods.compareAndSet(indices.size(), 0)) {
-									// updatedTradingPeriods = true;
-									// updatedTradingPeriodsCounter++;
-									// indices.applyRemoves();
-									// }
-
-									System.out.println(
-											"Timer check: ThreadPool = " + threadPool.toString());
-
-									if (updatedTradingPeriods)
-										updatedData.set(true);
-									// @Cleanup exchange 1 with 3, once we get data for etfs/indices too
-									if (updatedTradingPeriodsCounter >= 1) {
-										updatedTradingPeriodsCounter = 0;
-										System.out.println("Setting Trading Periods done");
-										timer.cancel();
-										try {
-											writeToJSON("stocks.json", ArrayFunctions.toStringArr(stocks.getArray(), x -> ((Sonifiable) x).toJSON(), true));
-										} catch (AppError e) {
-											e.printStackTrace();
-										}
-									}
-								}
-							}, 500, 200);
-
-							checkFLTimer.cancel();
 						}
-					} catch (Throwable e) {
-						e.printStackTrace();
-						checkFLTimer.cancel();
 					}
 				}
-			}, 1000, 200);
+
+				// Cache data for future use
+				stocks = newStocks;
+				etfs = newEtfs;
+				indices = newIndices;
+				writeToJSON("stocks",  ArrayFunctions.toStringArr(stocks.getArray(),  s -> ((Sonifiable) s).toJSON(), true));
+				writeToJSON("etfs",    ArrayFunctions.toStringArr(etfs.getArray(),    s -> ((Sonifiable) s).toJSON(), true));
+				writeToJSON("indices", ArrayFunctions.toStringArr(indices.getArray(), s -> ((Sonifiable) s).toJSON(), true));
+				System.out.println("Wrote new data into cached files");
+
+				Files.write(Path.of(DataRepo.class.getResource(lastUpdateFilePath).toURI()), Long.toString(Instant.now().toEpochMilli()).getBytes(), StandardOpenOption.CREATE);
+
+				System.out.println("New stocks length: " + stocks.size());
+				System.out.println("New etfs length: " + etfs.size());
+				System.out.println("New indices length: " + indices.size());
+				updatedData.set(true);
+			} catch (Throwable e) {
+				// we intentionally ignore this error, as it's not effecting the user in this moment
+				e.printStackTrace();
+			}
+		});
+	}
+
+	@SuppressWarnings("unchecked")
+	public static<T extends Sonifiable> UnorderedList<T> readFromJSON(String filename) throws AppError {
+		try {
+			Parser parser = new Parser();
+			String str = Files.readString(Paths.get(DataRepo.class.getResource("/Data/" + filename + ".json").toURI()));
+			JsonPrimitive<?> json = parser.parse(str);
+			return json.applyList(x -> {
+				return (T) new Sonifiable(x.asMap().get("name").asStr(), new SonifiableID(
+					x.asMap().get("id").asMap().get("symbol").asStr(),
+					x.asMap().get("id").asMap().get("exchange").asStr()));
+			}, new UnorderedList<>(json.asList().size()), true);
 		} catch (Exception e) {
 			e.printStackTrace();
-			throw new AppError(e.getMessage());
+			throw new AppError("Die gespeicherten Daten für '" + filename + "' konnten nicht gelesen werden. Stelle sicher, dass keine App-internen Dateien verschoben oder gelöscht wurden.");
 		}
 	}
 
 	private static <T> void writeToJSON(String filename, String data) throws AppError {
 		try {
-			PrintWriter out = new PrintWriter("./src/main/resources/Data/" + filename);
-			out.write(data);
-			out.close();
+			URL url = DataRepo.class.getResource("/Data/" + filename + ".json");
+			Path path = Paths.get(url.toURI());
+			// System.out.println("data: " + data);
+			Files.write(path, data.getBytes(), StandardOpenOption.WRITE);
 		} catch (Exception e) {
-			throw new AppError(e.getMessage());
+			e.printStackTrace();
+			throw new AppError("Die neuen Daten für '" + filename + "' konnten nicht gespeichert werden.");
 		}
-	}
-
-	private static <T extends Sonifiable> void setTradingPeriods(UnorderedList<T> list,
-			AtomicInteger updatedTradingPeriods) {
-		updatedTradingPeriods.set(0);
-		for (int i = 0; i < list.size(); i++) {
-			T s = list.get(i);
-			final int idx = i;
-			getTradingPeriod(s, dates -> {
-				if (dates == null || dates[0] == null || dates[1] == null) {
-					list.removeLater(idx);
-				} else {
-					s.setEarliest(dates[0]);
-					s.setLatest(dates[1]);
-				}
-				int x = updatedTradingPeriods.incrementAndGet();
-				System.out.println("Set trading periods. idx = " + idx + ", updatedCount = " + x + ", tpQueue.size() = "
-						+ tpQueue.size());
-				return s;
-			});
-		}
-	}
-
-	// Returns list of two Calendar objects. The first element is the starting date,
-	// the second the ending date. If an error happened, `null` is returned
-	public static <T> Future<T> getTradingPeriod(Sonifiable s, Function<Calendar[], T> callback) {
-		return threadPool.submit(() -> {
-			APIReq apiLeeway = getApiLeeway();
-			APIReq apiTwelvedata = getApiTwelvedata();
-			Calendar[] res = { null, null };
-			T out = null;
-			try {
-				HashMap<String, JsonPrimitive<?>> json = apiLeeway.getJSON("general/tradingperiod/" + s.getId().toString(), x -> x.asMap());
-				res[0] = DateUtil.calFromDateStr(json.get("start").asStr());
-				res[1] = DateUtil.calFromDateStr(json.get("end").asStr());
-				out = callback.apply(res);
-			} catch (APIErr e) {
-				// Try again using Twelvedata's API instead
-				try {
-					apiTwelvedata.setQueries("symbol", s.getId().getSymbol(), "exchange", s.getId().getExchange(), "outputsize", "10", "interval", IntervalLength.DAY.toString(API.TWELVEDATA));
-
-					List<JsonPrimitive<?>> vals = apiTwelvedata.getJSON("time_series", x -> x.asMap().get("values").asList(), "order", "ASC", "start_date", "1990-01-01");
-					res[0] = DateUtil.calFromDateStr(vals.get(0).asMap().get("datetime").asStr());
-
-					vals = apiTwelvedata.getJSON("time_series", x -> x.asMap().get("values").asList(), "order", "DESC", "end_date", DateUtil.formatDate(Calendar.getInstance()));
-					res[1] = DateUtil.calFromDateStr(vals.get(0).asMap().get("datetime").asStr());
-
-					apiTwelvedata.resetQueries();
-					out = callback.apply(res);
-				} catch (Exception e2) {
-					// @Debug
-					// System.out.println("Error in inner getTradingPeriod:");
-					// e2.printStackTrace();
-					out = callback.apply(null);
-				}
-			} catch (Exception e) {
-				// @Debug
-				// System.out.println("Error in outer getTradingPeriod:");
-				// e.printStackTrace();
-				out = callback.apply(null);
-			}
-			return out;
-		});
 	}
 }

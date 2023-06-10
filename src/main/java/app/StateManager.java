@@ -28,8 +28,11 @@ import java.util.function.Consumer;
 // however, it makes conceptually more sense to me, as the app's logic should be done in the main thread
 
 public class StateManager {
+	public static final int FILTER_MAX_AMOUNT = 100;
+
 	public static boolean isCurrentlySonifying = false;
 	public static SonifiableFilter sonifiableFilter = new SonifiableFilter("", FilterFlag.ALL);
+	public static int filterOffset = 0;
 	public static Mapping currentMapping;
 
 	public static void main(String[] args) {
@@ -100,8 +103,8 @@ public class StateManager {
 	}
 
 	private static void sendFilteredSonifiables() throws InterruptedException {
-		List<Sonifiable> list = StateManager.call(() -> DataRepo.findByPrefix(sonifiableFilter.prefix, sonifiableFilter.categoryFilter), List.of());
-		EventQueues.toUI.add(new Msg<>(MsgToUIType.FILTERED_SONIFIABLES, list));
+		Sonifiable[] arr = StateManager.call(() -> DataRepo.findByPrefix(filterOffset, FILTER_MAX_AMOUNT, sonifiableFilter.prefix, sonifiableFilter.categoryFilter), new Sonifiable[0]);
+		EventQueues.toUI.add(new Msg<>(MsgToUIType.FILTERED_SONIFIABLES, arr));
 	}
 
 	public static double[] getPriceValues(List<Price> prices) {
@@ -188,25 +191,6 @@ public class StateManager {
 		Analyzer analyzer = priceMap.get(ed.getId());
 		return analyzer.get(ed.getData());
 	}
-
-	// Change the mapping to test different functionalities
-	public static Mapping getTestMapping() {
-		Mapping mapping = new Mapping();
-		try {
-			mapping.setStartDate(DateUtil.calFromDateStr("2022-06-16"));
-			mapping.setEndDate(DateUtil.calFromDateStr("2023-05-16"));
-			mapping.setSoundLength(60);
-
-			Sonifiable s = new Stock("SAP", new SonifiableID("SAP", "XETRA"));
-			mapping.setParam(InstrumentEnum.RETRO_SYNTH, s, InstrParam.PITCH, LineData.PRICE);
-			mapping.setParam(InstrumentEnum.RETRO_SYNTH, s, InstrParam.RELVOLUME, LineData.MOVINGAVG);
-			mapping.setHighPass(true);
-		} catch (Throwable e) {
-			e.printStackTrace();
-		}
-		return mapping;
-	}
-
 
 	public static void padPrices(Map<SonifiableID, Analyzer> priceMap, Calendar startDate, Calendar endDate, IntervalLength interval, int maxLength) {
 		for(SonifiableID id : priceMap.keySet()){

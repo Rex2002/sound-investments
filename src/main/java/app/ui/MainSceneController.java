@@ -107,7 +107,6 @@ public class MainSceneController implements Initializable {
     }
 
     @Override
-    @SuppressWarnings("unchecked")
     public void initialize(URL arg0, ResourceBundle arg1) { // Initialisierung mit den Optionen
         categoriesCB.getItems().addAll(MainSceneController.categoryKeys);
         enableBtnIfValid();
@@ -122,17 +121,13 @@ public class MainSceneController implements Initializable {
                 switch (msg.type) {
                     case FILTERED_SONIFIABLES -> {
                         clearCheckList();
-                        
+                        Object[] sonifiables = (Object[]) msg.data;
+                        for (Object s : sonifiables) addToCheckList((Sonifiable) s);
+
                         mapping.setOnInstrAdded(inst -> instAdded(inst.toString()));
                         mapping.setOnEvInstrAdded(inst -> instAdded(inst.toString()));
                         mapping.setOnInstrRemoved(inst -> instRemoved(inst.toString()));
                         mapping.setOnEvInstrRemoved(inst -> instRemoved(inst.toString()));
-                        List<Sonifiable> sonifiables = (List<Sonifiable>) msg.data;
-                        // TODO: Decide whether we want to show all found sonifiables immediately or
-                        // only like 10 at once, unless prompted by the user to show more
-                        for (Sonifiable s : sonifiables) {
-                            addToCheckList(s);
-                        }
                     }
                     case SONIFIABLE_FILTER -> {
                         SonifiableFilter filter = (SonifiableFilter) msg.data;
@@ -560,7 +555,6 @@ public class MainSceneController implements Initializable {
 
     private Pane createSharePane(Sonifiable sonifiable, boolean showMapping) { // initialize and dek the Share Pane
         mapping.addSonifiable(sonifiable);
-        updateDateRange();
 
         Pane stockPane = new Pane();
         stockPane.getStyleClass().add("stockPane");
@@ -629,16 +623,6 @@ public class MainSceneController implements Initializable {
         audioLength.setText(sec);
         assert !filterValues[0];
         filterCB.getSelectionModel().select(mapping.getHighPass() ? 1 : 0);
-    }
-
-    private void updateDateRange() {
-        Calendar[] minMaxDates = mapping.getDateRange();
-        minDateStart = DateUtil.calendarToLocalDate(minMaxDates[0]);
-        maxDateEnd = DateUtil.calendarToLocalDate(minMaxDates[1]);
-        maxDateStart = maxDateEnd.minusDays(3);
-        minDateEnd = minDateStart.minusDays(3);
-        updateStartPicker();
-        updateEndPicker();
     }
 
     private void updateStartPicker() {

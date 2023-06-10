@@ -30,6 +30,10 @@ public class JsonPrimitive<T> {
 		return (S) this.el;
 	}
 
+	public boolean isNull() {
+		return this.el == null;
+	}
+
 	public NullType asNull() {
 		return (NullType) this.el;
 	}
