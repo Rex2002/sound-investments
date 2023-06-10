@@ -1,10 +1,8 @@
-package audio.harmonizer;
+package audio;
 
 import app.AppError;
 import app.mapping.GlobalFxDataRaw;
 import app.mapping.InstrumentDataRaw;
-import audio.Constants;
-import audio.Util;
 import audio.synth.GlobalFxData;
 import audio.synth.InstrumentData;
 import audio.synth.fx.FilterData;

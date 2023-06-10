@@ -3,7 +3,6 @@ package audio;
 import app.AppError;
 import app.mapping.GlobalFxDataRaw;
 import app.mapping.InstrumentDataRaw;
-import audio.harmonizer.Harmonizer;
 import audio.mixer.Backing;
 import audio.mixer.Mixer;
 import audio.synth.*;
