@@ -395,11 +395,6 @@ public class Mapping {
 	}
 
 
-	public void setHighPass(InstrumentEnum instr, boolean highpass) {
-		InstrumentMapping instrMap = ArrayFunctions.find(mappedInstruments, x -> x.getInstrument() == instr);
-		instrMap.setHighPass(highpass);
-	}
-
 	public void setHighPass(boolean highpass) {
 		this.highPass = highpass;
 	}

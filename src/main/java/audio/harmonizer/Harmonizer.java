@@ -1,11 +1,11 @@
 package audio.harmonizer;
 
 import app.AppError;
-import app.mapping.GlobalFxParamRaw;
+import app.mapping.GlobalFxDataRaw;
 import app.mapping.InstrumentDataRaw;
 import audio.Constants;
 import audio.Util;
-import audio.synth.GlobalFxParam;
+import audio.synth.GlobalFxData;
 import audio.synth.InstrumentData;
 import audio.synth.fx.FilterData;
 
@@ -14,7 +14,7 @@ import java.util.Random;
 
 public class Harmonizer {
     private InstrumentDataRaw dataRaw;
-    private GlobalFxParamRaw gDataRaw;
+    private GlobalFxDataRaw gDataRaw;
     private final int numberBeats;
 
     public Harmonizer(InstrumentDataRaw dataRaw, int numberBeats) {
@@ -22,13 +22,13 @@ public class Harmonizer {
         this.numberBeats = numberBeats;
     }
 
-    public Harmonizer(GlobalFxParamRaw dataRaw, int numberBeats){
+    public Harmonizer(GlobalFxDataRaw dataRaw, int numberBeats){
         this.numberBeats = numberBeats;
         this.gDataRaw = dataRaw;
     }
 
-    public GlobalFxParam gHarmonize() throws AppError{
-        GlobalFxParam data = new GlobalFxParam();
+    public GlobalFxData harmonizeGlobalData() throws AppError{
+        GlobalFxData data = new GlobalFxData();
         if (!(gDataRaw.getCutOffFrequency() == null && gDataRaw.getOnOffFilter() == null)) {
             data.setFilterData(normalizeFilter(gDataRaw.getCutOffFrequency(), gDataRaw.getOnOffFilter(), gDataRaw.isHighPass()));
         }

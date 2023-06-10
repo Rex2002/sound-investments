@@ -320,10 +320,9 @@ public class StateManager {
 			boolean[] onOffReverb = calcRangeData(mapping.getOnOffReverb(), priceMap);
 			boolean[] onOffFilter = calcRangeData(mapping.getOnOffFilter(), priceMap);
 			boolean isHighPass = mapping.getHighPass();
-			GlobalFxParamRaw globalFxParamRaw = new GlobalFxParamRaw(delayReverb, feedbackReverb,cutOffFrequency,onOffReverb, onOffFilter, isHighPass);
+			GlobalFxDataRaw globalFxDataRaw = new GlobalFxDataRaw(delayReverb, feedbackReverb,cutOffFrequency,onOffReverb, onOffFilter, isHighPass);
 
-			PlaybackController pbc = Sonifier.sonify(passedInstrRawDatas, evInstrDatas, globalFxParamRaw, mapping.getSoundLength());
-
+			PlaybackController pbc = Sonifier.sonify(passedInstrRawDatas, evInstrDatas, globalFxDataRaw, mapping.getSoundLength());
 
 
 			String[] sonifiableNames = new String[sonifiables.length];

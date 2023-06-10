@@ -1,7 +1,7 @@
 package audio;
 
 import app.AppError;
-import app.mapping.GlobalFxParamRaw;
+import app.mapping.GlobalFxDataRaw;
 import app.mapping.InstrumentDataRaw;
 import audio.harmonizer.Harmonizer;
 import audio.mixer.Backing;
@@ -19,7 +19,7 @@ import static audio.Util.concatArrays;
 
 public class Sonifier {
 
-    public static PlaybackController sonify(InstrumentDataRaw[] instrumentDataRaw, EvInstrData[] evInstrData, GlobalFxParamRaw globalFxParamRaw, int lengthInSecondsRaw) throws AppError {
+    public static PlaybackController sonify(InstrumentDataRaw[] instrumentDataRaw, EvInstrData[] evInstrData, GlobalFxDataRaw globalFxDataRaw, int lengthInSecondsRaw) throws AppError {
         Backing backing = new Backing();
         Constants.TEMPO = backing.setSamplesAndGetTempo();
 
@@ -48,11 +48,11 @@ public class Sonifier {
 
         double[] out = Mixer.mixAudioStreams(outArrays, evInstrs.length, synthLines.length - 1);
 
-        GlobalFxParam globalFxParam = new Harmonizer(globalFxParamRaw, lengthInBeats).gHarmonize();
-        if(globalFxParam.getDelayReverb() != null && globalFxParam.getDelayReverb() != null)
-            out = Effect.echoWithFeedback(out,globalFxParam.getFeedbackReverb(), globalFxParam.getDelayReverb());
-        if(globalFxParam.getFilterData() != null)
-            out = Effect.IIR(out, globalFxParam.getFilterData());
+        GlobalFxData globalFxData = new Harmonizer(globalFxDataRaw, lengthInBeats).harmonizeGlobalData();
+        if(globalFxData.getDelayReverb() != null && globalFxData.getFeedbackReverb() != null)
+            out = Effect.echoWithFeedback(out, globalFxData.getFeedbackReverb(), globalFxData.getDelayReverb());
+        if(globalFxData.getFilterData() != null)
+            out = Effect.IIR(out, globalFxData.getFilterData());
 
         out = Effect.antiAliasing(out);
         AudioFormat af = new AudioFormat(Constants.SAMPLE_RATE, 16, Constants.CHANNEL_NO, true, true);
