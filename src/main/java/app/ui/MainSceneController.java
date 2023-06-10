@@ -112,7 +112,7 @@ public class MainSceneController implements Initializable {
         categoriesCB.getItems().addAll(MainSceneController.categoryKeys);
         enableBtnIfValid();
 
-        closeImg = new Image(getClass().getResource("/UI/close_icon_w_bg.png").toExternalForm());
+        closeImg = new Image(getClass().getResource("/UI/close_icon.png").toExternalForm());
 
         checkEQService = new CheckEQService();
         checkEQService.setPeriod(Duration.millis(100));
