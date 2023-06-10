@@ -23,14 +23,14 @@ public class VFormationAnalyzer {
         double nextPrice = input[i];
         // Überprüfen, ob ein dynamischer Abwärtsimpuls stattfindet
         // Price intermediatePrice = priceList.get(k);
-        if (nextPrice < startPrice) {
+        if (nextPrice+1.0 < startPrice) {
             downwardImpulse = true;
             formationLength++;
-        } else if (nextPrice > startPrice && downwardImpulse) {
+        } else if (nextPrice > startPrice+1.0 && downwardImpulse) {
             formationLength++;
             downwardImpulse = false;
             isFlag = true;
-        } else if (nextPrice >= startPrice && isFlag) {
+        } else if (nextPrice > startPrice+0.5 && isFlag) {
             formationLength++;
         }
         if (nextPrice < startPrice && isFlag) {
