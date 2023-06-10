@@ -17,7 +17,12 @@ public class ADSR implements Envelope{
         }
     }
 
-
+    /**
+     * method to get the current factor of the amplitude based on the position <br/>
+     * visual representation via desmos: <a href="https://www.desmos.com/calculator/8ytmnnfnyw">graph</a>
+     * @param pos the position for which the amplitude factor is supposed to be calculated
+     * @return a factor between 0 and 1
+     */
     public double getAmplitudeFactor(int pos) {
         pos = pos % envLen;
         double relPos = (double) pos / envLen;

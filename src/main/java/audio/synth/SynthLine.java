@@ -24,11 +24,20 @@ public class SynthLine {
     double[] out;
     final int sampleNumber;
 
+    /**
+     * puts data to the data-field and calculates the number of samples for this line based on length, sample rate and number of channels.<br/>
+     * @param data object that hold all necessary information for sound creation
+     * @param length length in seconds
+     */
     public SynthLine(InstrumentData data, double length) {
         this.data = data;
         this.sampleNumber = (int) (length * SAMPLE_RATE * CHANNEL_NO);
     }
 
+    /**
+     * method to orchestrate sound generation pipeline based on this.data (set in the constructor) <br/>
+     * @return an array that contains sound-data and can be passed to the playbackController or the mixer
+     */
     public double[] synthesize() {
         this.applyVolume();
         this.applyTimbre();
@@ -39,6 +48,10 @@ public class SynthLine {
         return out;
     }
 
+    /**
+     * for each sample the volume is determined by stretching data.volume to the necessary length.<br/>
+     * Afterward a highpass filter is used to remove all steep changes in the volume (which create a cracking-sound)
+     */
     private void applyVolume() {
         out = new double[sampleNumber];
         for (int i = 0; i < out.length; i++) {
@@ -51,6 +64,11 @@ public class SynthLine {
         out = Effect.IIR(out, filter);
     }
 
+    /**
+     * this method transforms the volume array to an array that contains actual, meaningful sound-data.<br/>
+     * Depending on the instrument that was passed, the correct settings for modulation and envelopes for the sound-wave-generation are set. <br/>
+     * Also, the notes are transformed from midi-notes to actual frequencies. <br/>
+     */
     private void applyTimbre() {
         UnpackedInstr instr = this.unpackInstrument();
         double[] transformedPitch = this.transformNotesToFreq();

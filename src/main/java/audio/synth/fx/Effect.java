@@ -8,56 +8,14 @@ import static audio.Constants.SAMPLE_RATE;
 
 public class Effect {
 
-    @Deprecated
-    public static double[] onOffFilter(double[] input, boolean[] onOff){
-        double decayScalingFactor = 1; // controls how fast the sound decreases on change on -> off
-        // TODO: implement attack-scaling on change off -> on
-        for(int pos = 0; pos < input.length; pos++){
-
-            if(!onOff[Util.getRelPosition(pos, input.length, onOff.length)] && pos >= 1){
-                input[pos] = input[pos] * Math.pow(0.99, decayScalingFactor++/20);
-            }
-            if(onOff[Util.getRelPosition(pos, input.length, onOff.length)]){
-                decayScalingFactor = 1;
-                // reset scaling factor for next decay
-            }
-        }
-        return input;
-    }
-
-    @Deprecated
-    public static double[] echoWithOverdrive(double[] input, double feedback, int delay){
-        double[] out = new double[input.length];
-        double[] bufferL = new double[input.length / 2];
-        double[] bufferR = new double[input.length / 2];
-        bufferL[0] = input[0];
-        bufferR[0] = input[1];
-        int cursor = 0;
-        for(int pos = 0; pos < input.length/2; pos++){
-            double inL = input[2 * pos];
-            double inR = input[2 * pos + 1];
-            double bL = bufferL[cursor];
-            double bR = bufferR[cursor];
-            bufferL[cursor] = inL + bL * feedback;
-            bufferR[cursor] = inR + bR * feedback;
-            cursor += 1;
-            if(cursor >= delay){
-                cursor = 0;
-            }
-            out[2 * pos] = bL;
-            out[2 * pos + 1] = bR;
-        }
-        return out;
-    }
-
 
     /**
-     * the whole buffer-stuff is left as an exercise to the reader.
-     * The interesting part is probably the ADSR feedbackEnv anyway.
-     * The envelope solves the problem of crackings-sounds when the delay changes.
-     * This is achieved by scaling down the feedback to zero, each time the delay value changes using the envelope.
-     * Since the scaling of the feedback can not be done to fast, because then the cracking reappears,
-     * this method is limited to delay arrays that have at most a length of 1/3 of the sound length in seconds.
+     * the whole buffer-stuff is left as an exercise to the reader. <br/>
+     * The interesting part is probably the ADSR feedbackEnv anyway. <br/>
+     * The envelope solves the problem of crackings-sounds when the delay changes. <br/>
+     * This is achieved by scaling down the feedback to zero, each time the delay value changes using the envelope. <br/>
+     * Since the scaling of the feedback can not be done to fast, because then the cracking reappears, <br/>
+     * this method is limited to delay arrays that have at most a length of 1/3 of the sound length in seconds. <br/>
      * (the length limiting of the delayArray is already done in the Harmonizer)
      * @param input the sound-array that is supposed to be echoed / reverbed
      * @param feedback the feedback values that are to be applied
@@ -116,6 +74,10 @@ public class Effect {
     }
 
 
+    /**
+     * @param in the data-array that is supposed to be anti-aliased
+     * @return the input array after an anti-alias filter was applied
+     */
     public static double[] antiAliasing(double[] in){
         FilterData antiAliasingFilterData = new FilterData();
         antiAliasingFilterData.setCutoff(new double[]{20000});
@@ -124,7 +86,14 @@ public class Effect {
         return IIR(in, antiAliasingFilterData);
     }
 
-
+    /**
+     * using a recursive filter the input array is filtered. <br/>
+     * The name is actually misleading, since an FIR could be realised with different coefficients, <br/>
+     * but since the calculateCoefficients method only returns IIR-coefficients, it is probably somehow fine.
+     * @param in the array that is supposed to be filtered
+     * @param filterData object that contains information about the type of filtering, i.e. Cutoff-frequencies, Filtertype & bandwitdth
+     * @return the filtered array
+     */
     public static double[] IIR(double[] in, FilterData filterData){
         Coefficients c = new Coefficients();
         FilterTypesEnum ft = filterData.highPass ? FilterTypesEnum.HIGH : FilterTypesEnum.LOW;
@@ -153,6 +122,13 @@ public class Effect {
         return out;
     }
 
+    /**
+     *  based on the inputs the function calculates IIR (and theoretically FIR) filter coefficients
+     * @param kadov cutoff frequency for which the coefficients are to be calculated
+     * @param bandwidth bandwidth that the filter is supposed to have
+     * @param c the object into which the result is supposed to be written
+     * @param filterType the type of the filter that the coefficients shall realise
+     */
     @SuppressWarnings("DuplicateExpressions")
     private static void calculateCoefficients(double kadov, double bandwidth, Coefficients c, FilterTypesEnum filterType){
         double x = Math.tan(Math.PI * kadov/SAMPLE_RATE);

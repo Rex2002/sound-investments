@@ -19,6 +19,15 @@ import static audio.Util.concatArrays;
 
 public class Sonifier {
 
+    /**
+     * orchestrates the sonification based on the passed data <br/>
+     * @param instrumentDataRaw contains one element for each instrument that is meant to be sonified
+     * @param evInstrData contains one element for each event instrument that is meant to be sonified
+     * @param globalFxDataRaw contains the global fx-data (filter & reverb)
+     * @param lengthInSecondsRaw holds the target length of the sonification
+     * @return a playbackController object that contains the finished sonification
+     * @throws AppError if an error, about which the user should be informed, occurs an AppError is thrown (which is subsequently shown in the UI)
+     */
     public static PlaybackController sonify(InstrumentDataRaw[] instrumentDataRaw, EvInstrData[] evInstrData, GlobalFxDataRaw globalFxDataRaw, int lengthInSecondsRaw) throws AppError {
         Backing backing = new Backing();
         Constants.TEMPO = backing.setSamplesAndGetTempo();
@@ -31,7 +40,7 @@ public class Sonifier {
 
         double[][] synthLines = new double[instrumentDataRaw.length + 1][];
         for(int i = 0; i < instrumentDataRaw.length; i++){
-            InstrumentData instrData = new Harmonizer(instrumentDataRaw[i], lengthInBeats).harmonize();
+            InstrumentData instrData = new Harmonizer(instrumentDataRaw[i], lengthInBeats).harmonizeInstrumentData();
 
             synthLines[i] = new SynthLine(instrData, lengthInSeconds).synthesize();
         }
@@ -61,7 +70,7 @@ public class Sonifier {
             sdl = AudioSystem.getSourceDataLine(af);
         } catch (LineUnavailableException e) {
             // TODO exception handling
-            throw new RuntimeException(e);
+            throw new AppError("Zugriff auf Lautsprecher verweigert");
         }
 
         return new PlaybackController(sdl, out, lengthInSeconds);

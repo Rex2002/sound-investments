@@ -1,5 +1,7 @@
 package audio.mixer;
 
+import app.AppError;
+
 import javax.sound.sampled.*;
 
 import java.io.BufferedInputStream;
@@ -10,24 +12,28 @@ public class SampleLoader {
     /**
      * loads specified audio sample from resources/audio/impacts directory
      */
-    public static double[] loadEventSample(String filename) {
+    public static double[] loadEventSample(String filename) throws AppError {
         return loadSample("/audio/impacts/" + filename);
     }
 
     /**
      * loads specified audio sample from resources/audio/backings directory
      */
-    public static double[] loadBackingSample(String filename) {
+    public static double[] loadBackingSample(String filename) throws AppError {
         return loadSample("/audio/backings/" + filename);
     }
 
-    private static double[] loadSample(String filename) {
-
+    /**
+     * loads a sample from a file and converts to the correct audioformat
+     * @param filename of the sample that is to be loaded
+     * @return the data array representing the sample in the desired format
+     */
+    private static double[] loadSample(String filename) throws AppError {
         try {
             AudioInputStream audioStream = AudioSystem.getAudioInputStream(new BufferedInputStream(Objects.requireNonNull(SampleLoader.class.getResourceAsStream(filename))));
             AudioFormat af = audioStream.getFormat();
             if(af.getFrameSize() != 4 || af.getSampleRate() != 44100 || af.isBigEndian()) {
-                throw new RuntimeException("Illegal audio format in sample" + filename);
+                throw new AppError("Ungültiges Audioformat in Sample " + filename);
             }
             double[] out = new double[(int) (audioStream.getFrameLength() * 2)];
             byte[] frame = new byte[4];
@@ -40,7 +46,7 @@ public class SampleLoader {
             return out;
         } catch (NullPointerException | IOException | UnsupportedAudioFileException e){
             e.printStackTrace();
-            throw new RuntimeException("error while reading sample file: " + e.getMessage());
+            throw new AppError("Error beim Auslesen des Samples " + filename);
         }
 
     }

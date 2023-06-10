@@ -29,6 +29,18 @@ public class SineWaveGenerator {
         Envelope oneEnvelope = new OneEnvelope();
         return generate(freq, duration, amplitude, env, modFactor, oneEnvelope);
     }
+
+    /**
+     * generates a sound based on the provided inputs <br/>
+     * @param freq array of frequencies in hz
+     * @param sampleNumber total number of samples to be created
+     * @param amplitude provides the amplitudes, could theoretically be any length less than sampleNumber (is relatively stretched).
+     * @param env the envelope for the amplitude of the output
+     * @param modFactor the modulation factor that is used to calculate the modulation frequency
+     * @param modEnv the envelope that determines the impact/strenght of the modulation
+     * @return an array that (if played with the correct audioFormat/audioLine) plays the notes that are given with the frequency-array distributed evenly across the whole
+     *          length (repeated note values are tied)
+     */
     public double[] generate(double[] freq, int sampleNumber, double[] amplitude, Envelope env, double modFactor, Envelope modEnv) {
         double[] sin = new double[sampleNumber];
         env.setSectionLen(sin.length/freq.length);
