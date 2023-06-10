@@ -137,6 +137,17 @@ public class Mapping {
 			if (instrMap.isEmpty()) continue;
 			out.addAll(instrMap.getMappedSonifiables());
 		}
+
+		for(EvInstrMapping evInstrMap : eventInstruments){
+			if(evInstrMap == null || evInstrMap.isEmpty()) continue;
+			out.add(evInstrMap.getData().getId());
+		}
+		if(getFeedbackReverb() != null) out.add(getFeedbackReverb().getId());
+		if(getDelayReverb() != null) out.add(getDelayReverb().getId());
+		if(getCutoff() != null) out.add(getCutoff().getId());
+		if(getOnOffReverb() != null) out.add(getOnOffReverb().getId());
+		if(getOnOffFilter() != null) out.add(getOnOffFilter().getId());
+
 		return out;
 	}
 

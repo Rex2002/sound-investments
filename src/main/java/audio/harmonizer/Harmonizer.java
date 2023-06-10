@@ -1,9 +1,11 @@
 package audio.harmonizer;
 
 import app.AppError;
+import app.mapping.GlobalFxParamRaw;
 import app.mapping.InstrumentDataRaw;
 import audio.Constants;
 import audio.Util;
+import audio.synth.GlobalFxParam;
 import audio.synth.InstrumentData;
 import audio.synth.fx.FilterData;
 
@@ -11,12 +13,32 @@ import java.util.Arrays;
 import java.util.Random;
 
 public class Harmonizer {
-    private final InstrumentDataRaw dataRaw;
+    private InstrumentDataRaw dataRaw;
+    private GlobalFxParamRaw gDataRaw;
     private final int numberBeats;
 
     public Harmonizer(InstrumentDataRaw dataRaw, int numberBeats) {
         this.dataRaw = dataRaw;
         this.numberBeats = numberBeats;
+    }
+
+    public Harmonizer(GlobalFxParamRaw dataRaw, int numberBeats){
+        this.numberBeats = numberBeats;
+        this.gDataRaw = dataRaw;
+    }
+
+    public GlobalFxParam gHarmonize() throws AppError{
+        GlobalFxParam data = new GlobalFxParam();
+        if (!(gDataRaw.getCutOffFrequency() == null && gDataRaw.getOnOffFilter() == null)) {
+            data.setFilterData(normalizeFilter(gDataRaw.getCutOffFrequency(), gDataRaw.getOnOffFilter(), gDataRaw.isHighPass()));
+        }
+        if(gDataRaw.getDelayReverb() != null && gDataRaw.getFeedbackReverb() != null){
+            data.setDelayReverb(normalizeDelayReverb(gDataRaw.getDelayReverb()));
+
+            data.setFeedbackReverb(normalizeFeedbackReverb(gDataRaw.getFeedbackReverb(), gDataRaw.getDelayReverb(), gDataRaw.getOnOffReverb()));
+        }
+
+        return data;
     }
 
     public InstrumentData harmonize() throws AppError {
@@ -33,14 +55,15 @@ public class Harmonizer {
 
         if (!(dataRaw.getDelayReverb() == null && dataRaw.getFeedbackReverb() == null
                 && dataRaw.getOnOffReverb() == null)) {
-            data.setDelayReverb(normalizeDelayReverb());
+            data.setDelayReverb(normalizeDelayReverb(dataRaw.getDelayReverb()));
 
-            data.setFeedbackReverb(normalizeFeedbackReverb());
+            data.setFeedbackReverb(normalizeFeedbackReverb(dataRaw.getFeedbackReverb(), dataRaw.getDelayReverb(), dataRaw.getOnOffReverb()));
         }
 
         if (!(dataRaw.getFrequency() == null && dataRaw.getOnOffFilter() == null)) {
-            data.setFilterData(normalizeFilter());
+            data.setFilterData(normalizeFilter(dataRaw.getFrequency(), dataRaw.getOnOffFilter(), dataRaw.isHighPass()));
         }
+
 
         data.setPan(normalizePan(dataRaw.getPan()));
 
@@ -191,10 +214,10 @@ public class Harmonizer {
         return feedbackEcho;
     }
 
-    private int[] normalizeDelayReverb() throws AppError {
+    private int[] normalizeDelayReverb(double[] delayReverb) throws AppError {
         int MAX_DELAY_REVERB = Constants.SAMPLE_RATE / 20; // number of samples corresponding to 50ms
         int DEFAULT_DELAY_REVERB = Constants.SAMPLE_RATE / 25; // number of samples corresponding to 40ms
-        double[] delayReverb = dataRaw.getDelayReverb();
+        //double[] delayReverb = dataRaw.getDelayReverb();
 
         return normalizeDelayGeneric(true, delayReverb, DEFAULT_DELAY_REVERB, new double[]{ MAX_DELAY_REVERB });
 
@@ -246,13 +269,10 @@ public class Harmonizer {
         }
     }
 
-    private double[] normalizeFeedbackReverb() throws AppError {
+    private double[] normalizeFeedbackReverb(double[] feedbackReverb, double[] delayReverb, boolean[] onOffReverb) throws AppError {
         double MAX_FEEDBACK_REVERB = 0.8;
         double DEFAULT_FEEDBACK_REVERB = 0.6;
         double MUTE_REVERB = 0;
-        double[] feedbackReverb = dataRaw.getFeedbackReverb();
-        double[] delayReverb = dataRaw.getDelayReverb();
-        boolean[] onOffReverb = dataRaw.getOnOffReverb();
         // TODO: test values
         if (feedbackReverb != null) {
             for (int i = 0; i < feedbackReverb.length; i++) {
@@ -280,7 +300,7 @@ public class Harmonizer {
         return feedbackReverb;
     }
 
-    private FilterData normalizeFilter() throws AppError {
+    private FilterData normalizeFilter(double[] cutoff, boolean[] onOff, boolean highPass) throws AppError {
         double BANDWIDTH = 0.5;
         int MIN_FREQ = 40;
         int MAX_FREQ = 20000;
@@ -288,9 +308,6 @@ public class Harmonizer {
         int HIGH_PASS_DEFAULT_FREQ = 1000;
         int LOW_PASS_OFF = 50000;
         int LOW_PASS_DEFAULT_FREQ = 500;
-        double[] cutoff = dataRaw.getFrequency();
-        boolean[] onOff = dataRaw.getOnOffFilter();
-        boolean highPass = dataRaw.isHighPass();
         FilterData filter = new FilterData();
 
         if (cutoff != null) {

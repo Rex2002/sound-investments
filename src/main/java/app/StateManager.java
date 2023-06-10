@@ -290,7 +290,7 @@ public class StateManager {
 				double[] feedbackReverb = calcLineData(instrMap.getFeedbackReverb(), priceMap);
 				boolean[] onOffReverb = calcRangeData(instrMap.getOnOffReverb(), priceMap);
 				double[] frequency = calcLineData(instrMap.getCutoff(), priceMap);
-				boolean highPass = instrMap.getHighPass();
+				boolean highPass = mapping.getHighPass();
 				boolean[] onOffFilter = calcRangeData(instrMap.getOnOffFilter(), priceMap);
 				double[] pan = calcLineData(instrMap.getPan(), priceMap);
 
@@ -300,6 +300,7 @@ public class StateManager {
 			InstrumentDataRaw[] passedInstrRawDatas = new InstrumentDataRaw[instrRawData.size()];
 			passedInstrRawDatas = instrRawData.toArray(passedInstrRawDatas);
 
+			// Create EventInstrumentRawData
 			List<EvInstrData> evInstrRawDatas = new ArrayList<>();
 			for(EvInstrMapping evInstrMap : mapping.getEventInstruments()){
 				if(evInstrMap == null || evInstrMap.getData() == null){
@@ -312,7 +313,18 @@ public class StateManager {
 			EvInstrData[] evInstrDatas = new EvInstrData[evInstrRawDatas.size()];
 			evInstrDatas = evInstrRawDatas.toArray(evInstrDatas);
 
-			PlaybackController pbc = Sonifier.sonify(passedInstrRawDatas, evInstrDatas, mapping.getSoundLength());
+			// Create GlobalFxDataRaw for Harmonizer
+			double[] cutOffFrequency = calcLineData(mapping.getCutoff(), priceMap);
+			double[] delayReverb = calcLineData(mapping.getDelayReverb(), priceMap);
+			double[] feedbackReverb = calcLineData(mapping.getFeedbackReverb(), priceMap);
+			boolean[] onOffReverb = calcRangeData(mapping.getOnOffReverb(), priceMap);
+			boolean[] onOffFilter = calcRangeData(mapping.getOnOffFilter(), priceMap);
+			boolean isHighPass = mapping.getHighPass();
+			GlobalFxParamRaw globalFxParamRaw = new GlobalFxParamRaw(delayReverb, feedbackReverb,cutOffFrequency,onOffReverb, onOffFilter, isHighPass);
+
+			PlaybackController pbc = Sonifier.sonify(passedInstrRawDatas, evInstrDatas, globalFxParamRaw, mapping.getSoundLength());
+
+
 
 			String[] sonifiableNames = new String[sonifiables.length];
 			for (int i = 0; i < sonifiableNames.length; i++) {
