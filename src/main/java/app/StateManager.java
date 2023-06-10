@@ -13,7 +13,6 @@ import audio.synth.playback.PlaybackController;
 import dataAnalyzer.*;
 import dataRepo.*;
 import javafx.application.Application;
-import util.DateUtil;
 import util.FutureList;
 import util.Maths;
 
@@ -107,15 +106,8 @@ public class StateManager {
 		EventQueues.toUI.add(new Msg<>(MsgToUIType.FILTERED_SONIFIABLES, arr));
 	}
 
-	public static double[] getPriceValues(List<Price> prices) {
-		double[] out = new double[prices.size()];
-		for (int i = 0; i < out.length; i++)
-			out[i] = prices.get(i).getOpen();
-		return out;
-	}
-
 	// Normalizes the values to be in the range of 0 to 1 (inclusive on both ends)
-	public static double[] normalizeValues(double[] prices) {
+	public static double[] normalizeValues(double[] prices, boolean isPitch) {
 		double[] normalized = new double[prices.length];
 		// Find min & max
 		double min = Double.MAX_VALUE;
@@ -126,33 +118,44 @@ public class StateManager {
 			if (x > max)
 				max = x;
 		}
-		// Calculate the Standard Deviation -> if it's too small, then we want to pack the normalized values
-		// closer together as well. The cutoff-point at which we reduce the range of normalized values is
-		// set arbitrarily and was decided through testing.
-		// Afterward, we offset all values to put the normalized-value range into the middle between 0 and 1
-		double std = Maths.std(prices);
-		double stdCutoff = 10;
-		double normalizedValRange = Maths.clamp(std / stdCutoff, 0.25, 1);
-		double offset = (1 - normalizedValRange) / 2;
-		System.out.println("normalizedValRange: " + normalizedValRange + ", offset: " + offset);
+
+		double range = 1;
+		double offset = 0;
+
+		if (isPitch) {
+			// Calculate the Standard Deviation -> if it's too small, then we want to pack the normalized values
+			// closer together as well. The cutoff-point at which we reduce the range of normalized values is
+			// set arbitrarily and was decided through testing.
+			// Afterward, we offset all values to put the normalized-value range into the middle between 0 and 1
+			double std = Maths.std(prices);
+			double stdCutoff = 10;
+			range = Maths.clamp(std / stdCutoff, 0.25, 1);
+			offset = (1 - range) / 2;
+			System.out.println("normalizedValRange: " + range + ", offset: " + offset);
+		}
 		// Normalize values
-		for (int i = 0; i < normalized.length; i++)
-			normalized[i] = offset + (prices[i] - min) / (max - min) * normalizedValRange;
+		for (int i = 0; i < normalized.length; i++) {
+			normalized[i] = offset + (prices[i] - min) / (max - min) * range;
+		}
 		return normalized;
 	}
 
-	public static double[] calcLineData(ExchangeData<LineData> ed, HashMap<SonifiableID, Analyzer> priceMap) throws AppError {
+	public static double[] calcLineData(ExchangeData<LineData> ed, HashMap<SonifiableID, Analyzer> priceMap, boolean isPitch) {
 		if (ed == null) return null;
 		Analyzer analyzer = priceMap.get(ed.getId());
 		double[] ret = new double[analyzer.getPrices().size()];
 		int firstNoneNull = getValidPrice(analyzer.getPrices(), true);
 		int lastNoneNull = getValidPrice(analyzer.getPrices(), false);
 		analyzer.cutPrices(firstNoneNull, lastNoneNull + 1);
-		double[] normalized = normalizeValues(analyzer.get(ed.getData()));
+		double[] normalized = normalizeValues(analyzer.get(ed.getData()), isPitch);
 		Arrays.fill(ret, -1);
 		System.arraycopy(normalized, 0, ret, firstNoneNull, normalized.length);
-		return ret;
 
+		return ret;
+	}
+
+	private static double[] calcLineData(ExchangeData<LineData> ed, HashMap<SonifiableID, Analyzer> priceMap) {
+		return calcLineData(ed, priceMap, false);
 	}
 
 	public static int getValidPrice(List<Price> prices, boolean first){
@@ -162,15 +165,6 @@ public class StateManager {
 			}
 		}
 		return first ? prices.size() : 0;
-	}
-
-	public static boolean isDateInFormations(List<FormationResult> formations, Calendar date) {
-		for (FormationResult f : formations) {
-			if (date.equals(f.getStartDate()) || date.equals(f.getEndDate())
-					|| (date.after(f.getStartDate()) && date.before(f.getEndDate())))
-				return true;
-		}
-		return false;
 	}
 
 	public static boolean[] calcRangeData(ExchangeData<RangeData> ed, HashMap<SonifiableID, Analyzer> priceMap) {
@@ -186,13 +180,13 @@ public class StateManager {
 		return ret;
 	}
 
-	public static boolean[] calcPointData(ExchangeData<PointData> ed, HashMap<SonifiableID, Analyzer> priceMap) throws AppError {
+	public static boolean[] calcPointData(ExchangeData<PointData> ed, HashMap<SonifiableID, Analyzer> priceMap) {
 		if (ed == null) return null;
 		Analyzer analyzer = priceMap.get(ed.getId());
 		return analyzer.get(ed.getData());
 	}
 
-	public static void padPrices(Map<SonifiableID, Analyzer> priceMap, Calendar startDate, Calendar endDate, IntervalLength interval, int maxLength) {
+	public static void padPrices(Map<SonifiableID, Analyzer> priceMap, Calendar startDate, Calendar endDate, int maxLength) {
 		for(SonifiableID id : priceMap.keySet()){
 			List<Price> prices = priceMap.get(id).getPrices();
 			int lengthDiff = maxLength - prices.size();
@@ -248,7 +242,7 @@ public class StateManager {
 					System.out.println("Length: " + prices.get(i).size());
 					maxPriceLen = Math.max(maxPriceLen, prices.get(i).size());
 				}
-        		padPrices(priceMap, mapping.getStartDate(), mapping.getEndDate(), intervalLength, maxPriceLen);
+        		padPrices(priceMap, mapping.getStartDate(), mapping.getEndDate(), maxPriceLen);
 			} catch (ExecutionException e) {
 				throw new AppError(e.getMessage());
 			} catch (InterruptedException e) {
@@ -264,7 +258,7 @@ public class StateManager {
 					continue;
 
 				InstrumentEnum instrument = instrMap.getInstrument();
-				double[] pitch = calcLineData(instrMap.getPitch(), priceMap);
+				double[] pitch = calcLineData(instrMap.getPitch(), priceMap, true);
 				double[] relVolume = calcLineData(instrMap.getRelVolume(), priceMap);
 				boolean[] absVolume = calcRangeData(instrMap.getAbsVolume(), priceMap);
 				double[] delayEcho = calcLineData(instrMap.getDelayEcho(), priceMap);
