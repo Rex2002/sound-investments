@@ -667,9 +667,11 @@ public class MainSceneController implements Initializable {
     }
 
     private void instAdded(String name) {
+        if(name != null){
         Label label = new Label(name);
         label.setId("insLabel");
         instBox.getChildren().add(label);
+        }
     }
 
     private void instRemoved(String name) {
