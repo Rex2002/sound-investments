@@ -3,7 +3,6 @@ package dataRepo;
 import app.AppError;
 import dataRepo.api.APIReq;
 import dataRepo.api.AuthPolicy;
-import dataRepo.api.PaginationHandler;
 import dataRepo.json.JsonPrimitive;
 import dataRepo.json.Parser;
 import util.ArrayFunctions;
@@ -12,12 +11,14 @@ import util.FutureList;
 import util.UnorderedList;
 
 import java.net.URL;
+import java.net.URI;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.sql.Timestamp;
 import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -27,7 +28,8 @@ public class DataRepo {
 	private static final boolean GET_EXCHANGES_DYNAMICALLY = false;
 	private static final boolean UPDATE_SONIFIABLES        = true;
 
-	private static final List<String> DEFAULT_EXCHANGES = List.of("NYSE", "NASDAQ", "XETRA", "F", "BE", "MU");
+	private static final int          UPDATE_PERIOD_IN_DAYS = 5;
+	private static final List<String> DEFAULT_EXCHANGES     = List.of("NYSE", "NASDAQ", "XETRA", "F", "BE", "MU");
 
 	private static final String[] apiToksLeeway = { "pgz64a5qiuvw4qhkoullnx", "9pe3xyaplenvfvbnyxtomm", "r7splaijduabfpcu2z2l14",
 			"o5npdx6elm2pcpp395uaun", "2ja5gszii8g63hzjd41x78", "ftd5l4hscm9biueu5ptptr", "42dreongzzo5yqkyg2r3cr",
@@ -35,6 +37,8 @@ public class DataRepo {
 			"xaqiip44tivsl5a963zvft", "gyvss5g25tfcc5jt9oniob", "amcx442becc3lp9ffm4vav", "dknrw7xj2fozz383i8hlwk", "9ajr7myfoyaowast33fmas",
 			"1a7byxsvpyleppn373eel2", "hgffb6jusiy2yb3121wxik", "oogf9s7g8oqg9tg4fxc2yr"
 	};
+
+	private static String lastUpdateFilePath = "/Data/last-updated.txt";
 
 	// to prevent race conditions when making requests via the same APIReq object in different threads,
 	// we create a new APIReq object for each sequential task
@@ -90,8 +94,11 @@ public class DataRepo {
 			etfs    = readFromJSON("etfs");
 			indices = readFromJSON("indices");
 
-			if (UPDATE_SONIFIABLES)
-				updateSonifiablesList();
+			if (UPDATE_SONIFIABLES) {
+				Instant lastUpdate = getLastUpdateDay();
+				if (lastUpdate == null || lastUpdate.plus(UPDATE_PERIOD_IN_DAYS, ChronoUnit.DAYS).isBefore(Instant.now()))
+					updateSonifiablesList();
+			}
 		} catch (Exception e) {
 			e.printStackTrace();
 			throw new AppError(e.getMessage());
@@ -233,6 +240,15 @@ public class DataRepo {
 		});
 	}
 
+	public static Instant getLastUpdateDay() {
+		try {
+			String str = Files.readString(Paths.get(DataRepo.class.getResource(lastUpdateFilePath).toURI()));
+			return Instant.ofEpochMilli(Long.valueOf(str));
+		} catch (Exception e) {
+			return null;
+		}
+	}
+
 	public static void updateSonifiablesList() {
 		threadPool.submit(() -> {
 			try {
@@ -289,6 +305,8 @@ public class DataRepo {
 				writeToJSON("etfs",    ArrayFunctions.toStringArr(etfs.getArray(),    s -> ((Sonifiable) s).toJSON(), true));
 				writeToJSON("indices", ArrayFunctions.toStringArr(indices.getArray(), s -> ((Sonifiable) s).toJSON(), true));
 				System.out.println("Wrote new data into cached files");
+
+				Files.write(Path.of(DataRepo.class.getResource(lastUpdateFilePath).toURI()), Long.toString(Instant.now().toEpochMilli()).getBytes(), StandardOpenOption.CREATE);
 
 				System.out.println("New stocks length: " + stocks.size());
 				System.out.println("New etfs length: " + etfs.size());
