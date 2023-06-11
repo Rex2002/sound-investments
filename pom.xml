@@ -70,25 +70,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <javafx.version>20</javafx.version>
     </properties>
-    <repositories>
-        <repository>
-            <id>GroupDocsJavaAPI</id>
-            <name>GroupDocs Java API</name>
-            <url>https://releases.groupdocs.com/java/repo/</url>
-        </repository>
-    </repositories>
     <dependencies>
-        <dependency>
-            <groupId>org.jfree</groupId>
-            <artifactId>jfreechart</artifactId>
-            <version>1.5.4</version>
-        </dependency>
-        <dependency>
-            <groupId>com.groupdocs</groupId>
-            <artifactId>groupdocs-metadata</artifactId>
-            <version>21.2</version>
-        </dependency>
-
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
