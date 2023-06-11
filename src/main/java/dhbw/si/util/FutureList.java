@@ -18,7 +18,7 @@ import java.util.concurrent.TimeoutException;
  * <p>
  * {@code getAll} on the other hand returns a list of all results.
  *
- * @ImplNote
+ * @implNote
  * This class is very lightweight.
  * It uses a simple array of Futures, that can grow arbitrarily large by copying the existing array into a bigger one.
  *
@@ -51,7 +51,7 @@ public class FutureList<V> implements Future<V> {
 	/**
 	 * Add another Future to this FutureList.
 	 *
-	 * @ImplNote
+	 * @implNote
 	 * If the backing array is big enough, this is an O(1) operation, otherwise the array will be doubled in size and copied over - making it O(n).
 	 *
 	 * @param f The next future to add

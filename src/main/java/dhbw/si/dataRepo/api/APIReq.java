@@ -176,6 +176,7 @@ public class APIReq {
 		}
 
 		String url = sb.toString().replace(" ", "%20");
+		System.out.println(url);
 		URI uri = new URI(url);
 
 		HttpRequest.Builder rb = HttpRequest.newBuilder(uri);

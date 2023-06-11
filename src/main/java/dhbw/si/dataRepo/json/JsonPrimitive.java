@@ -4,7 +4,6 @@ import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Map.Entry;
 import java.util.function.Function;
 
@@ -66,28 +65,8 @@ public class JsonPrimitive<T> {
 		return (List<JsonPrimitive<?>>) this.el;
 	}
 
-	// This operation copies the entire List. Make sure that cost is worth it.
-	public <S> List<S> asList(Type S) {
-		List<JsonPrimitive<?>> l = asList();
-		return l.stream().map(x -> (S) x.as(S)).toList();
-	}
-
 	public HashMap<String, JsonPrimitive<?>> asMap() {
 		return (HashMap<String, JsonPrimitive<?>>) this.el;
-	}
-
-	// This operation copies the entire HashMap. Make sure that cost is worth it.
-	public <S> HashMap<String, S> asMap(Type S) {
-		HashMap<String, JsonPrimitive<?>> m = asMap();
-		HashMap<String, S> res = new HashMap<>(m.size());
-
-		for (Map.Entry<String, JsonPrimitive<?>> e : m.entrySet()) {
-			String key = e.getKey();
-			S value = e.getValue().as(S);
-			res.put(key, value);
-		}
-
-		return res;
 	}
 
 	// @Performance Copies the elements into a new array

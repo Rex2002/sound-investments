@@ -18,22 +18,11 @@ public enum IntervalLength {
 		return Instant.ofEpochMilli(res);
 	}
 
-	@SuppressWarnings("SwitchStatementWithTooFewBranches")
-	public String toString(API api) {
+	public String toString() {
 		return switch (this) {
-			case MIN -> switch (api) {
-				case LEEWAY -> "5m";
-				default -> "5min";
-			};
-			case HOUR -> switch (api) {
-				case MARKETSTACK -> "1hour";
-				default -> "1h";
-			};
-			case DAY -> switch (api) {
-				case LEEWAY -> null; // Leeway doesn't support 24hour intraday -> use /eod endpoint instead
-				case MARKETSTACK -> "24hour";
-				case TWELVEDATA -> "1day";
-			};
+			case MIN -> "5m";
+			case HOUR -> "1hour";
+			case DAY -> null; // In this case leeway expects you to use a different endpoint
 		};
 	}
 }
