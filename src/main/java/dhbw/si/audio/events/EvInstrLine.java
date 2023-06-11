@@ -29,7 +29,7 @@ public class EvInstrLine {
 
         for (int i = 0; i < data.values.length; i++) {
             if (data.values[i]) {
-                int j = Util.getRelPosition(i, data.values.length, out.length);
+                int j = j = Math.min(Util.getRelPosition(i, data.values.length, out.length), out.length - sample.length);
                 if (lastCopy + 2 * samplesPer16th < j) {
                     lastCopy = j;
                     System.arraycopy(sample, 0, out, j, sample.length);
