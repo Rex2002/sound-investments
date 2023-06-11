@@ -27,11 +27,13 @@ public class EvInstrLine {
         int samplesPer16th = (int) (60 / ((double)TEMPO * 4) * SAMPLE_RATE * CHANNEL_NO);
         int lastCopy = - 2* samplesPer16th;
 
-        for(int i = 0; i < out.length; i+=samplesPer16th){
-            if(data.values[Util.getRelPosition(i,out.length,data.values.length)] && lastCopy + 2 * samplesPer16th < i) {
-                lastCopy = i;
-                if(i + sample.length < out.length)
-                    System.arraycopy(sample, 0, out, i, sample.length);
+        for (int i = 0; i < data.values.length; i++) {
+            if (data.values[i]) {
+                int j = Util.getRelPosition(i, data.values.length, out.length);
+                if (lastCopy + 2 * samplesPer16th < j) {
+                    lastCopy = j;
+                    System.arraycopy(sample, 0, out, j, sample.length);
+                }
             }
         }
 
