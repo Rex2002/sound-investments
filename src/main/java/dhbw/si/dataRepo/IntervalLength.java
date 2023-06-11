@@ -21,7 +21,7 @@ public enum IntervalLength {
 	public String toString() {
 		return switch (this) {
 			case MIN -> "5m";
-			case HOUR -> "1hour";
+			case HOUR -> "1h";
 			case DAY -> null; // In this case leeway expects you to use a different endpoint
 		};
 	}
