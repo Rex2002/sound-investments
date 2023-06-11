@@ -16,10 +16,6 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 
 public class APIReq {
-	// Conditions based on the debug-variable will be evaluated at compile time
-	// See: https://stackoverflow.com/a/1813873/13764271
-	private static final boolean debug = true;
-	private static int reqCounter = 0;
 	private static final Random rand = new Random();
 
 	private static final List<StrTuple> defaultHeaders = new ArrayList<>(
@@ -180,8 +176,6 @@ public class APIReq {
 		}
 
 		String url = sb.toString().replace(" ", "%20");
-		if (debug)
-			System.out.println((reqCounter++) + ". URL: " + url);
 		URI uri = new URI(url);
 
 		HttpRequest.Builder rb = HttpRequest.newBuilder(uri);

@@ -287,16 +287,11 @@ public class DataRepo {
 				writeToJSON("stocks",  ArrayFunctions.toStringArr(stocks.getArray(),  s -> ((Sonifiable) s).toJSON(), true));
 				writeToJSON("etfs",    ArrayFunctions.toStringArr(etfs.getArray(),    s -> ((Sonifiable) s).toJSON(), true));
 				writeToJSON("indices", ArrayFunctions.toStringArr(indices.getArray(), s -> ((Sonifiable) s).toJSON(), true));
-				System.out.println("Wrote new data into cached files");
 
 				Files.write(Path.of(DataRepo.class.getResource(lastUpdateFilePath).toURI()), Long.toString(Instant.now().toEpochMilli()).getBytes(), StandardOpenOption.CREATE);
-
-				System.out.println("New stocks length: " + stocks.size());
-				System.out.println("New etfs length: " + etfs.size());
-				System.out.println("New indices length: " + indices.size());
 				updatedData.set(true);
 			} catch (Throwable e) {
-				// we intentionally ignore this error, as it's not effecting the user in this moment
+				// we intentionally ignore this error, as it's not effecting the user at this time
 				e.printStackTrace();
 			}
 		});
@@ -323,7 +318,6 @@ public class DataRepo {
 		try {
 			URL url = DataRepo.class.getResource("/Data/" + filename + ".json");
 			Path path = Paths.get(url.toURI());
-			// System.out.println("data: " + data);
 			Files.write(path, data.getBytes(), StandardOpenOption.WRITE);
 		} catch (Exception e) {
 			e.printStackTrace();

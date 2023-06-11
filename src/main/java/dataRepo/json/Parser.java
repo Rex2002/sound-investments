@@ -17,7 +17,6 @@ public class Parser {
 	private int len = 0;
 
 	private char curChar() {
-		// System.out.println("Reading '" + json.charAt(cur) + "'");
 		return json.charAt(cur);
 	}
 
@@ -37,7 +36,6 @@ public class Parser {
 
 	private char chopChar() {
 		char c = curChar();
-		// System.out.println("Chopping '" + c + "'");
 		if (c == '\n') {
 			bol = cur;
 			lc++;
@@ -49,7 +47,6 @@ public class Parser {
 	private void trimLeft() {
 		while (cur < len && Character.isWhitespace(curChar()))
 			chopChar();
-		// System.out.println("trimLeft done");
 	}
 
 	private String parseNumberStr(boolean checkDot) {

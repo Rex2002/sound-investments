@@ -128,7 +128,6 @@ public class MusicSceneController implements Initializable {
 					paused = false;
 					this.pausePlaySound();
 				} else {
-					System.out.println("MusicScene received a message of type " + msg.type);
 					// Put the message back
 					// The assumption here is, that we only get other messages when we are switching back to the main scene, so when we put the messages back into the queue again, we assume to not see them again
 					EventQueues.toUI.add(msg);

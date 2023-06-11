@@ -131,7 +131,6 @@ public class StateManager {
 			double stdCutoff = 10;
 			range = Maths.clamp(std / stdCutoff, 0.25, 1);
 			offset = (1 - range) / 2;
-			System.out.println("normalizedValRange: " + range + ", offset: " + offset);
 		}
 		// Normalize values
 		for (int i = 0; i < normalized.length; i++) {
@@ -206,9 +205,7 @@ public class StateManager {
 			while(prices.size() < maxLength){
 				prices.add(new Price(startDate, prices.get(0).start, prices.get(0).end, -1.0,-1.0,-1.0,-1.0));
 			}
-			// not quite sure if this is necessary, but not taking any risks for weird bugs...
 			priceMap.get(id).setPrices(prices);
-			System.out.println("Updated length: " + prices.size());
 		}
 	}
 
@@ -239,7 +236,6 @@ public class StateManager {
 					if (prices.get(i) == null || prices.get(i).size() == 0)
 						throw new AppError("Fehler beim Einholen von Preis-Daten von " + sonifiables[i].getSymbol());
 					priceMap.put(sonifiables[i], new Analyzer(prices.get(i)));
-					System.out.println("Length: " + prices.get(i).size());
 					maxPriceLen = Math.max(maxPriceLen, prices.get(i).size());
 				}
         		padPrices(priceMap, mapping.getStartDate(), mapping.getEndDate(), maxPriceLen);
@@ -317,9 +313,7 @@ public class StateManager {
 
 	public static Consumer<InterruptedException> getInterruptedExceptionHandler() {
 		return (ie -> {
-			// TODO: For now we just crash the application when we fail to establish connection with the UI
-			// Is that really what we want to do?
-			// What else could we even do?
+			// We just crash the application when we fail to establish connection with the UI
 			ie.printStackTrace();
 			System.exit(1);
 		});

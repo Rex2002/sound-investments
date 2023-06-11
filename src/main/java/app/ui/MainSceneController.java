@@ -524,7 +524,6 @@ public class MainSceneController implements Initializable {
 
             if (idxToSelect >= 0)
                 paramCBSelect.select(idxToSelect + 1);
-            // System.out.println("Selected: " + paramCBSelect.getSelectedItem());
         } catch (AppError e) {
             CommonController.displayError(anchor, e.getMessage(), "Interner Fehler");
         }
@@ -592,7 +591,6 @@ public class MainSceneController implements Initializable {
 
         startPicker.setValue(DateUtil.calendarToLocalDate(mapping.getStartDate()));
         endPicker.setValue(DateUtil.calendarToLocalDate(mapping.getEndDate()));
-        System.out.println("SoundLength: " + mapping.getSoundLength());
 
         String min = Integer.toString( mapping.getSoundLength() / 60);
         String sec = Integer.toString(mapping.getSoundLength() % 60 );

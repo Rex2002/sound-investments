@@ -48,7 +48,6 @@ public class Mapping {
 
 	// Indicates whether the current mapping can already be used for sonification
 	public boolean isValid() {
-		// System.out.println(verify());
 		return verify() == null;
 	}
 
