@@ -289,12 +289,12 @@ public class StateManager {
 
 
 			String[] sonifiableNames = new String[sonifiables.length];
-			for (int i = 0; i < sonifiableNames.length; i++) {
+			List<List<Price>> musicDataPrices = new ArrayList<>(sonifiables.length);
+			for (int i = 0; i < sonifiables.length; i++) {
 				sonifiableNames[i] = DataRepo.getSonifiableName(sonifiables[i]);
+				musicDataPrices.add(priceMap.get(sonifiables[i]).getPrices());
 			}
 			isCurrentlySonifying = false;
-			List<List<Price>> musicDataPrices = new ArrayList<>(priceMap.size());
-			for (Analyzer analyzer : priceMap.values()) musicDataPrices.add(analyzer.getPrices());
 			return new MusicData(pbc, sonifiableNames, musicDataPrices);
 		}, null);
 
