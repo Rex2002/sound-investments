@@ -6,10 +6,12 @@ import lombok.Data;
 public class Sonifiable {
 	public String name;
 	public SonifiableID id;
+	public FilterFlag type;
 
-	public Sonifiable(String name, SonifiableID id) {
+	public Sonifiable(String name, SonifiableID id, FilterFlag type) {
 		this.name = name.replace('"', '\'');
-		this.id = id;
+		this.id   = id;
+		this.type = type;
 	}
 
 	public String getCompositeName() {
@@ -18,6 +20,6 @@ public class Sonifiable {
 
 	public String toJSON() {
 		return "{ " + "\"name\": " + "\"" + name + "\"" + ", " +
-				"\"id\": " + id.toJSON() + " }";
+				"\"id\": " + id.toJSON() + ", \"type\": \"" + type + "\" }";
 	}
 }

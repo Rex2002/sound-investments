@@ -57,9 +57,10 @@ public class DataRepo {
 	public static final AtomicBoolean updatedData        = new AtomicBoolean(false);
 	private static final ThreadPoolExecutor threadPool   = new ThreadPoolExecutor(16, 64, 60, TimeUnit.SECONDS, new LinkedBlockingQueue<>());
 
-	private static UnorderedList<Sonifiable> stocks  = new UnorderedList<>(128);
-	private static UnorderedList<Sonifiable> etfs    = new UnorderedList<>(128);
-	private static UnorderedList<Sonifiable> indices = new UnorderedList<>(128);
+	// All three arrays are assumed to be parallel
+	private static Sonifiable[] sonifiables;
+	private static String[] lowercaseSymbols;
+	private static String[] lowercaseNames;
 
 	private static List<Price> testPrices() {
 		try {
@@ -87,10 +88,8 @@ public class DataRepo {
 	// Note: You shouldn't call this function twice
 	public static void init() throws AppError {
 		try {
-			// Read cached stocks
-			stocks  = readFromJSON("stocks");
-			etfs    = readFromJSON("etfs");
-			indices = readFromJSON("indices");
+			// Read cached sonifiables
+			loadCached();
 
 			if (UPDATE_SONIFIABLES) {
 				Instant lastUpdate = getLastUpdateDay();
@@ -103,53 +102,50 @@ public class DataRepo {
 		}
 	}
 
-	public static Sonifiable[] findByPrefix(int startIdx, int length, String prefix, FilterFlag... filters) {
-		int filledLen = 0;
+	public static Sonifiable[] findByPrefix(int length, String prefix, FilterFlag... filters) {
+		if (prefix == "") {
+			Sonifiable[] out = new Sonifiable[length];
+			System.arraycopy(sonifiables, 0, out, 0, length);
+			return out;
+		}
+
+		prefix = prefix.toLowerCase();
+		List<Sonifiable> bestFinds  = new ArrayList<>(length);
+		List<Sonifiable> otherFinds = new ArrayList<>(length);
 		int flag = FilterFlag.getFilterVal(filters);
-		Sonifiable[] l = new Sonifiable[length];
 
-		if ((flag & FilterFlag.STOCK.getVal()) > 0)
-			filledLen = findByPrefix(prefix, stocks,  startIdx,             l, filledLen);
-		if ((flag & FilterFlag.ETF.getVal()) > 0)
-			filledLen = findByPrefix(prefix, etfs,    startIdx - filledLen, l, filledLen);
-		if ((flag & FilterFlag.INDEX.getVal()) > 0)
-			filledLen = findByPrefix(prefix, indices, startIdx - filledLen, l, filledLen);
+		for (int i = 0; i < lowercaseSymbols.length; i++) {
+			List<Sonifiable> l = null;
+			if (lowercaseSymbols[i].equals(prefix))
+				l = bestFinds;
+			else if (lowercaseSymbols[i].startsWith(prefix))
+				l = otherFinds;
+			if (l != null && (flag & sonifiables[i].type.getVal()) > 0)
+				l.add(sonifiables[i]);
+		}
+		for (int i = 0; i < lowercaseNames.length; i++) {
+			List<Sonifiable> l = null;
+			if (lowercaseSymbols[i].equals(prefix))
+				l = bestFinds;
+			else if (lowercaseSymbols[i].contains(prefix))
+				l = otherFinds;
+			if (l != null && (flag & sonifiables[i].type.getVal()) > 0)
+				l.add(sonifiables[i]);
+		}
 
-		if (filledLen < length) {
-			Sonifiable[] newL = new Sonifiable[filledLen];
-			System.arraycopy(l, 0, newL, 0, filledLen);
-			return newL;
+		if (bestFinds.size() >= length) {
+			bestFinds = bestFinds.subList(0, length);
 		} else {
-			return l;
+			bestFinds.addAll(otherFinds.subList(0, Math.min(otherFinds.size(), length - bestFinds.size())));
 		}
-	}
-
-	private static int findByPrefix(String prefix, List<? extends Sonifiable> src, int srcOffset, Sonifiable[] dst, int dstOffset) {
-		if (dstOffset == dst.length) return dstOffset;
-		int i = 0;
-		for (Sonifiable s : src) {
-			if (s != null && (s.name.toLowerCase().startsWith(prefix.toLowerCase())
-					           || s.getId().symbol.toLowerCase().startsWith(prefix.toLowerCase()))
-					      && i++ >= srcOffset) {
-				dst[dstOffset++] = s;
-				if (dstOffset == dst.length) break;
-			}
-		}
-		return dstOffset;
+		Sonifiable[] out = new Sonifiable[bestFinds.size()];
+		return bestFinds.toArray(out);
 	}
 
 	public static String getSonifiableName(SonifiableID id) {
-		Sonifiable s = getSonifable(id, stocks);
-		if (s == null) s = getSonifable(id, etfs);
-		if (s == null) s = getSonifable(id, indices);
-		if (s == null) return null;
-		else return s.getCompositeName();
-	}
-
-	private static Sonifiable getSonifable(SonifiableID id, List<Sonifiable> list) {
-		for (Sonifiable x : list) {
-			if (x.getId() == id)
-				return x;
+		for (Sonifiable x : sonifiables) {
+			if (x.getId().equals(id))
+				return x.getCompositeName();
 		}
 		return null;
 	}
@@ -245,18 +241,16 @@ public class DataRepo {
 					exchanges = apiLeeway.getJSONList("general/exchanges", json -> json.asMap().get("Code").asStr());
 				}
 
-				FutureList<List<ExtendedSonifiable>> fl = new FutureList<>(exchanges.size());
+				FutureList<List<Sonifiable>> fl = new FutureList<>(exchanges.size());
 				for (String exchange : exchanges) {
 					fl.add(threadPool.submit(() -> {
 						try {
 							return getApiLeeway().getJSONList("general/symbols/" + exchange, json -> {
 								HashMap<String, JsonPrimitive<?>> m = json.asMap();
 								JsonPrimitive<?> typeJson = m.get("Type");
-								SonifiableType type = SonifiableType.fromString(typeJson.isNull() ? "" : typeJson.asStr());
-								if (type == SonifiableType.NONE) return null;
-								return new ExtendedSonifiable(type, new Sonifiable(
-										m.get("Name").asStr(), new SonifiableID(m.get("Code").asStr(), exchange)
-								));
+								FilterFlag type = FilterFlag.fromLeewayString(typeJson.isNull() ? "" : typeJson.asStr());
+								if (type == FilterFlag.NONE) return null;
+								return new Sonifiable(m.get("Name").asStr(), new SonifiableID(m.get("Code").asStr(), exchange), type);
 							}, true);
 						} catch (Exception e) {
 							return null;
@@ -264,31 +258,58 @@ public class DataRepo {
 					}));
 				}
 
-				UnorderedList<Sonifiable> newStocks  = new UnorderedList<>(4096);
-				UnorderedList<Sonifiable> newEtfs    = new UnorderedList<>(2048);
-				UnorderedList<Sonifiable> newIndices = new UnorderedList<>(2048);
+				UnorderedList<Sonifiable> newSonifiables  = new UnorderedList<>(4096);
+				List<String> newSymbols = new UnorderedList<>(4096);
+				List<String> newNames = new UnorderedList<>(4096);
 				Object[] allSonifiables = fl.getAll();
+				System.out.println("FutureList is done");
 				for (Object sonifiables : allSonifiables) {
-					for (ExtendedSonifiable s : (List<ExtendedSonifiable>) sonifiables) {
-						switch (s.type) {
-							case STOCK -> newStocks.add(s.sonifiable);
-							case ETF -> newEtfs.add(s.sonifiable);
-							case INDEX -> newIndices.add(s.sonifiable);
-							case NONE -> System.out.println("Unreachable: We shouldn't be able to still get unidentified Sonifiables after awaiting all futures");
+					for (Sonifiable s : (List<Sonifiable>) sonifiables) {
+						newSonifiables.add(s);
+						newSymbols.add(s.getId().symbol.toLowerCase());
+						newNames.add(s.getName().toLowerCase());
+					}
+				}
+				System.out.println("newSonifiable lists created");
+
+				// Remove duplicates
+				// @Performance O(n^2) for a very big n :eyes:
+				for (int i = 0; i < newSymbols.size(); i++) {
+					for (int j = i+1; j < newSymbols.size(); j++) {
+						if (newSymbols.get(i).equals(newSymbols.get(j))) {
+							newSymbols.remove(j);
+							newNames.remove(j);
+							newSonifiables.remove(j);
+							j--;
 						}
 					}
 				}
+				System.out.println("Duplicates removed");
 
-				// Cache data for future use
-				stocks = newStocks;
-				etfs = newEtfs;
-				indices = newIndices;
-				writeToJSON("stocks",  ArrayFunctions.toStringArr(stocks.getArray(),  s -> ((Sonifiable) s).toJSON(), true));
-				writeToJSON("etfs",    ArrayFunctions.toStringArr(etfs.getArray(),    s -> ((Sonifiable) s).toJSON(), true));
-				writeToJSON("indices", ArrayFunctions.toStringArr(indices.getArray(), s -> ((Sonifiable) s).toJSON(), true));
 
-				Files.write(Path.of("./src/main/resources/" + lastUpdateFilePath), Long.toString(Instant.now().toEpochMilli()).getBytes(), StandardOpenOption.CREATE);
+				// The intermediate arrays are used to prevent the user trying to search for sonifiables, while they are being updated
+				// this way, the actual updating is a simple pointer-swap which is instantaneous
+				System.out.println("new Sonifiables amount: " + newSonifiables.size());
+				System.out.println("new Symbols amount: " + newSymbols.size());
+				System.out.println("new Names amount: " + newNames.size());
+				assert newSonifiables.size() == newSymbols.size() && newSonifiables.size() == newNames.size();
+				int len = newSonifiables.size();
+				Sonifiable[] newSon = new Sonifiable[len];
+				String[]     newSym = new String[len];
+				String[]     newNam = new String[len];
+				newSon = newSonifiables.toArray(newSon);
+				newSym = newSymbols    .toArray(newSym);
+				newNam = newNames      .toArray(newNam);
+				System.out.println("intermediate arrays created");
+
+
+				sonifiables      = newSon;
+				lowercaseSymbols = newSym;
+				lowercaseNames   = newNam;
+				System.out.println("updated");
 				updatedData.set(true);
+				cacheData();
+				Files.write(Path.of("./src/main/resources/" + lastUpdateFilePath), Long.toString(Instant.now().toEpochMilli()).getBytes(), StandardOpenOption.CREATE);
 			} catch (Throwable e) {
 				// we intentionally ignore this error, as it's not effecting the user at this time
 				e.printStackTrace();
@@ -296,28 +317,40 @@ public class DataRepo {
 		});
 	}
 
-	@SuppressWarnings("unchecked")
-	public static<T extends Sonifiable> UnorderedList<T> readFromJSON(String filename) throws AppError {
+	public static void loadCached() throws AppError {
 		try {
 			Parser parser = new Parser();
-			String stri = Files.readString(Path.of("./src/main/resources/Data/" + filename + ".json"));
+			String stri = Files.readString(Path.of("./src/main/resources/Data/sonifiables.json"));
 			JsonPrimitive<?> json = parser.parse(stri);
-			return json.applyList(x -> (T) new Sonifiable(x.asMap().get("name").asStr(), new SonifiableID(
-				x.asMap().get("id").asMap().get("symbol").asStr(),
-				x.asMap().get("id").asMap().get("exchange").asStr())), new UnorderedList<>(json.asList().size()), true);
+			List<Sonifiable> sl = json.applyList(x -> new Sonifiable(
+						x.asMap().get("name").asStr(),
+						new SonifiableID(
+							x.asMap().get("id").asMap().get("symbol").asStr(),
+							x.asMap().get("id").asMap().get("exchange").asStr()),
+						FilterFlag.fromString(x.asMap().get("type").asStr())),
+					true);
+			sonifiables      = new Sonifiable[sl.size()];
+			sonifiables      = sl.toArray(sonifiables);
+			lowercaseSymbols = new String[sonifiables.length];
+			lowercaseNames   = new String[sonifiables.length];
+			for (int i = 0; i < sonifiables.length; i++) {
+				lowercaseSymbols[i] = sonifiables[i].getId().symbol.toLowerCase();
+				lowercaseNames  [i] = sonifiables[i].getName().toLowerCase();
+			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			throw new AppError("Die gespeicherten Daten für '" + filename + "' konnten nicht gelesen werden. Stelle sicher, dass keine App-internen Dateien verschoben oder gelöscht wurden.");
+			throw new AppError("Die gespeicherten Börsendaten konnten nicht gelesen werden. Stelle sicher, dass keine App-internen Dateien verschoben oder gelöscht wurden.");
 		}
 	}
 
-	private static void writeToJSON(String filename, String data) throws AppError {
+	private static void cacheData() throws AppError {
 		try {
-			Path path = Path.of("./src/main/resources/Data/" + filename + ".json");
+			Path path = Path.of("./src/main/resources/Data/sonifiables.json");
+			String data = ArrayFunctions.toStringArr(sonifiables,  s -> s.toJSON(), true);
 			Files.write(path, data.getBytes(), StandardOpenOption.WRITE);
 		} catch (Exception e) {
 			e.printStackTrace();
-			throw new AppError("Die neuen Daten für '" + filename + "' konnten nicht gespeichert werden.");
+			throw new AppError("Die neuen Börsendaten konnten nicht gespeichert werden.");
 		}
 	}
 }
