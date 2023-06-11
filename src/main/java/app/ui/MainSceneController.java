@@ -317,18 +317,18 @@ public class MainSceneController implements Initializable {
             System.out.println("rmSonifiable was called on " + id + " which couldn't be found in SceneTree.");
             return;
         }
+        paneBoxSonifiables.setPrefHeight((paneBoxSonifiables.getChildren().size()-1) * 511.0);
         rmSonifiable(id, idx, updateSearchResult);
     }
 
     private void rmSonifiable(SonifiableID id, Pane stockPane, boolean updateSearchResult) {
+        paneBoxSonifiables.setPrefHeight((paneBoxSonifiables.getChildren().size()-1) * 511.0);
         rmSonifiable(id, paneBoxSonifiables.getChildren().indexOf(stockPane), updateSearchResult);
     }
 
     private void rmSonifiable(SonifiableID id, int paneIdx, boolean updateSearchResult) {
         mapping.rmSonifiable(id);
         enableBtnIfValid();
-
-        paneBoxSonifiables.prefHeight(paneBoxSonifiables.getChildren().size() * 511.0);
         paneBoxSonifiables.getChildren().remove(paneIdx);
         if (updateSearchResult) {
             ObservableList<Node> checkBoxes = checkVBox.getChildren();
