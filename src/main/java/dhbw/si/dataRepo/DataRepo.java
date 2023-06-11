@@ -54,9 +54,9 @@ public class DataRepo {
 	public static final AtomicBoolean updatedData        = new AtomicBoolean(false);
 	private static final ThreadPoolExecutor threadPool   = new ThreadPoolExecutor(16, 64, 60, TimeUnit.SECONDS, new LinkedBlockingQueue<>());
 
-	private static UnorderedList<Sonifiable> stocks  = new UnorderedList<>(128);
-	private static UnorderedList<Sonifiable> etfs    = new UnorderedList<>(128);
-	private static UnorderedList<Sonifiable> indices = new UnorderedList<>(128);
+	private static UnorderedList<Sonifiable> stocks  = new UnorderedList<>(2048);
+	private static UnorderedList<Sonifiable> etfs    = new UnorderedList<>(2048);
+	private static UnorderedList<Sonifiable> indices = new UnorderedList<>(2048);
 
 	private static List<Price> testPrices() {
 		try {
@@ -100,39 +100,48 @@ public class DataRepo {
 		}
 	}
 
-	public static Sonifiable[] findByPrefix(int startIdx, int length, String prefix, FilterFlag... filters) {
-		int filledLen = 0;
+	public static Sonifiable[] findByPrefix(int length, String prefix, FilterFlag... filters) {
+		// @Cleanup by using lists
+		prefix = prefix.toLowerCase();
+		List<Sonifiable> bestFinds  = new ArrayList<>(length);
+		List<Sonifiable> otherFinds = new ArrayList<>(length);
 		int flag = FilterFlag.getFilterVal(filters);
-		Sonifiable[] l = new Sonifiable[length];
 
 		if ((flag & FilterFlag.STOCK.getVal()) > 0)
-			filledLen = findByPrefix(prefix, stocks,  startIdx,             l, filledLen);
+			findByPrefix(prefix, stocks,  bestFinds, otherFinds, length);
 		if ((flag & FilterFlag.ETF.getVal()) > 0)
-			filledLen = findByPrefix(prefix, etfs,    startIdx - filledLen, l, filledLen);
+			findByPrefix(prefix, etfs,    bestFinds, otherFinds, length);
 		if ((flag & FilterFlag.INDEX.getVal()) > 0)
-			filledLen = findByPrefix(prefix, indices, startIdx - filledLen, l, filledLen);
+			findByPrefix(prefix, indices, bestFinds, otherFinds, length);
 
-		if (filledLen < length) {
-			Sonifiable[] newL = new Sonifiable[filledLen];
-			System.arraycopy(l, 0, newL, 0, filledLen);
-			return newL;
-		} else {
-			return l;
-		}
+		bestFinds.addAll(otherFinds);
+		Sonifiable[] out = new Sonifiable[bestFinds.size()];
+		return bestFinds.toArray(out);
 	}
 
-	private static int findByPrefix(String prefix, List<? extends Sonifiable> src, int srcOffset, Sonifiable[] dst, int dstOffset) {
-		if (dstOffset == dst.length) return dstOffset;
-		int i = 0;
+	// Assumes to be given prefix in lowercase
+	// Returns updated srcOffset
+	private static void findByPrefix(String prefix, List<? extends Sonifiable> src, List<Sonifiable> exactResults, List<Sonifiable> otherResults, int totalLen) {
+		int usedLen = exactResults.size() + otherResults.size();
+		if (usedLen >= totalLen) return;
+
 		for (Sonifiable s : src) {
-			if (s != null && (s.name.toLowerCase().startsWith(prefix.toLowerCase())
-					           || s.getId().symbol.toLowerCase().startsWith(prefix.toLowerCase()))
-					      && i++ >= srcOffset) {
-				dst[dstOffset++] = s;
-				if (dstOffset == dst.length) break;
+			// @Performance instead of transforming strings into lowercase strings constantly and
+			// allocating new strings in each iteration, we should just store names and symbols as
+			// lowercase in some array, that we can traverse then
+			String name = s.name.toLowerCase();
+			String symbol = s.getId().symbol.toLowerCase();
+
+			if (name.equals(prefix) || symbol.equals(prefix)) {
+				exactResults.add(s);
+				if ((usedLen++) == totalLen) // usedLen++ is wrapped in parans, bc I'm not sure about the order of operations with ++ in java
+					break;
+			} else if (s != null && (name.startsWith(prefix) || symbol.startsWith(prefix))) {
+				otherResults.add(s);
+				if ((usedLen++) == totalLen)
+					break;
 			}
 		}
-		return dstOffset;
 	}
 
 	public static String getSonifiableName(SonifiableID id) {
