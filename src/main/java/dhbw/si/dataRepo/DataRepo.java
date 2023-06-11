@@ -10,10 +10,8 @@ import dhbw.si.util.DateUtil;
 import dhbw.si.util.FutureList;
 import dhbw.si.util.UnorderedList;
 
-import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.sql.Timestamp;
 import java.time.Instant;
@@ -227,8 +225,8 @@ public class DataRepo {
 
 	public static Instant getLastUpdateDay() {
 		try {
-			String str = Files.readString(Paths.get(DataRepo.class.getResource(lastUpdateFilePath).toURI()));
-			return Instant.ofEpochMilli(Long.valueOf(str));
+			String str = Files.readString(Path.of("./src/main/resources/"+ lastUpdateFilePath));
+			return Instant.ofEpochMilli(Long.parseLong(str));
 		} catch (Exception e) {
 			return null;
 		}
@@ -245,8 +243,7 @@ public class DataRepo {
 				}
 
 				FutureList<List<ExtendedSonifiable>> fl = new FutureList<>(exchanges.size());
-				for (int i = 0; i < exchanges.size(); i++) {
-					String exchange = exchanges.get(i);
+				for (String exchange : exchanges) {
 					fl.add(threadPool.submit(() -> {
 						try {
 							return getApiLeeway().getJSONList("general/symbols/" + exchange, json -> {
@@ -255,7 +252,7 @@ public class DataRepo {
 								SonifiableType type = SonifiableType.fromString(typeJson.isNull() ? "" : typeJson.asStr());
 								if (type == SonifiableType.NONE) return null;
 								return new ExtendedSonifiable(type, new Sonifiable(
-									m.get("Name").asStr(), new SonifiableID(m.get("Code").asStr(), exchange)
+										m.get("Name").asStr(), new SonifiableID(m.get("Code").asStr(), exchange)
 								));
 							}, true);
 						} catch (Exception e) {
@@ -287,7 +284,7 @@ public class DataRepo {
 				writeToJSON("etfs",    ArrayFunctions.toStringArr(etfs.getArray(),    s -> ((Sonifiable) s).toJSON(), true));
 				writeToJSON("indices", ArrayFunctions.toStringArr(indices.getArray(), s -> ((Sonifiable) s).toJSON(), true));
 
-				Files.write(Path.of(DataRepo.class.getResource(lastUpdateFilePath).toURI()), Long.toString(Instant.now().toEpochMilli()).getBytes(), StandardOpenOption.CREATE);
+				Files.write(Path.of("./src/main/resources/" + lastUpdateFilePath), Long.toString(Instant.now().toEpochMilli()).getBytes(), StandardOpenOption.CREATE);
 				updatedData.set(true);
 			} catch (Throwable e) {
 				// we intentionally ignore this error, as it's not effecting the user at this time
@@ -300,23 +297,20 @@ public class DataRepo {
 	public static<T extends Sonifiable> UnorderedList<T> readFromJSON(String filename) throws AppError {
 		try {
 			Parser parser = new Parser();
-			String str = Files.readString(Paths.get(DataRepo.class.getResource("/Data/" + filename + ".json").toURI()));
-			JsonPrimitive<?> json = parser.parse(str);
-			return json.applyList(x -> {
-				return (T) new Sonifiable(x.asMap().get("name").asStr(), new SonifiableID(
-					x.asMap().get("id").asMap().get("symbol").asStr(),
-					x.asMap().get("id").asMap().get("exchange").asStr()));
-			}, new UnorderedList<>(json.asList().size()), true);
+			String stri = Files.readString(Path.of("./src/main/resources/Data/" + filename + ".json"));
+			JsonPrimitive<?> json = parser.parse(stri);
+			return json.applyList(x -> (T) new Sonifiable(x.asMap().get("name").asStr(), new SonifiableID(
+				x.asMap().get("id").asMap().get("symbol").asStr(),
+				x.asMap().get("id").asMap().get("exchange").asStr())), new UnorderedList<>(json.asList().size()), true);
 		} catch (Exception e) {
 			e.printStackTrace();
 			throw new AppError("Die gespeicherten Daten für '" + filename + "' konnten nicht gelesen werden. Stelle sicher, dass keine App-internen Dateien verschoben oder gelöscht wurden.");
 		}
 	}
 
-	private static <T> void writeToJSON(String filename, String data) throws AppError {
+	private static void writeToJSON(String filename, String data) throws AppError {
 		try {
-			URL url = DataRepo.class.getResource("/Data/" + filename + ".json");
-			Path path = Paths.get(url.toURI());
+			Path path = Path.of("./src/main/resources/Data/" + filename + ".json");
 			Files.write(path, data.getBytes(), StandardOpenOption.WRITE);
 		} catch (Exception e) {
 			e.printStackTrace();
