@@ -124,7 +124,7 @@ public class DataRepo {
 			List<Sonifiable> l = null;
 			if (lowercaseSymbols[i].equals(prefix))
 				l = bestFinds;
-			else if (lowercaseSymbols[i].startsWith(prefix))
+			else if (lowercaseSymbols[i].contains(prefix))
 				l = otherFinds;
 			if (l != null && (flag & sonifiables[i].type.getVal()) > 0)
 				l.add(sonifiables[i]);
@@ -270,7 +270,7 @@ public class DataRepo {
 				System.out.println("newSonifiable lists created");
 
 				// Remove duplicates
-				// @Performance this takes forever :eyes:
+				// @Performance O(n^2) for a very big n :eyes:
 				for (int i = 0; i < newSymbols.size(); i++) {
 					for (int j = i+1; j < newSymbols.size(); j++) {
 						if (newSymbols.get(i).equals(newSymbols.get(j))) {
