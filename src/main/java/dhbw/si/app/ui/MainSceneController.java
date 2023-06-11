@@ -26,10 +26,13 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.scene.shape.Line;
 import javafx.util.Duration;
+import javafx.util.StringConverter;
+
 import java.io.IOException;
 import java.net.URL;
 import java.text.ParseException;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.function.Function;
 
@@ -153,7 +156,7 @@ public class MainSceneController implements Initializable {
         setDatePickerListeners(startPicker, true);
         setDatePickerListeners(endPicker, false);
         // Set default values
-        startPicker.valueProperty().setValue(LocalDate.now().minusMonths(1));
+        startPicker.valueProperty().setValue(LocalDate.now().minusMonths(24));
         endPicker.valueProperty().setValue(LocalDate.now());
 
         audioLength.textProperty().addListener((o, oldVal, newVal) -> updateSoundLength());
@@ -211,13 +214,61 @@ public class MainSceneController implements Initializable {
     }
 
     private void setDatePickerListeners(DatePicker datePicker, boolean isStartDate) {
+        String pattern = "dd/MM/yyyy";
         datePicker.getEditor().textProperty().addListener((observable, oldValue, newValue) -> {
+            LocalDate date;
             try {
-                LocalDate date = DateUtil.localDateFromGermanDateStr(newValue);
+                date = DateUtil.localDateFromGermanDateStr(newValue);
                 datePicker.setValue(date);
-            } catch (ParseException e) {}
+            } catch (ParseException ignored) {
+            } catch (Exception e){
+                System.out.println("another exception occurred");
+            }
         });
+        StringConverter<LocalDate> converter = new StringConverter<LocalDate>() {
+            DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern(pattern);
+
+            @Override
+            public String toString(LocalDate date) {
+                if (date != null) {
+                    try {
+                        return dateFormatter.format(date);
+                    } catch (Exception e){
+                        return "";
+                    }
+
+                } else {
+                    return "";
+                }
+            }
+
+            @Override
+            public LocalDate fromString(String string) {
+                if (string != null && !string.isEmpty()) {
+                    if(string.length() != 10){
+                        if(string.split("/")[0].length() != 2){
+                            string = new StringBuilder(string).insert(0, "0").toString();
+                        }
+                        if(string.split("/")[1].length() != 2){
+                            string = new StringBuilder(string).insert(3, "0").toString();
+                        }
+                    }
+                    try {
+                        return LocalDate.parse(string, dateFormatter);
+                    } catch (Exception e){
+                        return DateUtil.getYearZeroDate();
+                    }
+                } else {
+                    return null;
+                }
+            }
+        };
+        datePicker.setConverter(converter);
         datePicker.valueProperty().addListener((observable, oldValue, newValue) -> {
+            if(newValue.getYear() == 0){
+                datePicker.setValue(oldValue);
+                newValue = oldValue;
+            }
             try {
                 if (isStartDate)
                     mapping.setStartDate(DateUtil.localDateToCalendar(newValue));

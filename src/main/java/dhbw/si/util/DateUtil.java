@@ -63,4 +63,8 @@ public class DateUtil {
 			throw new ParseException("Invalid length", 0);
 		return LocalDate.ofInstant(germanDateFmt.parse(dateStr).toInstant(), ZoneId.systemDefault());
 	}
+
+	public static LocalDate getYearZeroDate(){
+		return LocalDate.ofYearDay(0, 1);
+	}
 }
