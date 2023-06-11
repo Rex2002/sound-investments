@@ -298,9 +298,8 @@ public class Harmonizer {
      * @throws AppError if invalid datapoints are discovered, the user is informed of that
      */
     private int[] normalizeDelayReverb(double[] delayReverb) throws AppError {
-        int MAX_DELAY_REVERB = Constants.SAMPLE_RATE / 20; // number of samples corresponding to 50ms
-        int DEFAULT_DELAY_REVERB = Constants.SAMPLE_RATE / 25; // number of samples corresponding to 40ms
-        //double[] delayReverb = dataRaw.getDelayReverb();
+        int MAX_DELAY_REVERB = Constants.SAMPLE_RATE / 10; // number of samples corresponding to 100ms
+        int DEFAULT_DELAY_REVERB = (int) (Constants.SAMPLE_RATE / 12.5); // number of samples corresponding to 80ms
 
         return normalizeDelayGeneric(true, delayReverb, DEFAULT_DELAY_REVERB, new double[]{ MAX_DELAY_REVERB });
 
