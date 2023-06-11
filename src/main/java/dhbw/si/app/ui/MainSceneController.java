@@ -313,18 +313,18 @@ public class MainSceneController implements Initializable {
             System.out.println("rmSonifiable was called on " + id + " which couldn't be found in SceneTree.");
             return;
         }
-        rmSonifiable(id, idx, false);
+        paneBoxSonifiables.setPrefHeight((paneBoxSonifiables.getChildren().size()-1) * 511.0);
+        rmSonifiable(id, idx, true);
     }
 
-    private void rmSonifiable(SonifiableID id, Pane stockPane) {
-        rmSonifiable(id, paneBoxSonifiables.getChildren().indexOf(stockPane), true);
+    private void rmSonifiable(SonifiableID id, Pane stockPane, boolean updateSearchResult) {
+        paneBoxSonifiables.setPrefHeight((paneBoxSonifiables.getChildren().size()-1) * 511.0);
+        rmSonifiable(id, paneBoxSonifiables.getChildren().indexOf(stockPane), updateSearchResult);
     }
 
     private void rmSonifiable(SonifiableID id, int paneIdx, boolean updateSearchResult) {
         mapping.rmSonifiable(id);
         enableBtnIfValid();
-
-        paneBoxSonifiables.prefHeight(paneBoxSonifiables.getChildren().size() * 511.0);
         paneBoxSonifiables.getChildren().remove(paneIdx);
         if (updateSearchResult) {
             ObservableList<Node> checkBoxes = checkVBox.getChildren();
@@ -552,7 +552,7 @@ public class MainSceneController implements Initializable {
         closeIcon.setLayoutX(paneWidth - iconSideLen - iconMargin);
         closeIcon.setLayoutY(iconMargin);
         closeIcon.setCursor(Cursor.HAND);
-        closeIcon.setOnMouseClicked(ev -> rmSonifiable(sonifiable.getId(), stockPane));
+        closeIcon.setOnMouseClicked(ev -> rmSonifiable(sonifiable.getId(), stockPane, true));
         stockPane.getChildren().add(closeIcon);
 
         addLine(null, 174, 53, 0, 0, 391, 0, stockPane.getChildren());

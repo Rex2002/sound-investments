@@ -41,9 +41,11 @@
       </font>
    </Label>
 
+   <!-- Legend Table-->
    <Pane fx:id="legendPane">
    </Pane>
 
+   <!-- Export Button -->
    <Button fx:id="exportBtn" layoutX="1243.0" layoutY="21.0" mnemonicParsing="false" prefHeight="45.0" prefWidth="146.0"
            style="-fx-background-color: #121315; -fx-border-radius: 30;" text="Exportieren" textFill="WHITE">
       <font>
