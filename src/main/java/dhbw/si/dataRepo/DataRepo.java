@@ -56,9 +56,9 @@ public class DataRepo {
 	public static final AtomicBoolean updatedData        = new AtomicBoolean(false);
 	private static final ThreadPoolExecutor threadPool   = new ThreadPoolExecutor(16, 64, 60, TimeUnit.SECONDS, new LinkedBlockingQueue<>());
 
-	private static UnorderedList<Sonifiable> stocks  = new UnorderedList<>(128);
-	private static UnorderedList<Sonifiable> etfs    = new UnorderedList<>(128);
-	private static UnorderedList<Sonifiable> indices = new UnorderedList<>(128);
+	private static UnorderedList<Sonifiable> stocks  = new UnorderedList<>(2048);
+	private static UnorderedList<Sonifiable> etfs    = new UnorderedList<>(2048);
+	private static UnorderedList<Sonifiable> indices = new UnorderedList<>(2048);
 
 	private static List<Price> testPrices() {
 		try {
@@ -102,45 +102,31 @@ public class DataRepo {
 		}
 	}
 
-	public static Sonifiable[] findByPrefix(int startIdx, int length, String prefix, FilterFlag... filters) {
+	public static Sonifiable[] findByPrefix(int length, String prefix, FilterFlag... filters) {
 		// @Cleanup by using lists
 		prefix = prefix.toLowerCase();
-		int[] dstOffset   = {0};
-		int[] dstLen      = {length};
-		int[] exactOffset = {0};
-		int[] srcOffset   = {startIdx};
+		List<Sonifiable> bestFinds  = new ArrayList<>(length);
+		List<Sonifiable> otherFinds = new ArrayList<>(length);
 		int flag = FilterFlag.getFilterVal(filters);
-		Sonifiable[] dst          = new Sonifiable[length];
-		Sonifiable[] exactMatches = new Sonifiable[length];
 
 		if ((flag & FilterFlag.STOCK.getVal()) > 0)
-			findByPrefix(prefix, stocks,  srcOffset, dst, dstOffset, dstLen, exactMatches, exactOffset);
+			findByPrefix(prefix, stocks,  bestFinds, otherFinds, length);
 		if ((flag & FilterFlag.ETF.getVal()) > 0)
-			findByPrefix(prefix, etfs,    srcOffset, dst, dstOffset, dstLen, exactMatches, exactOffset);
+			findByPrefix(prefix, etfs,    bestFinds, otherFinds, length);
 		if ((flag & FilterFlag.INDEX.getVal()) > 0)
-			findByPrefix(prefix, indices, srcOffset, dst, dstOffset, dstLen, exactMatches, exactOffset);
+			findByPrefix(prefix, indices, bestFinds, otherFinds, length);
 
-		if (exactOffset[0] == 0) {
-			exactMatches = dst;
-			exactOffset = dstOffset;
-		} else {
-			System.arraycopy(dst, 0, exactMatches, exactOffset[0], dstOffset[0]);
-		}
-
-		if (exactOffset[0] + dstOffset[0] < length) {
-			Sonifiable[] l = new Sonifiable[exactOffset[0] + dstOffset[0]];
-			System.arraycopy(exactMatches, 0, l, 0, l.length);
-			return l;
-		} else {
-			return exactMatches;
-		}
+		bestFinds.addAll(otherFinds);
+		Sonifiable[] out = new Sonifiable[bestFinds.size()];
+		return bestFinds.toArray(out);
 	}
 
 	// Assumes to be given prefix in lowercase
-	// srcOffset, dstOffset, dstLen and exactOffset are given as arrays to be references
-	private static void findByPrefix(String prefix, List<? extends Sonifiable> src, int[] srcOffset, Sonifiable[] dst, int[] dstOffset, int[] dstLen, Sonifiable[] exactMatches, int[] exactOffset) {
-		// @Cleanup this code is a mess rn
-		if (dstOffset[0] == dstLen[0]) return;
+	// Returns updated srcOffset
+	private static void findByPrefix(String prefix, List<? extends Sonifiable> src, List<Sonifiable> exactResults, List<Sonifiable> otherResults, int totalLen) {
+		int usedLen = exactResults.size() + otherResults.size();
+		if (usedLen >= totalLen) return;
+
 		for (Sonifiable s : src) {
 			// @Performance instead of transforming strings into lowercase strings constantly and
 			// allocating new strings in each iteration, we should just store names and symbols as
@@ -149,15 +135,13 @@ public class DataRepo {
 			String symbol = s.getId().symbol.toLowerCase();
 
 			if (name.equals(prefix) || symbol.equals(prefix)) {
-				exactMatches[exactOffset[0]++] = s;
-				dstLen[0]--;
+				exactResults.add(s);
+				if ((usedLen++) == totalLen) // usedLen++ is wrapped in parans, bc I'm not sure about the order of operations with ++ in java
+					break;
 			} else if (s != null && (name.startsWith(prefix) || symbol.startsWith(prefix))) {
-				if (srcOffset[0] <= 0) {
-					dst[dstOffset[0]++] = s;
-					if (dstOffset[0] == dstLen[0]) break;
-				} else {
-					srcOffset[0]--;
-				}
+				otherResults.add(s);
+				if ((usedLen++) == totalLen)
+					break;
 			}
 		}
 	}
