@@ -15,7 +15,7 @@
 <?import javafx.scene.shape.Rectangle?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane fx:id="anchor" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="823.0" prefWidth="1584.0" style="-fx-background-color: #09080E;" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="app.ui.MainSceneController">
+<AnchorPane fx:id="anchor" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="823.0" prefWidth="1584.0" style="-fx-background-color: #09080E;" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="dhbw.si.app.ui.MainSceneController">
 <children>
 	<!-- Title -->
 	<Rectangle arcHeight="5.0" arcWidth="5.0" fill="#121315" height="85.6" stroke="#121315" strokeType="INSIDE" width="1584.0" />
