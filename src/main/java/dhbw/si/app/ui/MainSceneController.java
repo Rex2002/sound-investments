@@ -579,7 +579,7 @@ public class MainSceneController implements Initializable {
         }
     }
 
-    private Pane createSharePane(Sonifiable sonifiable, boolean showMapping) { // initialize and dek the Share Pane
+    private Pane createSharePane(Sonifiable sonifiable, boolean showMapping) {
         mapping.addSonifiable(sonifiable);
 
         Pane stockPane = new Pane();
@@ -588,14 +588,15 @@ public class MainSceneController implements Initializable {
         Label tField = new Label();
         tField.setText(sonifiable.getCompositeName());
         tField.getStyleClass().add("txtField");
-        tField.setLayoutX(168);
+        tField.setLayoutX(40);
+        tField.setPrefWidth(400);
         tField.setLayoutY(8);
         stockPane.getChildren().add(tField);
 
         ImageView closeIcon = new ImageView(closeImg);
-        double paneWidth = 738; // see css for width value
+        double paneWidth = 610; // see css for width value
         double iconSideLen = 35;
-        double iconMargin = 15;
+        double iconMargin = 20;
         closeIcon.setFitHeight(iconSideLen);
         closeIcon.setFitWidth(iconSideLen);
         closeIcon.setLayoutX(paneWidth - iconSideLen - iconMargin);
@@ -604,7 +605,7 @@ public class MainSceneController implements Initializable {
         closeIcon.setOnMouseClicked(ev -> rmSonifiable(sonifiable.getId(), stockPane, true));
         stockPane.getChildren().add(closeIcon);
 
-        addLine(null, 174, 53, 0, 0, 391, 0, stockPane.getChildren());
+        addLine(null, 40, 53, 0, 0, 400, 0, stockPane.getChildren());
         addLine("pinkline", 306, 168, -100, -60, -100, 263, stockPane.getChildren());
         addLine("pinkline", 512, 177, -100, -60, -100, 263, stockPane.getChildren());
         addStockParamToPane("Preis", "paneShareLabel", 14, 80, 14, 115, 14, 160, sonifiable, LineData.PRICE,
