@@ -111,9 +111,9 @@ public class Analyzer {
 
 	private void setMinMax() {
 		if (min != Double.MAX_VALUE) return;
-		for (double p : getPriceValues()) {
-			if      (p < min) min = p;
-			else if (p > max) max = p;
+		for (Price p : prices) {
+			if      (p.getLow() < min) min = p.getLow();
+			else if (p.getHigh() > max) max = p.getHigh();
 		}
 	}
 
