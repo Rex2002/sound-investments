@@ -52,7 +52,7 @@
    </Button>
    <ImageView fx:id="backBtn" fitHeight="80.0" fitWidth="80.0" layoutX="1020.0" layoutY="684.0" pickOnBounds="true"
               preserveRatio="true">
-      <Image url="@back_btn.png"/>
+      <Image url="@img\back_btn.png"/>
    </ImageView>
    <Slider fx:id="musicSlider" layoutX="35.0" layoutY="620.0" prefHeight="14.0" prefWidth="1526.0"/>
    <ImageView fx:id="playBtn" fitHeight="80.0" fitWidth="80.0" layoutX="1163.0" layoutY="684.0" pickOnBounds="true"
@@ -60,11 +60,11 @@
    </ImageView>
    <ImageView fx:id="stopBtn" fitHeight="80.0" fitWidth="80.0" layoutX="1306.0" layoutY="684.0"
               onMouseDragExited="#stopSound" pickOnBounds="true" preserveRatio="true">
-      <Image url="@stop_btn.png"/>
+      <Image url="@img\stop_btn.png"/>
    </ImageView>
    <ImageView fx:id="forBtn" fitHeight="80.0" fitWidth="80.0" layoutX="1449.0" layoutY="684.0" pickOnBounds="true"
               preserveRatio="true">
-      <Image url="@for_btn.png"/>
+      <Image url="@img\for_btn.png"/>
    </ImageView>
    <Button fx:id="closeBtn" layoutX="1416.0" layoutY="21.0" mnemonicParsing="false" onAction="#closeWindow"
            prefHeight="45.0" prefWidth="146.0" style="-fx-background-color: #121315; -fx-border-radius: 30;"

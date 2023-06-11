@@ -94,7 +94,7 @@ public class MainSceneController implements Initializable {
         categoriesCB.getItems().addAll(MainSceneController.categoryKeys);
         enableBtnIfValid();
 
-        closeImg = new Image(getClass().getResource("/UI/close_icon.png").toExternalForm());
+        closeImg = new Image(getClass().getResource("/UI/img/close_icon.png").toExternalForm());
 
         checkEQService = new CheckEQService();
         checkEQService.setPeriod(Duration.millis(100));
@@ -181,7 +181,7 @@ public class MainSceneController implements Initializable {
                 startedSonification = true;
                 EventQueues.toSM.add(new Msg<>(MsgToSMType.START, mapping));
                 // Show loading image
-                loading = new ImageView(new Image(getClass().getResource("/UI/loading.png").toExternalForm()));
+                loading = new ImageView(new Image(getClass().getResource("/UI/img/loading.png").toExternalForm()));
                 double loadingWidth = 150;
                 double loadingHeight = 150;
                 loading.setFitWidth(loadingWidth);

@@ -97,8 +97,8 @@ public class MusicSceneController implements Initializable {
 			}
 		});
 
-		playImage = new Image(getClass().getResource("/UI/play_btn.png").toString());
-		pauseImage = new Image(getClass().getResource("/UI/pause_btn.png").toString());
+		playImage = new Image(getClass().getResource("/UI/img/play_btn.png").toString());
+		pauseImage = new Image(getClass().getResource("/UI/img/pause_btn.png").toString());
 		playBtn.setImage(pauseImage);
 		playBtn.setOnMouseClicked(ev -> this.pausePlaySound());
 		forBtn.setOnMouseClicked(ev -> pbc.skipForward());
