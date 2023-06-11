@@ -15,7 +15,7 @@ public class Sonifiable {
 	}
 
 	public String getCompositeName() {
-		return name + " (" + id.symbol + ")";
+		return name + " (" + id.toString() + ")";
 	}
 
 	@Override
