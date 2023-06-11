@@ -216,7 +216,7 @@ public class DataRepo {
 				return out;
 			} catch (Exception e) {
 				e.printStackTrace();
-				System.out.println("Error in getting Price-Data for " + s + " from " + DateUtil.formatDate(start) + " to " + DateUtil.formatDate(end));
+				System.out.println("Fehler beim Einholen der Preisdaten von " + s + " vom " + DateUtil.formatDateGerman(start) + " bis zum " + DateUtil.formatDateGerman(end));
 				return null;
 			}
 		});
