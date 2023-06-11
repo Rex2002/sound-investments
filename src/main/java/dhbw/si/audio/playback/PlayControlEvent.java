@@ -24,13 +24,4 @@ public class PlayControlEvent {
 
     public PlayControlEvent() {
     }
-
-    @Override
-    public String toString() {
-        return "PlayControlEvent{" +
-                "type=" + type +
-                ", duration=" + duration +
-                ", goToRelative=" + goToRelative +
-                '}';
-    }
 }

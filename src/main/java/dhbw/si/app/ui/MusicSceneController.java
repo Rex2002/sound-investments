@@ -4,7 +4,6 @@ import dhbw.si.app.AppError;
 import dhbw.si.app.communication.*;
 import dhbw.si.audio.playback.PlaybackController;
 import javafx.application.Platform;
-import javafx.event.EventHandler;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.Initializable;
@@ -17,7 +16,6 @@ import javafx.scene.chart.XYChart;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.Slider;
-import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
@@ -50,14 +48,10 @@ public class MusicSceneController implements Initializable {
 	@FXML private NumberAxis xAxis;
 	@FXML private NumberAxis yAxis;
 	@FXML private Pane legendPane;
-	@SuppressWarnings("unused")
-	@FXML private TextField headerTitle;
 	@FXML private Button exportBtn;
 	@FXML private Button closeBtn;
 	@FXML private Slider musicSlider;
 	@FXML private Label lengthLabel;
-	@SuppressWarnings("unused")
-	@FXML private Parent root;
 	@FXML private ImageView playBtn;
 	@FXML private ImageView stopBtn;
 	@FXML private ImageView backBtn;
@@ -103,13 +97,9 @@ public class MusicSceneController implements Initializable {
 		playBtn.setOnMouseClicked(ev -> this.pausePlaySound());
 		forBtn.setOnMouseClicked(ev -> pbc.skipForward());
 		backBtn.setOnMouseClicked(ev -> pbc.skipBackward());
-		stopBtn.addEventHandler(MouseEvent.MOUSE_CLICKED, new EventHandler<MouseEvent>() {
-				@Override
-				public void handle(MouseEvent event) {
+		stopBtn.addEventHandler(MouseEvent.MOUSE_CLICKED, _ev -> {
 					stopSound();
 					playBtn.setImage(playImage);
-
-				}
 		});
 		playBtn.setCursor(Cursor.HAND);
 		forBtn.setCursor(Cursor.HAND);
@@ -234,7 +224,6 @@ public class MusicSceneController implements Initializable {
 		musicSlider.setMinorTickCount(1000);
 		musicSlider.setMajorTickUnit(5*60);
 		musicSlider.setOnMouseClicked(ev -> sliderGoto(ev));
-		// TODO: call PBC's goto when the slider is being dragged too
 	}
 
 	private void sliderGoto(MouseEvent ev) {
@@ -256,8 +245,9 @@ public class MusicSceneController implements Initializable {
         } catch (IOException e) {
             CommonController.displayError(anchor, "Fehler beim Laden der nächsten UI-Szene", "Interner Fehler");
         } catch (InterruptedException e) {
+			Parent root = anchor.getParent();
 			Pane pane = anchor;
-			if (!root.getChildrenUnmodifiable().isEmpty() && root.getChildrenUnmodifiable().get(0) instanceof Pane)
+			if (root != null && !root.getChildrenUnmodifiable().isEmpty() && root.getChildrenUnmodifiable().get(0) instanceof Pane)
 				pane = (Pane) root.getChildrenUnmodifiable().get(0);
 			CommonController.displayError(pane, "Es konnte keine Verbindung mit dem Backend der Anwendung hergestellt werden", "Interner Fehler");
 		}

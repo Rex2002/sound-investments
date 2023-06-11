@@ -2,6 +2,7 @@ package dhbw.si.app.mapping;
 
 import dhbw.si.audio.synth.InstrumentEnum;
 import dhbw.si.dataRepo.SonifiableID;
+import lombok.Data;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
@@ -9,6 +10,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+@Data
 public class InstrumentMapping {
 	// Optional fields represent that the user can leave those empty
 	// Any other fields have to be set for a valid mapping
@@ -144,125 +146,5 @@ public class InstrumentMapping {
 		if (ed.equals(onOffReverb))    return InstrParam.ON_OFF_REVERB;
 		if (ed.equals(onOffFilter))    return InstrParam.ON_OFF_FILTER;
 		return null;
-	}
-
-	public InstrumentEnum getInstrument() {
-		return this.instrument;
-	}
-
-	public ExchangeData<LineData> getRelVolume() {
-		return this.relVolume;
-	}
-
-	public void setRelVolume(ExchangeData<LineData> relVolume) {
-		this.relVolume = relVolume;
-	}
-
-	public ExchangeData<RangeData> getAbsVolume() {
-		return this.absVolume;
-	}
-
-	public void setAbsVolume(ExchangeData<RangeData> absVolume) {
-		this.absVolume = absVolume;
-	}
-
-	public ExchangeData<LineData> getPitch() {
-		return this.pitch;
-	}
-
-	public void setPitch(ExchangeData<LineData> pitch) {
-		this.pitch = pitch;
-	}
-
-	public ExchangeData<LineData> getDelayEcho() {
-		return this.delayEcho;
-	}
-
-	public void setDelayEcho(ExchangeData<LineData> delayEcho) {
-		this.delayEcho = delayEcho;
-	}
-
-	public ExchangeData<LineData> getFeedbackEcho() {
-		return this.feedbackEcho;
-	}
-
-	public void setFeedbackEcho(ExchangeData<LineData> feedbackEcho) {
-		this.feedbackEcho = feedbackEcho;
-	}
-
-	public ExchangeData<RangeData> getOnOffEcho() {
-		return this.onOffEcho;
-	}
-
-	public void setOnOffEcho(ExchangeData<RangeData> onOffEcho) {
-		this.onOffEcho = onOffEcho;
-	}
-
-	public ExchangeData<LineData> getDelayReverb() {
-		return this.delayReverb;
-	}
-
-	public void setDelayReverb(ExchangeData<LineData> delayReverb) {
-		this.delayReverb = delayReverb;
-	}
-
-	public ExchangeData<LineData> getFeedbackReverb() {
-		return this.feedbackReverb;
-	}
-
-	public void setFeedbackReverb(ExchangeData<LineData> feedbackReverb) {
-		this.feedbackReverb = feedbackReverb;
-	}
-
-	public ExchangeData<RangeData> getOnOffReverb() {
-		return this.onOffReverb;
-	}
-
-	public void setOnOffReverb(ExchangeData<RangeData> onOffReverb) {
-		this.onOffReverb = onOffReverb;
-	}
-
-	public ExchangeData<LineData> getCutoff() {
-		return this.cutoff;
-	}
-
-	public void setCutoff(ExchangeData<LineData> cutoff) {
-		this.cutoff = cutoff;
-	}
-
-	public ExchangeData<RangeData> getOnOffFilter() {
-		return this.onOffFilter;
-	}
-
-	public void setOnOffFilter(ExchangeData<RangeData> onOffFilter) {
-		this.onOffFilter = onOffFilter;
-	}
-
-	public ExchangeData<LineData> getPan() {
-		return this.pan;
-	}
-
-	public void setPan(ExchangeData<LineData> pan) {
-		this.pan = pan;
-	}
-
-	@Override
-	public String toString() {
-		return "{" +
-				" instrument='" + this.instrument + "'" +
-				", absVolume='" + this.absVolume + "'" +
-				", relVolume='" + this.relVolume + "'" +
-				", pitch='" + this.pitch + "'" +
-				", pan='" + this.pan + "'" +
-				", delayEcho='" + this.delayEcho + "'" +
-				", feedbackEcho='" + this.feedbackEcho + "'" +
-				", onOffEcho='" + this.onOffEcho + "'" +
-				", delayReverb='" + this.delayReverb + "'" +
-				", feedbackReverb='" + this.feedbackReverb + "'" +
-				", onOffReverb='" + this.onOffReverb + "'" +
-				", cutoff='" + this.cutoff + "'" +
-				", onOffFilter='" + this.onOffFilter + "'" +
-				", pan='" + this.pan + "'" +
-				"}";
 	}
 }

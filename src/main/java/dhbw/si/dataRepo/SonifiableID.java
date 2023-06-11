@@ -2,8 +2,6 @@ package dhbw.si.dataRepo;
 
 import lombok.Data;
 
-import java.util.Objects;
-
 @Data
 public class SonifiableID {
 	public String exchange;
@@ -12,16 +10,6 @@ public class SonifiableID {
 	public SonifiableID(String symbol, String exchange) {
 		this.symbol   = symbol.replace('"', '\'');
 		this.exchange = exchange.replace('"', '\'');
-	}
-
-	@Override
-	public boolean equals(Object o) {
-		if (o == this)
-			return true;
-		if (!(o instanceof SonifiableID sonifiableID)) {
-			return false;
-		}
-		return Objects.equals(exchange, sonifiableID.exchange) && Objects.equals(symbol, sonifiableID.symbol);
 	}
 
 	@Override

@@ -70,7 +70,6 @@ public class Sonifier {
         try {
             sdl = AudioSystem.getSourceDataLine(af);
         } catch (LineUnavailableException e) {
-            // TODO exception handling
             throw new AppError("Zugriff auf Lautsprecher verweigert");
         }
 
