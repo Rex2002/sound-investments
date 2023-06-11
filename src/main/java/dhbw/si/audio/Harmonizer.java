@@ -278,7 +278,7 @@ public class Harmonizer {
         } else if (onOffEcho != null) {
             feedbackEcho = new double[onOffEcho.length];
             for (int i = 0; i < onOffEcho.length; i++) {
-                feedbackEcho[i] = onOffEcho[i] && delayEcho[i] != -1 ? DEFAULT_FEEDBACK_ECHO : MUTE_ECHO;
+                feedbackEcho[i] = onOffEcho[i] && delayEcho != null && delayEcho[i] != -1 ? DEFAULT_FEEDBACK_ECHO : MUTE_ECHO;
             }
         } else if (delayEcho != null) {
             feedbackEcho = new double[delayEcho.length];
