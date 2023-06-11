@@ -161,7 +161,7 @@ public class MusicSceneController implements Initializable {
 		// Show legend of sonifiable names
 		legendPane.getChildren().clear();
 		for (int i = 0; i < sonifiableNames.length; i++) {
-			addSonifiableName(sonifiableNames[i], colors[i], 60 + (i % 3) * 240, 646 + ((int) (i / 3f)) * 50);
+			addSonifiableName(sonifiableNames[i], colors[sonifiableNames.length-i], 60 + (i % 3) * 240, 646 + ((int) (i / 3f)) * 50);
 		}
 
 		// Show price data in line chart
