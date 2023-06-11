@@ -7,8 +7,6 @@ import dhbw.si.audio.Sonifier;
 import dhbw.si.audio.events.EvInstrData;
 import dhbw.si.audio.events.EvInstrEnum;
 import dhbw.si.audio.synth.InstrumentEnum;
-import dhbw.si.audio.playback.PlayControlEvent;
-import dhbw.si.audio.playback.PlayControlEventsEnum;
 import dhbw.si.audio.playback.PlaybackController;
 import dhbw.si.dataAnalyzer.*;
 import dhbw.si.dataRepo.*;
@@ -45,20 +43,11 @@ public class StateManager {
 			public void run() {
 				try {
 					if (!th.isAlive()) {
-						// Cleanup & close dhbw.si.app
-						timer.cancel();
-						// @Cleanup It feels a bit hacky to close the Playback-Thread like this
-						// I can't seem to figure out how to listen to the UI closing from within the MusicSceneController,
-						// where killing the Playback-Thread via PlaybackController would be simple and make sense
-						// instead, I send a KILL message to the Playback thread to make sure it gets closed cleanly
-						// For some reason though, the dhbw.si.app still doesn't get closed then, so I exit the application anyways
-						PlayControlEvent p = new PlayControlEvent(PlayControlEventsEnum.KILL);
-						try {
-							EventQueues.toPlayback.put(p);
-							System.exit(0);
-						} catch (InterruptedException ie) {
-							System.exit(1);
-						}
+						// If the UI thread is closed, we want to close the entire app
+						// There might still be some timers or threads running in the background, however,
+						// instead of bookkeeping them all and cleaning them up manually,
+						// we just let the Operating System clean them up for us
+						System.exit(0);
 					}
 
 					while (!EventQueues.toSM.isEmpty()) {

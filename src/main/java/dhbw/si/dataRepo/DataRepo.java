@@ -174,7 +174,7 @@ public class DataRepo {
 
 				boolean isEoD = interval == IntervalLength.DAY;
 				String endpoint = (isEoD ? "historicalquotes/" : "intraday/") + s;
-				String[] intervalQueries = {"interval", interval.toString(API.LEEWAY)};
+				String[] intervalQueries = {"interval", interval.toString()};
 				do {
 					// We increase end by 1, because Leeway's range is exclusive
 					// and after each iteration end = earliestDay and it might be that we missed some data from that day
@@ -234,6 +234,7 @@ public class DataRepo {
 		}
 	}
 
+	@SuppressWarnings("unchecked")
 	public static void updateSonifiablesList() {
 		threadPool.submit(() -> {
 			try {
@@ -270,8 +271,6 @@ public class DataRepo {
 				for (Object sonifiables : allSonifiables) {
 					for (ExtendedSonifiable s : (List<ExtendedSonifiable>) sonifiables) {
 						switch (s.type) {
-							// @Performance it's absurd to create new objects here
-							// solution would be to have stocks/etfs/indices be lists of sonifiables
 							case STOCK -> newStocks.add(s.sonifiable);
 							case ETF -> newEtfs.add(s.sonifiable);
 							case INDEX -> newIndices.add(s.sonifiable);

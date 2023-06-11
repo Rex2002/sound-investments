@@ -333,7 +333,6 @@ public class UnorderedList<E> implements List<E>, RandomAccess {
 	}
 
 	public List<E> subList(int fromIndex, int toIndex) {
-		// TODO
 		subListRangeCheck(fromIndex, toIndex, len);
 		return new SubList<>(this, fromIndex, toIndex);
 	}

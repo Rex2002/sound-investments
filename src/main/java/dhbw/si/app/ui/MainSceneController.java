@@ -47,8 +47,6 @@ public class MainSceneController implements Initializable {
     @FXML private TextField audioLength1;
     @FXML private VBox checkVBox;
     @FXML private VBox instBox;
-    @SuppressWarnings("unused")
-    @FXML private double duration;
 
     // initialized externally
     public Scene scene;
@@ -90,7 +88,7 @@ public class MainSceneController implements Initializable {
     }
 
     @Override
-    public void initialize(URL arg0, ResourceBundle arg1) { // Initialisierung mit den Optionen
+    public void initialize(URL arg0, ResourceBundle arg1) {
         categoriesCB.getItems().addAll(MainSceneController.categoryKeys);
         enableBtnIfValid();
 
@@ -204,7 +202,7 @@ public class MainSceneController implements Initializable {
                 }, nextFrameInMs, nextFrameInMs);
             } catch (Exception e) {
                 e.printStackTrace();
-                // TODO: Error handling
+                CommonController.displayError(anchor, "Sonifizierung konnte aufgrund eines internen Fehlers nicht gestartet werden. Starten Sie die Anwendung bitte neu.", "Interner Fehler");
             }
         });
 
@@ -227,7 +225,8 @@ public class MainSceneController implements Initializable {
                     mapping.setEndDate(DateUtil.localDateToCalendar(newValue));
                 enableBtnIfValid();
             } catch (Exception e) {
-                // TODO: Error Handling
+                e.printStackTrace();
+                CommonController.displayError(anchor, "Das neue Enddatum konnte nicht gesetzt werden.", "Interner Fehler");
             }
         });
     }
@@ -248,7 +247,6 @@ public class MainSceneController implements Initializable {
                 }
 
                 mapping.setSoundLength(passValue);
-                duration = passValue;
             }
         } else {
             // falsche Eingabe

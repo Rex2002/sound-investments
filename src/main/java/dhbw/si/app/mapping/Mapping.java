@@ -1,5 +1,8 @@
 package dhbw.si.app.mapping;
 
+import java.util.*;
+import java.util.function.Consumer;
+import lombok.Data;
 import dhbw.si.app.AppError;
 import dhbw.si.audio.events.EvInstrEnum;
 import dhbw.si.audio.synth.InstrumentEnum;
@@ -7,9 +10,7 @@ import dhbw.si.dataRepo.Sonifiable;
 import dhbw.si.dataRepo.SonifiableID;
 import dhbw.si.util.ArrayFunctions;
 
-import java.util.*;
-import java.util.function.Consumer;
-
+@Data
 public class Mapping {
 	public static final int MAX_EV_INSTR_SIZE = 10;
 	public static final int MIN_SOUND_LENGTH = 30;
@@ -52,10 +53,8 @@ public class Mapping {
 	}
 
 	public String verify() {
-		// TODO: Are there any other ways in which the mapping can be invalid?
 		// evInstrAmount > MAX_EV_INSTR_SIZE doesn't have to be checked, because the
 		// setters don't allow this to happen anyways
-		// TODO: Update Warning messages for invalid Mapping
 		if (startDate == null)
 			return "Start-Datum ist nicht gesetzt.";
 		if (endDate == null)
@@ -334,105 +333,9 @@ public class Mapping {
 		return out;
 	}
 
-	public void setOnInstrAdded(Consumer<InstrumentEnum> callback) {
-		this.onInstrAdded = callback;
-	}
-
-	public void setOnEvInstrAdded(Consumer<EvInstrEnum> callback) {
-		this.onEvInstrAdded = callback;
-	}
-
-	public void setOnInstrRemoved(Consumer<InstrumentEnum> callback) {
-		this.onInstrRemoved = callback;
-	}
-
-	public void setOnEvInstrRemoved(Consumer<EvInstrEnum> callback) {
-		this.onEvInstrRemoved = callback;
-	}
-
-
-	public void setHighPass(boolean highpass) {
-		this.highPass = highpass;
-	}
-
-	public void setSoundLength(int len) {
-		this.soundLength = len;
-	}
-
-	public void setStartDate(Calendar startDate) {
-		this.startDate = startDate;
-	}
-
-	public void setEndDate(Calendar endDate) {
-		this.endDate = endDate;
-	}
-
-	public Set<Sonifiable> getSonifiables() {
-		return this.sonifiables;
-	}
-
-	public InstrumentMapping[] getMappedInstruments() {
-		return this.mappedInstruments;
-	}
-
 	public EvInstrMapping[] getEventInstruments() {
 		EvInstrMapping[] out = new EvInstrMapping[evInstrAmount];
 		System.arraycopy(eventInstruments, 0, out, 0, evInstrAmount);
 		return out;
-	}
-
-	public Integer getSoundLength() {
-		return this.soundLength;
-	}
-
-	public Calendar getStartDate() {
-		return this.startDate;
-	}
-
-	public Calendar getEndDate() {
-		return this.endDate;
-	}
-
-	public ExchangeData<LineData> getDelayReverb() {
-		return this.delayReverb;
-	}
-
-	public ExchangeData<LineData> getFeedbackReverb() {
-		return this.feedbackReverb;
-	}
-
-	public ExchangeData<RangeData> getOnOffReverb() {
-		return this.onOffReverb;
-	}
-
-	public ExchangeData<LineData> getCutoff() {
-		return this.cutoff;
-	}
-
-	public ExchangeData<RangeData> getOnOffFilter() {
-		return this.onOffFilter;
-	}
-
-	public Boolean getHighPass() {
-		return this.highPass;
-	}
-
-	@Override
-	public String toString() {
-		return "{" +
-				" sonifiables='" + this.sonifiables + "'" +
-				", mappedInstruments='" + ArrayFunctions.toStringArr(this.mappedInstruments) + "'" +
-				", eventInstruments='" + ArrayFunctions.toStringArr(this.eventInstruments) + "'" +
-				", evInstrAmount='" + this.evInstrAmount + "'" +
-				", soundLength='" + this.soundLength + "'" +
-				", startDate='" + this.startDate + "'" +
-				", endDate='" + this.endDate + "'" +
-				", delayReverb='" + this.delayReverb + "'" +
-				", feedbackReverb='" + this.feedbackReverb + "'" +
-				", onOffReverb='" + this.onOffReverb + "'" +
-				", cutoff='" + this.cutoff + "'" +
-				", onOffFilter='" + this.onOffFilter + "'" +
-				", highPass='" + this.highPass + "'" +
-				"}";
 	}
 }
