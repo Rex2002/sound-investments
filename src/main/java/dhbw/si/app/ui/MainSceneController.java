@@ -441,14 +441,15 @@ public class MainSceneController implements Initializable {
                     InstrumentEnum oldValue = instVals[Math.max(oldIdx.intValue(), 0)];
                     SingleSelectionModel<String> paramCBSelect = paramCB.getSelectionModel();
                     InstrParam paramVal = paramCBSelect.getSelectedItem() == null ? null : InstrParam.fromString(paramCBSelect.getSelectedItem());
-
                     paramCB.setDisable(newIdx.intValue() <= 0);
                     refreshParamOpts(paramCB, newValue, isLineParam, true);
-                    if (newValue != null && paramVal != null) {
+                    if (paramVal != null) {
                         mapping.rmParam(oldValue, paramVal);
+                        if(newValue != null){
                         if (mapping.isNotMapped(newValue, paramVal))
                             mapping.setParam(newValue, sonifiable, paramVal, eparam);
                     }
+                }
                     enableBtnIfValid();
                     currentlyUpdatingCB = false;
                 } catch (AppError e) {
