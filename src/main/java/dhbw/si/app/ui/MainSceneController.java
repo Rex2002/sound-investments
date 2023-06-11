@@ -421,7 +421,7 @@ public class MainSceneController implements Initializable {
             if (showMapping) {
                 MappedInstr mi = mapping.get(new ExchangeData<>(sonifiable.getId(), eparam));
                 if (mi != null) {
-                    instCB.getSelectionModel().select(mi.instr.toString());
+                    instCB.getSelectionModel().select(mi.instr == null ? instKeys[1] : mi.instr.toString());
                     paramCB.getSelectionModel().select(mi.param.toString());
                     paramCB.setDisable(false);
                 }

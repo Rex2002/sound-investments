@@ -317,6 +317,11 @@ public class Mapping {
 			if (param != null)
 				return new MappedInstr(instrMap.getInstrument(), param);
 		}
+		if (ed.equals(delayReverb))    return new MappedInstr(null, InstrParam.DELAY_REVERB);
+		if (ed.equals(feedbackReverb)) return new MappedInstr(null, InstrParam.FEEDBACK_REVERB);
+		if (ed.equals(cutoff))         return new MappedInstr(null, InstrParam.CUTOFF);
+		if (ed.equals(onOffReverb))    return new MappedInstr(null, InstrParam.ON_OFF_REVERB);
+		if (ed.equals(onOffFilter))    return new MappedInstr(null, InstrParam.ON_OFF_FILTER);
 		return null;
 	}
 
