@@ -34,7 +34,7 @@
                 <artifactId>javafx-maven-plugin</artifactId>
                 <version>0.0.8</version>
                 <configuration>
-                    <mainClass>app.StateManager</mainClass>
+                    <mainClass>dhbw.si.app.StateManager</mainClass>
                 </configuration>
             </plugin>
 			<plugin>
@@ -53,7 +53,7 @@
 					<archive>
 					<manifest>
 						<addClasspath>true</addClasspath>
-						<mainClass>app.StateManager</mainClass>
+						<mainClass>dhbw.si.app.StateManager</mainClass>
 					</manifest>
 					</archive>
 					<descriptorRefs>
