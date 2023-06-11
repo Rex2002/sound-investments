@@ -14,7 +14,7 @@ import java.util.Random;
 /**
  * The main purpose of this class is to translate Market/Stock-domain information to the music-domain. <br/>
  * This is needed in two ways: <br/>
- *  Raw InstrumentData needs to be translated  toInstrumentData that is understood by the SynthLine-class <br/>
+ *  Raw InstrumentData needs to be translated to InstrumentData that is understood by the SynthLine-class <br/>
  *  Raw GlobalFxData needs to be translated to GlobalFxData that is understood by the sonify-method <br/>
  *
  *  Since the operations performed by the latter are a subset of the operations performed by the first, the latter is included into this class as well. <br/>
@@ -47,8 +47,8 @@ public class Harmonizer {
 
     /**
      * Method orchestrating the harmonizing of the raw globalFxData. <br/>
-     * The GlobalFx-harmonization consists of filter-normalization and feverb-normalization
-     * @return a GlobalData-Object that is understood by the Sonify-method and can be used to apply global effects
+     * The GlobalFx-harmonization consists of filter-normalization and reverb-normalization
+     * @return a GlobalData-Object that is understood by the sonify-method and can be used to apply global effects
      * @throws AppError if an error occurs the user is informed
      */
     public GlobalFxData harmonizeGlobalData() throws AppError{
@@ -111,7 +111,7 @@ public class Harmonizer {
      * 1. selecting a music-key-pattern<br/>
      * 2. quantizing the available data (i.e. making sure that exactly one pitch value is present for each beat)<br/>
      * 3. creating midi-note-values based on the quantized pitch values and the scale that was selected in step one.<br/>
-     * For an in-depth understanding on how the scale is incorporated into the result, it is probably best to refer to the architecture document.
+     * For an in-depth understanding on how the scale is incorporated into the result, please consult the architecture-documentation at paragraph 4.3.1 <br/>
      * @return an int-array that contains one midi-note between 36 and 83 for each beat.
      * @throws AppError if an invalid values is detected in the pitch, an AppError is thrown to inform the user.
      */
@@ -139,6 +139,15 @@ public class Harmonizer {
         return output;
     }
 
+    /**
+     * In order to bring some variation to the sonification, a random music-key-pattern gets chosen before the pitch gets normalized <br/>
+     * The pattern is a 12-element array, where each element represents a halftone on the chromatic scale. <br/>
+     * In order to make the pitch more harmonic, the pattern uses the following rules: <br/>
+     * 1. all elements on a Major or natural Minor scale are set to 2 <br/>
+     * 2. all other elements on the chromatic scale are set to 1 <br/>
+     * 3. the pattern is shifted by a random number of elements <br/>
+     * @return a 12-element array that represents a random music-key-pattern
+     */
     private int[] getRandomScale() {
         int[] scale = new int[] {
                 2, 1, 2, 1, 2, 2, 1, 2, 1, 2, 1, 2
@@ -157,8 +166,7 @@ public class Harmonizer {
 
     /**
      * compresses long data array to the required length by averaging a number of data points into one note. <br/>
-     * @return data array that has the exact length where one data point can be
-     *         sonified as one quarter note
+     * @return data array that has the exact length in which one data point can be sonified as one quarter note
      */
     private double[] quantizePitch() {
         double[] pitch = dataRaw.getPitch();
@@ -299,7 +307,7 @@ public class Harmonizer {
     }
 
     /**
-     * Some generic-delay-normalization-maigc
+     * Some generic-delay-normalization-magic
      * @param reverb
      * @param delayInput
      * @param defaultDelayTime
