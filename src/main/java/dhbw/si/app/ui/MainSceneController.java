@@ -552,7 +552,7 @@ public class MainSceneController implements Initializable {
         closeIcon.setLayoutX(paneWidth - iconSideLen - iconMargin);
         closeIcon.setLayoutY(iconMargin);
         closeIcon.setCursor(Cursor.HAND);
-        closeIcon.setOnMouseClicked(ev -> rmSonifiable(sonifiable.getId(), stockPane));
+        closeIcon.setOnMouseClicked(ev -> rmSonifiable(sonifiable.getId(), stockPane, true));
         stockPane.getChildren().add(closeIcon);
 
         addLine(null, 174, 53, 0, 0, 391, 0, stockPane.getChildren());
