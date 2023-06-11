@@ -44,7 +44,6 @@
 }
 .check-box > .viewport {
 	-fx-pref-height: 59.2px;
-	-fx-pref-width: 348.8px;
 }
 .stockPane {
 	-fx-background-color: white;
@@ -81,16 +80,16 @@
 	-fx-font-size: 20;
 }
 #errorTitle {
-	-fx-font-size: 27;
-	/* -fx-alignment: left; */
-	-fx-pref-height: 50px;
+	-fx-font-size: 18;
+	-fx-alignment: left;
+	-fx-pref-height: 40px;
 	-fx-text-fill: rgb(255, 255, 255);
-	-fx-pref-width: 310px;
+	-fx-pref-width: 200.5px;
 }
 #errorMessage {
-	-fx-font-size: 24;
-	-fx-pref-height: 400px;
-	-fx-pref-width: 460px;
+	-fx-font-size: 18;
+	-fx-pref-height: 300;
+	-fx-pref-width: 360px;
 	-fx-text-fill: rgb(255, 255, 255);
 	-fx-alignment: center;
 }
@@ -111,18 +110,19 @@
 	-fx-pref-width: 152px;
 }
 #errorPane {
-	-fx-background-color: rgb(128, 45, 45);
-	-fx-border-color: rgb(175, 26, 26);
-	-fx-border-width: 10;
+	-fx-border-color: #b4010a;
+	-fx-background-color: #b86868;
+	-fx-border-width: 3;
 	-fx-background-radius: 40;
 	-fx-border-radius: 30;
 }
+
 #closeBtn {
-	-fx-pref-height: 50px;
-	-fx-pref-width: 150px;
+	-fx-pref-height: 20px;
+	-fx-pref-width: 110px;
 	-fx-alignment: center;
-	-fx-font-size: 20px;
-	-fx-background-color: rgb(128, 45, 45);
+	-fx-font-size: 16px;
+	-fx-background-color: #b86868;
 	-fx-text-fill: rgb(255, 255, 255);
 	-fx-font-weight: bold;
 	-fx-background-radius: 30;

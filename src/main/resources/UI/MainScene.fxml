@@ -15,7 +15,7 @@
 <?import javafx.scene.shape.Rectangle?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane fx:id="anchor" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="823.0" prefWidth="1584.0" style="-fx-background-color: #09080E;" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="app.ui.MainSceneController">
+<AnchorPane fx:id="anchor" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="823.0" prefWidth="1584.0" style="-fx-background-color: #09080E;" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="dhbw.si.app.ui.MainSceneController">
 <children>
 	<!-- Title -->
 	<Rectangle arcHeight="5.0" arcWidth="5.0" fill="#121315" height="85.6" stroke="#121315" strokeType="INSIDE" width="1584.0" />
@@ -44,9 +44,9 @@
 				</font>
 			</Label>
 			<ChoiceBox id="categoriesCB" fx:id="categoriesCB" layoutX="151.0" layoutY="197.0" prefHeight="49.0" prefWidth="165.0" style="-fx-background-radius: 10; -fx-background-color: #4D505B;" />
-			<ScrollPane hbarPolicy="NEVER" layoutX="17.0" layoutY="275.0" maxWidth="1.7976931348623157E308" prefHeight="340.0" prefWidth="299.0" style="-fx-background-color: #4D505B; -fx-border-color: #4D505B;">
+			<ScrollPane layoutX="17.0" layoutY="275.0" maxWidth="1.7976931348623157E308" prefHeight="340.0" prefWidth="299.0" style="-fx-background-color: #4D505B; -fx-border-color: #4D505B;">
 				<content>
-					<VBox fx:id="checkVBox" prefHeight="275.0" prefWidth="296.0" />
+					<VBox fx:id="checkVBox" prefHeight="275.0"/>
 				</content>
 			</ScrollPane>
 			<Line endX="290.0" layoutX="25.0" layoutY="70.0" strokeWidth="2.0" />
