@@ -222,8 +222,10 @@ public class StateManager {
 				List<List<Price>> prices = getPricesFutures.getAll(new ArrayList<>(sonifiables.length));
 				assert prices.size() == sonifiables.length;
 				for (int i = 0; i < prices.size(); i++) {
-					if (prices.get(i) == null || prices.get(i).size() == 0)
+					if (prices.get(i) == null)
 						throw new AppError("Fehler beim Einholen von Preis-Daten von " + sonifiables[i].getSymbol());
+					if (prices.get(i).isEmpty())
+						throw new AppError("Wir haben keine Preisdaten für " + sonifiables[i].getSymbol() + " in diesem Zeitraum gefunden. Versuchen Sie es nochmal mit einem anderem Zeitraum.");
 					priceMap.put(sonifiables[i], new Analyzer(prices.get(i)));
 					maxPriceLen = Math.max(maxPriceLen, prices.get(i).size());
 				}
