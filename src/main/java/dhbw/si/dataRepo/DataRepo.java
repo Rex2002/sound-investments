@@ -125,9 +125,9 @@ public class DataRepo {
 		}
 		for (int i = 0; i < lowercaseNames.length; i++) {
 			List<Sonifiable> l = null;
-			if (lowercaseSymbols[i].equals(prefix))
+			if (lowercaseNames[i].equals(prefix))
 				l = bestFinds;
-			else if (lowercaseSymbols[i].contains(prefix))
+			else if (lowercaseNames[i].contains(prefix))
 				l = otherFinds;
 			if (l != null && (flag & sonifiables[i].type.getVal()) > 0)
 				l.add(sonifiables[i]);
