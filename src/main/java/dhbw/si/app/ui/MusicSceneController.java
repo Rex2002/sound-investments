@@ -49,7 +49,7 @@ public class MusicSceneController implements Initializable {
 	@FXML private NumberAxis yAxis;
 	@FXML private Pane legendPane;
 	@FXML private Button exportBtn;
-	@FXML private Button closeBtn;
+	@FXML private Button clsBtn;
 	@FXML private Slider musicSlider;
 	@FXML private Label lengthLabel;
 	@FXML private ImageView playBtn;
@@ -106,7 +106,7 @@ public class MusicSceneController implements Initializable {
 		backBtn.setCursor(Cursor.HAND);
 		stopBtn.setCursor(Cursor.HAND);
 		exportBtn.setCursor(Cursor.HAND);
-		closeBtn.setCursor(Cursor.HAND);
+		clsBtn.setCursor(Cursor.HAND);
 
 		checkEQService = new CheckEQService();
         checkEQService.setPeriod(Duration.millis(100));
@@ -161,7 +161,7 @@ public class MusicSceneController implements Initializable {
 		// Show legend of sonifiable names
 		legendPane.getChildren().clear();
 		for (int i = 0; i < sonifiableNames.length; i++) {
-			addSonifiableName(sonifiableNames[i], colors[sonifiableNames.length-i], 60 + (i % 3) * 240, 646 + ((int) (i / 3f)) * 50);
+			addSonifiableName(sonifiableNames[i], colors[sonifiableNames.length-i-1], 60 + (i % 3) * 240, 646 + ((int) (i / 3f)) * 50);
 		}
 
 		// Show price data in line chart

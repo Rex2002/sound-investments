@@ -68,7 +68,7 @@
               preserveRatio="true">
       <Image url="@for_btn.png"/>
    </ImageView>
-   <Button fx:id="closeBtn" layoutX="1416.0" layoutY="21.0" mnemonicParsing="false" onAction="#closeWindow"
+   <Button fx:id="clsBtn" layoutX="1416.0" layoutY="21.0" mnemonicParsing="false" onAction="#closeWindow"
            prefHeight="45.0" prefWidth="146.0" style="-fx-background-color: #121315; -fx-border-radius: 30;"
            text="Zurück" textFill="WHITE">
       <font>
