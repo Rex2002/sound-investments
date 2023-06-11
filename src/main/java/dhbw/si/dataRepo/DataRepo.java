@@ -103,38 +103,63 @@ public class DataRepo {
 	}
 
 	public static Sonifiable[] findByPrefix(int startIdx, int length, String prefix, FilterFlag... filters) {
-		int filledLen = 0;
+		// @Cleanup by using lists
+		prefix = prefix.toLowerCase();
+		int[] dstOffset   = {0};
+		int[] dstLen      = {length};
+		int[] exactOffset = {0};
+		int[] srcOffset   = {startIdx};
 		int flag = FilterFlag.getFilterVal(filters);
-		Sonifiable[] l = new Sonifiable[length];
+		Sonifiable[] dst          = new Sonifiable[length];
+		Sonifiable[] exactMatches = new Sonifiable[length];
 
 		if ((flag & FilterFlag.STOCK.getVal()) > 0)
-			filledLen = findByPrefix(prefix, stocks,  startIdx,             l, filledLen);
+			findByPrefix(prefix, stocks,  srcOffset, dst, dstOffset, dstLen, exactMatches, exactOffset);
 		if ((flag & FilterFlag.ETF.getVal()) > 0)
-			filledLen = findByPrefix(prefix, etfs,    startIdx - filledLen, l, filledLen);
+			findByPrefix(prefix, etfs,    srcOffset, dst, dstOffset, dstLen, exactMatches, exactOffset);
 		if ((flag & FilterFlag.INDEX.getVal()) > 0)
-			filledLen = findByPrefix(prefix, indices, startIdx - filledLen, l, filledLen);
+			findByPrefix(prefix, indices, srcOffset, dst, dstOffset, dstLen, exactMatches, exactOffset);
 
-		if (filledLen < length) {
-			Sonifiable[] newL = new Sonifiable[filledLen];
-			System.arraycopy(l, 0, newL, 0, filledLen);
-			return newL;
+		if (exactOffset[0] == 0) {
+			exactMatches = dst;
+			exactOffset = dstOffset;
 		} else {
+			System.arraycopy(dst, 0, exactMatches, exactOffset[0], dstOffset[0]);
+		}
+
+		if (exactOffset[0] + dstOffset[0] < length) {
+			Sonifiable[] l = new Sonifiable[exactOffset[0] + dstOffset[0]];
+			System.arraycopy(exactMatches, 0, l, 0, l.length);
 			return l;
+		} else {
+			return exactMatches;
 		}
 	}
 
-	private static int findByPrefix(String prefix, List<? extends Sonifiable> src, int srcOffset, Sonifiable[] dst, int dstOffset) {
-		if (dstOffset == dst.length) return dstOffset;
-		int i = 0;
+	// Assumes to be given prefix in lowercase
+	// srcOffset, dstOffset, dstLen and exactOffset are given as arrays to be references
+	private static void findByPrefix(String prefix, List<? extends Sonifiable> src, int[] srcOffset, Sonifiable[] dst, int[] dstOffset, int[] dstLen, Sonifiable[] exactMatches, int[] exactOffset) {
+		// @Cleanup this code is a mess rn
+		if (dstOffset[0] == dstLen[0]) return;
 		for (Sonifiable s : src) {
-			if (s != null && (s.name.toLowerCase().startsWith(prefix.toLowerCase())
-					           || s.getId().symbol.toLowerCase().startsWith(prefix.toLowerCase()))
-					      && i++ >= srcOffset) {
-				dst[dstOffset++] = s;
-				if (dstOffset == dst.length) break;
+			// @Performance instead of transforming strings into lowercase strings constantly and
+			// allocating new strings in each iteration, we should just store names and symbols as
+			// lowercase in some array, that we can traverse then
+			String name = s.name.toLowerCase();
+			String symbol = s.getId().symbol.toLowerCase();
+
+			if (name.equals(prefix) || symbol.equals(prefix)) {
+				exactMatches[exactOffset[0]++] = s;
+				dstLen[0]--;
+			} else if (s != null && (name.startsWith(prefix) || symbol.startsWith(prefix))) {
+				if (srcOffset[0] <= 0) {
+					dst[dstOffset[0]++] = s;
+					if (dstOffset[0] == dstLen[0]) break;
+				} else {
+					srcOffset[0]--;
+				}
 			}
 		}
-		return dstOffset;
 	}
 
 	public static String getSonifiableName(SonifiableID id) {
