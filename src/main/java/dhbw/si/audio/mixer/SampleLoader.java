@@ -10,14 +10,14 @@ import java.util.Objects;
 
 public class SampleLoader {
     /**
-     * loads specified dhbw.si.audio sample from resources/dhbw.si.audio/impacts directory
+     * loads specified audio sample from resources/audio/impacts directory
      */
     public static double[] loadEventSample(String filename) throws AppError {
         return loadSample("/audio/impacts/" + filename);
     }
 
     /**
-     * loads specified dhbw.si.audio sample from resources/dhbw.si.audio/backings directory
+     * loads specified audio sample from resources/audio/backings directory
      */
     public static double[] loadBackingSample(String filename) throws AppError {
         return loadSample("/audio/backings/" + filename);

@@ -13,60 +13,64 @@
 <?import javafx.scene.shape.Rectangle?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane fx:id="anchor" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="825.0" prefWidth="1586.0" style="-fx-background-color: #09080E;" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="dhbw.si.app.ui.MusicSceneController">
-   <children>
-      <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#121315" height="85.6" layoutX="-8.0" layoutY="1.0" stroke="#121315" strokeType="INSIDE" width="1592.0" />
-      <Label layoutX="83.0" layoutY="-18.0" prefHeight="124.0" prefWidth="885.0" text="SoundInvestments" textFill="WHITE">
-         <font>
-            <Font name="Rage Italic" size="80.0" />
-         </font>
-      </Label>
-      <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#121315" height="200.0" layoutY="624.0" stroke="#121315" strokeType="INSIDE" width="1586.0" />
-      <LineChart fx:id="lineChart" layoutY="106.0" prefHeight="516.0" prefWidth="1570.0">
-        <xAxis>
-          <NumberAxis side="BOTTOM" fx:id="xAxis" />
-        </xAxis>
-        <yAxis>
-          <NumberAxis fx:id="yAxis" side="LEFT" />
-        </yAxis>
-      </LineChart>
-      <Accordion layoutX="221.0" layoutY="880.0" />
-      <Label fx:id="lengthLabel" layoutX="1485.0" layoutY="630.0" text="0:00/0:00" textFill="WHITE" >
-         <font>
-            <Font name="System Bold" size="15.0" />
-         </font>
-      </Label>
+<AnchorPane fx:id="anchor" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity"
+            prefHeight="825.0" prefWidth="1586.0" style="-fx-background-color: #09080E;"
+            xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="dhbw.si.app.ui.MusicSceneController">
+   <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#121315" height="85.6" layoutX="-8.0" layoutY="1.0" stroke="#121315"
+              strokeType="INSIDE" width="1592.0"/>
+   <Label layoutX="83.0" layoutY="-18.0" prefHeight="124.0" prefWidth="885.0" text="SoundInvestments" textFill="WHITE">
+      <font>
+         <Font name="Rage Italic" size="80.0"/>
+      </font>
+   </Label>
+   <Rectangle arcHeight="5.0" arcWidth="5.0" fill="#121315" height="200.0" layoutY="624.0" stroke="#121315"
+              strokeType="INSIDE" width="1586.0"/>
+   <LineChart fx:id="lineChart" layoutY="106.0" prefHeight="516.0" prefWidth="1570.0">
+      <xAxis>
+         <NumberAxis side="BOTTOM" fx:id="xAxis"/>
+      </xAxis>
+      <yAxis>
+         <NumberAxis fx:id="yAxis" side="LEFT"/>
+      </yAxis>
+   </LineChart>
+   <Accordion layoutX="221.0" layoutY="880.0"/>
+   <Label fx:id="lengthLabel" layoutX="1485.0" layoutY="630.0" text="0:00/0:00" textFill="WHITE">
+      <font>
+         <Font name="System Bold" size="15.0"/>
+      </font>
+   </Label>
 
-      <Pane fx:id="legendPane" >
-      </Pane>
+   <Pane fx:id="legendPane">
+   </Pane>
 
-      <Button fx:id="exportBtn" layoutX="1243.0" layoutY="21.0" mnemonicParsing="false" prefHeight="45.0" prefWidth="146.0" style="-fx-background-color: #121315; -fx-border-radius: 30;" text="Exportieren" textFill="WHITE">
-         <font>
-            <Font size="19.0" />
-         </font>
-      </Button>
-      <ImageView fx:id="backBtn" fitHeight="80.0" fitWidth="80.0" layoutX="1020.0" layoutY="684.0" pickOnBounds="true" preserveRatio="true">
-         <image>
-            <Image url="/UI/back_btn.png" />
-         </image>
-      </ImageView>
-      <Slider fx:id="musicSlider" layoutX="35.0" layoutY="620.0" prefHeight="14.0" prefWidth="1526.0" />
-      <ImageView fx:id="playBtn" fitHeight="80.0" fitWidth="80.0" layoutX="1163.0" layoutY="684.0" pickOnBounds="true" preserveRatio="true">
-      </ImageView>
-      <ImageView fx:id="stopBtn" fitHeight="80.0" fitWidth="80.0" layoutX="1306.0" layoutY="684.0" onMouseDragExited="#stopSound" pickOnBounds="true" preserveRatio="true">
-         <image>
-            <Image url="/UI/stop_btn.png" />
-         </image>
-      </ImageView>
-      <ImageView fx:id="forBtn" fitHeight="80.0" fitWidth="80.0" layoutX="1449.0" layoutY="684.0" pickOnBounds="true" preserveRatio="true">
-         <image>
-            <Image url="/UI/for_btn.png" />
-         </image>
-      </ImageView>
-      <Button fx:id="closeBtn" layoutX="1416.0" layoutY="21.0" mnemonicParsing="false" onAction="#closeWindow" prefHeight="45.0" prefWidth="146.0" style="-fx-background-color: #121315; -fx-border-radius: 30;" text="Zurück" textFill="WHITE">
-         <font>
-            <Font size="19.0" />
-         </font>
-      </Button>
-   </children>
+   <Button fx:id="exportBtn" layoutX="1243.0" layoutY="21.0" mnemonicParsing="false" prefHeight="45.0" prefWidth="146.0"
+           style="-fx-background-color: #121315; -fx-border-radius: 30;" text="Exportieren" textFill="WHITE">
+      <font>
+         <Font size="19.0"/>
+      </font>
+   </Button>
+   <ImageView fx:id="backBtn" fitHeight="80.0" fitWidth="80.0" layoutX="1020.0" layoutY="684.0" pickOnBounds="true"
+              preserveRatio="true">
+      <Image url="@back_btn.png"/>
+   </ImageView>
+   <Slider fx:id="musicSlider" layoutX="35.0" layoutY="620.0" prefHeight="14.0" prefWidth="1526.0"/>
+   <ImageView fx:id="playBtn" fitHeight="80.0" fitWidth="80.0" layoutX="1163.0" layoutY="684.0" pickOnBounds="true"
+              preserveRatio="true">
+   </ImageView>
+   <ImageView fx:id="stopBtn" fitHeight="80.0" fitWidth="80.0" layoutX="1306.0" layoutY="684.0"
+              onMouseDragExited="#stopSound" pickOnBounds="true" preserveRatio="true">
+      <Image url="@stop_btn.png"/>
+   </ImageView>
+   <ImageView fx:id="forBtn" fitHeight="80.0" fitWidth="80.0" layoutX="1449.0" layoutY="684.0" pickOnBounds="true"
+              preserveRatio="true">
+      <Image url="@for_btn.png"/>
+   </ImageView>
+   <Button fx:id="closeBtn" layoutX="1416.0" layoutY="21.0" mnemonicParsing="false" onAction="#closeWindow"
+           prefHeight="45.0" prefWidth="146.0" style="-fx-background-color: #121315; -fx-border-radius: 30;"
+           text="Zurück" textFill="WHITE">
+      <font>
+         <Font size="19.0"/>
+      </font>
+   </Button>
 </AnchorPane>

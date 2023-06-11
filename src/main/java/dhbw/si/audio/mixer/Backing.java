@@ -16,15 +16,14 @@ public class Backing {
     private final Random random = new Random();
 
     /**
-     * Selects a random backing sample from resources/dhbw.si.audio/backings and returns the sonification's tempo as stated in
+     * Selects a random backing sample from resources/audio/backings and returns the sonification's tempo as stated in
      * the backing's filename. The selected sample and the fills associated with it are safed in the object's field vars
      * for use in getBacking().
      * @return selected tempo in bpm (quarter-note)
-     * @throws AppError when there are no backing tracks matching the name schema in resources/dhbw.si.audio/backings
+     * @throws AppError when there are no backing tracks matching the name schema in resources/audio/backings
      */
     public int setSamplesAndGetTempo() throws AppError {
-        //TODO: I think this method of getting file names doesn't work in a JAR. Needs to be changed for release
-        File directory = new File("./src/main/resources/dhbw.si.audio/backings");
+        File directory = new File("./src/main/resources/audio/backings");
         List<String> backings = List.of(Objects.requireNonNull(directory.list()));
 
         backings = backings.stream().filter((string) -> string.contains("groove") || string.contains("fill")).toList();

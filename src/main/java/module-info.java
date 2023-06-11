@@ -12,4 +12,6 @@ module soundinvestments {
 
     opens dhbw.si.app.ui to javafx.fxml;
     exports dhbw.si.app.ui to javafx.graphics, javafx.fxml;
+    exports dhbw.si.app.communication;
+    exports dhbw.si.dataRepo;
 }

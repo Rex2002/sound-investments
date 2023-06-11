@@ -136,9 +136,7 @@ public class MusicSceneController implements Initializable {
         });
         checkEQService.start();
 
-		Platform.runLater(() -> {
-			setupSlider();
-		});
+		Platform.runLater(this::setupSlider);
 	}
 
 	private String getAllSymbols() {
