@@ -178,6 +178,12 @@ public class MainSceneController implements Initializable {
 
         startBtn.setOnAction(ev -> {
             try {
+                String err = mapping.verify();
+                if (err != null) {
+                    CommonController.displayError(anchor, err, "Ungültiges Mapping");
+                    return;
+                }
+
                 startBtn.setDisable(true);
                 startedSonification = true;
                 EventQueues.toSM.add(new Msg<>(MsgToSMType.START, mapping));
@@ -652,7 +658,7 @@ public class MainSceneController implements Initializable {
     }
 
     private void enableBtnIfValid() {
-        startBtn.setDisable(startedSonification || !mapping.isValid());
+        startBtn.setDisable(startedSonification);
     }
 
     private void instAdded(String name) {
