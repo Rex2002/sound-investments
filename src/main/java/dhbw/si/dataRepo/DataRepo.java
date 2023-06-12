@@ -176,6 +176,7 @@ public class DataRepo {
 					// We increase end by 1, because Leeway's range is exclusive
 					// and after each iteration end = earliestDay and it might be that we missed some data from that day
 					startEnd[1].roll(Calendar.DATE, true);
+					if (startEnd[1].before(startEnd[0])) break;
 					String[] queries = {"from", DateUtil.formatDate(startEnd[0]), "to", DateUtil.formatDate(startEnd[1])};
 					if (!isEoD) queries = ArrayFunctions.add(queries, intervalQueries);
 
