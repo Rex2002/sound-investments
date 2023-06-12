@@ -15,18 +15,18 @@
 <?import javafx.scene.shape.Rectangle?>
 <?import javafx.scene.text.Font?>
 
-<AnchorPane fx:id="anchor" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="823.0" prefWidth="1584.0" style="-fx-background-color: #09080E;" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="dhbw.si.app.ui.MainSceneController">
+<AnchorPane fx:id="anchor" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="750.0" prefWidth="1450.0" style="-fx-background-color: #09080E;" xmlns="http://javafx.com/javafx/19" xmlns:fx="http://javafx.com/fxml/1" fx:controller="dhbw.si.app.ui.MainSceneController">
 <children>
 	<!-- Title -->
-	<Rectangle arcHeight="5.0" arcWidth="5.0" fill="#121315" height="85.6" stroke="#121315" strokeType="INSIDE" width="1584.0" />
-	<Label fx:id="headerTitle" layoutX="59.0" layoutY="-20.0" prefHeight="125.0" prefWidth="885.0" text="SoundInvestments" textFill="WHITE">
+	<Rectangle arcHeight="5.0" arcWidth="5.0" fill="#121315" height="65.0" stroke="#121315" strokeType="INSIDE" width="1450.0" />
+	<Label fx:id="headerTitle" layoutX="59.0" layoutY="-30.0" prefHeight="125.0" prefWidth="885.0" text="SoundInvestments" textFill="WHITE">
 		<font>
-			<Font name="Rage Italic" size="80.0" />
+			<Font name="Rage Italic" size="60.0" />
 		</font>
 	</Label>
 
 	<!-- "Choosing Sonifiables"-Box -->
-	<Pane layoutX="29.0" layoutY="110.0" prefHeight="655.0" prefWidth="332.0" style="-fx-background-color: #D9D9D9; -fx-background-radius: 30;">
+	<Pane layoutX="29.0" layoutY="80.0" prefHeight="655.0" prefWidth="332.0" style="-fx-background-color: #D9D9D9; -fx-background-radius: 30;">
 		<children>
 			<Label layoutX="24.0" layoutY="21.0" prefHeight="53.0" prefWidth="131.0" style="-fx-font-style: &quot;Roboto&quot;;" text="Kurse">
 				<font>
@@ -38,13 +38,13 @@
 					<Font size="20.0" />
 				</font>
 			</TextField>
-			<Label layoutX="17.0" layoutY="195.0" prefHeight="53.0" prefWidth="165.0" style="-fx-font-style: &quot;Roboto&quot;;" text="Kategorie">
+			<Label layoutX="17.0" layoutY="175.0" prefHeight="53.0" prefWidth="165.0" style="-fx-font-style: &quot;Roboto&quot;;" text="Kategorie">
 				<font>
 					<Font size="24.0" />
 				</font>
 			</Label>
-			<ChoiceBox id="categoriesCB" fx:id="categoriesCB" layoutX="151.0" layoutY="197.0" prefHeight="49.0" prefWidth="165.0" style="-fx-background-radius: 10; -fx-background-color: #4D505B;" />
-			<ScrollPane layoutX="17.0" layoutY="275.0" maxWidth="1.7976931348623157E308" prefHeight="340.0" prefWidth="299.0" style="-fx-background-color: #4D505B; -fx-border-color: #4D505B;">
+			<ChoiceBox id="categoriesCB" fx:id="categoriesCB" layoutX="151.0" layoutY="178.0" prefHeight="49.0" prefWidth="165.0" style="-fx-background-radius: 10; -fx-background-color: #4D505B;" />
+			<ScrollPane layoutX="17.0" layoutY="250.0" maxWidth="1.7976931348623157E308" prefHeight="370.0" prefWidth="299.0" style="-fx-background-color: #4D505B; -fx-border-color: #4D505B;">
 				<content>
 					<VBox fx:id="checkVBox" prefHeight="275.0"/>
 				</content>
@@ -55,7 +55,7 @@
 	</Pane>
 
 	<!-- "Sonifiable Parameters"-Box -->
-	<Pane layoutX="380.0" layoutY="110.0" prefHeight="655.0" prefWidth="816.0" style="-fx-background-color: #D9D9D9; -fx-background-radius: 30;">
+	<Pane layoutX="380.0" layoutY="80.0" prefHeight="655.0" prefWidth="645.0" style="-fx-background-color: #D9D9D9; -fx-background-radius: 30;">
 		<children>
 			<Label layoutX="35.0" layoutY="18.0" prefHeight="53.0" prefWidth="305.0" style="-fx-font-style: &quot;Roboto&quot;;" text="Konfigurationen">
 				<font>
@@ -63,16 +63,16 @@
 				</font>
 			</Label>
 			<Line endX="290.0" layoutX="33.0" layoutY="71.0" strokeWidth="2.0" />
-			<ScrollPane fx:id="shareScrollPanel" hbarPolicy="NEVER" layoutX="32.0" layoutY="97.0" prefHeight="540.0" prefWidth="740.0" vbarPolicy="NEVER">
+			<ScrollPane fx:id="shareScrollPanel" hbarPolicy="NEVER" layoutX="18.0" layoutY="97.0" prefHeight="540.0" prefWidth="610.0" vbarPolicy="NEVER">
 				<content>
-            					<VBox fx:id="paneBoxSonifiables" prefHeight="1800.0" prefWidth="740.0" style="-fx-background-color: #D9D9D9;" />
+            		<VBox fx:id="paneBoxSonifiables" prefHeight="1800.0" prefWidth="610.0" style="-fx-background-color: #D9D9D9;" />
 				</content>
 			</ScrollPane>
 		</children>
 	</Pane>
 
 	<!-- "Global Settings" Box -->
-	<Pane layoutX="1210.0" layoutY="114.0" prefHeight="549.0" prefWidth="332.0" style="-fx-background-color: #D9D9D9; -fx-background-radius: 30;">
+	<Pane layoutX="1044.0" layoutY="80.0" prefHeight="549.0" prefWidth="332.0" style="-fx-background-color: #D9D9D9; -fx-background-radius: 30;">
 		<children>
 			<!-- Title -->
 			<Label layoutX="18.0" layoutY="20.0" prefHeight="53.0" prefWidth="305.0" style="-fx-font-style: &quot;Roboto&quot;;" text="Einstellungen">
@@ -125,7 +125,7 @@
 	</Pane>
 
       	<!-- Start Button -->
-	<Button fx:id="startBtn" layoutX="1210.0" layoutY="679.0" mnemonicParsing="false" prefHeight="86.0" prefWidth="332.0" style="-fx-background-color: #9C5EEB; -fx-background-radius: 30;" text="Start" textFill="WHITE">
+	<Button fx:id="startBtn" layoutX="1046.0" layoutY="645.0" mnemonicParsing="false" prefHeight="86.0" prefWidth="332.0" style="-fx-background-color: #9C5EEB; -fx-background-radius: 30;" text="Start" textFill="WHITE">
 		<font>
 			<Font size="40.0" />
 		</font>
