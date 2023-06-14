@@ -8,6 +8,9 @@ import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.util.Objects;
 
+//@authors: B.Frahm, M.Richert
+//@reviewers: L.Lehmann, V.Richter
+
 public class SampleLoader {
     /**
      * loads specified audio sample from resources/audio/impacts directory

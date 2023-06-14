@@ -2,6 +2,9 @@ package dhbw.si.audio.playback;
 
 import lombok.Data;
 
+//@author: V.Richter
+//@reviewers: B.Frahm, L.Lehmann, M.Richert
+
 @Data
 public class PlayControlEvent {
     private PlayControlEventsEnum type;

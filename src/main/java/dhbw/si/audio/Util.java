@@ -1,6 +1,10 @@
 package dhbw.si.audio;
 
 import java.util.Arrays;
+
+//@authors: M.Richert, V.Richter
+//@reviewers: B.Frahm, L.Lehmann
+
 public class Util {
 
     public static int getRelPosition(int pos, int sourceLength, int destinationLength) {

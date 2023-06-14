@@ -20,6 +20,9 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
+//@author: V.Richter
+//@reviewers: L.Lehmann,
+
 public class DataRepo {
 	private static final boolean GET_PRICES_DYNAMICALLY    = true;
 	private static final boolean GET_EXCHANGES_DYNAMICALLY = false;

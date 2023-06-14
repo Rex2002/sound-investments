@@ -18,6 +18,9 @@ import javax.sound.sampled.SourceDataLine;
 
 import static dhbw.si.audio.Util.concatArrays;
 
+//@authors: B.Frahm, M.Richert
+//@reviewers: L.Lehmann, V.Richter
+
 public class Sonifier {
 
     /**

@@ -1,6 +1,8 @@
 package dhbw.si.audio.mixer;
 
 public class Mixer {
+    //@author: L.Lehmann
+    //@reviewers: M.Richert, V.Richter, B.Frahm
     /**
      * Mixes the given dhbw.si.audio streams together. <br/>
      * The numberEvLines is used to apply the EVENT_LINES_MIX_FACTOR to each EventInstrument, <br/>

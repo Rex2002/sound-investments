@@ -11,6 +11,8 @@ import java.util.Arrays;
 import java.util.Random;
 
 
+//@authors: B.Frahm, L.Lehmann, M.Richert, V.Richter
+
 /**
  * The main purpose of this class is to translate Market/Stock-domain information to the music-domain. <br/>
  * This is needed in two ways: <br/>
