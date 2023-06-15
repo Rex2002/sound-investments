@@ -4,7 +4,7 @@ import java.util.Arrays;
 
 /**
  * @author B. Frahm
- * @author V.Richter
+ * @author V. Richter
  * @reviewer M. Richert
  * @reviewer L.Lehmann
  */

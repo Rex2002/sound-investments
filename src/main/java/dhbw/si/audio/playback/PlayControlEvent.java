@@ -5,7 +5,7 @@ import lombok.Data;
 /**
  * @author V. Richter
  * @reviewer B. Frahm
- * @reviewer L. Lehman
+ * @reviewer L. Lehmann
  */
 @Data
 public class PlayControlEvent {

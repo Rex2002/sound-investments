@@ -15,7 +15,7 @@ import java.util.Random;
  * @author B. Frahm
  * @reviewer L. Lehmann
  * @reviewer V. Richter
- *
+ * <p/>
  * The main purpose of this class is to translate Market/Stock-domain information to the music-domain. <br/>
  * This is needed in two ways: <br/>
  *  Raw InstrumentData needs to be translated to InstrumentData that is understood by the SynthLine-class <br/>
