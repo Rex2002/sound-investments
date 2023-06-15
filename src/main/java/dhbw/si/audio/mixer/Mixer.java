@@ -1,16 +1,20 @@
 package dhbw.si.audio.mixer;
 
+/**
+ * @author L. Lehmann
+ * @reviewer B. Frahm
+ * @reviewer M. Richert
+ */
 public class Mixer {
-    //@author: L.Lehmann
-    //@reviewers: M.Richert, V.Richter, B.Frahm
+
     /**
-     * Mixes the given dhbw.si.audio streams together. <br/>
+     * Mixes the given audio streams together. <br/>
      * The numberEvLines is used to apply the EVENT_LINES_MIX_FACTOR to each EventInstrument, <br/>
      * while the indexBacking is used to apply the BACKING_MIX_FACTOR to the backing-track
      * @param audioStreams array of double-arrays to be mixed
      * @param numberEvLines describes number of event lines
      * @param indexBacking index of the backing track
-     * @return mixed dhbw.si.audio stream as double-array
+     * @return mixed audio stream as double-array
      */
     public static double[] mixAudioStreams(double[][] audioStreams, int numberEvLines, int indexBacking) {
         double EVENT_LINES_MIX_FACTOR = 0.65;
@@ -29,7 +33,7 @@ public class Mixer {
 
             //reduce volume of event instruments
             if (i < numberEvLines) {
-                mixFactor = (1 - EVENT_LINES_MIX_FACTOR) * audioStreams.length / ( 1+audioStreams.length) + EVENT_LINES_MIX_FACTOR;
+                mixFactor = (1 - EVENT_LINES_MIX_FACTOR) * audioStreams.length / ( 1 + audioStreams.length) + EVENT_LINES_MIX_FACTOR;
             }
             // reduce volume of backing
             if (i == indexBacking) {

@@ -1,5 +1,9 @@
 package dhbw.si.audio.events;
 
+/**
+ * @author B. Frahm
+ * @author M. Richert
+ */
 public enum EvInstrEnum {
     BOOM,
     BIKE_BELL,

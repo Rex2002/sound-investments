@@ -10,10 +10,12 @@ import dhbw.si.audio.synth.fx.FilterData;
 import java.util.Arrays;
 import java.util.Random;
 
-
-//@authors: B.Frahm, L.Lehmann, M.Richert, V.Richter
-
 /**
+ * @author M. Richert
+ * @author B. Frahm
+ * @reviewer L. Lehmann
+ * @reviewer V. Richter
+ *
  * The main purpose of this class is to translate Market/Stock-domain information to the music-domain. <br/>
  * This is needed in two ways: <br/>
  *  Raw InstrumentData needs to be translated to InstrumentData that is understood by the SynthLine-class <br/>

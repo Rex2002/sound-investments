@@ -8,9 +8,11 @@ import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.util.Objects;
 
-//@authors: B.Frahm, M.Richert
-//@reviewers: L.Lehmann, V.Richter
-
+/**
+ * @author B. Frahm
+ * @reviewer M. Richert
+ * @reviewer L. Lehmann
+ */
 public class SampleLoader {
     /**
      * loads specified audio sample from resources/audio/impacts directory
@@ -27,7 +29,7 @@ public class SampleLoader {
     }
 
     /**
-     * loads a sample from a file and converts to the correct audioformat
+     * loads a sample from a file and converts to the correct audio format
      * @param filename of the sample that is to be loaded
      * @return the data array representing the sample in the desired format
      */

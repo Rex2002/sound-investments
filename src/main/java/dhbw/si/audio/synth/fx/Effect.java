@@ -6,9 +6,12 @@ import dhbw.si.audio.synth.envelopes.ADSR;
 
 import static dhbw.si.audio.Constants.SAMPLE_RATE;
 
-//@authors: B.Frahm, M.Richert
-//@reviewers: L.Lehmann, V.Richter
-
+/**
+ * @author B. Frahm
+ * @reviewer L. Lehmann
+ * @reviewer V. Richter
+ * @reviewer M. Richert
+ */
 public class Effect {
 
 

@@ -1,5 +1,11 @@
 package dhbw.si.app.mapping;
 
+/**
+ * @author L. Wellhausen
+ * @author V. Richter
+ * @reviewer M. Richert
+ * @reviewer B. Frahm
+ */
 public enum InstrParam {
 	PITCH,
 	RELVOLUME,

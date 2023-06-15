@@ -1,3 +1,6 @@
+/**
+ * @author M. Richert
+ */
 module soundinvestments {
     requires javafx.controls;
     requires javafx.fxml;

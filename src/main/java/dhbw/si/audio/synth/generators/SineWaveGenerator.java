@@ -3,9 +3,11 @@ package dhbw.si.audio.synth.generators;
  import dhbw.si.audio.Util;
 import dhbw.si.audio.synth.envelopes.Envelope;
 
-//@author: B.Frahm
-//@reviewers: V.Richter
-
+/**
+ * @author B. Frahm
+ * @reviewer M. Richert
+ * @reviewer V. Richter
+ */
 public class SineWaveGenerator {
     /**
      * generates a sound based on the provided inputs <br/>

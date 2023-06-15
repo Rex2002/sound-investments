@@ -11,8 +11,12 @@ import javax.sound.sampled.SourceDataLine;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
-//@authors: B.Frahm, V.Richter
-//@reviewers: L.Lehmann, M.Richert
+
+/**
+ * @author B. Frahm
+ * @reviewer V. Richter
+ * @reviewer L. Lehmann
+ */
 public class PlaybackController {
     public final int SKIP_LENGTH = 100;
     private final SourceDataLine s;

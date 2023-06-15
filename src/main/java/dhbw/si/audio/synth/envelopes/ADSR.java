@@ -1,7 +1,8 @@
 package dhbw.si.audio.synth.envelopes;
 
-//@author: B.Frahm
-
+/**
+ * @author B.Frahm
+ */
 public class ADSR implements Envelope{
     private final double attack;
     private final double decay;

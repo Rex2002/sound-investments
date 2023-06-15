@@ -1,9 +1,9 @@
 package dhbw.si.app.mapping;
 
 public enum LineData implements ExchangeParam {
-	PRICE, // Absoluter Preis des Kurses
-	MOVINGAVG, // Gleitender Durchschnitt wie in 2.3 beschrieben
-	RELCHANGE; // Steigung zwischen zwei Preispunkten
+	PRICE, // absolute Price
+	MOVINGAVG, // moving average
+	RELCHANGE; // gradient between two data points
 
 	public static final int size;
 	public static final String[] displayVals;

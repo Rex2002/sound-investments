@@ -3,6 +3,10 @@ package dhbw.si.audio.synth;
 import lombok.Data;
 import dhbw.si.audio.synth.fx.FilterData;
 
+/**
+ * @author B. Frahm
+ * @author M. Richert
+ */
 @Data
 public class InstrumentData {
     // Volume

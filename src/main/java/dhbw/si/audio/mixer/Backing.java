@@ -8,9 +8,11 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Random;
 
-//@author: M.Richert
-//@reviewers: L.Lehmann, V.Richter, B.Frahm
-
+/**
+ * @author M. Richert
+ * @reviewer L. Lehmann
+ * @reviewer B. Frahm
+ */
 public class Backing {
     @SuppressWarnings("FieldCanBeLocal")
     private final int SAMPLE_BARS = 4;

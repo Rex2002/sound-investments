@@ -1,10 +1,10 @@
 package dhbw.si.app.mapping;
 
 public enum PointData implements ExchangeParam {
-	TRENDBREAK, // Beim Durchbrechen einer Trend-Formation
-	EQMOVINGAVG, // Wenn absoluter Preis = gleitender Durchschnitt gilt
-	EQSUPPORT, // Wenn absoluter Preis = Unterstützungs-Linie gilt
-	EQRESIST; // Wenn absoluter Preis = Widerstands-Linie gilt
+	TRENDBREAK, // breaking a trend formation
+	EQMOVINGAVG, // price = moving average
+	EQSUPPORT, // price = support line
+	EQRESIST; // price = resist line
 
 	public static final int size;
 	public static final String[] displayVals;

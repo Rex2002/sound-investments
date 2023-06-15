@@ -5,9 +5,11 @@ import dhbw.si.app.communication.EventQueues;
 import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.SourceDataLine;
 
-//@authors: B.Frahm
-//@reviewers: M.Richert, V.Richter, L.Wellhausen
-
+/**
+ * @author B. Frahm
+ * @reviewer V. Richter
+ * @reviewer L. Wellhausen
+ */
 public class Playback implements Runnable {
     // This value is written to by this class and read by the PlaybackController
     // Race-Conditions are ignored, because it is ok if we are a couple percentage points behind as that wouldn't be visible in the UI anyways

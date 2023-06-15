@@ -19,11 +19,16 @@ import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
 
-// This class runs in the main thread and coordinates all tasks and the creation of the UI thread
-// This is atypical, as JavaFX's UI thread is usually the main thread as well
-// (see: https://stackoverflow.com/a/37580083/13764271)
-// however, it makes conceptually more sense to me, as the dhbw.si.app's logic should be done in the main thread
-
+/**
+ * @author V. Richter
+ * @author B. Frahm
+ * @reviewer M. Richert
+ *
+ * This class runs in the main thread and coordinates all tasks and the creation of the UI thread
+ * This is atypical, as JavaFX's UI thread is usually the main thread as well
+ * (see: <a href="https://stackoverflow.com/a/37580083/13764271">StackOverflow</a>). <br>
+ * However, it conceptually makes more sense to me, as the app's logic should be done in the main thread.
+ */
 public class StateManager {
 	public static final int FILTER_MAX_AMOUNT = 100;
 

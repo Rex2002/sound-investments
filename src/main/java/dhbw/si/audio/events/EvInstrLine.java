@@ -6,6 +6,10 @@ import dhbw.si.audio.mixer.SampleLoader;
 
 import static dhbw.si.audio.Constants.*;
 
+/**
+ * @author B. Frahm
+ * @reviewer M. Richert
+ */
 public class EvInstrLine {
     final EvInstrData data;
     final int sampleNumber;
@@ -29,7 +33,7 @@ public class EvInstrLine {
 
         for (int i = 0; i < data.values.length; i++) {
             if (data.values[i]) {
-                int j = j = Math.min(Util.getRelPosition(i, data.values.length, out.length), out.length - sample.length);
+                int j = Math.min(Util.getRelPosition(i, data.values.length, out.length), out.length - sample.length);
                 if (lastCopy + 2 * samplesPer16th < j) {
                     lastCopy = j;
                     System.arraycopy(sample, 0, out, j, sample.length);
