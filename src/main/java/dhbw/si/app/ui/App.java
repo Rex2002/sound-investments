@@ -1,16 +1,16 @@
 package dhbw.si.app.ui;
 
 import java.io.IOException;
-
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 
-// For a wonderful explanation of periodic tasks in javaFX see here:
-// https://stackoverflow.com/a/60685975/13764271
-
+/**
+ * @author L. Wellhausen
+ * @reviewer V. Richter
+ */
 public class App extends Application {
 
     @Override

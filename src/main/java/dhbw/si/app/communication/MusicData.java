@@ -1,14 +1,13 @@
 package dhbw.si.app.communication;
 
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Calendar;
-
+import java.util.*;
 import javafx.scene.chart.XYChart;
-
 import dhbw.si.dataRepo.Price;
 import dhbw.si.audio.playback.PlaybackController;
 
+/**
+ * @author V. Richter
+ */
 public class MusicData {
 	public PlaybackController pbc;
 	// sonifiableNames and prices are parallel arrays

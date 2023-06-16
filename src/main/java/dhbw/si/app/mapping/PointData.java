@@ -1,5 +1,8 @@
 package dhbw.si.app.mapping;
 
+/**
+ * @author V. Richter
+ */
 public enum PointData implements ExchangeParam {
 	TRENDBREAK, // breaking a trend formation
 	EQMOVINGAVG, // price = moving average
@@ -18,10 +21,10 @@ public enum PointData implements ExchangeParam {
 
 	public String toString() {
 		return switch (this) {
-			case TRENDBREAK -> "Trendbrüche";
+			case TRENDBREAK  -> "Trendbrüche";
 			case EQMOVINGAVG -> "Preis = Schnitt";
-			case EQSUPPORT -> "Preis = Stützt";
-			case EQRESIST -> "Preis = Widerst.";
+			case EQSUPPORT   -> "Preis = Stützt";
+			case EQRESIST    -> "Preis = Widerst.";
 		};
 	}
 }

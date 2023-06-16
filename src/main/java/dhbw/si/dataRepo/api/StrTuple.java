@@ -1,5 +1,8 @@
 package dhbw.si.dataRepo.api;
 
+/**
+ * @author V. Richter
+ */
 public class StrTuple {
 	private final String[] h = { "\0", "\0" };
 

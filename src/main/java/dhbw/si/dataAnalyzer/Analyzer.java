@@ -8,6 +8,10 @@ import dhbw.si.app.mapping.PointData;
 import dhbw.si.app.mapping.RangeData;
 import dhbw.si.dataRepo.Price;
 
+/**
+ * @author V. Richter
+ * @reviwer J. Kautz
+ */
 public class Analyzer {
 	private List<Price> prices;
 	private boolean[] triangles;

@@ -1,5 +1,8 @@
 package dhbw.si.dataRepo;
 
+/**
+ * @author V. Richter
+ */
 public enum SonifiableType {
 	NONE,
 	STOCK,

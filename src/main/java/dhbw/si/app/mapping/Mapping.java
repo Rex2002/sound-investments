@@ -10,6 +10,9 @@ import dhbw.si.dataRepo.Sonifiable;
 import dhbw.si.dataRepo.SonifiableID;
 import dhbw.si.util.ArrayFunctions;
 
+/**
+ * @author V. Richter
+ */
 @Data
 public class Mapping {
 	public static final int MAX_EV_INSTR_SIZE = 10;

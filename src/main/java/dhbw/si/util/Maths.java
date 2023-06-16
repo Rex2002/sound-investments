@@ -1,5 +1,8 @@
 package dhbw.si.util;
 
+/**
+ * @author V. Richter
+ */
 public class Maths {
 	public static double clamp(double x, double min, double max) {
 		return x < min ? min : Math.min(x, max);

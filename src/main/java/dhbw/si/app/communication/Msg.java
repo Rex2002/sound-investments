@@ -1,5 +1,8 @@
 package dhbw.si.app.communication;
 
+/**
+ * @author V. Richter
+ */
 public class Msg<T extends MsgType> {
 	public final T type;
 	public Object data = null;

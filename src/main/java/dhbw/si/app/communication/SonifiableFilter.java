@@ -2,6 +2,9 @@ package dhbw.si.app.communication;
 
 import dhbw.si.dataRepo.FilterFlag;
 
+/**
+ * @author V. Richter
+ */
 public class SonifiableFilter {
 	public final String prefix;
 	public final FilterFlag categoryFilter;

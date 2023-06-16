@@ -5,6 +5,9 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
+/**
+ * @author V. Richter
+ */
 public class ArrayFunctions {
 	public static <T> int findIndex(T[] xs, Predicate<T> f) {
 		for (int i = 0; i < xs.length; i++) {

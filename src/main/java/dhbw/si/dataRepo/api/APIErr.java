@@ -1,5 +1,8 @@
 package dhbw.si.dataRepo.api;
 
+/**
+ * @author V. Richter
+ */
 public class APIErr extends Exception {
 	public final int status;
 	public final String body;

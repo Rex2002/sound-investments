@@ -3,8 +3,8 @@ package dhbw.si.audio.playback;
 import lombok.Data;
 
 /**
- * @author V. Richter
- * @reviewer B. Frahm
+ * @author B. Frahm
+ * @reviewer V. Richter
  * @reviewer L. Lehmann
  */
 @Data

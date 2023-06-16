@@ -31,6 +31,7 @@ robocopy src\main\resources dist\src\main\resources %robocopy-params%
 copy DistReadme.txt dist\README.txt >NUL
 
 @REM Write executable into the distributable
+@REM It doesn't really make sense to build the bash and command files from windows, because the built java executable isn't cross platform :facepalm:
 echo Writing Script...
 echo java\bin\java.exe --module-path javafx\lib --add-modules javafx.base,javafx.controls,javafx.fxml,javafx.graphics -jar %jar-name% > dist/SoundInvestments.bat
 echo ./java/bin/java.exe --module-path javafx\lib --add-modules javafx.base,javafx.controls,javafx.fxml,javafx.graphics -jar %jar-name% > dist/SoundInvestments.bash
@@ -38,5 +39,6 @@ echo #! /usr/bin/env bash >> dist/SoundInvestments.command
 echo cd -- \$(dirname \$BASH_SOURCE) >> dist/SoundInvestments.command
 echo java --module-path javafx/lib --add-modules javafx.base,javafx.controls,javafx.fxml,javafx.graphics -jar %jar-name% >> dist/SoundInvestments.command
 @REM Can't make the .command file executable from a windows machine, since windows apparently doesn't have the same file-permission scheme
+
 
 echo Done

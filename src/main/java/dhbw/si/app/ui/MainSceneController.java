@@ -5,11 +5,10 @@ import dhbw.si.app.communication.*;
 import dhbw.si.app.mapping.*;
 import dhbw.si.audio.events.EvInstrEnum;
 import dhbw.si.audio.synth.InstrumentEnum;
-import dhbw.si.dataRepo.FilterFlag;
-import dhbw.si.dataRepo.Sonifiable;
-import dhbw.si.dataRepo.SonifiableID;
+import dhbw.si.dataRepo.*;
 import dhbw.si.util.ArrayFunctions;
 import dhbw.si.util.DateUtil;
+
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -27,7 +26,6 @@ import javafx.scene.layout.VBox;
 import javafx.scene.shape.Line;
 import javafx.util.Duration;
 import javafx.util.StringConverter;
-
 import java.io.IOException;
 import java.net.URL;
 import java.text.ParseException;
@@ -36,6 +34,10 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.function.Function;
 
+/**
+ * @author L. Wellhausen
+ * @author V. Richter
+ */
 public class MainSceneController implements Initializable {
     @FXML private AnchorPane anchor;
     @FXML private TextField searchBar;

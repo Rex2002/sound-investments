@@ -2,9 +2,12 @@ package dhbw.si.app.communication;
 
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
-
 import dhbw.si.audio.playback.PlayControlEvent;
 
+/**
+ * @author V. Richter
+ * @reviewer B. Frahm
+ */
 public class EventQueues {
 	public static final BlockingQueue<Msg<MsgToUIType>> toUI = new ArrayBlockingQueue<>(10);
 

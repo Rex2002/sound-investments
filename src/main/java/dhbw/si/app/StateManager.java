@@ -23,6 +23,7 @@ import java.util.function.Consumer;
  * @author V. Richter
  * @reviewer B. Frahm
  * @reviewer M. Richert
+ *
  * <p>
  * This class runs in the main thread and coordinates all tasks and the creation of the UI thread
  * This is atypical, as JavaFX's UI thread is usually the main thread as well

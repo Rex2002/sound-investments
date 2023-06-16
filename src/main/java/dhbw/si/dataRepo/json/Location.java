@@ -1,5 +1,8 @@
 package dhbw.si.dataRepo.json;
 
+/**
+ * @author V. Richter
+ */
 public class Location {
 	public final String file;
 	public final int row;

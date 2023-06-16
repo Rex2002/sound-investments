@@ -15,6 +15,9 @@ import java.util.Random;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
+/**
+ * @author V. Richter
+ */
 public class APIReq {
 	private static final Random rand = new Random();
 
@@ -176,7 +179,6 @@ public class APIReq {
 		}
 
 		String url = sb.toString().replace(" ", "%20");
-		System.out.println(url);
 		URI uri = new URI(url);
 
 		HttpRequest.Builder rb = HttpRequest.newBuilder(uri);

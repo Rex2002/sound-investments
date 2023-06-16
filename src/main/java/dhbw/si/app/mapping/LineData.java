@@ -1,5 +1,8 @@
 package dhbw.si.app.mapping;
 
+/**
+ * @author V. Richter
+ */
 public enum LineData implements ExchangeParam {
 	PRICE, // absolute Price
 	MOVINGAVG, // moving average
@@ -17,7 +20,7 @@ public enum LineData implements ExchangeParam {
 
 	public String toString() {
 		return switch (this) {
-			case PRICE -> "Preis";
+			case PRICE     -> "Preis";
 			case MOVINGAVG -> "Gleitender Durchschnitt";
 			case RELCHANGE -> "Relative Änderung";
 		};
