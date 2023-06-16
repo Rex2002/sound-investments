@@ -20,16 +20,30 @@ import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 
-//@author: V.Richter
-//@reviewers: L.Lehmann,
-
+/**
+ * @author V. Richter
+ * @reviewer L. Lehmann
+ *
+ * The DataRepo offers an interface for retrieving any data from the API connection.
+ * The main functionalities are provided via the {@code getPrices} and {@code findByPrefix} functions.
+ * Before those can be used, however, one should call the {@code init} function. This function should not be called more than once.
+ *
+ * Much of the implementation of this class assumes that only one component is interacting with the DataRepo without chance of race conditions. This assumption helps us reduce unnecessary overhead.
+ * The first implementation detail based on this assumption is the fact, that this class is static throughout, as it is not assumed to be needed twice.
+ *
+ * Because waiting for API-calls can take quite long, any function making API-requests will return a {@code Future}.
+ * Furthermore, the DataRepo might update its list of sonifiables (i.e. stocks, etfs and indices) at any moment. When interacting with the DataRepo, one should thus periodically check whether this data has been updated (indicated via the atomic boolean {@code updatedData}).
+ * As it is implemented at the moment, updates wll only happen on startup of the app and only if the last update was 5 days ago.
+ *
+ * @ImplNote
+ * There are several variables that may be set to effect the functioning of the DataRepo. They are mainly useful for enabling different testing cases
+ * As the user is not meant to tweak these values, they are compile-time values.
+ */
 public class DataRepo {
-	private static final boolean GET_PRICES_DYNAMICALLY    = true;
 	private static final boolean GET_EXCHANGES_DYNAMICALLY = false;
 	private static final boolean UPDATE_SONIFIABLES        = true;
-
-	private static final int          UPDATE_PERIOD_IN_DAYS = 5;
-	private static final List<String> DEFAULT_EXCHANGES     = List.of("NYSE", "NASDAQ", "XETRA", "F", "BE", "MU");
+	private static final int UPDATE_PERIOD_IN_DAYS         = 5;
+	private static final List<String> DEFAULT_EXCHANGES    = List.of("NYSE", "NASDAQ", "XETRA", "F", "BE", "MU");
 
 	private static final String[] apiToksLeeway = { "pgz64a5qiuvw4qhkoullnx", "9pe3xyaplenvfvbnyxtomm", "r7splaijduabfpcu2z2l14",
 			"o5npdx6elm2pcpp395uaun", "2ja5gszii8g63hzjd41x78", "ftd5l4hscm9biueu5ptptr", "42dreongzzo5yqkyg2r3cr",
@@ -41,10 +55,11 @@ public class DataRepo {
 			"z24dmsuvivce2hjf7e38i5", "msdo37wboxs5oeunq8gji2"
 	};
 
+	// File-path is relative from the resources directory
 	private static final String lastUpdateFilePath = "/Data/last-updated.txt";
 
-	// to prevent race conditions when making requests via the same APIReq object in different threads,
-	// we create a new APIReq object for each sequential task
+	// to prevent race conditions when making requests via the same APIReq object in different threads, we create
+	// a new APIReq object in each thread. This function simplifies creating new objects with the same configuration
 	private static APIReq getApiLeeway() {
 		return new APIReq("https://api.leeway.tech/api/v1/public/", apiToksLeeway, AuthPolicy.QUERY, "apitoken",
 				APIReq.rateLimitErrHandler(res -> {
@@ -57,43 +72,21 @@ public class DataRepo {
 	// a single boolean flag would not be sufficient of course. Since we know,
 	// however, that only the StateManager reacts to this information, having a
 	// single boolean flag is completely sufficient
-	public static final AtomicBoolean updatedData        = new AtomicBoolean(false);
-	private static final ThreadPoolExecutor threadPool   = new ThreadPoolExecutor(16, 64, 60, TimeUnit.SECONDS, new LinkedBlockingQueue<>());
+	public static final AtomicBoolean updatedData      = new AtomicBoolean(false);
+	private static final ThreadPoolExecutor threadPool = new ThreadPoolExecutor(16, 64, 60, TimeUnit.SECONDS, new LinkedBlockingQueue<>());
 
-	// All three arrays are assumed to be parallel
+	/* All three arrays below are assumed to be parallel. This assumption is enforced in the {@code updateSonifiablesList} function */
 	private static Sonifiable[] sonifiables;
 	private static String[] lowercaseSymbols;
 	private static String[] lowercaseNames;
 
-	private static List<Price> testPrices() {
-		try {
-			String fname  = "./src/main/resources/TestData/TestPrices.json";
-			String json   = Files.readString(Path.of(fname));
-			Parser parser = new Parser();
-			return parser.parse(fname, json).applyList(x -> {
-				try {
-					HashMap<String, JsonPrimitive<?>> m = x.asMap();
-					Calendar startDay = DateUtil.calFromDateStr(m.get("datetime").asStr());
-					Instant startTime = DateUtil.fmtDatetime.parse(m.get("datetime").asStr()).toInstant();
-					Instant endTime   = IntervalLength.HOUR.addToInstant(startTime);
-
-					return new Price(startDay, startTime, endTime, m.get("open").asDouble(),
-							m.get("close").asDouble(), m.get("low").asDouble(), m.get("high").asDouble());
-				} catch (Exception e) {
-					return null;
-				}
-			}, true);
-		} catch (Exception e) {
-			return List.of();
-		}
-	}
-
 	// Note: You shouldn't call this function twice
 	public static void init() throws AppError {
 		try {
-			// Read cached sonifiables
+			// Read cached sonifiables from disk
 			loadCached();
 
+			// Potentially update list of sonifiables to be synced with the API
 			if (UPDATE_SONIFIABLES) {
 				Instant lastUpdate = getLastUpdateDay();
 				if (lastUpdate == null || lastUpdate.plus(UPDATE_PERIOD_IN_DAYS, ChronoUnit.DAYS).isBefore(Instant.now()))
@@ -155,8 +148,6 @@ public class DataRepo {
 
 	public static Future<List<Price>> getPrices(SonifiableID s, Calendar start, Calendar end, IntervalLength interval) {
 		return threadPool.submit(() -> {
-			if (!GET_PRICES_DYNAMICALLY) return testPrices();
-
 			APIReq apiLeeway = getApiLeeway();
 			Calendar[] startEnd = {start, end};
 
