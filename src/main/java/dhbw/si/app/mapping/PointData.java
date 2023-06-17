@@ -2,6 +2,7 @@ package dhbw.si.app.mapping;
 
 /**
  * @author V. Richter
+ * @reviewer J. Kautz
  */
 public enum PointData implements ExchangeParam {
 	TRENDBREAK, // breaking a trend formation

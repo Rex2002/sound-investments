@@ -1,8 +1,11 @@
 package dhbw.si.dataAnalyzer;
 
 import dhbw.si.dataRepo.Price;
-
 import java.util.List;
+
+/**
+ * @author J. Kautz
+ */
 
 public class GeneralTrends {
 	/**
