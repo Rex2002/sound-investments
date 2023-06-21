@@ -29,7 +29,7 @@ public class PlaybackController {
         this.lengthInSeconds = lengthInSeconds;
     }
 
-    // Returns length of dhbw.si.audio stream in seconds
+    // Returns length of audio stream in seconds
     public double getLengthInSeconds() {
         return lengthInSeconds;
     }
@@ -90,8 +90,8 @@ public class PlaybackController {
         }
     }
 
-    // Goes to a specific time in the dhbw.si.audio stream
-    // The input is the percentage of the entire dhbw.si.audio stream
+    // Goes to a specific time in the audio stream
+    // The input is the percentage of the entire audio stream
     // that should be skipped to
     public void goToRelative(double percentage) {
         PlayControlEvent p = new PlayControlEvent(PlayControlEventsEnum.GOTO, percentage);
