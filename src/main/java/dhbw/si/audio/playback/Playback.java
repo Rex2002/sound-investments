@@ -1,7 +1,7 @@
 package dhbw.si.audio.playback;
 
 import dhbw.si.app.communication.EventQueues;
-
+import dhbw.si.util.Dev;
 import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.SourceDataLine;
 
@@ -55,7 +55,7 @@ public class Playback implements Runnable {
                 try {
                     nextEvent = EventQueues.toPlayback.take();
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    if (Dev.DEBUG) e.printStackTrace();
                 }
                 switch (nextEvent.getType()) {
                     case PAUSE -> paused = true;

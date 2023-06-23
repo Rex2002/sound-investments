@@ -89,7 +89,7 @@ public class MusicSceneController implements Initializable {
 				try {
 					pbc.save(selectedFile);
 				} catch (AppError e) {
-					e.printStackTrace();
+					if (Dev.DEBUG) e.printStackTrace();
 					CommonController.displayError(anchor, e.getMessage(), "Interner Fehler");
 				}
 			}

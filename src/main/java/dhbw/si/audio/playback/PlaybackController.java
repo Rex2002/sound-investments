@@ -3,6 +3,7 @@ package dhbw.si.audio.playback;
 import dhbw.si.app.AppError;
 import dhbw.si.app.communication.EventQueues;
 import dhbw.si.audio.Util;
+import dhbw.si.util.Dev;
 
 import javax.sound.sampled.AudioFileFormat;
 import javax.sound.sampled.AudioInputStream;
@@ -49,7 +50,7 @@ public class PlaybackController {
         try {
             EventQueues.toPlayback.put(p);
         } catch (InterruptedException e) {
-            e.printStackTrace();
+            if (Dev.DEBUG) e.printStackTrace();
         }
 
     }
@@ -59,7 +60,7 @@ public class PlaybackController {
         try {
             EventQueues.toPlayback.put(p);
         } catch (InterruptedException e) {
-            e.printStackTrace();
+            if (Dev.DEBUG) e.printStackTrace();
         }
     }
 
@@ -68,7 +69,7 @@ public class PlaybackController {
         try {
             EventQueues.toPlayback.put(p);
         } catch (InterruptedException e) {
-            e.printStackTrace();
+            if (Dev.DEBUG) e.printStackTrace();
         }
     }
 
@@ -77,7 +78,7 @@ public class PlaybackController {
         try {
             EventQueues.toPlayback.put(p);
         } catch (InterruptedException e) {
-            e.printStackTrace();
+            if (Dev.DEBUG) e.printStackTrace();
         }
     }
 
@@ -86,7 +87,7 @@ public class PlaybackController {
         try {
             EventQueues.toPlayback.put(p);
         } catch (InterruptedException e) {
-            e.printStackTrace();
+            if (Dev.DEBUG) e.printStackTrace();
         }
     }
 
@@ -98,7 +99,7 @@ public class PlaybackController {
         try {
             EventQueues.toPlayback.put(p);
         } catch (InterruptedException e) {
-            e.printStackTrace();
+            if (Dev.DEBUG) e.printStackTrace();
         }
     }
 
@@ -107,7 +108,7 @@ public class PlaybackController {
         try {
             EventQueues.toPlayback.put(p);
         } catch (InterruptedException e) {
-            e.printStackTrace();
+            if (Dev.DEBUG) e.printStackTrace();
         }
     }
 
@@ -126,7 +127,7 @@ public class PlaybackController {
         try {
             EventQueues.toPlayback.put(p);
         } catch (InterruptedException e) {
-            e.printStackTrace();
+            if (Dev.DEBUG) e.printStackTrace();
         }
     }
 }

@@ -6,6 +6,7 @@ import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
+import dhbw.si.util.Dev;
 
 /**
  * @author L. Wellhausen
@@ -29,7 +30,7 @@ public class App extends Application {
             MainSceneController controller = loader.getController();
             controller.scene = scene;
         } catch (IOException e) {
-            e.printStackTrace();
+            if (Dev.DEBUG) e.printStackTrace();
         }
 
     }

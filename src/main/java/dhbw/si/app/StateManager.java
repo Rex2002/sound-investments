@@ -13,6 +13,7 @@ import dhbw.si.dataRepo.*;
 import javafx.application.Application;
 import dhbw.si.util.FutureList;
 import dhbw.si.util.Maths;
+import dhbw.si.util.Dev;
 
 import java.time.temporal.ChronoUnit;
 import java.util.*;
@@ -38,6 +39,8 @@ public class StateManager {
 	public static Mapping currentMapping;
 
 	public static void main(String[] args) {
+		if (!Dev.DEBUG) Dev.disablePrinting();
+		if (Dev.DEBUG) System.out.println("Debugging, yaaay");
 		Thread th = new Thread(() -> Application.launch(App.class, args));
 		th.start();
 		call(DataRepo::init);
@@ -85,7 +88,7 @@ public class StateManager {
 
 					// Check if DataRepo has updated data for us
 					if (DataRepo.updatedData.compareAndSet(true, false)) {
-						System.out.println("DataRepo has updated Data");
+						if (Dev.DEBUG) System.out.println("DataRepo has updated Data");
 						sendFilteredSonifiables();
 					}
 				} catch (InterruptedException ie) {
@@ -310,7 +313,7 @@ public class StateManager {
 	public static Consumer<InterruptedException> getInterruptedExceptionHandler() {
 		return (ie -> {
 			// We just crash the application when we fail to establish connection with the UI
-			ie.printStackTrace();
+			if (Dev.DEBUG) ie.printStackTrace();
 			System.exit(1);
 		});
 	}

@@ -1,9 +1,8 @@
 package dhbw.si.audio.mixer;
 
 import dhbw.si.app.AppError;
-
+import dhbw.si.util.Dev;
 import javax.sound.sampled.*;
-
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.util.Objects;
@@ -51,7 +50,7 @@ public class SampleLoader {
 
             return out;
         } catch (NullPointerException | IOException | UnsupportedAudioFileException e){
-            e.printStackTrace();
+            if (Dev.DEBUG) e.printStackTrace();
             throw new AppError("Error beim Auslesen des Samples " + filename);
         }
 

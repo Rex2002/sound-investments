@@ -5,10 +5,7 @@ import dhbw.si.dataRepo.api.APIReq;
 import dhbw.si.dataRepo.api.AuthPolicy;
 import dhbw.si.dataRepo.json.JsonPrimitive;
 import dhbw.si.dataRepo.json.Parser;
-import dhbw.si.util.ArrayFunctions;
-import dhbw.si.util.DateUtil;
-import dhbw.si.util.FutureList;
-import dhbw.si.util.UnorderedList;
+import dhbw.si.util.*;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -93,7 +90,7 @@ public class DataRepo {
 					updateSonifiablesList();
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
+			if (Dev.DEBUG) e.printStackTrace();
 			throw new AppError(e.getMessage());
 		}
 	}
@@ -210,8 +207,8 @@ public class DataRepo {
 				ArrayFunctions.rmDuplicates(out, 300, (x, y) -> x.getStart().equals(y.getStart()));
 				return out;
 			} catch (Exception e) {
-				e.printStackTrace();
-				System.out.println("Fehler beim Einholen der Preisdaten von " + s + " vom " + DateUtil.formatDateGerman(start) + " bis zum " + DateUtil.formatDateGerman(end));
+				if (Dev.DEBUG) e.printStackTrace();
+				if (Dev.DEBUG) System.out.println("Fehler beim Einholen der Preisdaten von " + s + " vom " + DateUtil.formatDateGerman(start) + " bis zum " + DateUtil.formatDateGerman(end));
 				return null;
 			}
 		});
@@ -257,7 +254,7 @@ public class DataRepo {
 				List<String> newSymbols = new UnorderedList<>(4096);
 				List<String> newNames = new UnorderedList<>(4096);
 				Object[] allSonifiables = fl.getAll();
-				System.out.println("FutureList is done");
+				if (Dev.DEBUG) System.out.println("FutureList is done");
 				for (Object sonifiables : allSonifiables) {
 					for (Sonifiable s : (List<Sonifiable>) sonifiables) {
 						newSonifiables.add(s);
@@ -265,7 +262,7 @@ public class DataRepo {
 						newNames.add(s.getName().toLowerCase());
 					}
 				}
-				System.out.println("newSonifiable lists created");
+				if (Dev.DEBUG) System.out.println("newSonifiable lists created");
 
 				// Remove duplicates
 				// @Performance O(n^2) for a very big n :eyes:
@@ -279,14 +276,14 @@ public class DataRepo {
 						}
 					}
 				}
-				System.out.println("Duplicates removed");
+				if (Dev.DEBUG) System.out.println("Duplicates removed");
 
 
 				// The intermediate arrays are used to prevent the user trying to search for sonifiables, while they are being updated
 				// this way, the actual updating is a simple pointer-swap which is instantaneous
-				System.out.println("new Sonifiables amount: " + newSonifiables.size());
-				System.out.println("new Symbols amount: " + newSymbols.size());
-				System.out.println("new Names amount: " + newNames.size());
+				if (Dev.DEBUG) System.out.println("new Sonifiables amount: " + newSonifiables.size());
+				if (Dev.DEBUG) System.out.println("new Symbols amount: " + newSymbols.size());
+				if (Dev.DEBUG) System.out.println("new Names amount: " + newNames.size());
 				assert newSonifiables.size() == newSymbols.size() && newSonifiables.size() == newNames.size();
 				int len = newSonifiables.size();
 				Sonifiable[] newSon = new Sonifiable[len];
@@ -295,19 +292,19 @@ public class DataRepo {
 				newSon = newSonifiables.toArray(newSon);
 				newSym = newSymbols    .toArray(newSym);
 				newNam = newNames      .toArray(newNam);
-				System.out.println("intermediate arrays created");
+				if (Dev.DEBUG) System.out.println("intermediate arrays created");
 
 
 				sonifiables      = newSon;
 				lowercaseSymbols = newSym;
 				lowercaseNames   = newNam;
-				System.out.println("updated");
+				if (Dev.DEBUG) System.out.println("updated");
 				updatedData.set(true);
 				cacheData();
 				Files.write(Path.of("./src/main/resources/" + lastUpdateFilePath), Long.toString(Instant.now().toEpochMilli()).getBytes(), StandardOpenOption.CREATE);
 			} catch (Throwable e) {
 				// we intentionally ignore this error, as it's not effecting the user at this time
-				e.printStackTrace();
+				if (Dev.DEBUG) e.printStackTrace();
 			}
 		});
 	}
@@ -333,7 +330,7 @@ public class DataRepo {
 				lowercaseNames  [i] = sonifiables[i].getName().toLowerCase();
 			}
 		} catch (Exception e) {
-			e.printStackTrace();
+			if (Dev.DEBUG) e.printStackTrace();
 			throw new AppError("Die gespeicherten Börsendaten konnten nicht gelesen werden. Stelle sicher, dass keine App-internen Dateien verschoben oder gelöscht wurden.");
 		}
 	}
@@ -344,7 +341,7 @@ public class DataRepo {
 			String data = ArrayFunctions.toStringArr(sonifiables,  s -> s.toJSON(), true);
 			Files.write(path, data.getBytes(), StandardOpenOption.WRITE);
 		} catch (Exception e) {
-			e.printStackTrace();
+			if (Dev.DEBUG) e.printStackTrace();
 			throw new AppError("Die neuen Börsendaten konnten nicht gespeichert werden.");
 		}
 	}
