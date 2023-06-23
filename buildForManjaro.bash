@@ -33,7 +33,6 @@ cp -r "./src/main/resources" "$distResourcesPath" >/dev/null
 
 # Write executable into the distributable
 echo "Writing Script..."
-echo "java\bin\java.exe --module-path javafx\lib --add-modules javafx.base,javafx.controls,javafx.fxml,javafx.graphics -jar $jarName" >dist/SoundInvestments.bat
 echo "./java/bin/java --module-path javafx\lib --add-modules javafx.base,javafx.controls,javafx.fxml,javafx.graphics -jar $jarName" >dist/SoundInvestments.bash
 
 echo "Done"
