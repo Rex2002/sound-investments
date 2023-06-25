@@ -1,11 +1,11 @@
 # @author Val Richter
 # @reviewer Malte Richert
-
+#
 javaPath=/opt/homebrew/Cellar/openjdk/20.0.1
 javafxPath=/Users/malterichert/Dev/javafx-sdk-20.0.1
 jarName=SoundInvestments.jar
 mavenJarPath=./target/sound-investments-1.0-SNAPSHOT-jar-with-dependencies.jar
-
+#
 # Build clean dist directory
 if [ -d "./dist" ]; then
 	rm -rf "./dist"
