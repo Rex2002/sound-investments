@@ -1,11 +1,9 @@
 # @author Val Richter
 # @reviewer Benjamin Frahm
-
 javaPath=/lib/jvm/java-20-openjdk
 javafxPath=/lib/jvm/java-20-openjdk/lib
 jarName=SoundInvestments.jar
 mavenJarPath=./target/sound-investments-1.0-SNAPSHOT-jar-with-dependencies.jar
-
 # Build clean dist directory
 if [ -d "./dist" ]; then
 	rm -rf "./dist"
