@@ -3,6 +3,10 @@ package dhbw.si.dataAnalyzer;
 import java.util.List;
 import dhbw.si.dataRepo.Price;
 
+/**
+ * @author J. Kautz
+ */
+
 public class FlagFormationAnalyzer {
 	public static final int MIN_FORMATION_LENGTH = 2;
 	public static final int MAX_FORMATION_LENGTH = 60;

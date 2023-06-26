@@ -1,6 +1,9 @@
 package dhbw.si.audio.synth.envelopes;
 
-public class OneEnvelope implements Envelope{
+/**
+ * @author B. Frahm
+ */
+public class OneEnvelope implements Envelope {
     @Override
     public double getAmplitudeFactor(int pos) {
         return 1;

@@ -1,8 +1,11 @@
 package dhbw.si.dataAnalyzer;
 
 import java.util.List;
-
 import dhbw.si.dataRepo.Price;
+
+/**
+ * @author J. Kautz
+ */
 
 public class VFormationAnalyzer {
     public static boolean[] analyze(List<Price> priceList) {

@@ -1,5 +1,8 @@
 package dhbw.si.app.mapping;
 
+/**
+ * @author V. Richter
+ */
 public enum RangeData implements ExchangeParam {
 	FLAG,
 	TRIANGLE,
@@ -17,9 +20,9 @@ public enum RangeData implements ExchangeParam {
 
 	public String toString() {
 		return switch (this) {
-			case FLAG -> "Flaggenformation";
+			case FLAG     -> "Flaggenformation";
 			case TRIANGLE -> "Dreiecksformation";
-			case VFORM -> "V-Formation";
+			case VFORM    -> "V-Formation";
 		};
 	}
 }

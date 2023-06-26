@@ -1,16 +1,17 @@
 package dhbw.si.app.ui;
 
 import java.io.IOException;
-
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Parent;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
+import dhbw.si.util.Dev;
 
-// For a wonderful explanation of periodic tasks in javaFX see here:
-// https://stackoverflow.com/a/60685975/13764271
-
+/**
+ * @author L. Wellhausen
+ * @reviewer V. Richter
+ */
 public class App extends Application {
 
     @Override
@@ -29,7 +30,7 @@ public class App extends Application {
             MainSceneController controller = loader.getController();
             controller.scene = scene;
         } catch (IOException e) {
-            e.printStackTrace();
+            if (Dev.DEBUG) e.printStackTrace();
         }
 
     }

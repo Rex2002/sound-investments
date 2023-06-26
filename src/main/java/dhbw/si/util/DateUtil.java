@@ -9,6 +9,9 @@ import java.util.Calendar;
 import java.util.GregorianCalendar;
 import java.util.Locale;
 
+/**
+ * @author V. Richter
+ */
 public class DateUtil {
 	public static final SimpleDateFormat fmtDate       = new SimpleDateFormat("yyyy-MM-dd", Locale.US);
 	public static final SimpleDateFormat fmtDatetime   = new SimpleDateFormat("yyyy-MM-dd hh:mm:ss", Locale.US);

@@ -1,5 +1,8 @@
 package dhbw.si.dataRepo;
 
+/**
+ * @author V. Richter
+ */
 public enum FilterFlag {
 	NONE(0),
 	STOCK(1 << 0),

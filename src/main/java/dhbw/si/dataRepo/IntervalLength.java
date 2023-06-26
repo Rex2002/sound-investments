@@ -2,6 +2,9 @@ package dhbw.si.dataRepo;
 
 import java.time.Instant;
 
+/**
+ * @author V. Richter
+ */
 public enum IntervalLength {
 	MIN,
 	HOUR,

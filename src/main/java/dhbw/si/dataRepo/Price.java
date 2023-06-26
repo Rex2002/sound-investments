@@ -5,6 +5,9 @@ import lombok.Data;
 import java.time.Instant;
 import java.util.Calendar;
 
+/**
+ * @author V. Richter
+ */
 @Data
 @AllArgsConstructor
 public class Price {

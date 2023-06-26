@@ -3,6 +3,8 @@ package dhbw.si.app.ui;
 import dhbw.si.app.AppError;
 import dhbw.si.app.communication.*;
 import dhbw.si.audio.playback.PlaybackController;
+import dhbw.si.util.*;
+
 import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -27,13 +29,15 @@ import javafx.scene.text.Font;
 import javafx.stage.FileChooser;
 import javafx.util.Duration;
 import javafx.util.StringConverter;
-import dhbw.si.util.ArrayFunctions;
-import dhbw.si.util.DateUtil;
 import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.*;
 
+/**
+ * @author L. Wellhausen
+ * @author V. Richter
+ */
 public class MusicSceneController implements Initializable {
 	// Colors have to be kept in sync with colors in css file
 	// In css the colors are specified under .default-color-<x>.chart-series-line
@@ -85,7 +89,7 @@ public class MusicSceneController implements Initializable {
 				try {
 					pbc.save(selectedFile);
 				} catch (AppError e) {
-					e.printStackTrace();
+					if (Dev.DEBUG) e.printStackTrace();
 					CommonController.displayError(anchor, e.getMessage(), "Interner Fehler");
 				}
 			}

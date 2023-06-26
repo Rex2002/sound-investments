@@ -11,6 +11,12 @@ import lombok.Data;
 import static dhbw.si.audio.Constants.CHANNEL_NO;
 import static dhbw.si.audio.Constants.SAMPLE_RATE;
 
+/**
+ * @author B. Frahm
+ * @reviewer M. Richert
+ * @reviewer V. Richter
+ * @reviewer L. Lehmann
+ */
 public class SynthLine {
 
     @Data

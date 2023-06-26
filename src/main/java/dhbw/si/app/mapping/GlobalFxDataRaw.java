@@ -3,6 +3,10 @@ package dhbw.si.app.mapping;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 
+/**
+ * @author B. Frahm
+ * @reviewer M. Richert
+ */
 @Data
 @RequiredArgsConstructor
 public class GlobalFxDataRaw {

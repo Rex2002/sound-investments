@@ -3,6 +3,7 @@ package dhbw.si.audio.playback;
 import dhbw.si.app.AppError;
 import dhbw.si.app.communication.EventQueues;
 import dhbw.si.audio.Util;
+import dhbw.si.util.Dev;
 
 import javax.sound.sampled.AudioFileFormat;
 import javax.sound.sampled.AudioInputStream;
@@ -12,6 +13,11 @@ import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
 
+/**
+ * @author B. Frahm
+ * @reviewer V. Richter
+ * @reviewer L. Lehmann
+ */
 public class PlaybackController {
     public final int SKIP_LENGTH = 100;
     private final SourceDataLine s;
@@ -24,7 +30,7 @@ public class PlaybackController {
         this.lengthInSeconds = lengthInSeconds;
     }
 
-    // Returns length of dhbw.si.audio stream in seconds
+    // Returns length of audio stream in seconds
     public double getLengthInSeconds() {
         return lengthInSeconds;
     }
@@ -44,7 +50,7 @@ public class PlaybackController {
         try {
             EventQueues.toPlayback.put(p);
         } catch (InterruptedException e) {
-            e.printStackTrace();
+            if (Dev.DEBUG) e.printStackTrace();
         }
 
     }
@@ -54,7 +60,7 @@ public class PlaybackController {
         try {
             EventQueues.toPlayback.put(p);
         } catch (InterruptedException e) {
-            e.printStackTrace();
+            if (Dev.DEBUG) e.printStackTrace();
         }
     }
 
@@ -63,7 +69,7 @@ public class PlaybackController {
         try {
             EventQueues.toPlayback.put(p);
         } catch (InterruptedException e) {
-            e.printStackTrace();
+            if (Dev.DEBUG) e.printStackTrace();
         }
     }
 
@@ -72,7 +78,7 @@ public class PlaybackController {
         try {
             EventQueues.toPlayback.put(p);
         } catch (InterruptedException e) {
-            e.printStackTrace();
+            if (Dev.DEBUG) e.printStackTrace();
         }
     }
 
@@ -81,19 +87,19 @@ public class PlaybackController {
         try {
             EventQueues.toPlayback.put(p);
         } catch (InterruptedException e) {
-            e.printStackTrace();
+            if (Dev.DEBUG) e.printStackTrace();
         }
     }
 
-    // Goes to a specific time in the dhbw.si.audio stream
-    // The input is the percentage of the entire dhbw.si.audio stream
+    // Goes to a specific time in the audio stream
+    // The input is the percentage of the entire audio stream
     // that should be skipped to
     public void goToRelative(double percentage) {
         PlayControlEvent p = new PlayControlEvent(PlayControlEventsEnum.GOTO, percentage);
         try {
             EventQueues.toPlayback.put(p);
         } catch (InterruptedException e) {
-            e.printStackTrace();
+            if (Dev.DEBUG) e.printStackTrace();
         }
     }
 
@@ -102,7 +108,7 @@ public class PlaybackController {
         try {
             EventQueues.toPlayback.put(p);
         } catch (InterruptedException e) {
-            e.printStackTrace();
+            if (Dev.DEBUG) e.printStackTrace();
         }
     }
 
@@ -121,7 +127,7 @@ public class PlaybackController {
         try {
             EventQueues.toPlayback.put(p);
         } catch (InterruptedException e) {
-            e.printStackTrace();
+            if (Dev.DEBUG) e.printStackTrace();
         }
     }
 }

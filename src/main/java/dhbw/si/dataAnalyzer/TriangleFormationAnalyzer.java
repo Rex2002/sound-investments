@@ -3,6 +3,10 @@ package dhbw.si.dataAnalyzer;
 import java.util.List;
 import dhbw.si.dataRepo.Price;
 
+/**
+ * @author J. Kautz
+ */
+
 public class TriangleFormationAnalyzer {
     public static final int MIN_FORMATION_LEN = 5;
 

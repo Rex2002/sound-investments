@@ -1,5 +1,9 @@
 package dhbw.si.audio.synth;
 
+/**
+ * @author B. Frahm
+ * @reviewer M. Richert
+ */
 public enum InstrumentEnum {
     RETRO_SYNTH,
     STRINGS_SYNTH,

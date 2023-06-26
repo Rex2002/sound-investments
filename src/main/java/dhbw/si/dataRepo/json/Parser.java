@@ -6,6 +6,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.function.Function;
 
+/**
+ * @author V. Richter
+ */
 public class Parser {
 	final static String DEFAULT_FILENAME = "Unknown";
 

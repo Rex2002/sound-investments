@@ -3,6 +3,10 @@ package dhbw.si.dataAnalyzer;
 import java.util.List;
 import dhbw.si.dataRepo.Price;
 
+/**
+ * @author J. Kautz
+ */
+
 public class Blur {
     public static final int BLUR_LENGTH = 5;
 

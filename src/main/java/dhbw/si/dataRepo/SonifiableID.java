@@ -2,6 +2,9 @@ package dhbw.si.dataRepo;
 
 import lombok.Data;
 
+/**
+ * @author V. Richter
+ */
 @Data
 public class SonifiableID {
 	public String exchange;

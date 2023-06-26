@@ -6,6 +6,9 @@ import javafx.scene.control.Label;
 import javafx.scene.Cursor;
 import javafx.scene.control.Button;
 
+/**
+ * @author V. Richter
+ */
 public class CommonController {
 	public static void displayError(Pane parent, String errorMessage, String errorTitle) {
         double width = 400;

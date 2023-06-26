@@ -3,6 +3,10 @@ package dhbw.si.app.mapping;
 import lombok.Data;
 import dhbw.si.audio.synth.InstrumentEnum;
 
+/**
+ * @author B. Frahm
+ * @author M. Richert
+ */
 @Data
 public class InstrumentDataRaw {
     // Volume

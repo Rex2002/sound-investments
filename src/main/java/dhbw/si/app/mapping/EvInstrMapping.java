@@ -3,6 +3,9 @@ package dhbw.si.app.mapping;
 import dhbw.si.audio.events.EvInstrEnum;
 import lombok.Data;
 
+/**
+ * @author V. Richter
+ */
 @Data
 public class EvInstrMapping {
 	private EvInstrEnum instrument;

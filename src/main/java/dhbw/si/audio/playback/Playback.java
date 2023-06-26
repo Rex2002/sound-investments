@@ -1,10 +1,15 @@
 package dhbw.si.audio.playback;
 
 import dhbw.si.app.communication.EventQueues;
-
+import dhbw.si.util.Dev;
 import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.SourceDataLine;
 
+/**
+ * @author B. Frahm
+ * @reviewer V. Richter
+ * @reviewer L. Wellhausen
+ */
 public class Playback implements Runnable {
     // This value is written to by this class and read by the PlaybackController
     // Race-Conditions are ignored, because it is ok if we are a couple percentage points behind as that wouldn't be visible in the UI anyways
@@ -50,7 +55,7 @@ public class Playback implements Runnable {
                 try {
                     nextEvent = EventQueues.toPlayback.take();
                 } catch (InterruptedException e) {
-                    e.printStackTrace();
+                    if (Dev.DEBUG) e.printStackTrace();
                 }
                 switch (nextEvent.getType()) {
                     case PAUSE -> paused = true;

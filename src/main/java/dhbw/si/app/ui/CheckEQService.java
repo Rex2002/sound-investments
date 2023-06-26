@@ -4,11 +4,11 @@ import javafx.concurrent.ScheduledService;
 import javafx.concurrent.Task;
 import java.util.ArrayList;
 import java.util.List;
+import dhbw.si.app.communication.*;
 
-import dhbw.si.app.communication.EventQueues;
-import dhbw.si.app.communication.Msg;
-import dhbw.si.app.communication.MsgToUIType;
-
+/**
+ * @author V. Richter
+ */
 public class CheckEQService extends ScheduledService<List<Msg<MsgToUIType>>> {
 	private final List<Msg<MsgToUIType>> l = new ArrayList<>(8);
 

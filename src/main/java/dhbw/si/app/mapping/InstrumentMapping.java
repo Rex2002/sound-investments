@@ -2,14 +2,13 @@ package dhbw.si.app.mapping;
 
 import dhbw.si.audio.synth.InstrumentEnum;
 import dhbw.si.dataRepo.SonifiableID;
+import java.lang.reflect.Field;
+import java.util.*;
 import lombok.Data;
 
-import java.lang.reflect.Field;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-
+/**
+ * @author V. Richter
+ */
 @Data
 public class InstrumentMapping {
 	// Optional fields represent that the user can leave those empty

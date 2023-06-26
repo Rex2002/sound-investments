@@ -18,6 +18,12 @@ import javax.sound.sampled.SourceDataLine;
 
 import static dhbw.si.audio.Util.concatArrays;
 
+/**
+ * @author B. Frahm
+ * @author M. Richert
+ * @reviewer L. Lehmann
+ * @reviewer V. Richter
+ */
 public class Sonifier {
 
     /**
@@ -34,7 +40,7 @@ public class Sonifier {
         Constants.TEMPO = backing.setSamplesAndGetTempo();
 
         double numberBeatsRaw = (Constants.TEMPO / 60f) * lengthInSecondsRaw;
-        // get number of beats to nearest multiple of 16 so that dhbw.si.audio always lasts for
+        // get number of beats to nearest multiple of 16 so that audio always lasts for
         // a full multiple of 4 bars
         int lengthInBeats = (int) Math.round(numberBeatsRaw / 16) * 16;
         double lengthInSeconds = lengthInBeats / (Constants.TEMPO / 60f);

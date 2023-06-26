@@ -3,9 +3,13 @@ package dhbw.si.util;
 import java.util.*;
 import java.util.function.Predicate;
 
-// Basically ArrayList, but much faster when having to remove a lot of elements.
-// The speedup is possible, because this List implementation doesn't keep elements in the same order.
-// For Benchmarking see: https://github.com/ArtInLines/speedy-java
+/**
+ * @author V. Richter
+ *
+ * Basically ArrayList, but much faster when having to remove a lot of elements.
+ * The speedup is possible, because this List implementation doesn't keep elements in the same order.
+ * For Benchmarking see: https://github.com/ArtInLines/speedy-java
+ */
 public class UnorderedList<E> implements List<E>, RandomAccess {
 	private static final int DEFAULT_CAPACITY = 16;
 

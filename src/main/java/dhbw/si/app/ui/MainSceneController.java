@@ -5,11 +5,11 @@ import dhbw.si.app.communication.*;
 import dhbw.si.app.mapping.*;
 import dhbw.si.audio.events.EvInstrEnum;
 import dhbw.si.audio.synth.InstrumentEnum;
-import dhbw.si.dataRepo.FilterFlag;
-import dhbw.si.dataRepo.Sonifiable;
-import dhbw.si.dataRepo.SonifiableID;
+import dhbw.si.dataRepo.*;
 import dhbw.si.util.ArrayFunctions;
 import dhbw.si.util.DateUtil;
+import dhbw.si.util.Dev;
+
 import javafx.collections.ObservableList;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -27,7 +27,6 @@ import javafx.scene.layout.VBox;
 import javafx.scene.shape.Line;
 import javafx.util.Duration;
 import javafx.util.StringConverter;
-
 import java.io.IOException;
 import java.net.URL;
 import java.text.ParseException;
@@ -36,6 +35,10 @@ import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.function.Function;
 
+/**
+ * @author L. Wellhausen
+ * @author V. Richter
+ */
 public class MainSceneController implements Initializable {
     @FXML private AnchorPane anchor;
     @FXML private TextField searchBar;
@@ -178,12 +181,6 @@ public class MainSceneController implements Initializable {
 
         startBtn.setOnAction(ev -> {
             try {
-                String err = mapping.verify();
-                if (err != null) {
-                    CommonController.displayError(anchor, err, "Ungültiges Mapping");
-                    return;
-                }
-
                 startBtn.setDisable(true);
                 startedSonification = true;
                 EventQueues.toSM.add(new Msg<>(MsgToSMType.START, mapping));
@@ -210,7 +207,7 @@ public class MainSceneController implements Initializable {
                     }
                 }, nextFrameInMs, nextFrameInMs);
             } catch (Exception e) {
-                e.printStackTrace();
+                if (Dev.DEBUG) e.printStackTrace();
                 CommonController.displayError(anchor, "Sonifizierung konnte aufgrund eines internen Fehlers nicht gestartet werden. Starten Sie die Anwendung bitte neu.", "Interner Fehler");
             }
         });
@@ -228,7 +225,7 @@ public class MainSceneController implements Initializable {
                 datePicker.setValue(date);
             } catch (ParseException ignored) {
             } catch (Exception e){
-                System.out.println("another exception occurred");
+                if (Dev.DEBUG) System.out.println("another exception occurred");
             }
         });
         StringConverter<LocalDate> converter = new StringConverter<LocalDate>() {
@@ -282,7 +279,7 @@ public class MainSceneController implements Initializable {
                     mapping.setEndDate(DateUtil.localDateToCalendar(newValue));
                 enableBtnIfValid();
             } catch (Exception e) {
-                e.printStackTrace();
+                if (Dev.DEBUG) e.printStackTrace();
                 CommonController.displayError(anchor, "Das neue Enddatum konnte nicht gesetzt werden.", "Interner Fehler");
             }
         });
@@ -323,7 +320,7 @@ public class MainSceneController implements Initializable {
             controller.scene = scene;
             scene.setRoot(root);
         } catch (IOException e) {
-            e.printStackTrace();
+            if (Dev.DEBUG) e.printStackTrace();
             CommonController.displayError(anchor, "Fehler beim Laden der nächsten UI-Szene", "Interner Fehler");
         }
     }
@@ -365,7 +362,7 @@ public class MainSceneController implements Initializable {
         while (idx < children.size() && !id.equals(children.get(idx).getUserData()))
             idx++;
         if (idx == children.size()) {
-            System.out.println("rmSonifiable was called on " + id + " which couldn't be found in SceneTree.");
+            if (Dev.DEBUG) System.out.println("rmSonifiable was called on " + id + " which couldn't be found in SceneTree.");
             return;
         }
         paneBoxSonifiables.setPrefHeight((paneBoxSonifiables.getChildren().size()-1) * 511.0);
@@ -658,7 +655,7 @@ public class MainSceneController implements Initializable {
     }
 
     private void enableBtnIfValid() {
-        startBtn.setDisable(startedSonification);
+        startBtn.setDisable(startedSonification || !mapping.isValid());
     }
 
     private void instAdded(String name) {

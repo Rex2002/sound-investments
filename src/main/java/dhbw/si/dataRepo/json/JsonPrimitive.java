@@ -6,9 +6,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.function.Function;
-
 import javax.lang.model.type.NullType;
 
+/**
+ * @author V. Richter
+ */
 @SuppressWarnings("unchecked")
 public class JsonPrimitive<T> {
 	private final T el;

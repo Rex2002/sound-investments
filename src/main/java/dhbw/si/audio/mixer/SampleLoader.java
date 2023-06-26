@@ -1,13 +1,17 @@
 package dhbw.si.audio.mixer;
 
 import dhbw.si.app.AppError;
-
+import dhbw.si.util.Dev;
 import javax.sound.sampled.*;
-
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.util.Objects;
 
+/**
+ * @author B. Frahm
+ * @reviewer M. Richert
+ * @reviewer L. Lehmann
+ */
 public class SampleLoader {
     /**
      * loads specified audio sample from resources/audio/impacts directory
@@ -24,7 +28,7 @@ public class SampleLoader {
     }
 
     /**
-     * loads a sample from a file and converts to the correct audioformat
+     * loads a sample from a file and converts to the correct audio format
      * @param filename of the sample that is to be loaded
      * @return the data array representing the sample in the desired format
      */
@@ -46,7 +50,7 @@ public class SampleLoader {
 
             return out;
         } catch (NullPointerException | IOException | UnsupportedAudioFileException e){
-            e.printStackTrace();
+            if (Dev.DEBUG) e.printStackTrace();
             throw new AppError("Error beim Auslesen des Samples " + filename);
         }
 

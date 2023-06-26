@@ -8,6 +8,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 /**
+ * @author V. Richter
+ *
  * A FutureList is a list of Futures, that should be awaited together
  * <p>
  * The FutureList implements the Future interface itself and allows awaiting all contained futures together.
@@ -18,7 +20,7 @@ import java.util.concurrent.TimeoutException;
  * <p>
  * {@code getAll} on the other hand returns a list of all results.
  *
- * @implNote
+ * @ImplNote
  * This class is very lightweight.
  * It uses a simple array of Futures, that can grow arbitrarily large by copying the existing array into a bigger one.
  *

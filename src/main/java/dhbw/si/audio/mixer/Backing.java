@@ -8,6 +8,11 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Random;
 
+/**
+ * @author M. Richert
+ * @reviewer L. Lehmann
+ * @reviewer B. Frahm
+ */
 public class Backing {
     @SuppressWarnings("FieldCanBeLocal")
     private final int SAMPLE_BARS = 4;
@@ -54,7 +59,7 @@ public class Backing {
      * Gets the previously selected backing track and loops it for the desired length,
      * alternating with a corresponding fill.
      * @param bars length of sonification in multiple of four 4/4-bars of given tempo
-     * @return dhbw.si.audio line of randomly selected backing groove and fill
+     * @return audio line of randomly selected backing groove and fill
      */
     public double[] getBacking( int bars ) {
         int seconds = (int) Math.ceil( (bars * 4) / (Constants.TEMPO / 60f) );

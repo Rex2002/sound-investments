@@ -13,17 +13,24 @@ import dhbw.si.dataRepo.*;
 import javafx.application.Application;
 import dhbw.si.util.FutureList;
 import dhbw.si.util.Maths;
+import dhbw.si.util.Dev;
 
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Consumer;
 
-// This class runs in the main thread and coordinates all tasks and the creation of the UI thread
-// This is atypical, as JavaFX's UI thread is usually the main thread as well
-// (see: https://stackoverflow.com/a/37580083/13764271)
-// however, it makes conceptually more sense to me, as the dhbw.si.app's logic should be done in the main thread
-
+/**
+ * @author V. Richter
+ * @reviewer B. Frahm
+ * @reviewer M. Richert
+ *
+ * <p>
+ * This class runs in the main thread and coordinates all tasks and the creation of the UI thread
+ * This is atypical, as JavaFX's UI thread is usually the main thread as well
+ * (see: <a href="https://stackoverflow.com/a/37580083/13764271">StackOverflow</a>). <br>
+ * However, it conceptually makes more sense to me, as the app's logic should be done in the main thread.
+ */
 public class StateManager {
 	public static final int FILTER_MAX_AMOUNT = 100;
 
@@ -32,6 +39,8 @@ public class StateManager {
 	public static Mapping currentMapping;
 
 	public static void main(String[] args) {
+		if (!Dev.DEBUG) Dev.disablePrinting();
+		if (Dev.DEBUG) System.out.println("Debugging, yaaay");
 		Thread th = new Thread(() -> Application.launch(App.class, args));
 		th.start();
 		call(DataRepo::init);
@@ -79,7 +88,7 @@ public class StateManager {
 
 					// Check if DataRepo has updated data for us
 					if (DataRepo.updatedData.compareAndSet(true, false)) {
-						System.out.println("DataRepo has updated Data");
+						if (Dev.DEBUG) System.out.println("DataRepo has updated Data");
 						sendFilteredSonifiables();
 					}
 				} catch (InterruptedException ie) {
@@ -304,7 +313,7 @@ public class StateManager {
 	public static Consumer<InterruptedException> getInterruptedExceptionHandler() {
 		return (ie -> {
 			// We just crash the application when we fail to establish connection with the UI
-			ie.printStackTrace();
+			if (Dev.DEBUG) ie.printStackTrace();
 			System.exit(1);
 		});
 	}
