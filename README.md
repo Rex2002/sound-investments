@@ -3,12 +3,12 @@
 This is the source code for the "SoundInvestments" project from the lecture SoftwareEngineering II. \
 The application aims to support stock analysts by sonifying trade data and thereby enabling a more intuitive understanding of market trends.
 
-## How to build the Distributable
+## Getting started
+Download the newest release, choosing the package for your Operating System (Windows, Arch-based Linux and Apple Silicon macOS are supported). Unpack the zip and, in the resulting directory, open the file named SoundInvestments.bat (or .command on macOS or .bash on Linux). The app opens from there. Don't remove that file from the directory or change the directory's structure in any other way as that might break the app.
 
-1. Make sure you have `maven` and `jlink` installed and in your path. To test this, you can run `mvn --version` and `jlink --version`, respectively
-2. Go into `build.bat` (or `build.bash` if you're not on windows) and set the java path and javafx path variables at the top of the script. These variables should be the paths pointing at your local `java` and `javafx` isntallations.
-3. Run the script (`build.bat` on windows and `build.bash` on linux/mac)
-4. You can now go into the newly created `dist/` folder and run the application via the `SoundInvestments.bat` or `SounInvestments.bash` script
+## Dive into the code
+For a highlevel overview and explanations, consult the [architecture document](https://malterichert.notion.site/SoundInvestments-Entwurf-31976b2593464f68af791e462032f3fb?pvs=4) (German only).
+For detailed insights on code level classes and complicated methods are equipped with explanatory docstrings.
 
 ## Developers
 - [Rex2002](https://github.com/Rex2002) - Music and synthesizer
